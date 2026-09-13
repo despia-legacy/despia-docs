@@ -31,6 +31,7 @@ rmSync(target, { recursive: true, force: true });
 const sync = [
   { from: "Documentation/guides", to: "guides" },
   { from: "Skills", to: "skills" },
+  { from: "Documentation/reference/style", to: "reference/style" },
 ];
 
 let copied = 0;

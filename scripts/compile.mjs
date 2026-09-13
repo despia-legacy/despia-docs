@@ -114,6 +114,7 @@ const PAGE_LABELS = {
   "/system": "Design system",
   "/framework/guides": "Overview",
   "/framework/skills": "Overview",
+  "/framework/reference/style": "Overview",
   "/framework/guides/codemagic-build": "Codemagic iOS build",
   "/framework/guides/combinations": "Combination matrix",
   "/framework/guides/combinations/c1-pure-dsx-app": "C1 · Pure DSX app",
@@ -150,9 +151,10 @@ function sectionFor(route, meta) {
   if (meta.section !== undefined && meta.section !== "framework") return meta.section;
   if (route.startsWith("/framework/guides")) return "guides";
   if (route.startsWith("/framework/skills")) return "skills";
+  if (route.startsWith("/framework/reference/style")) return "styling";
   return route === "/" ? "" : route.split("/")[1];
 }
-const SECTION_RANK = { "": 0, guides: 1, components: 2, skills: 3 };
+const SECTION_RANK = { "": 0, guides: 1, components: 2, styling: 3, skills: 4 };
 
 // ── the section splitter (rail anchors) ───────────────────────────────────────────────────
 // A page body splits at its h2/h3 headings (fence-aware) so each section renders as its
