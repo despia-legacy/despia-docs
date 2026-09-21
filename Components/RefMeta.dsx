@@ -14,7 +14,7 @@
   </head>
   <hstack class="doc-refmeta-chips" visible-if="dsx.formula.chips.length > 0" a11yLabel="Platforms">
     <list bind="dsx.formula.chips" key="index" scroll="false" spacing="0" class="doc-refmeta-chiplist">
-      <text bind="item.value" class="doc-refmeta-chip"/>
+      <text bind="dsx.this.value" class="doc-refmeta-chip"/>
     </list>
   </hstack>
   <stack class="doc-refmeta-line">

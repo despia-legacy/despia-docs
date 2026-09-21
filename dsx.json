@@ -1,6 +1,6 @@
 {
   "name": "despia-docs",
-  "scheme": "docs",
+  "command": "docs",
   "version": "0.1.0",
   "platforms": ["desktop", "phone"]
 }

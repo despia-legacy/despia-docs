@@ -35,7 +35,7 @@
     <formula as="hitGroups" q="dsx.variable.query">
       if (!q || q.length < 2) { return [] }
       const needle = q.toLowerCase()
-      const index = searchIndex.data
+      const index = dsx.api.searchIndex.data
       if (!index || !index.pages) { return [] }
       const inTitle = index.pages.filter((page) => page.title.toLowerCase().includes(needle))
       const inText = index.pages.filter((page) => !page.title.toLowerCase().includes(needle) && page.text.toLowerCase().includes(needle))
@@ -134,11 +134,11 @@
       <list bind="dsx.formula.hitGroups" key="name" scroll="false" spacing="0" class="doc-hit-groups"
             visible-if="dsx.formula.hitGroups.length > 0">
         <stack class="doc-hit-group">
-          <text bind="item.name" class="doc-hit-label"/>
-          <list bind="item.rows" key="id" scroll="false" spacing="0" class="doc-hit-list">
-            <row href="{{ item.route }}" on:tap="dsx.action.closeSearch()">
+          <text bind="dsx.this.name" class="doc-hit-label"/>
+          <list bind="dsx.this.rows" key="id" scroll="false" spacing="0" class="doc-hit-list">
+            <row href="{{ dsx.this.route }}" on:tap="dsx.action.closeSearch()">
               <hstack class="doc-hit">
-                <text bind="item.title" class="doc-hit-title"/>
+                <text bind="dsx.this.title" class="doc-hit-title"/>
               </hstack>
             </row>
           </list>
@@ -189,8 +189,8 @@
       <stack class="doc-rail" visible-if="dsx.formula.tocRows.length >= 2" role="navigation" a11yLabel="On this page">
         <text value="On this page" class="doc-rail-label"/>
         <list bind="dsx.formula.tocRows" key="id" scroll="false" class="doc-toc">
-          <row href="#{{ item.id }}">
-            <text bind="item.title" class="doc-toc-text doc-toc-l{{ item.level }}"/>
+          <row href="#{{ dsx.this.id }}">
+            <text bind="dsx.this.title" class="doc-toc-text doc-toc-l{{ dsx.this.level }}"/>
           </row>
         </list>
       </stack>
