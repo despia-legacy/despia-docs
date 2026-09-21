@@ -43,19 +43,22 @@ body (pure markup):
 Save, and the page reloads. The same document renders natively on iOS and Android through
 the Despia app runtimes; markup is never platform-forked.
 
-## The visual editor
+## Manual edits
 
 ```sh
 npx despia edit
+npx despia edit Component/Card
 ```
 
-serves the open-source canvas editor against your project: your documents in the sidebar,
-the canvas rendering and simulating them, and saves that write straight back to your
-files. No account, no hosting.
+mints an editing link for the running project and prints it with a QR: open it on any device and
+the editor renders your documents live, scoped to what you named (a component, a page such as
+`route:/checkout`, or one element such as `Component/Card#0.2.1`) and zooming out or in from there.
+A manual edit is applied to your files at exact bytes, the same way an agent's edit is, and lands as
+one commit on the branch you are on (`--no-commit` keeps it uncommitted). No account, no hosting.
 
 ## Ship something
 
 - `despia build` compiles the deployable web build.
-- `dsx ota build` turns your screens into a sha-pinned content folder any static host can
+- `despia ota build` turns your screens into a sha-pinned content folder any static host can
   serve over the air ([self-hosted OTA](/framework/guides/combinations/c7-self-hosted-ota)).
 - The [combination matrix](/framework/guides/combinations) is the map of everything else.
