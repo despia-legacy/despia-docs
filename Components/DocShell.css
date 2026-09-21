@@ -1,0 +1,824 @@
+/*
+  DocShell chrome, tokens only. Owner-scoped by the compiler into the dsx-sheets
+  layer, so every rule here also reaches the portaled Drawer layer (the portal
+  scope preserves the owner stamp). Colors, radii, shadows and motion all ride
+  the --dsx-* plane; both schemes and the theme= pin come free.
+*/
+
+/* ── header ─────────────────────────────────────────────────────────────── */
+.doc-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  align-items: stretch;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--dsx-background) 86%, transparent);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  backdrop-filter: blur(18px) saturate(1.2);
+  border-block-end: var(--dsx-hairline) solid var(--dsx-outline-soft);
+}
+/* the control cluster sits on one 8px rhythm: 8px between neighbors, 16px (two
+   steps) between the search field and the icon cluster */
+.doc-header-row {
+  min-height: 3.5rem;
+  align-items: center;
+  gap: 0.5rem;
+  padding-inline: clamp(0.75rem, 3vw, 1.5rem);
+}
+.doc-wordmark {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  margin-inline-start: -0.5rem;
+  border-radius: var(--dsx-radius-sm);
+  transition: background-color var(--dsx-dur-fast) var(--dsx-ease);
+}
+@media (hover: hover) {
+  .doc-wordmark:hover { background: var(--dsx-fill); }
+}
+.doc-wordmark-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--dsx-label);
+}
+.doc-wordmark-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--dsx-secondary-label);
+  background: var(--dsx-fill);
+  border-radius: 999px;
+  padding: 0.14em 0.55em;
+}
+.doc-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  border-radius: var(--dsx-radius-control, var(--dsx-radius));
+  color: var(--dsx-secondary-label);
+  transition: background-color var(--dsx-dur-fast) var(--dsx-ease), color var(--dsx-dur-fast) var(--dsx-ease);
+}
+/* compact frames are touch frames: the chrome buttons hold the 44px hit floor,
+   and the wordmark sheds its gutter-hang (the nav toggle leads the row there) */
+@media (max-width: 68.999rem) {
+  .doc-icon-btn { width: 2.75rem; height: 2.75rem; }
+  .doc-wordmark { margin-inline-start: 0; }
+}
+@media (hover: hover) {
+  .doc-icon-btn:hover { background: var(--dsx-fill); color: var(--dsx-label); }
+}
+.doc-icon-btn .dsx-svg { display: inline-flex; }
+
+/* inline search (wide frames): the system field with a kbd hint chip, harmonized
+   to the 56px bar (36px tall, the control radius) with two rhythm steps of air
+   before the icon cluster */
+.doc-search-inline { position: relative; width: min(19rem, 32vw); display: none; margin-inline-end: 0.5rem; }
+.doc-search-inline > :not(.doc-kbd) { width: 100%; }
+.doc-search-inline .dsx-textfield { min-height: 2.25rem; border-radius: 0.625rem; }
+.doc-kbd {
+  position: absolute;
+  inset-inline-end: 0.55rem;
+  top: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--dsx-secondary-label);
+  background: var(--dsx-background);
+  border-radius: var(--dsx-radius-sm);
+  padding: 0.12em 0.5em calc(0.12em + 1px);
+  box-shadow:
+    inset 0 0 0 var(--dsx-hairline) var(--dsx-separator),
+    inset 0 -2px 0 var(--dsx-separator);
+}
+.doc-search-row { padding: 0 clamp(0.75rem, 3vw, 1.5rem) 0.625rem; }
+.doc-search-row > * { width: 100%; }
+
+/* the results panel: the elevated overlay surface anchored under the header
+   (system overlay language: radius-lg, shadow-3, inset hairline; a soft rise-in
+   only when motion is welcome). The surface is FULLY OPAQUE by design: nested
+   inside the header's own backdrop-filter this panel's blur never composites
+   (a nested backdrop root no-ops in engines), and any translucency at all left
+   the rail text readable through the surface in the measured captures - so the
+   background is the opaque token, which needs no blur and no fallback arm.
+   align-items: stretch so every face and every hit row spans the panel's
+   content box. The surface is the RAISED plane (white in light, the level-2
+   elevated tone in dark), so the overlay separates from both the content plane
+   and the rail's grouped plane in both schemes. */
+.doc-search-panel {
+  position: absolute;
+  top: calc(100% + 0.375rem);
+  inset-inline-end: clamp(0.75rem, 3vw, 1.5rem);
+  width: min(24rem, calc(100vw - 1.5rem));
+  max-height: min(24rem, 70vh);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  z-index: 120;
+  align-items: stretch;
+  background: var(--dsx-surface-raised);
+  border-radius: var(--dsx-radius-lg);
+  box-shadow: var(--dsx-shadow-3), inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
+  padding: 0.375rem;
+}
+/* Entry motion is the rise alone - never an opacity ramp on the surface, so no
+   animation frame (first open or re-mount) can make the page read through it. */
+@media (prefers-reduced-motion: no-preference) {
+  .doc-search-panel { animation: doc-search-panel-in var(--dsx-dur-fast) var(--dsx-ease) both; }
+}
+@keyframes doc-search-panel-in {
+  from { translate: 0 -0.25rem; }
+}
+
+/* grouped hits: uppercase micro-labels over pill rows (the sidebar's language).
+   Group breathing room is spaced-by-default: every group carries the margin and
+   only the provably-first one sheds it, so a wrapper-shape change can never
+   collapse the boundary back to zero (flex-item margins do not collapse). */
+.doc-hit-group { align-items: stretch; margin-block-start: 0.625rem; }
+.doc-hit-groups > .doc-hit-group:first-child,
+.doc-hit-groups > .dsx-row:first-child > .doc-hit-group { margin-block-start: 0; }
+.doc-hit-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsx-tertiary-label);
+  margin: 0.375rem 0.625rem 0.25rem;
+}
+.doc-hit {
+  align-items: baseline;
+  gap: 0.75rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--dsx-radius-sm);
+}
+.doc-search-panel .dsx-pressable {
+  width: 100%;
+  border-radius: var(--dsx-radius-sm);
+  transition: background-color var(--dsx-dur-fast) var(--dsx-ease);
+}
+@media (hover: hover) {
+  .doc-search-panel .dsx-pressable:hover { background: var(--dsx-fill); }
+}
+/* the roving keyboard highlight (docs.js): the accent wash pill, nav's active state */
+.doc-search-panel .dsx-pressable.is-active { background: var(--dsx-accent-muted); }
+.doc-search-panel .dsx-pressable.is-active .doc-hit-title { color: var(--dsx-accent); font-weight: 600; }
+.doc-hit-title { font-size: 0.875rem; font-weight: 500; color: var(--dsx-label); }
+
+/* the empty-query prompt + no-results faces: the EmptyState anatomy scaled to a
+   dropdown (quiet icon, headline, one-line hint, one centered calm block) */
+.doc-search-blank {
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 2rem 1.25rem 2.125rem;
+  text-align: center;
+}
+.doc-search-blank-icon { color: var(--dsx-secondary-label); opacity: 0.82; }
+.doc-search-blank-copy { align-items: center; gap: 0.25rem; }
+.doc-search-blank-title { font-size: 0.9375rem; font-weight: 600; color: var(--dsx-label); }
+.doc-search-blank-hint {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--dsx-secondary-label);
+  max-width: 17.5rem;
+  overflow-wrap: anywhere;
+}
+
+/* ── frame: sidebar + main ──────────────────────────────────────────────── */
+.doc-frame { align-items: stretch; gap: 0; min-height: calc(100vh - 3.5rem); }
+/* the rail sits on its own plane (the grouped surface), hairlined to the content
+   plane; in dark the two planes separate by the same tokens (#141416 over #101012) */
+.doc-sidebar {
+  display: none;
+  width: 16.5rem;
+  flex: 0 0 auto;
+  position: sticky;
+  top: 3.5rem;
+  height: calc(100dvh - 3.5rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding: 1.25rem 0.75rem 2.5rem;
+  background: var(--dsx-secondary-background);
+  border-inline-end: var(--dsx-hairline) solid var(--dsx-outline-soft);
+}
+
+/* the grouped nav: micro-labels + wash pills, no separators anywhere */
+.doc-nav { gap: 1px; align-items: stretch; }
+.doc-nav-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsx-tertiary-label);
+  margin: 1.75rem 0.625rem 0.45rem;
+}
+.doc-nav > .doc-nav-label:first-child { margin-block-start: 0.375rem; }
+.doc-nav-link {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: start;
+  min-height: 2rem;
+  padding: 0.3rem 0.625rem;
+  border-radius: var(--dsx-radius-sm);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--dsx-secondary-label);
+  transition: background-color var(--dsx-dur-fast) var(--dsx-ease), color var(--dsx-dur-fast) var(--dsx-ease);
+}
+@media (hover: hover) {
+  .doc-nav-link:hover { background: var(--dsx-fill); color: var(--dsx-label); }
+}
+/* the active pill: the accent wash COMPOSITED OVER THE BASE PLANE (two-layer
+   background), so the ink:wash contrast stays the audited pair on every plane
+   the nav lands on - the rail's grouped surface, the drawer, anywhere */
+.doc-nav-link.is-active, .doc-nav-link[aria-current="page"] {
+  background: linear-gradient(var(--dsx-accent-muted), var(--dsx-accent-muted)), var(--dsx-background);
+  color: var(--dsx-accent);
+  font-weight: 600;
+}
+.doc-nav-text { font-size: inherit; font-weight: inherit; color: inherit; }
+
+/* the compact drawer carries the same nav; content spacing collapses to the nav's own */
+.doc-drawer { --dsx-drawer-content-spacing: 0; }
+.doc-drawer .doc-nav { padding-block: 0.25rem 1rem; }
+
+/* ── main column + rail ─────────────────────────────────────────────────── */
+.doc-main {
+  flex: 1;
+  min-width: 0;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(2rem, 3.5vw, 3.5rem);
+  padding: 2.25rem clamp(1rem, 4vw, 3rem) 4.5rem;
+}
+/* the landing hero's one modern touch: a radial accent whisper behind the hero
+   zone, 4% alpha, both schemes; print drops it with the rest of the decoration */
+.doc-main-home {
+  position: relative;
+  isolation: isolate;
+}
+.doc-main-home::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 26rem;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(56rem 24rem at 50% -6rem, color-mix(in srgb, var(--dsx-accent) 4%, transparent), transparent 72%);
+  /* the wash must reach zero before the box edge: the shell insets the frame from
+     the viewport, so an unfaded edge prints a one-step vertical seam on the ground */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+@media print {
+  .doc-main-home::before { display: none; }
+}
+.doc-column { width: 100%; max-width: 72ch; min-width: 0; align-items: stretch; }
+.doc-section { min-width: 0; scroll-margin-top: 4.75rem; align-items: stretch; }
+
+/* splitting a page at its headings trims each chunk's first margin; restore the
+   flow rhythm the prose plane defines (h2 2.2em, h3 2em) */
+.doc-section .dsx-markdown > h2:first-child { margin-block-start: 2.2em; }
+.doc-section .dsx-markdown > h3:first-child { margin-block-start: 2em; }
+
+.doc-crumbs {
+  align-items: center;
+  gap: 0.4rem;
+  margin-block-end: 1.5rem;
+  min-width: 0;
+}
+.doc-crumb { font-size: 0.8125rem; color: var(--dsx-secondary-label); white-space: nowrap; }
+.doc-crumb-link {
+  border-radius: var(--dsx-radius-sm);
+  padding: 0.1rem 0.25rem;
+  margin-inline-start: -0.25rem;
+  transition: background-color var(--dsx-dur-fast) var(--dsx-ease);
+}
+@media (hover: hover) {
+  .doc-crumb-link:hover { background: var(--dsx-fill); }
+}
+.doc-crumb-current {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--dsx-label);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc-md-link {
+  font-size: 0.75rem;
+  color: var(--dsx-tertiary-label);
+  white-space: nowrap;
+  transition: color var(--dsx-dur-fast) var(--dsx-ease);
+}
+.doc-md-link:hover { color: var(--dsx-accent); }
+
+/* prev/next pager cards */
+.doc-pager { margin-block-start: 3.5rem; gap: 0.75rem; align-items: stretch; }
+.doc-pager-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  max-width: 48%;
+  padding: 0.75rem 1rem;
+  border-radius: var(--dsx-radius-lg);
+  box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
+  transition: box-shadow var(--dsx-dur-fast) var(--dsx-ease), background-color var(--dsx-dur-fast) var(--dsx-ease);
+}
+.doc-pager-next { align-items: flex-end; text-align: end; }
+@media (hover: hover) {
+  .doc-pager-card:hover {
+    background: var(--dsx-fill);
+    box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-separator), var(--dsx-shadow-1);
+  }
+}
+.doc-pager-eyebrow {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsx-tertiary-label);
+}
+.doc-pager-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--dsx-accent);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+.doc-footer {
+  margin-block-start: 2.5rem;
+  padding-block-start: 1.25rem;
+  border-block-start: var(--dsx-hairline) solid var(--dsx-outline-soft);
+  font-size: 0.8125rem;
+  color: var(--dsx-tertiary-label);
+}
+
+/* the "On this page" rail (1280 and up) */
+.doc-rail {
+  display: none;
+  width: 13.5rem;
+  flex: 0 0 auto;
+  position: sticky;
+  top: 5.25rem;
+  max-height: calc(100dvh - 6.5rem);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  align-items: stretch;
+  gap: 0.25rem;
+}
+.doc-rail-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dsx-tertiary-label);
+  margin: 0 0.625rem 0.25rem;
+}
+.doc-toc { gap: 1px; }
+.doc-toc .dsx-pressable {
+  display: flex;
+  border-radius: var(--dsx-radius-sm);
+  transition: background-color var(--dsx-dur-fast) var(--dsx-ease), color var(--dsx-dur-fast) var(--dsx-ease);
+}
+@media (hover: hover) {
+  .doc-toc .dsx-pressable:hover { background: var(--dsx-fill); }
+  .doc-toc .dsx-pressable:hover .doc-toc-text { color: var(--dsx-label); }
+}
+.doc-toc-text {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--dsx-secondary-label);
+  padding: 0.25rem 0.625rem;
+  transition: color var(--dsx-dur-fast) var(--dsx-ease);
+}
+.doc-toc-l3 { padding-inline-start: 1.5rem; }
+.doc-toc .dsx-pressable.is-current { background: var(--dsx-accent-muted); }
+.doc-toc .dsx-pressable.is-current .doc-toc-text { color: var(--dsx-accent); font-weight: 600; }
+
+/* ── /system card wall ──────────────────────────────────────────────────── */
+.doc-cardwall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.75rem;
+}
+.doc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.875rem 1rem;
+  border-radius: var(--dsx-radius-card, var(--dsx-radius-lg));
+  background: var(--dsx-surface-raised);
+  box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft), var(--dsx-shadow-xs);
+  transition: box-shadow var(--dsx-dur-fast) var(--dsx-ease);
+}
+@media (hover: hover) {
+  .doc-card:hover {
+    box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-separator), var(--dsx-shadow-1);
+  }
+}
+.doc-card-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--dsx-label);
+}
+.doc-card-role { font-size: 0.8125rem; line-height: 1.45; color: var(--dsx-secondary-label); }
+
+/* ── the authoring components (components-in-markdown, scripts/compile.mjs) ──
+   Every doc component below renders inside the shell, so this one owner-scoped
+   sheet reaches them all (a per-component sidecar could never style its own
+   root: the owner stamp lands on the root element itself). Tokens only. */
+
+/* callouts: quiet bordered notes. The hue lives ONLY in the 16px icon and the
+   hairline (the hue dimmed to 22%); the fill is the muted token cut to half
+   (5% light, 6.5-8% dark) and every word stays neutral ink. The plain note is
+   the naked form: page surface + the soft outline, nothing colored. */
+.doc-callout {
+  --doc-callout-hue: var(--dsx-secondary-label);
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-block: 1.3rem;
+  padding: 0.75rem 1rem;
+  border-radius: var(--dsx-radius-lg);
+  border: var(--dsx-hairline) solid var(--dsx-outline-soft);
+}
+.doc-callout-info {
+  --doc-callout-hue: var(--dsx-accent);
+  border-color: color-mix(in srgb, var(--dsx-accent) 22%, transparent);
+  background: color-mix(in srgb, var(--dsx-accent-muted) 50%, transparent);
+}
+.doc-callout-tip {
+  --doc-callout-hue: var(--dsx-success);
+  border-color: color-mix(in srgb, var(--dsx-success) 22%, transparent);
+  background: color-mix(in srgb, var(--dsx-success-muted) 50%, transparent);
+}
+.doc-callout-warning {
+  --doc-callout-hue: var(--dsx-warning);
+  border-color: color-mix(in srgb, var(--dsx-warning) 22%, transparent);
+  background: color-mix(in srgb, var(--dsx-warning-muted) 50%, transparent);
+}
+.doc-callout-danger {
+  --doc-callout-hue: var(--dsx-destructive);
+  border-color: color-mix(in srgb, var(--dsx-destructive) 22%, transparent);
+  background: color-mix(in srgb, var(--dsx-danger-muted) 50%, transparent);
+}
+/* the 20px glyph slot, first-line locked (20px icon centered on the 21px first
+   text line); the drawn centerline paths render as 2u round strokes */
+.doc-callout-icon { color: var(--doc-callout-hue); margin-block-start: 0.5px; flex: 0 0 auto; }
+.doc-callout-icon path {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.doc-callout-content { min-width: 0; flex: 1; gap: 0.125rem; align-items: stretch; }
+.doc-callout-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.5;
+  color: var(--dsx-label);
+}
+.doc-callout-body { min-width: 0; align-items: stretch; }
+.doc-callout-body .dsx-markdown { font-size: 0.875rem; line-height: 1.5; color: var(--dsx-secondary-label); }
+.doc-callout-body .dsx-markdown > :first-child { margin-block-start: 0; }
+.doc-callout-body .dsx-markdown > :last-child { margin-block-end: 0; }
+
+/* the reference-page hero meta (RefMeta): neutral platform chips (the wordmark
+   tag's pill language) over a quiet dot-separated meta line */
+.doc-refmeta { margin-block: 1.25rem 0; gap: 0.625rem; align-items: flex-start; }
+.doc-refmeta-chips { flex-wrap: wrap; }
+.doc-refmeta-chiplist { display: flex; flex-direction: row; flex-wrap: wrap; gap: 0.375rem; }
+.doc-refmeta-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  color: var(--dsx-secondary-label);
+  background: var(--dsx-fill);
+  border-radius: 999px;
+  padding: 0.4em 0.75em;
+}
+.doc-refmeta-line { min-width: 0; align-items: stretch; }
+.doc-refmeta-line .dsx-markdown { font-size: 0.8125rem; line-height: 1.6; color: var(--dsx-secondary-label); }
+.doc-refmeta-line .dsx-markdown > :first-child { margin-block-start: 0; }
+.doc-refmeta-line .dsx-markdown > :last-child { margin-block-end: 0; }
+.doc-refmeta-line .dsx-markdown code { font-size: 0.92em; }
+
+/* cards: the linking tile + its grid. Hairline ring, quiet rest, and a hover
+   that only deepens the line and lifts the shadow one notch - never a move. */
+.doc-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-block: 1.3rem;
+}
+.doc-tiles-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 40rem) {
+  .doc-tiles, .doc-tiles-3 { grid-template-columns: minmax(0, 1fr); }
+}
+.doc-tile {
+  position: relative;
+  align-items: flex-start;
+  gap: 0.375rem;
+  padding: 1.25rem;
+  border-radius: var(--dsx-radius-card, var(--dsx-radius-lg));
+  background: var(--dsx-surface-raised);
+  box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft), var(--dsx-shadow-xs);
+  transition: box-shadow var(--dsx-dur-fast) var(--dsx-ease);
+}
+.doc-tiles .doc-tile { margin-block: 0; }
+.doc-column > .doc-tile, .doc-section > .doc-tile { margin-block: 1.3rem; }
+.doc-tile-icon { color: var(--dsx-accent); margin-block-end: 0.25rem; }
+.doc-tile-title { font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em; color: var(--dsx-label); }
+.doc-tile-link { border-radius: inherit; }
+.doc-tile-link::after { content: ""; position: absolute; inset: 0; border-radius: inherit; }
+.doc-tile-link:focus-visible { outline: none; }
+.doc-tile-link:focus-visible::after {
+  outline: var(--dsx-focus-ring-width) solid var(--dsx-accent);
+  outline-offset: var(--dsx-focus-ring-offset);
+}
+@media (hover: hover) {
+  .doc-tile:hover {
+    box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-separator), var(--dsx-shadow-1);
+  }
+}
+.doc-tile-body { min-width: 0; align-items: stretch; }
+.doc-tile-body .dsx-markdown { font-size: 0.875rem; color: var(--dsx-secondary-label); }
+.doc-tile-body .dsx-markdown > :first-child { margin-block-start: 0; }
+.doc-tile-body .dsx-markdown > :last-child { margin-block-end: 0; }
+
+/* steps: the numbered rail. A 24px neutral disc (fill token, quiet number),
+   a soft hairline connector, and the title line locked to the disc height. */
+.doc-steps { counter-reset: doc-step; align-items: stretch; margin-block: 1.3rem; }
+.doc-step { counter-increment: doc-step; gap: 0.875rem; align-items: stretch; }
+.doc-step-rail { flex: 0 0 auto; width: 1.5rem; align-items: center; gap: 0.375rem; }
+.doc-step-badge {
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--dsx-fill);
+  flex: 0 0 auto;
+}
+.doc-step-badge::before {
+  content: counter(doc-step);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--dsx-secondary-label);
+}
+.doc-step-rail::after { content: ""; flex: 1; width: var(--dsx-hairline); min-height: 0.5rem; background: var(--dsx-outline-soft); }
+.doc-step:last-child .doc-step-rail::after { display: none; }
+.doc-step-content { min-width: 0; flex: 1; gap: 0.25rem; align-items: stretch; padding-block: 0 1.25rem; }
+.doc-step:last-child .doc-step-content { padding-block-end: 0.125rem; }
+.doc-step-title { font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em; line-height: 1.5rem; color: var(--dsx-label); }
+.doc-step-body { min-width: 0; align-items: stretch; }
+.doc-step-body .dsx-markdown { font-size: 0.875rem; }
+.doc-step-body .dsx-markdown > :first-child { margin-block-start: 0; }
+.doc-step-body .dsx-markdown > :last-child { margin-block-end: 0; }
+.doc-step-body .dsx-markdown pre { margin-block: 0.75em; }
+
+/* the media frame */
+.doc-figure { margin-block: 1.3rem; align-items: stretch; gap: 0.5rem; }
+.doc-figure-media {
+  align-items: center;
+  border-radius: var(--dsx-radius-lg);
+  background: var(--dsx-secondary-background);
+  box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
+  overflow: hidden;
+  padding: 0.375rem;
+}
+.doc-figure-media .dsx-markdown { align-self: stretch; }
+.doc-figure-media .dsx-markdown > :first-child { margin-block-start: 0; }
+.doc-figure-media .dsx-markdown > :last-child { margin-block-end: 0; }
+.doc-figure-media .dsx-markdown img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: 22rem;
+  margin: 0 auto;
+  border-radius: calc(var(--dsx-radius-lg) - 0.375rem);
+}
+.doc-figure-caption { font-size: 0.8125rem; color: var(--dsx-tertiary-label); text-align: center; }
+
+/* the disclosure set: system Accordions joined on ONE card - the group owns the
+   ring and the radius, so each row sheds its own card chrome (whose corners and
+   shadow would otherwise notch every seam) */
+.doc-accordions {
+  margin-block: 1.3rem;
+  align-items: stretch;
+  background: var(--dsx-surface-raised);
+  border-radius: var(--dsx-radius-lg);
+  box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
+  overflow: hidden;
+}
+.doc-accordions > .dsx-accordion { border-radius: 0; box-shadow: none; background: transparent; }
+.doc-accordions > .dsx-accordion + .dsx-accordion { border-block-start: var(--dsx-hairline) solid var(--dsx-outline-soft); }
+.doc-accordions .dsx-accordion-chevron { color: var(--dsx-tertiary-label); }
+.doc-accordions .dsx-markdown > :first-child { margin-block-start: 0; }
+.doc-accordions .dsx-markdown > :last-child { margin-block-end: 0; }
+
+/* ── content tabs + the code UX (compile.mjs emission, docs.js behavior) ──
+   <Tabs>/<CodeGroup> ride the tabs PRIMITIVE; this scope re-places its adaptive
+   app chrome (bottom dock / desktop rail) as the inline underline strip a doc
+   page needs, at every width. Same DOM, same WAI-ARIA wiring. */
+.doc-tabs, .doc-codegroup { margin-block: 1.3rem; align-items: stretch; }
+.doc-tabs .dsx-tabs, .doc-codegroup .dsx-tabs {
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  color: var(--dsx-label);
+}
+.doc-tabs .dsx-tablist, .doc-codegroup .dsx-tablist {
+  order: -1;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  border-block-end: var(--dsx-hairline) solid var(--dsx-outline-soft);
+}
+.doc-tabs .dsx-tab, .doc-codegroup .dsx-tab {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0.4rem;
+  min-height: 2.25rem;
+  margin: 0;
+  padding: 0.375rem 0.25rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--dsx-secondary-label);
+  box-shadow: inset 0 calc(-2 * var(--dsx-hairline) - 1px) 0 transparent;
+  transition: color var(--dsx-dur-fast) var(--dsx-ease), box-shadow var(--dsx-dur-fast) var(--dsx-ease);
+}
+.doc-tabs .dsx-tab + .dsx-tab, .doc-codegroup .dsx-tab + .dsx-tab { margin-inline-start: 0.875rem; }
+.doc-tabs .dsx-tab-label, .doc-codegroup .dsx-tab-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  line-height: 1.3;
+  color: inherit;
+}
+@media (hover: hover) {
+  .doc-tabs .dsx-tab:hover, .doc-codegroup .dsx-tab:hover { color: var(--dsx-label); background: transparent; }
+}
+.doc-tabs .dsx-tab[data-dsx-selected="true"], .doc-codegroup .dsx-tab[data-dsx-selected="true"] {
+  color: var(--dsx-accent);
+  background: transparent;
+  box-shadow: inset 0 calc(-2 * var(--dsx-hairline) - 1px) 0 var(--dsx-accent);
+}
+.doc-tabs .dsx-tab[data-dsx-selected="true"] .dsx-tab-label,
+.doc-codegroup .dsx-tab[data-dsx-selected="true"] .dsx-tab-label { font-weight: 600; }
+.doc-tabs .dsx-tab-panels, .doc-codegroup .dsx-tab-panels { overflow: visible; }
+.doc-tab-pane { min-width: 0; align-items: stretch; }
+.doc-tabs .doc-tab-pane { padding-block-start: 0.25rem; }
+.doc-tabs .doc-tab-pane .dsx-markdown > :first-child { margin-block-start: 0.75em; }
+.doc-tabs .doc-tab-pane .dsx-markdown > :last-child { margin-block-end: 0.25em; }
+
+/* the code header bar: one surface with the block below it */
+.doc-codeblock {
+  margin-block: 1.3rem;
+  align-items: stretch;
+  border-radius: 12px;
+  box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
+  overflow: hidden;
+}
+.doc-codebar {
+  position: relative;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.5rem;
+  padding: 0.375rem 3rem 0.375rem 1rem;
+  background: var(--dsx-secondary-background);
+  border-block-end: var(--dsx-hairline) solid var(--dsx-outline-soft);
+}
+.doc-codebar-lang {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--dsx-secondary-label);
+  background: var(--dsx-fill);
+  border-radius: 999px;
+  padding: 0.2em 0.65em;
+}
+.doc-codebar-title {
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  color: var(--dsx-secondary-label);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.doc-codeblock .dsx-markdown pre { margin-block: 0; border-radius: 0; box-shadow: none; }
+
+/* the code group: the same bar carries the language tabs */
+.doc-codegroup { border-radius: 12px; box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft); overflow: hidden; }
+.doc-codegroup .dsx-tabs { position: relative; }
+.doc-codegroup .dsx-tablist {
+  gap: 0;
+  min-height: 2.5rem;
+  padding: 0 3rem 0 1rem;
+  background: var(--dsx-secondary-background);
+  border-block-end: var(--dsx-hairline) solid var(--dsx-outline-soft);
+}
+.doc-codegroup .dsx-tab { min-height: 2.5rem; }
+.doc-codegroup .dsx-tab-label { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.8125rem; }
+.doc-codegroup .dsx-md-code { margin-block: 0; border-radius: 0; box-shadow: none; }
+
+/* the copy affordance (docs.js): hover-reveal on fine pointers over bare blocks,
+   always visible on coarse pointers and on every header bar */
+.doc-pre { position: relative; }
+.doc-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 0;
+  cursor: pointer;
+  border-radius: var(--dsx-radius-sm);
+  color: var(--dsx-secondary-label);
+  background: color-mix(in srgb, var(--dsx-secondary-background) 84%, transparent);
+  box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
+  transition: color var(--dsx-dur-fast) var(--dsx-ease), background-color var(--dsx-dur-fast) var(--dsx-ease), opacity var(--dsx-dur-fast) var(--dsx-ease);
+}
+@media (hover: hover) {
+  .doc-copy:hover { color: var(--dsx-label); background: var(--dsx-fill); }
+}
+.doc-copy:focus-visible {
+  outline: var(--dsx-focus-ring-width) solid var(--dsx-accent);
+  outline-offset: var(--dsx-focus-ring-offset);
+  opacity: 1;
+}
+.doc-copy svg { width: 1rem; height: 1rem; display: block; transition: transform var(--dsx-dur-fast) var(--dsx-ease); }
+.doc-copy .doc-copy-check { display: none; color: var(--dsx-success); }
+.doc-copy.is-copied .doc-copy-icon { display: none; }
+.doc-copy.is-copied .doc-copy-check { display: block; animation: doc-copy-pop var(--dsx-dur-base) var(--dsx-ease); }
+@keyframes doc-copy-pop { from { transform: scale(0.6); } }
+.doc-pre > .doc-copy { position: absolute; top: 0.625rem; inset-inline-end: 0.625rem; z-index: 2; }
+.doc-codebar > .doc-copy { position: absolute; top: 50%; translate: 0 -50%; inset-inline-end: 0.5rem; }
+.doc-codegroup .dsx-tabs > .doc-copy { position: absolute; top: 0.3rem; inset-inline-end: 0.5rem; z-index: 2; }
+@media (hover: hover) and (pointer: fine) {
+  .doc-pre > .doc-copy { opacity: 0; }
+  .doc-pre:hover > .doc-copy, .doc-pre > .doc-copy:focus-visible, .doc-pre > .doc-copy.is-copied { opacity: 1; }
+}
+
+/* ── responsive steps ───────────────────────────────────────────────────── */
+@media (min-width: 69rem) {
+  .doc-nav-toggle, .doc-search-toggle, .doc-search-row, .doc-drawer { display: none; }
+  .doc-search-inline { display: block; }
+  .doc-sidebar { display: block; }
+}
+@media (min-width: 80rem) {
+  .doc-rail { display: flex; }
+}
+
+/* scroll regions promoted to tab stops (docs.js) take the one focus recipe */
+.dsx-markdown pre:focus-visible,
+.dsx-markdown .dsx-md-table-wrap:focus-visible {
+  outline: var(--dsx-focus-ring-width) solid var(--dsx-accent);
+  outline-offset: var(--dsx-focus-ring-offset);
+}
+
+/* smooth anchor scrolling only when motion is welcome */
+@media (prefers-reduced-motion: no-preference) {
+  .doc-root { scroll-behavior: smooth; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .doc-icon-btn, .doc-nav-link, .doc-pager-card, .doc-card, .doc-toc .dsx-pressable, .doc-toc-text,
+  .doc-search-panel .dsx-pressable, .doc-tile, .doc-copy, .doc-copy svg,
+  .doc-tabs .dsx-tab, .doc-codegroup .dsx-tab,
+  .doc-wordmark, .doc-crumb-link, .doc-md-link {
+    transition: none;
+  }
+  .doc-copy.is-copied .doc-copy-check { animation: none; }
+}

@@ -1,0 +1,10 @@
+<stack class="doc-figure">
+  <head>
+    <!-- The media card: hairline + radius around the slot, an optional caption. -->
+    <attribute as="caption" default="''"/>
+  </head>
+  <stack class="doc-figure-media">
+    <slot/>
+  </stack>
+  <text value="{{ dsx.attribute.caption }}" class="doc-figure-caption" visible-if="dsx.attribute.caption !== ''"/>
+</stack>

@@ -1,0 +1,16 @@
+// The docs site's deploy manifest: `npm run build` first (compile → dsx build → assemble),
+// then `npx wrangler deploy`. `--dry-run` validates without an account — the CI gate.
+// The worker runs first (run_worker_first): it owns /mcp and SSR for dynamic routes, and
+// reaches the static tree through the ASSETS binding — the same chain the framework's own
+// site face implements.
+{
+  "name": "despia-docs",
+  "main": "worker/index.ts",
+  "compatibility_date": "2025-08-01",
+  "assets": {
+    "directory": "dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "observability": { "enabled": true }
+}

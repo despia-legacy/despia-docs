@@ -1,0 +1,47 @@
+name: CI
+# The docs site builds from the PUBLIC registry and the PUBLIC front door, like a stranger
+# would: sync the framework's own pages from despia-native/despia, compile the markdown tree
+# to DSX, build, lint strict, validate the worker with wrangler, then boot the real thing and
+# probe SSR, the raw-markdown routes, llms.txt and the site's own MCP face.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: despia-native/despia
+          path: .front-door
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - run: DESPIA_FRONT_DOOR="$PWD/.front-door" npm run sync
+      - run: npm run lint
+      - run: npm run build
+      - run: npx wrangler deploy --dry-run --outdir dist-worker
+      - name: Boot and probe (SSR, md, llms.txt, MCP face)
+        run: |
+          npx wrangler dev --port 8799 & echo $! > wrangler.pid
+          for i in $(seq 1 30); do curl -sf http://127.0.0.1:8799/ > /dev/null && break; sleep 1; done
+          curl -sf http://127.0.0.1:8799/ | grep -q dsx-md-heading
+          curl -sf http://127.0.0.1:8799/llms.txt > /dev/null
+          curl -sf http://127.0.0.1:8799/md/quickstart.md > /dev/null
+          curl -sf -X POST http://127.0.0.1:8799/mcp -H 'content-type: application/json' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"ci","version":"0"}}}' \
+            | grep -q '"protocolVersion":"2025-06-18"'
+          curl -sf -X POST http://127.0.0.1:8799/mcp -H 'content-type: application/json' \
+            -d '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' | grep -q '"fetch-page"'
+          kill "$(cat wrangler.pid)"
+      - name: Page weight budget
+        # Lighthouse-class in spirit, checkable in fact: the SSR'd home document (styles
+        # inlined) stays under 200 KB. A docs page that outgrows this is a regression.
+        run: |
+          size=$(wc -c < dist/index.html)
+          echo "index.html: ${size} bytes"
+          test "$size" -lt 200000

@@ -1,0 +1,7 @@
+<stack class="doc-tiles doc-tiles-{{ dsx.attribute.cols }}">
+  <head>
+    <!-- The card grid: cols=2|3 on wide frames, one column under 40rem. -->
+    <attribute as="cols" default="'2'"/>
+  </head>
+  <slot/>
+</stack>
