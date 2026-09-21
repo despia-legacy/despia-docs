@@ -8,13 +8,13 @@ section:
 # Quickstart
 
 ```sh
-npm create dsx@latest my-app
+npm create despia@latest my-app
 cd my-app
 npm install
-npx dsx dev
+npx despia dev
 ```
 
-`dsx dev` builds, serves, watches and reloads. The scaffold is a complete DSX package:
+`despia dev` builds, serves, watches and reloads. The scaffold is a complete DSX package:
 
 | Path | What it is |
 |---|---|
@@ -46,7 +46,7 @@ the Despia app runtimes; markup is never platform-forked.
 ## The visual editor
 
 ```sh
-npx dsx edit
+npx despia edit
 ```
 
 serves the open-source canvas editor against your project: your documents in the sidebar,
@@ -55,7 +55,7 @@ files. No account, no hosting.
 
 ## Ship something
 
-- `dsx build` compiles the deployable web build.
+- `despia build` compiles the deployable web build.
 - `dsx ota build` turns your screens into a sha-pinned content folder any static host can
   serve over the air ([self-hosted OTA](/framework/guides/combinations/c7-self-hosted-ota)).
 - The [combination matrix](/framework/guides/combinations) is the map of everything else.

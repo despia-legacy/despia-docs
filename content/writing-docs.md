@@ -116,18 +116,18 @@ A `Steps` block numbers its `Step` children down a rail. Steps nest full markdow
 One command; the scaffold is a complete DSX package.
 
 ```sh
-npm create dsx@latest my-app
+npm create despia@latest my-app
 ```
 </Step>
 <Step title="Run it">
-`dsx dev` builds, serves, watches and reloads.
+`despia dev` builds, serves, watches and reloads.
 
 ```sh
-npx dsx dev
+npx despia dev
 ```
 </Step>
 <Step title="Ship it">
-`dsx build` compiles the deployable web build; the [combination matrix](/framework/guides/combinations) maps everything else.
+`despia build` compiles the deployable web build; the [combination matrix](/framework/guides/combinations) maps everything else.
 </Step>
 </Steps>
 
@@ -149,17 +149,17 @@ Body markdown, fences included.
 <Tabs>
 <Tab title="npm">
 ```sh
-npm create dsx@latest my-app
+npm create despia@latest my-app
 ```
 </Tab>
 <Tab title="pnpm">
 ```sh
-pnpm create dsx my-app
+pnpm create despia my-app
 ```
 </Tab>
 <Tab title="bun">
 ```sh
-bun create dsx my-app
+bun create despia my-app
 ```
 </Tab>
 </Tabs>

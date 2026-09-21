@@ -8,7 +8,7 @@ stack it documents.
   guides and skills sync in from the front door. `scripts/compile.mjs` turns the tree into
   DSX page components, the route table, the navigation model, a client-side search index,
   raw-markdown siblings for every page, and `llms.txt` + `llms-full.txt`.
-- **Rendering**: `dsx build` compiles the pages; `@despia-native/server` renders them on Cloudflare
+- **Rendering**: `despia build` compiles the pages; `@despia-native/server` renders them on Cloudflare
   Workers. The `<markdown>` element paints the block vocabulary server-side, so first paint
   is the content.
 - **Search**: client-side over the build-time index. No server dependency for the basic
@@ -21,7 +21,7 @@ stack it documents.
 npm install
 npm run sync       # pull the framework docs from a front-door checkout (DESPIA_FRONT_DOOR=…)
 npm run dev        # compile + serve + watch
-npm run build      # compile + dsx build + assemble the servable tree in dist/
+npm run build      # compile + despia build + assemble the servable tree in dist/
 npx wrangler deploy
 ```
 
