@@ -1,4 +1,4 @@
-<stack class="doc-root" style="gap: 0; min-height: 100vh; background: background; align-items: stretch">
+<stack class="doc-root" style="gap: 0; min-height: 100vh; background: var(--dsx-background); align-items: stretch">
   <head>
     <!--
       The one layout every documentation page mounts. Rebuilt on the design system

@@ -1,4 +1,4 @@
-<scroll theme="{{ dsx.global.docs &amp;&amp; dsx.global.docs.theme ? dsx.global.docs.theme : '' }}" style="background: background">
+<scroll theme="{{ dsx.global.docs &amp;&amp; dsx.global.docs.theme ? dsx.global.docs.theme : '' }}" style="background: var(--dsx-background)">
   <head>
     <!--
       /system, the living spec of the design system: every element the grammar ships,
@@ -40,7 +40,7 @@
     <stack style="gap: 0.4rem">
       <text value="System" style="font-size: 2rem; font-weight: 700; letter-spacing: -0.02em"/>
       <text value="The design system as a living page: every element below is the real system component, rendered live. Semantic tokens only, one accent, both color schemes for free."
-            style="color: secondary"/>
+            style="color: var(--dsx-secondary-label)"/>
     </stack>
 
     <SystemSection title="Buttons"
@@ -58,9 +58,9 @@
         <button label="Delete" role="destructive" disabled="true"/>
       </hstack>
       <hstack style="gap: 0.6rem; align-items: center; flex-wrap: wrap">
-        <text value="Reference:" style="font-size: 0.8rem; color: tertiary"/>
-        <text value="button" href="/components/button" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
-        <text value="pressable" href="/components/pressable" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
+        <text value="Reference:" style="font-size: 0.8rem; color: var(--dsx-tertiary-label)"/>
+        <text value="button" href="/components/button" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
+        <text value="pressable" href="/components/pressable" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
       </hstack>
     </SystemSection>
 
@@ -73,10 +73,10 @@
                message="At least 8 characters"/>
       </form>
       <hstack style="gap: 0.6rem; align-items: center; flex-wrap: wrap">
-        <text value="Reference:" style="font-size: 0.8rem; color: tertiary"/>
-        <text value="form" href="/components/form" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
-        <text value="field" href="/components/field" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
-        <text value="textfield" href="/components/textfield" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
+        <text value="Reference:" style="font-size: 0.8rem; color: var(--dsx-tertiary-label)"/>
+        <text value="form" href="/components/form" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
+        <text value="field" href="/components/field" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
+        <text value="textfield" href="/components/textfield" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
       </hstack>
     </SystemSection>
 
@@ -98,17 +98,17 @@
         <hstack style="gap: 0.75rem; align-items: center">
           <slider bind="dsx.variable.brightness" a11yLabel="Brightness" style="flex: 1"/>
           <text value="{{ dsx.formula.pct(dsx.variable.brightness) }}"
-                style="color: secondary; font-size: 0.85rem; min-width: 3.5ch; text-align: right"/>
+                style="color: var(--dsx-secondary-label); font-size: 0.85rem; min-width: 3.5ch; text-align: right"/>
         </hstack>
         <stepper bind="dsx.variable.copies" min="1" max="9" label="Copies"/>
       </stack>
       <hstack style="gap: 0.6rem; align-items: center; flex-wrap: wrap">
-        <text value="Reference:" style="font-size: 0.8rem; color: tertiary"/>
-        <text value="toggle" href="/components/toggle" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
-        <text value="segmented" href="/components/segmented" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
-        <text value="picker" href="/components/picker" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
-        <text value="slider" href="/components/slider" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
-        <text value="stepper" href="/components/stepper" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
+        <text value="Reference:" style="font-size: 0.8rem; color: var(--dsx-tertiary-label)"/>
+        <text value="toggle" href="/components/toggle" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
+        <text value="segmented" href="/components/segmented" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
+        <text value="picker" href="/components/picker" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
+        <text value="slider" href="/components/slider" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
+        <text value="stepper" href="/components/stepper" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
       </hstack>
     </SystemSection>
 
@@ -120,40 +120,40 @@
             <image icon="{{ dsx.this.icon }}" iconSize="18" color="accent"/>
             <text bind="dsx.this.title"/>
             <spacer/>
-            <text bind="dsx.this.detail" style="color: secondary"/>
+            <text bind="dsx.this.detail" style="color: var(--dsx-secondary-label)"/>
             <image icon="chevron.right" iconSize="13" color="tertiary"/>
           </hstack>
         </row>
       </list>
       <hstack style="gap: 0.6rem; align-items: center; flex-wrap: wrap">
-        <text value="Reference:" style="font-size: 0.8rem; color: tertiary"/>
-        <text value="list" href="/components/list" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
+        <text value="Reference:" style="font-size: 0.8rem; color: var(--dsx-tertiary-label)"/>
+        <text value="list" href="/components/list" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
       </hstack>
     </SystemSection>
 
     <SystemSection title="Badge"
                    note="Count or dot status on a semantic fill, sized off the caption step of the ramp. value= folds past max= to 99+; dot=true is the bare presence dot; color= defaults to destructive. It never positions itself: the parent stack's align places it, the Avatar status-dot idiom.">
       <hstack style="gap: 1rem; align-items: center; flex-wrap: wrap">
-        <stack style="display: grid; place-items: center; min-width: 1.2rem; min-height: 1.2rem; padding: 0 0.3rem; border-radius: 999px; background: destructive">
+        <stack style="display: grid; place-items: center; min-width: 1.2rem; min-height: 1.2rem; padding: 0 0.3rem; border-radius: 999px; background: var(--dsx-destructive)">
           <text value="3" style="font-size: 0.72rem; font-weight: 600; color: var(--dsx-on-destructive)"/>
         </stack>
-        <stack style="display: grid; place-items: center; min-width: 1.2rem; min-height: 1.2rem; padding: 0 0.3rem; border-radius: 999px; background: destructive">
+        <stack style="display: grid; place-items: center; min-width: 1.2rem; min-height: 1.2rem; padding: 0 0.3rem; border-radius: 999px; background: var(--dsx-destructive)">
           <text value="99+" style="font-size: 0.72rem; font-weight: 600; color: var(--dsx-on-destructive)"/>
         </stack>
-        <stack style="display: grid; place-items: center; min-width: 1.2rem; min-height: 1.2rem; padding: 0 0.3rem; border-radius: 999px; background: accent">
+        <stack style="display: grid; place-items: center; min-width: 1.2rem; min-height: 1.2rem; padding: 0 0.3rem; border-radius: 999px; background: var(--dsx-accent)">
           <text value="12" style="font-size: 0.72rem; font-weight: 600; color: var(--dsx-on-accent)"/>
         </stack>
-        <stack style="width: 0.6rem; height: 0.6rem; border-radius: 999px; background: destructive"/>
-        <stack style="width: 0.6rem; height: 0.6rem; border-radius: 999px; background: accent"/>
+        <stack style="width: 0.6rem; height: 0.6rem; border-radius: 999px; background: var(--dsx-destructive)"/>
+        <stack style="width: 0.6rem; height: 0.6rem; border-radius: 999px; background: var(--dsx-accent)"/>
       </hstack>
       <hstack style="gap: 1.5rem; align-items: center">
         <stack style="display: grid">
           <image icon="bell.fill" iconSize="24" color="secondary" style="grid-area: 1 / 1"/>
-          <stack style="grid-area: 1 / 1; justify-self: end; align-self: start; width: 0.6rem; height: 0.6rem; border-radius: 999px; background: destructive; margin: -0.15rem -0.15rem 0 0"/>
+          <stack style="grid-area: 1 / 1; justify-self: end; align-self: start; width: 0.6rem; height: 0.6rem; border-radius: 999px; background: var(--dsx-destructive); margin: -0.15rem -0.15rem 0 0"/>
         </stack>
         <stack style="display: grid">
           <image icon="tray" iconSize="24" color="secondary" style="grid-area: 1 / 1"/>
-          <stack style="grid-area: 1 / 1; justify-self: end; align-self: start; display: grid; place-items: center; min-width: 1.1rem; min-height: 1.1rem; padding: 0 0.25rem; border-radius: 999px; background: destructive; margin: -0.45rem -0.55rem 0 0">
+          <stack style="grid-area: 1 / 1; justify-self: end; align-self: start; display: grid; place-items: center; min-width: 1.1rem; min-height: 1.1rem; padding: 0 0.25rem; border-radius: 999px; background: var(--dsx-destructive); margin: -0.45rem -0.55rem 0 0">
             <text value="3" style="font-size: 0.68rem; font-weight: 600; color: var(--dsx-on-destructive)"/>
           </stack>
         </stack>
@@ -164,16 +164,16 @@
                    note="The location trail: prior rows are real links via the anchor attribute, the last row is the current page and never a link. The separator icon swaps per trail; the row follows the document direction, so RTL comes free.">
       <stack style="gap: 0.75rem">
         <hstack role="navigation" a11yLabel="Breadcrumb, chevron style" style="gap: 0.375rem; align-items: center; flex-wrap: wrap">
-          <pressable href="/"><text value="Docs" style="font-size: 0.875rem; color: secondary"/></pressable>
+          <pressable href="/"><text value="Docs" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
           <image icon="chevron.right" iconSize="11" color="tertiary" a11yHidden="true"/>
-          <pressable href="/quickstart"><text value="Quickstart" style="font-size: 0.875rem; color: secondary"/></pressable>
+          <pressable href="/quickstart"><text value="Quickstart" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
           <image icon="chevron.right" iconSize="11" color="tertiary" a11yHidden="true"/>
           <text value="Requirements" style="font-size: 0.875rem; font-weight: 600"/>
         </hstack>
         <hstack role="navigation" a11yLabel="Breadcrumb, dot style" style="gap: 0.5rem; align-items: center; flex-wrap: wrap">
-          <pressable href="/"><text value="Docs" style="font-size: 0.875rem; color: secondary"/></pressable>
+          <pressable href="/"><text value="Docs" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
           <image icon="circle.fill" iconSize="4" color="tertiary" a11yHidden="true"/>
-          <pressable href="/system"><text value="System" style="font-size: 0.875rem; color: secondary"/></pressable>
+          <pressable href="/system"><text value="System" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
           <image icon="circle.fill" iconSize="4" color="tertiary" a11yHidden="true"/>
           <text value="Badge" style="font-size: 0.875rem; font-weight: 600"/>
         </hstack>
@@ -191,33 +191,33 @@
       <hstack style="gap: 0.6rem; align-items: center">
         <image icon="info.circle.fill" iconSize="18" color="secondary" tooltip="Any element can carry a hint, icons included"/>
         <text value="Hover the row above and hold still a moment, or tab through it: the hint appears beside its side word."
-              style="color: secondary; font-size: 0.85rem; flex: 1"/>
+              style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1"/>
       </hstack>
     </SystemSection>
 
     <SystemSection title="Surfaces"
                    note="The grouped pair is the native list language: secondaryGroupedBackground cards on a groupedBackground page. Elevation stays soft and real.">
-      <stack style="gap: 1rem; padding: 1rem; border-radius: var(--dsx-radius-lg); background: groupedBackground">
-        <stack style="gap: 0.25rem; padding: 1rem; border-radius: var(--dsx-radius); background: secondaryGroupedBackground; border: 1px solid var(--dsx-separator)">
+      <stack style="gap: 1rem; padding: 1rem; border-radius: var(--dsx-radius-lg); background: var(--dsx-grouped-background)">
+        <stack style="gap: 0.25rem; padding: 1rem; border-radius: var(--dsx-radius); background: var(--dsx-secondary-grouped-background); border: 1px solid var(--dsx-separator)">
           <text value="Grouped card" style="font-weight: 600"/>
           <text value="A hairline border, no shadow: the resting grouped surface."
-                style="color: secondary; font-size: 0.9rem"/>
+                style="color: var(--dsx-secondary-label); font-size: 0.9rem"/>
         </stack>
-        <stack style="gap: 0.25rem; padding: 1rem; border-radius: var(--dsx-radius); background: secondaryGroupedBackground; box-shadow: var(--dsx-shadow-2)">
+        <stack style="gap: 0.25rem; padding: 1rem; border-radius: var(--dsx-radius); background: var(--dsx-secondary-grouped-background); box-shadow: var(--dsx-shadow-2)">
           <text value="Elevated card" style="font-weight: 600"/>
           <text value="shadow-2, the resting elevation for floating content."
-                style="color: secondary; font-size: 0.9rem"/>
+                style="color: var(--dsx-secondary-label); font-size: 0.9rem"/>
         </stack>
       </stack>
       <hstack style="gap: 1rem; flex-wrap: wrap">
-        <stack style="padding: 0.9rem 1.1rem; border-radius: var(--dsx-radius); background: background; box-shadow: var(--dsx-shadow-1)">
-          <text value="shadow-1" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: secondary"/>
+        <stack style="padding: 0.9rem 1.1rem; border-radius: var(--dsx-radius); background: var(--dsx-background); box-shadow: var(--dsx-shadow-1)">
+          <text value="shadow-1" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-secondary-label)"/>
         </stack>
-        <stack style="padding: 0.9rem 1.1rem; border-radius: var(--dsx-radius); background: background; box-shadow: var(--dsx-shadow-2)">
-          <text value="shadow-2" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: secondary"/>
+        <stack style="padding: 0.9rem 1.1rem; border-radius: var(--dsx-radius); background: var(--dsx-background); box-shadow: var(--dsx-shadow-2)">
+          <text value="shadow-2" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-secondary-label)"/>
         </stack>
-        <stack style="padding: 0.9rem 1.1rem; border-radius: var(--dsx-radius); background: background; box-shadow: var(--dsx-shadow-3)">
-          <text value="shadow-3" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: secondary"/>
+        <stack style="padding: 0.9rem 1.1rem; border-radius: var(--dsx-radius); background: var(--dsx-background); box-shadow: var(--dsx-shadow-3)">
+          <text value="shadow-3" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-secondary-label)"/>
         </stack>
       </hstack>
     </SystemSection>
@@ -225,22 +225,22 @@
     <SystemSection title="Dashboard"
                    note="The desktop idiom set from the same grammar: stat tiles in a grid whose columns follow dsx.screen.width, delta chips on token fills, and a bound Table that scrolls inside its own frame. One document, phone to desktop.">
       <grid bind="dsx.variable.metrics" key="id" columns="{{ dsx.screen.width >= 700 ? 3 : 1 }}" spacing="12" scroll="false" style="width: 100%">
-        <stack style="gap: 0.4rem; padding: 0.9rem 1rem; border-radius: var(--dsx-radius-lg); background: secondaryGroupedBackground; border: 1px solid var(--dsx-separator); width: 100%">
-          <text bind="dsx.this.label" style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; color: tertiary"/>
+        <stack style="gap: 0.4rem; padding: 0.9rem 1rem; border-radius: var(--dsx-radius-lg); background: var(--dsx-secondary-grouped-background); border: 1px solid var(--dsx-separator); width: 100%">
+          <text bind="dsx.this.label" style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; color: var(--dsx-tertiary-label)"/>
           <text bind="dsx.this.value" style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em"/>
           <hstack style="align-items: center; gap: 0.375rem">
-            <stack style="border-radius: 999px; background: fill; padding: 0.125rem 0.5rem">
+            <stack style="border-radius: 999px; background: var(--dsx-fill); padding: 0.125rem 0.5rem">
               <text bind="dsx.this.delta" color="{{ dsx.this.up ? 'accent' : 'destructive' }}" style="font-size: 0.72rem; font-weight: 600"/>
             </stack>
-            <text value="vs last week" style="color: tertiary; font-size: 0.72rem"/>
+            <text value="vs last week" style="color: var(--dsx-tertiary-label); font-size: 0.72rem"/>
           </hstack>
         </stack>
       </grid>
       <Table bind="dsx.variable.orders" columns="Order,Customer,Total,Status" fields="id,customer,total,status"/>
       <hstack style="gap: 0.6rem; align-items: center; flex-wrap: wrap">
-        <text value="Reference:" style="font-size: 0.8rem; color: tertiary"/>
-        <text value="grid" href="/components/grid" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
-        <text value="table" href="/components/table" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
+        <text value="Reference:" style="font-size: 0.8rem; color: var(--dsx-tertiary-label)"/>
+        <text value="grid" href="/components/grid" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
+        <text value="table" href="/components/table" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
       </hstack>
     </SystemSection>
 
@@ -249,7 +249,7 @@
         <stack tabTitle="Overview" tabIcon="house.fill" style="gap: 0.3rem; padding: 1rem 0.25rem">
           <text value="Panes keep their own content."/>
           <text value="The bar renders from the panes; nothing is declared twice."
-                style="color: secondary; font-size: 0.9rem"/>
+                style="color: var(--dsx-secondary-label); font-size: 0.9rem"/>
         </stack>
         <stack tabTitle="Activity" tabIcon="bell.fill" style="gap: 0.3rem; padding: 1rem 0.25rem">
           <text value="The second pane."/>
@@ -259,8 +259,8 @@
         </stack>
       </tabs>
       <hstack style="gap: 0.6rem; align-items: center; flex-wrap: wrap">
-        <text value="Reference:" style="font-size: 0.8rem; color: tertiary"/>
-        <text value="tabs" href="/components/tabs" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
+        <text value="Reference:" style="font-size: 0.8rem; color: var(--dsx-tertiary-label)"/>
+        <text value="tabs" href="/components/tabs" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
       </hstack>
     </SystemSection>
 
@@ -276,100 +276,100 @@
         </stack>
       </sheet>
       <hstack style="gap: 0.6rem; align-items: center; flex-wrap: wrap">
-        <text value="Reference:" style="font-size: 0.8rem; color: tertiary"/>
-        <text value="sheet" href="/components/sheet" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
+        <text value="Reference:" style="font-size: 0.8rem; color: var(--dsx-tertiary-label)"/>
+        <text value="sheet" href="/components/sheet" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
       </hstack>
     </SystemSection>
 
     <SystemSection title="Typography" note="The ramp. Weights stay between 400 and 700; tracking tightens as size grows.">
       <stack style="gap: 0.9rem">
         <hstack style="gap: 1rem; align-items: baseline; flex-wrap: wrap">
-          <text value="2rem / 700" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
+          <text value="2rem / 700" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
           <text value="Display" style="font-size: 2rem; font-weight: 700; letter-spacing: -0.02em"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: baseline; flex-wrap: wrap">
-          <text value="1.5rem / 600" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
+          <text value="1.5rem / 600" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
           <text value="Title" style="font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: baseline; flex-wrap: wrap">
-          <text value="1.17rem / 600" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
+          <text value="1.17rem / 600" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
           <text value="Heading" style="font-size: 1.17rem; font-weight: 600"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: baseline; flex-wrap: wrap">
-          <text value="1rem / 400" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
+          <text value="1rem / 400" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
           <text value="Body, the reading size."/>
         </hstack>
         <hstack style="gap: 1rem; align-items: baseline; flex-wrap: wrap">
-          <text value="0.9rem / 400" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <text value="Subhead, supporting copy." style="font-size: 0.9rem; color: secondary"/>
+          <text value="0.9rem / 400" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <text value="Subhead, supporting copy." style="font-size: 0.9rem; color: var(--dsx-secondary-label)"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: baseline; flex-wrap: wrap">
-          <text value="0.8rem / 400" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <text value="Footnote, fine print." style="font-size: 0.8rem; color: secondary"/>
+          <text value="0.8rem / 400" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <text value="Footnote, fine print." style="font-size: 0.8rem; color: var(--dsx-secondary-label)"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: baseline; flex-wrap: wrap">
-          <text value="0.72rem / 600" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
+          <text value="0.72rem / 600" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
           <text value="Caption, the section label"
-                style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: secondary"/>
+                style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dsx-secondary-label)"/>
         </hstack>
       </stack>
       <hstack style="gap: 0.6rem; align-items: center; flex-wrap: wrap">
-        <text value="Reference:" style="font-size: 0.8rem; color: tertiary"/>
-        <text value="text" href="/components/text" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: accent"/>
+        <text value="Reference:" style="font-size: 0.8rem; color: var(--dsx-tertiary-label)"/>
+        <text value="text" href="/components/text" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.8rem; color: var(--dsx-accent)"/>
       </hstack>
     </SystemSection>
 
     <SystemSection title="Colors" note="The ten cross-renderer semantic words. The OS owns the values, so both schemes come free.">
       <stack style="gap: 0.6rem">
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
-          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: label; border: 1px solid var(--dsx-separator)"/>
+          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-label); border: 1px solid var(--dsx-separator)"/>
           <text value="label" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="Primary text" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="Primary text" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
           <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-secondary-label); border: 1px solid var(--dsx-separator)"/>
           <text value="secondary" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="Supporting text" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="Supporting text" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
           <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-tertiary-label); border: 1px solid var(--dsx-separator)"/>
           <text value="tertiary" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="Faintest text, placeholders" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="Faintest text, placeholders" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
-          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: background; border: 1px solid var(--dsx-separator)"/>
+          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-background); border: 1px solid var(--dsx-separator)"/>
           <text value="background" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="The page" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="The page" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
-          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: groupedBackground; border: 1px solid var(--dsx-separator)"/>
+          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-grouped-background); border: 1px solid var(--dsx-separator)"/>
           <text value="groupedBackground" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="Grouped pages" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="Grouped pages" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
-          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: secondaryGroupedBackground; border: 1px solid var(--dsx-separator)"/>
+          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-secondary-grouped-background); border: 1px solid var(--dsx-separator)"/>
           <text value="secondaryGroupedBackground" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="Cards on grouped pages" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="Cards on grouped pages" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
-          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: fill; border: 1px solid var(--dsx-separator)"/>
+          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-fill); border: 1px solid var(--dsx-separator)"/>
           <text value="fill" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="Control fills" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="Control fills" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
-          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: separator; border: 1px solid var(--dsx-separator)"/>
+          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-separator); border: 1px solid var(--dsx-separator)"/>
           <text value="separator" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="Hairlines" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="Hairlines" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
-          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: accent; border: 1px solid var(--dsx-separator)"/>
+          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-accent); border: 1px solid var(--dsx-separator)"/>
           <text value="accent" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="The one accent: actions and selection" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="The one accent: actions and selection" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
         <hstack style="gap: 0.75rem; align-items: center; flex-wrap: wrap; align-self: stretch">
-          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: destructive; border: 1px solid var(--dsx-separator)"/>
+          <stack style="width: 1.75rem; height: 1.75rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-destructive); border: 1px solid var(--dsx-separator)"/>
           <text value="destructive" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85rem"/>
-          <text value="Danger and deletion" style="color: secondary; font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
+          <text value="Danger and deletion" style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1 1 auto; min-width: 9rem; text-align: right"/>
         </hstack>
       </stack>
     </SystemSection>
@@ -377,46 +377,46 @@
     <SystemSection title="Spacing and radius" note="A 4px grid, space-1 through space-12. Three radius stops: controls ride base, cards ride lg.">
       <stack style="gap: 0.5rem">
         <hstack style="gap: 1rem; align-items: center">
-          <text value="space-1 · 4" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <stack style="width: var(--dsx-space-1); height: 0.75rem; border-radius: 2px; background: accent"/>
+          <text value="space-1 · 4" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <stack style="width: var(--dsx-space-1); height: 0.75rem; border-radius: 2px; background: var(--dsx-accent)"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: center">
-          <text value="space-2 · 8" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <stack style="width: var(--dsx-space-2); height: 0.75rem; border-radius: 2px; background: accent"/>
+          <text value="space-2 · 8" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <stack style="width: var(--dsx-space-2); height: 0.75rem; border-radius: 2px; background: var(--dsx-accent)"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: center">
-          <text value="space-3 · 12" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <stack style="width: var(--dsx-space-3); height: 0.75rem; border-radius: 2px; background: accent"/>
+          <text value="space-3 · 12" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <stack style="width: var(--dsx-space-3); height: 0.75rem; border-radius: 2px; background: var(--dsx-accent)"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: center">
-          <text value="space-4 · 16" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <stack style="width: var(--dsx-space-4); height: 0.75rem; border-radius: 2px; background: accent"/>
+          <text value="space-4 · 16" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <stack style="width: var(--dsx-space-4); height: 0.75rem; border-radius: 2px; background: var(--dsx-accent)"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: center">
-          <text value="space-6 · 24" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <stack style="width: var(--dsx-space-6); height: 0.75rem; border-radius: 2px; background: accent"/>
+          <text value="space-6 · 24" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <stack style="width: var(--dsx-space-6); height: 0.75rem; border-radius: 2px; background: var(--dsx-accent)"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: center">
-          <text value="space-8 · 32" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <stack style="width: var(--dsx-space-8); height: 0.75rem; border-radius: 2px; background: accent"/>
+          <text value="space-8 · 32" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <stack style="width: var(--dsx-space-8); height: 0.75rem; border-radius: 2px; background: var(--dsx-accent)"/>
         </hstack>
         <hstack style="gap: 1rem; align-items: center">
-          <text value="space-12 · 48" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
-          <stack style="width: var(--dsx-space-12); height: 0.75rem; border-radius: 2px; background: accent"/>
+          <text value="space-12 · 48" style="width: 7.5rem; flex-shrink: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
+          <stack style="width: var(--dsx-space-12); height: 0.75rem; border-radius: 2px; background: var(--dsx-accent)"/>
         </hstack>
       </stack>
       <hstack style="gap: 1rem; margin-top: 0.5rem; flex-wrap: wrap">
         <stack style="gap: 0.4rem; align-items: center">
-          <stack style="width: 3.5rem; height: 3.5rem; border-radius: var(--dsx-radius-sm); background: secondaryGroupedBackground; border: 1px solid var(--dsx-separator)"/>
-          <text value="sm · 6" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
+          <stack style="width: 3.5rem; height: 3.5rem; border-radius: var(--dsx-radius-sm); background: var(--dsx-secondary-grouped-background); border: 1px solid var(--dsx-separator)"/>
+          <text value="sm · 6" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
         </stack>
         <stack style="gap: 0.4rem; align-items: center">
-          <stack style="width: 3.5rem; height: 3.5rem; border-radius: var(--dsx-radius); background: secondaryGroupedBackground; border: 1px solid var(--dsx-separator)"/>
-          <text value="base · 10" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
+          <stack style="width: 3.5rem; height: 3.5rem; border-radius: var(--dsx-radius); background: var(--dsx-secondary-grouped-background); border: 1px solid var(--dsx-separator)"/>
+          <text value="base · 10" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
         </stack>
         <stack style="gap: 0.4rem; align-items: center">
-          <stack style="width: 3.5rem; height: 3.5rem; border-radius: var(--dsx-radius-lg); background: secondaryGroupedBackground; border: 1px solid var(--dsx-separator)"/>
-          <text value="lg · 14" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: tertiary"/>
+          <stack style="width: 3.5rem; height: 3.5rem; border-radius: var(--dsx-radius-lg); background: var(--dsx-secondary-grouped-background); border: 1px solid var(--dsx-separator)"/>
+          <text value="lg · 14" style="font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.75rem; color: var(--dsx-tertiary-label)"/>
         </stack>
       </hstack>
     </SystemSection>
