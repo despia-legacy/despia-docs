@@ -32,7 +32,7 @@
     <api as="searchIndex" url="/search-index.json"/>
     <!-- Ranked hits folded into section groups (title matches lead, then body matches;
          groups appear in relevance order, rows stay ranked inside each). -->
-    <formula as="hitGroups" q="dsx.variable.query">
+    <formula as="hitGroups" input:q="dsx.variable.query">
       if (!q || q.length < 2) { return [] }
       const needle = q.toLowerCase()
       const index = dsx.api.searchIndex.data
@@ -49,15 +49,15 @@
     <!-- The panel's state: '' closed · 'prompt' (field active, under two characters,
          the empty-query EmptyState) · 'results' (grouped hits, or the no-results
          EmptyState when hitGroups is empty). -->
-    <formula as="searchState" q="dsx.variable.query" focus="dsx.variable.searchFocus" open="dsx.variable.searchOpen">
+    <formula as="searchState" input:q="dsx.variable.query" input:focus="dsx.variable.searchFocus" input:open="dsx.variable.searchOpen">
       if (q && q.length >= 2) { return 'results' }
       return focus || open ? 'prompt' : ''
     </formula>
-    <formula as="tocRows" raw="dsx.attribute.toc">
+    <formula as="tocRows" input:raw="dsx.attribute.toc">
       if (!raw || raw === '') { return [] }
       return JSON.parse(raw)
     </formula>
-    <formula as="themeState" docs="dsx.global.docs">
+    <formula as="themeState" input:docs="dsx.global.docs">
       return docs && docs.theme ? docs.theme : ''
     </formula>
     <action as="cycleTheme">
@@ -81,7 +81,7 @@
     <hstack class="doc-header-row">
       <pressable class="doc-icon-btn doc-nav-toggle" a11yLabel="Open navigation"
                  on:tap="dsx.variable.navOpen = true">
-        <svg d="M3 6.4h18v1.6H3z M3 11.2h18v1.6H3z M3 16h18v1.6H3z" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"/>
+        <svg d="M3 6.4h18v1.6H3z M3 11.2h18v1.6H3z M3 16h18v1.6H3z" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; min-width: 18px; height: 18px; min-height: 18px;"/>
       </pressable>
       <pressable href="/" class="doc-wordmark" a11yLabel="Despia documentation home">
         <text value="Despia" class="doc-wordmark-name"/>
@@ -95,16 +95,16 @@
       </stack>
       <pressable class="doc-icon-btn doc-search-toggle" a11yLabel="Search"
                  on:tap="dsx.action.toggleSearch()">
-        <svg d="M10.5 3c4.142 0 7.5 3.358 7.5 7.5s-3.358 7.5-7.5 7.5S3 14.642 3 10.5 6.358 3 10.5 3zm0 2c-3.038 0-5.5 2.462-5.5 5.5s2.462 5.5 5.5 5.5 5.5-2.462 5.5-5.5S13.538 5 10.5 5zm4.94 11.85l4.66 4.65 1.4-1.4-4.65-4.66-1.41 1.41z" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"/>
+        <svg d="M10.5 3c4.142 0 7.5 3.358 7.5 7.5s-3.358 7.5-7.5 7.5S3 14.642 3 10.5 6.358 3 10.5 3zm0 2c-3.038 0-5.5 2.462-5.5 5.5s2.462 5.5 5.5 5.5 5.5-2.462 5.5-5.5S13.538 5 10.5 5zm4.94 11.85l4.66 4.65 1.4-1.4-4.65-4.66-1.41 1.41z" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; min-width: 18px; height: 18px; min-height: 18px;"/>
       </pressable>
       <pressable href="https://github.com/despia-native/despia" class="doc-icon-btn" a11yLabel="Despia on GitHub">
-        <svg d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.02 1.75 2.68 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18.92-.26 1.9-.38 2.88-.39.98.01 1.96.13 2.88.39 2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.14 0 .3.21.67.8.55C20.44 21.37 23.5 17.06 23.5 12 23.5 5.65 18.35.5 12 .5z" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"/>
+        <svg d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.02 1.75 2.68 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18.92-.26 1.9-.38 2.88-.39.98.01 1.96.13 2.88.39 2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.78 1.05.78 2.12 0 1.53-.01 2.76-.01 3.14 0 .3.21.67.8.55C20.44 21.37 23.5 17.06 23.5 12 23.5 5.65 18.35.5 12 .5z" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; min-width: 18px; height: 18px; min-height: 18px;"/>
       </pressable>
       <pressable class="doc-icon-btn" on:tap="dsx.action.cycleTheme()"
                  a11yLabel="{{ 'Color scheme: ' + (dsx.formula.themeState === '' ? 'system' : dsx.formula.themeState) + '. Activate to change.' }}">
-        <svg visible-if="dsx.formula.themeState === ''" d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm0 2.5v15c4.142 0 7.5-3.358 7.5-7.5S16.142 4.5 12 4.5z" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"/>
-        <svg visible-if="dsx.formula.themeState === 'dark'" d="M20.74 13.15c-1.06.3-2.18.47-3.34.47-6.02 0-10.9-4.88-10.9-10.9 0-.62.05-1.23.15-1.82C3.15 2.28 1 5.9 1 10c0 5.52 4.48 10 10 10 4.61 0 8.5-3.12 9.74-6.85z" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"/>
-        <svg visible-if="dsx.formula.themeState === 'light'" d="M12 7c2.761 0 5 2.239 5 5s-2.239 5-5 5-5-2.239-5-5 2.239-5 5-5zm-.8-5h1.6v3h-1.6zm0 17h1.6v3h-1.6zM2 11.2h3v1.6H2zm17 0h3v1.6h-3zM4.9 6.03l1.13-1.13 2.12 2.12-1.13 1.13zm10.95 10.97l1.13-1.13 2.12 2.12-1.13 1.13zM4.9 17.97l2.12-2.12 1.13 1.13-2.12 2.12zm10.95-10.95l2.12-2.12 1.13 1.13-2.12 2.12z" viewBox="0 0 24 24" fill="currentColor" width="18" height="18"/>
+        <svg visible-if="dsx.formula.themeState === ''" d="M12 2c5.523 0 10 4.477 10 10s-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2zm0 2.5v15c4.142 0 7.5-3.358 7.5-7.5S16.142 4.5 12 4.5z" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; min-width: 18px; height: 18px; min-height: 18px;"/>
+        <svg visible-if="dsx.formula.themeState === 'dark'" d="M20.74 13.15c-1.06.3-2.18.47-3.34.47-6.02 0-10.9-4.88-10.9-10.9 0-.62.05-1.23.15-1.82C3.15 2.28 1 5.9 1 10c0 5.52 4.48 10 10 10 4.61 0 8.5-3.12 9.74-6.85z" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; min-width: 18px; height: 18px; min-height: 18px;"/>
+        <svg visible-if="dsx.formula.themeState === 'light'" d="M12 7c2.761 0 5 2.239 5 5s-2.239 5-5 5-5-2.239-5-5 2.239-5 5-5zm-.8-5h1.6v3h-1.6zm0 17h1.6v3h-1.6zM2 11.2h3v1.6H2zm17 0h3v1.6h-3zM4.9 6.03l1.13-1.13 2.12 2.12-1.13 1.13zm10.95 10.97l1.13-1.13 2.12 2.12-1.13 1.13zM4.9 17.97l2.12-2.12 1.13 1.13-2.12 2.12zm10.95-10.95l2.12-2.12 1.13 1.13-2.12 2.12z" viewBox="0 0 24 24" fill="currentColor" style="width: 18px; min-width: 18px; height: 18px; min-height: 18px;"/>
       </pressable>
     </hstack>
     <stack class="doc-search-row" visible-if="dsx.variable.searchOpen">
@@ -118,24 +118,24 @@
          docs.js adds the roving arrow-key highlight (.is-active) on the rows. -->
     <stack class="doc-search-panel" visible-if="dsx.formula.searchState !== ''" role="navigation" a11yLabel="Search results">
       <stack class="doc-search-blank" visible-if="dsx.formula.searchState === 'prompt'">
-        <image icon="magnifyingglass" iconSize="32" color="secondary" a11yHidden="true" class="doc-search-blank-icon"/>
+        <image icon="magnifyingglass" iconSize="32" style="color: var(--dsx-secondary-label)" a11yHidden="true" class="doc-search-blank-icon"/>
         <stack class="doc-search-blank-copy" a11yGroup="true">
-          <text value="Search the docs" textAlign="center" class="doc-search-blank-title"/>
-          <text value="Type at least two characters to find a page." textAlign="center" class="doc-search-blank-hint"/>
+          <text value="Search the docs" style="text-align: center" class="doc-search-blank-title"/>
+          <text value="Type at least two characters to find a page." style="text-align: center" class="doc-search-blank-hint"/>
         </stack>
       </stack>
       <stack class="doc-search-blank" visible-if="dsx.formula.searchState === 'results' &amp;&amp; dsx.formula.hitGroups.length === 0">
-        <image icon="tray" iconSize="32" color="secondary" a11yHidden="true" class="doc-search-blank-icon"/>
+        <image icon="tray" iconSize="32" style="color: var(--dsx-secondary-label)" a11yHidden="true" class="doc-search-blank-icon"/>
         <stack class="doc-search-blank-copy" a11yGroup="true">
-          <text value="No results" textAlign="center" class="doc-search-blank-title"/>
-          <text value="{{ 'Nothing matches “' + dsx.variable.query + '”. Try a component or guide name.' }}" textAlign="center" class="doc-search-blank-hint"/>
+          <text value="No results" style="text-align: center" class="doc-search-blank-title"/>
+          <text value="{{ 'Nothing matches “' + dsx.variable.query + '”. Try a component or guide name.' }}" style="text-align: center" class="doc-search-blank-hint"/>
         </stack>
       </stack>
-      <list bind="dsx.formula.hitGroups" key="name" scroll="false" spacing="0" class="doc-hit-groups"
+      <list bind="dsx.formula.hitGroups" key="name" scroll="false" style="gap: 0" class="doc-hit-groups"
             visible-if="dsx.formula.hitGroups.length > 0">
         <stack class="doc-hit-group">
           <text bind="dsx.this.name" class="doc-hit-label"/>
-          <list bind="dsx.this.rows" key="id" scroll="false" spacing="0" class="doc-hit-list">
+          <list bind="dsx.this.rows" key="id" scroll="false" style="gap: 0" class="doc-hit-list">
             <row href="{{ dsx.this.route }}" on:tap="dsx.action.closeSearch()">
               <hstack class="doc-hit">
                 <text bind="dsx.this.title" class="doc-hit-title"/>
@@ -160,9 +160,9 @@
       <stack class="doc-column">
         <hstack class="doc-crumbs" role="navigation" a11yLabel="Breadcrumb" visible-if="dsx.attribute.route !== '/'">
           <pressable href="/" class="doc-crumb-link"><text value="Docs" class="doc-crumb"/></pressable>
-          <image icon="chevron.right" iconSize="10" color="tertiary" a11yHidden="true" visible-if="dsx.attribute.section !== ''"/>
+          <image icon="chevron.right" iconSize="10" style="color: var(--dsx-tertiary-label)" a11yHidden="true" visible-if="dsx.attribute.section !== ''"/>
           <text value="{{ dsx.attribute.section }}" class="doc-crumb" visible-if="dsx.attribute.section !== ''"/>
-          <image icon="chevron.right" iconSize="10" color="tertiary" a11yHidden="true"/>
+          <image icon="chevron.right" iconSize="10" style="color: var(--dsx-tertiary-label)" a11yHidden="true"/>
           <text value="{{ dsx.attribute.label !== '' ? dsx.attribute.label : dsx.attribute.title }}" class="doc-crumb-current"/>
           <spacer/>
           <text value="Markdown" href="{{ dsx.attribute.md }}" visible-if="dsx.attribute.md !== ''" class="doc-md-link"/>

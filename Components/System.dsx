@@ -31,7 +31,7 @@
       { id: 'A-1040', customer: 'Beacon Labs', total: '$2,410.00', status: 'Pending' },
       { id: 'A-1039', customer: 'Cardan GmbH', total: '$96.00', status: 'Refunded' }
     ]</variable>
-    <formula as="pct" inputs="v">return Math.round(v * 100) + '%'</formula>
+    <formula as="pct" input:v="dsx.variable.brightness">return Math.round(v * 100) + '%'</formula>
   </head>
 
   <DocShell title="System" label="Design system" route="/system" section="Start"
@@ -66,7 +66,7 @@
 
     <SystemSection title="Fields"
                    note="Focus draws the ring. A required field left empty raises its error once touched; message= overrides the validator text.">
-      <form as="gallery" spacing="14">
+      <form as="gallery" style="gap: 14px">
         <field name="name" label="Name" placeholder="Ada Lovelace"/>
         <field name="email" type="email" label="Email" placeholder="you@example.com" validate="required,email"/>
         <field name="passphrase" type="secure" label="Passphrase" validate="required,minLength:8"
@@ -97,7 +97,7 @@
         <picker bind="dsx.variable.region" options="Europe,Americas,Asia" label="Region"/>
         <hstack style="gap: 0.75rem; align-items: center">
           <slider bind="dsx.variable.brightness" a11yLabel="Brightness" style="flex: 1"/>
-          <text value="{{ dsx.formula.pct(dsx.variable.brightness) }}"
+          <text value="{{ dsx.formula.pct }}"
                 style="color: var(--dsx-secondary-label); font-size: 0.85rem; min-width: 3.5ch; text-align: right"/>
         </hstack>
         <stepper bind="dsx.variable.copies" min="1" max="9" label="Copies"/>
@@ -117,11 +117,11 @@
       <list bind="dsx.variable.rows" key="id">
         <row>
           <hstack style="gap: 0.75rem; align-items: center" a11yGroup="true">
-            <image icon="{{ dsx.this.icon }}" iconSize="18" color="accent"/>
+            <image icon="{{ dsx.this.icon }}" iconSize="18" style="color: var(--dsx-accent)"/>
             <text bind="dsx.this.title"/>
             <spacer/>
             <text bind="dsx.this.detail" style="color: var(--dsx-secondary-label)"/>
-            <image icon="chevron.right" iconSize="13" color="tertiary"/>
+            <image icon="chevron.right" iconSize="13" style="color: var(--dsx-tertiary-label)"/>
           </hstack>
         </row>
       </list>
@@ -148,11 +148,11 @@
       </hstack>
       <hstack style="gap: 1.5rem; align-items: center">
         <stack style="display: grid">
-          <image icon="bell.fill" iconSize="24" color="secondary" style="grid-area: 1 / 1"/>
+          <image icon="bell.fill" iconSize="24" style="color: var(--dsx-secondary-label); grid-area: 1 / 1"/>
           <stack style="grid-area: 1 / 1; justify-self: end; align-self: start; width: 0.6rem; height: 0.6rem; border-radius: 999px; background: var(--dsx-destructive); margin: -0.15rem -0.15rem 0 0"/>
         </stack>
         <stack style="display: grid">
-          <image icon="tray" iconSize="24" color="secondary" style="grid-area: 1 / 1"/>
+          <image icon="tray" iconSize="24" style="color: var(--dsx-secondary-label); grid-area: 1 / 1"/>
           <stack style="grid-area: 1 / 1; justify-self: end; align-self: start; display: grid; place-items: center; min-width: 1.1rem; min-height: 1.1rem; padding: 0 0.25rem; border-radius: 999px; background: var(--dsx-destructive); margin: -0.45rem -0.55rem 0 0">
             <text value="3" style="font-size: 0.68rem; font-weight: 600; color: var(--dsx-on-destructive)"/>
           </stack>
@@ -165,16 +165,16 @@
       <stack style="gap: 0.75rem">
         <hstack role="navigation" a11yLabel="Breadcrumb, chevron style" style="gap: 0.375rem; align-items: center; flex-wrap: wrap">
           <pressable href="/"><text value="Docs" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
-          <image icon="chevron.right" iconSize="11" color="tertiary" a11yHidden="true"/>
+          <image icon="chevron.right" iconSize="11" style="color: var(--dsx-tertiary-label)" a11yHidden="true"/>
           <pressable href="/quickstart"><text value="Quickstart" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
-          <image icon="chevron.right" iconSize="11" color="tertiary" a11yHidden="true"/>
+          <image icon="chevron.right" iconSize="11" style="color: var(--dsx-tertiary-label)" a11yHidden="true"/>
           <text value="Requirements" style="font-size: 0.875rem; font-weight: 600"/>
         </hstack>
         <hstack role="navigation" a11yLabel="Breadcrumb, dot style" style="gap: 0.5rem; align-items: center; flex-wrap: wrap">
           <pressable href="/"><text value="Docs" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
-          <image icon="circle.fill" iconSize="4" color="tertiary" a11yHidden="true"/>
+          <image icon="circle.fill" iconSize="4" style="color: var(--dsx-tertiary-label)" a11yHidden="true"/>
           <pressable href="/system"><text value="System" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
-          <image icon="circle.fill" iconSize="4" color="tertiary" a11yHidden="true"/>
+          <image icon="circle.fill" iconSize="4" style="color: var(--dsx-tertiary-label)" a11yHidden="true"/>
           <text value="Badge" style="font-size: 0.875rem; font-weight: 600"/>
         </hstack>
       </stack>
@@ -189,7 +189,7 @@
         <button label="Next" variant="bordered" tooltip="Continue to review" tooltipSide="trailing"/>
       </hstack>
       <hstack style="gap: 0.6rem; align-items: center">
-        <image icon="info.circle.fill" iconSize="18" color="secondary" tooltip="Any element can carry a hint, icons included"/>
+        <image icon="info.circle.fill" iconSize="18" style="color: var(--dsx-secondary-label)" tooltip="Any element can carry a hint, icons included"/>
         <text value="Hover the row above and hold still a moment, or tab through it: the hint appears beside its side word."
               style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1"/>
       </hstack>
@@ -224,13 +224,13 @@
 
     <SystemSection title="Dashboard"
                    note="The desktop idiom set from the same grammar: stat tiles in a grid whose columns follow dsx.screen.width, delta chips on token fills, and a bound Table that scrolls inside its own frame. One document, phone to desktop.">
-      <grid bind="dsx.variable.metrics" key="id" columns="{{ dsx.screen.width >= 700 ? 3 : 1 }}" spacing="12" scroll="false" style="width: 100%">
+      <grid bind="dsx.variable.metrics" key="id" columns="{{ dsx.screen.width >= 700 ? 3 : 1 }}" scroll="false" style="gap: 12px; width: 100%">
         <stack style="gap: 0.4rem; padding: 0.9rem 1rem; border-radius: var(--dsx-radius-lg); background: var(--dsx-secondary-grouped-background); border: 1px solid var(--dsx-separator); width: 100%">
           <text bind="dsx.this.label" style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; color: var(--dsx-tertiary-label)"/>
           <text bind="dsx.this.value" style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em"/>
           <hstack style="align-items: center; gap: 0.375rem">
             <stack style="border-radius: 999px; background: var(--dsx-fill); padding: 0.125rem 0.5rem">
-              <text bind="dsx.this.delta" color="{{ dsx.this.up ? 'accent' : 'destructive' }}" style="font-size: 0.72rem; font-weight: 600"/>
+              <text bind="dsx.this.delta" style="color: {{ dsx.this.up ? 'var(--dsx-accent)' : 'var(--dsx-destructive)' }}; font-size: 0.72rem; font-weight: 600"/>
             </stack>
             <text value="vs last week" style="color: var(--dsx-tertiary-label); font-size: 0.72rem"/>
           </hstack>
