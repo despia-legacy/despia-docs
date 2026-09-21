@@ -11,3 +11,4 @@ public/search-index.json
 public/llms.txt
 public/llms-full.txt
 .wrangler/
+deploy/
