@@ -14,10 +14,10 @@ Despia is a web-optional native runtime. None of the four targets is a port: the
 What that is proven to mean is written down rather than implied. Runtime behavior is held to 857 conformance assertions on the TypeScript kernel and 2,775 tests on the Kotlin kernel, on every pull request. The web renderer is verified against its own committed reference render, which every skin change re-records so the diff is the review. Native rendering is held to a budgeted near-pixel contract with a published gap ledger, because an app should look like the platform it runs on. [Platform support](/framework/guides/platform-support) is the full picture: what is measured, what is budgeted, what is still verified by review, and every element the web renderer does not implement.
 
 ```sh
-npm create dsx@latest my-app
+npm create despia@latest my-app
 cd my-app
 npm install
-npx dsx dev
+npx despia dev
 ```
 
 ## Where to start

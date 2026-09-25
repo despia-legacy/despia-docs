@@ -8,13 +8,13 @@ section:
 # Quickstart
 
 ```sh
-npm create dsx@latest my-app
+npm create despia@latest my-app
 cd my-app
 npm install
-npx dsx dev
+npx despia dev
 ```
 
-`dsx dev` builds, serves, watches and reloads. The scaffold is a complete DSX package:
+`despia dev` builds, serves, watches and reloads. The scaffold is a complete DSX package:
 
 | Path | What it is |
 |---|---|
@@ -46,13 +46,13 @@ the Despia app runtimes; markup is never platform-forked.
 ## The visual editor
 
 ```sh
-npm install --save-dev @despia-native/canvas-editor
-npx dsx edit
+npx despia edit
 ```
 
-serves the open-source canvas editor against your project: your documents in the sidebar,
+serves the Canvas editor against your project: your documents in the sidebar,
 the canvas rendering and simulating them, and saves that write straight back to your
-files. No account, no hosting.
+files. The editor is included with the Despia CLI and runs locally; no account or hosted
+project is required.
 
 ## Ship something
 
