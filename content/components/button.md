@@ -7,10 +7,10 @@ element: button
 category: input
 scope: library
 platforms: web,ios,android,desktop
-properties: [{"name":"color","type":"color","default":"white"},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"href","type":"string","default":null},{"name":"icon","type":"sf-symbol","default":null},{"name":"iconSize","type":"number","default":"20"},{"name":"label","type":"string","default":null},{"name":"on:tap","type":"action","default":null},{"name":"role","type":"enum","default":null,"values":["destructive","cancel"]},{"name":"variant","type":"enum","default":null,"values":["bordered","prominent"]}]
+properties: [{"name":"color","type":"color","default":"white"},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"href","type":"string","default":null},{"name":"icon","type":"sf-symbol","default":null},{"name":"iconSize","type":"number","default":"20"},{"name":"label","type":"string","default":null},{"name":"on:tap","type":"action","default":null},{"name":"role","type":"enum","default":null,"values":["destructive","cancel"]},{"name":"variant","type":"enum","default":null,"values":["bordered","prominent","glass","glass-prominent","plain"]}]
 actions: ["tap"]
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -25,7 +25,7 @@ Category: Input - Also answers to `glassButton`, `transport` - Live specimens: t
 ## Usage
 
 ```dsx
-<button label="Save" on:tap="dsx.send('save')"/>
+<button label="Save" on:tap="dsx.event('save')"/>
 ```
 
 `button` takes children. The same element answers to `glassButton`, `transport`.
@@ -71,7 +71,7 @@ Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colo
 | `label` | `string` |  | Text content (used if no `icon`). |
 | `on:tap` | `action` |  | Press handler. |
 | `role` | `destructive` \| `cancel` |  | `destructive` (red danger semantics) / `cancel` (dismissive weight) - the SwiftUI `ButtonRole`. Only these two words; any other `role` value keeps its accessibility meaning. |
-| `variant` | `bordered` \| `prominent` |  | `bordered` selects the tonal system button (`.bordered`); `prominent` selects the filled system button (`.borderedProminent`). Both use **`.controlSize(.large)`**, the modern full-size system button and larger tap target. Use `style="width: 100%"` when the CTA has a definite containing box. Web mirrors the large metrics (theme.ts); Android's M3 button already uses the platform's full-size spec. The unstyled default button stays inline-sized. |
+| `variant` | `bordered` \| `prominent` \| `glass` \| `glass-prominent` \| `plain` |  | One of `bordered`, `prominent`, `glass`, `glass-prominent`, `plain`. `plain` is the TEXT TIER, minted 2026-09-17 with `architecture/adr/0002-despia-ui-words.md`: accent ink over no fill at the SAME height as the other rungs, which is the part an author cannot restate by hand without first measuring them. The counterparts are `.borderless` on SwiftUI and the Material 3 text button; a lane that has not written its half yet falls to the base rendering the way it does for any word it does not know. `bordered` selects the tonal system button (`.bordered`); `prominent` selects the filled system button (`.borderedProminent`). Both use **`.controlSize(.large)`**, the modern full-size system button and larger tap target. Use `style="width: 100%"` when the CTA has a definite containing box. Web mirrors the large metrics (theme.ts); Android's M3 button already uses the platform's full-size spec. The unstyled default button stays inline-sized. **`glass` and `glass-prominent` are Liquid Glass**, and what they render is per platform and per OS: on **iOS 26 and later** the real system glass button style (SwiftUI `GlassButtonStyle` / `GlassProminentButtonStyle`, spelled `.glass` and `.glassProminent`; the UIKit twins in the SDK are `glassButtonConfiguration` and `prominentGlassButtonConfiguration`), tinted from the resolved `color`; on **iOS 16.6 to 25** there is no glass in the SDK, so the shipped control part answers instead, which is the tinted fill over the system thin material for `glass` and the accent fill for `glass-prominent`; on **Android** there is no glass either, so `glass` is the M3 tonal button and `glass-prominent` the filled one, with no blur applied (write `backdrop-filter` yourself to get the existing material ladder); on **web and desktop** the user agent sheet paints a translucent surface with `backdrop-filter: blur(12px) saturate(1.8)` and a hairline ring, or the accent fill with the same blur. Under **Reduce Transparency** (`prefers-reduced-transparency: reduce`) both become solid on every lane, and that is the documented rendering rather than a defect. An unknown variant word is a lint error naming the five; a supported word on a platform without glass never errors, it falls back as written here. |
 
 Every element also carries the [universal attributes](/components/attributes): accessibility, animation, `class`, `style` and the platform suffixes.
 
@@ -118,11 +118,11 @@ Web runtime: `base`.
 | Renderer | Audited | Dated | Evidence |
 |---|---|---|---|
 | web | yes | 2026-08-18 | native button element, label text, disabled reflected; tab-reachable with ring; axe 0 serious/critical on the controls family page light+dark (calendar excluded, filed) |
-| ios | review | 2026-08-18 | A real SwiftUI Button: button trait + label from content; ButtonRole announces destructive; the kernel a11y pass applies on any element (StackStyle.apply, OpenSource/Engine/iOS/Stack.swift:6060-6092: a11yLabel/aria-label, a11yHint, a11yValue, a11yTrait/role, a11yGroup, a11yHidden; on:tap implies .isButton) covers icon-only buttons; CI exercises DSX buttons through the accessibility tree across fixtures (ClosedSource/RuntimeUITests/RuntimeLaunchUITests.swift app.buttons[label].tap()). Verified-by-review; the visual capture awaits the iOS capture lane. |
+| ios | review | 2026-08-18 | A real SwiftUI Button: button trait + label from content; ButtonRole announces destructive; the kernel a11y pass applies on any element (StackStyle.apply, OpenSource/Engine/Swift/Stack.swift:6060-6092: a11yLabel/aria-label, a11yHint, a11yValue, a11yTrait/role, a11yGroup, a11yHidden; on:tap implies .isButton) covers icon-only buttons; CI exercises DSX buttons through the accessibility tree across fixtures (ClosedSource/RuntimeUITests/RuntimeLaunchUITests.swift app.buttons[label].tap()). Verified-by-review; the visual capture awaits the iOS capture lane. |
 | android | review | 2026-08-18 | VERIFIED-BY-REVIEW: system path = the real M3 Button semantics; legacy path = dsxAccessibleActivation(Role.Button) beside the raw recognizer with Enter/Space/D-pad activation + focus traversal (StackNodeView.kt:1210, AccessibilityModifiers.kt:39). |
 | desktop | unaudited | unaudited | none recorded |
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

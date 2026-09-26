@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"bind","type":"expr","default":null},{"name":"columns","type":"number","default":"3"},{"name":"key","type":"string","default":"id"},{"name":"on:reachEnd","type":"action","default":null},{"name":"scroll","type":"bool","default":"true"},{"name":"spacing","type":"number","default":"10"}]
 actions: ["reachEnd"]
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -25,7 +25,7 @@ Category: Structure - Live specimens: the [System gallery](/system).
 ## Usage
 
 ```dsx
-<grid bind="dsx.variable.items" columns="3"><image src="{{ item.cover }}"/></grid>
+<grid bind="dsx.variable.items" columns="3"><image src="{{ dsx.this.cover }}"/></grid>
 ```
 
 `grid` takes children: rowTemplate.
@@ -40,7 +40,7 @@ Category: Structure - Live specimens: the [System gallery](/system).
     <variable as="items">return [{ id: 1, name: 'One' }, { id: 2, name: 'Two' }, { id: 3, name: 'Three' }, { id: 4, name: 'Four' }, { id: 5, name: 'Five' }, { id: 6, name: 'Six' }]</variable>
   </head>
   <stack style="height: 48px; border-radius: 8px; background: var(--dsx-fill); align-items: center; justify-content: center">
-    <text value="{{ item.name }}"/>
+    <text value="{{ dsx.this.name }}"/>
   </stack>
 </grid>
 ```
@@ -92,10 +92,10 @@ The structural/binding twin renders semantic grid rows/cells with responsive col
 
 **Known limits on the web**
 
-- Bound grids reconcile at most 1,000 live rows per update (data-dsx-truncated is exposed) and are not virtualized; larger sources must be paged by the application.
+- Bound grids are windowed by row band: the viewport plus an overscan band is live, the container keeps the full scroll extent, and aria-rowcount counts the whole grid. No cell is dropped and no truncation is stamped.
 - CSS grid layout owns browser-specific fractional column rounding.
 
-**Implementation notes.** Single child = the cell template, rendered per row in its own item scope with write-back (the `<list>` data model), flowing into `columns` flexible columns (default 3, clamped >=1). Lazy ONLY inside a scrolling viewport (LazyVGrid - a Lazy*Grid reports ~zero ideal height before cells materialize, so an embedded grid collapses); `scroll="false"`/measuring = the EAGER chunked grid (a VStack of HStacks with equal flexible columns, zero-height fillers squaring the last partial row). on:reachEnd fires when the LAST cell appears (pagination). NO LIST-CONSTRUCTS: unlike `<list>`, `<grid>` carries no group_by / swipeLeading / swipeTrailing / reorder - DECLARED PARITY, not a gap. The iOS twin (Grid.swift) is deliberately construct-free and those are List-only on every renderer, so no renderer implements them for `<grid>`; adding them to one renderer alone would violate the unified-codebase law (swipe-to-dismiss has no honest grid analogue anyway - cells share a row). Android: BoundGrid header + android-status.md carry the same ratification.
+**Implementation notes.** Single child = the cell template, rendered per row in its own item scope with write-back (the `<list>` data model), flowing into `columns` flexible columns (default 3, clamped >=1). Lazy ONLY inside a scrolling viewport (LazyVGrid - a Lazy*Grid reports ~zero ideal height before cells materialize, so an embedded grid collapses); `scroll="false"`/measuring = the EAGER chunked grid (a VStack of HStacks with equal flexible columns, zero-height fillers squaring the last partial row). on:reachEnd fires when the LAST cell appears (pagination). NO LIST-CONSTRUCTS: unlike `<list>`, `<grid>` carries no group_by / swipeLeading / swipeTrailing / reorder - DECLARED PARITY, not a gap. The iOS twin (Grid.swift) is deliberately construct-free and those are List-only on every renderer, so no renderer implements them for `<grid>`; adding them to one renderer alone would violate the unified-codebase law (swipe-to-dismiss has no honest grid analogue anyway - cells share a row). Android: BoundGrid header + android-status.md carry the same ratification. WEB VIRTUALISATION (2026-09-19): the web renderer WINDOWS a scrolling bound grid BY ROW BAND, the band of `columns` cells being the unit the window moves in, with aria-rowcount over the whole grid and each band stating its own index in it. The 1,000 cell cap and data-dsx-truncated are gone; no lane drops a cell.
 
 Declared platforms: `ios`, `android`.
 
@@ -114,11 +114,11 @@ Web runtime: `structural`.
 | Renderer | Audited | Dated | Evidence |
 |---|---|---|---|
 | web | yes | 2026-08-18 | emits aria row structure (.dsx-grid-aria-row role=row) around cells; axe 0 serious/critical on the chrome family page light + dark-390 |
-| ios | review | 2026-08-18 | Transparent collection container: rows carry their own semantics; on:reachEnd rides onAppear (no a11y interception); the kernel a11y pass applies on any element (StackStyle.apply, OpenSource/Engine/iOS/Stack.swift:6060-6092: a11yLabel/aria-label, a11yHint, a11yValue, a11yTrait/role, a11yGroup, a11yHidden; on:tap implies .isButton). ClosedSource/DSX/Modules/Mandatory/Foundation/Components/Structure/Grid/swift/Grid.swift. Verified-by-review; the visual capture awaits the iOS capture lane. |
+| ios | review | 2026-08-18 | Transparent collection container: rows carry their own semantics; on:reachEnd rides onAppear (no a11y interception); the kernel a11y pass applies on any element (StackStyle.apply, OpenSource/Engine/Swift/Stack.swift:6060-6092: a11yLabel/aria-label, a11yHint, a11yValue, a11yTrait/role, a11yGroup, a11yHidden; on:tap implies .isButton). ClosedSource/DSX/Modules/Mandatory/Foundation/Components/Structure/Grid/swift/Grid.swift. Verified-by-review; the visual capture awaits the iOS capture lane. |
 | android | review | 2026-08-18 | VERIFIED-BY-REVIEW: rows are content; the lazy grid exposes the platform scrollable-collection semantics (Compose LazyVerticalGrid). |
 | desktop | unaudited | unaudited | none recorded |
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

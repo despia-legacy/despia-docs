@@ -7,10 +7,10 @@ element: textfield
 category: input
 scope: library
 platforms: web,ios,android,desktop
-properties: [{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"contentType","type":"enum","default":null},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"keyboard","type":"enum","default":null,"values":["email","number","decimal","phone","url","ascii","twitter","websearch"]},{"name":"on:blur","type":"action","default":null},{"name":"on:change","type":"action","default":null},{"name":"on:focus","type":"action","default":null},{"name":"on:submit","type":"action","default":null},{"name":"placeholder","type":"string","default":null},{"name":"secure","type":"bool","default":"false"}]
+properties: [{"name":"autocapitalize","type":"enum","default":null,"values":["off","none","on","sentences","words","characters"]},{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"contentType","type":"enum","default":null,"values":["name","givenName","familyName","middleName","namePrefix","nameSuffix","nickname","jobTitle","organizationName","emailAddress","telephoneNumber","URL","username","password","newPassword","oneTimeCode","fullStreetAddress","streetAddressLine1","streetAddressLine2","addressCity","addressState","postalCode","countryName","creditCardNumber","creditCardName","creditCardExpiration","creditCardExpirationMonth","creditCardExpirationYear","creditCardSecurityCode","none","email","otp","firstName","lastName","phone","telephone","url","zip","address"]},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"enterkeyhint","type":"enum","default":null,"values":["enter","done","go","next","previous","search","send"]},{"name":"keyboard","type":"enum","default":null,"values":["email","number","decimal","phone","url","ascii","twitter","websearch"]},{"name":"on:blur","type":"action","default":null},{"name":"on:change","type":"action","default":null},{"name":"on:focus","type":"action","default":null},{"name":"on:submit","type":"action","default":null},{"name":"placeholder","type":"string","default":null},{"name":"secure","type":"bool","default":"false"}]
 actions: ["blur","change","focus","submit"]
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -59,12 +59,14 @@ Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colo
 
 | Attribute | Type | Default | Notes |
 |---|---|---|---|
+| `autocapitalize` | `off` \| `none` \| `on` \| `sentences` \| `words` \| `characters` |  | The HTML autocapitalize spelling, in app: sets the soft keyboard auto-capitalization behavior. |
 | `bind` | `expr` |  | Two-way bound String. |
 | `color` | `color` | `var(--dsx-label)` | Unstyled controls follow the adaptive label token. |
-| `contentType` | `enum` |  |  |
+| `contentType` | `name` \| `givenName` \| `familyName` \| `middleName` \| `namePrefix` \| `nameSuffix` \| `nickname` \| `jobTitle` \| `organizationName` \| `emailAddress` \| `telephoneNumber` \| `URL` \| `username` \| `password` \| `newPassword` \| `oneTimeCode` \| `fullStreetAddress` \| `streetAddressLine1` \| `streetAddressLine2` \| `addressCity` \| `addressState` \| `postalCode` \| `countryName` \| `creditCardNumber` \| `creditCardName` \| `creditCardExpiration` \| `creditCardExpirationMonth` \| `creditCardExpirationYear` \| `creditCardSecurityCode` \| `none` \| `email` \| `otp` \| `firstName` \| `lastName` \| `phone` \| `telephone` \| `url` \| `zip` \| `address` |  |  |
 | `disabled` | `bool` | `false` |  |
 | `disabled-if` | `expr` |  | Disabled when this expression is truthy. `disabled=` binds as TEXT, and the string "false" is TRUE - so a bound boolean belongs here, never there. |
-| `keyboard` | `email` \| `number` \| `decimal` \| `phone` \| `url` \| `ascii` \| `twitter` \| `websearch` |  |  |
+| `enterkeyhint` | `enter` \| `done` \| `go` \| `next` \| `previous` \| `search` \| `send` |  | The HTML enterkeyhint spelling, in app: sets the soft keyboard return key label and, when present, wins over the label the keyboard token implies. |
+| `keyboard` | `email` \| `number` \| `decimal` \| `phone` \| `url` \| `ascii` \| `twitter` \| `websearch` |  | `email` \ |
 | `on:blur` | `action` |  |  |
 | `on:change` | `action` |  | Each edit. The payload names WHAT CAUSED the change beside the value: `inputType`, a member of the closed DOM `InputEvent.inputType` vocabulary, flat in the handler scope. `historyUndo` and `historyRedo` are the FIELD'S own text history and not the document's, so a consumer that commits on a settle, Enter or blur must treat them as local and write nothing. A renderer that cannot name the cause says `unspecified`, which is a member and is never local. The law, with the per renderer table, is OpenSource/Conformance/elements/textfield.json `behavior.changeCause`. |
 | `on:focus` | `action` |  |  |
@@ -127,5 +129,5 @@ Web runtime: `base`.
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

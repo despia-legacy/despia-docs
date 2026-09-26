@@ -10,19 +10,22 @@ platforms: web,ios,android,desktop
 properties: []
 actions: []
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
 # Components
 
-69 components, one page each. Every page is a projection of the ledgers: the census for the attribute and event contract, the library matrix for the audited platform record, the web element ledger for the limits, and the catalog for the specimen. Nothing on a page is written by hand, so nothing on a page can quietly go stale.
+76 components, one page each. Every page is a projection of the ledgers: the census for the attribute and event contract, the library matrix for the audited platform record, the web element ledger for the limits, and the catalog for the specimen. Nothing on a page is written by hand, so nothing on a page can quietly go stale.
 
-68 of the 69 have a specimen the catalog serves today; the rest say so on their own page.
+69 of the 76 have a specimen the catalog serves today; the rest say so on their own page.
 
 ## Layout
 
 <CardGroup cols="2">
+<Card title="card" href="/components/card">
+The base Web twin renders the surface word: the card corner, the raised ground, the elevation and the INSET, which is the part the two helper classes deliberately do not carry because their wearers pad themselves.
+</Card>
 <Card title="divider" href="/components/divider">
 The base Web twin renders the semantic-token divider and accepts universal style/color overrides.
 </Card>
@@ -67,6 +70,12 @@ The global Web twin renders a size/radius-aware loading placeholder hidden from 
 <Card title="Table" href="/components/table">
 The global Web twin renders the whole native Table contract: a semantic, scroll-contained table from bound rows, declared columns/fields (fields defaulting to the lowercased column labels), semantic tint, header cell traits and one combined accessibility element per row.
 </Card>
+<Card title="chip" href="/components/chip">
+The base Web twin renders the pill word with its two independent axes: role is the STATUS voice off the system's own semantic pairs (accent, success, warning, danger, info) and selected is the chosen pose, so a chip may be a warning and selected at once.
+</Card>
+<Card title="footerCopy" href="/components/footercopy">
+The base Web twin renders the closing line of a screen or a form at the footnote rung in the tertiary ink, the other half of the screen header word.
+</Card>
 <Card title="image" href="/components/image">
 The base Web twin renders remote and relative images, every icon name in the shared cross-runtime sf-map corpus, the fixture's decorative-by-default accessibility contract, iconSize/fontSize geometry, semantic tint and the cache policy.
 </Card>
@@ -76,11 +85,14 @@ The base Web twin provides an accessible determinate progressbar with clamped bo
 <Card title="qrcode" href="/components/qrcode">
 The rich Web twin generates deterministic SVG QR matrices with size, colors, correction level, accessible labeling, and fail-closed input handling.
 </Card>
+<Card title="screenHeader" href="/components/screenheader">
+The base Web twin renders the screen's opening block, a display title over a callout subtitle in the secondary ink, both of them display copy through the localization seam and both painted server side so a reader meets the title rather than a box that grows when the client arrives.
+</Card>
 <Card title="spinner" href="/components/spinner">
 The base Web twin provides an accessible status spinner with semantic color/scale styling and reduced-motion handling.
 </Card>
 <Card title="svg" href="/components/svg">
-The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization.
+The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T A Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization.
 </Card>
 <Card title="text" href="/components/text">
 The base Web twin renders bound/value/inner content with semantic color and universal typography, the inline markdown vocabulary the native reference renders, and lineLimit tail truncation.
@@ -122,6 +134,9 @@ The base Web twin provides whole-area button/anchor semantics with child content
 </Card>
 <Card title="rangeslider" href="/components/rangeslider">
 The native-control twin implements two bounded range inputs with normalized low/high constraints, throttled write-back, final commit, and accessible labels.
+</Card>
+<Card title="scopeBar" href="/components/scopebar">
+The base Web twin renders the scopes under a search field as a wrapping rail of the chip word, with the tablist semantics, a roving tab stop and the two way write back the other option controls carry.
 </Card>
 <Card title="searchbar" href="/components/searchbar">
 The Web twin is the composite search field the native reference draws: a leading magnifier, the real search input with binding, the Search placeholder default and submit, and a trailing clear button that writes the bound path back and fires on:clear.
@@ -189,6 +204,12 @@ The structural/binding twin renders horizontal/vertical snap paging with two-way
 </Card>
 <Card title="refreshable" href="/components/refreshable">
 The data-control twin implements the fixture's on:refresh/busy contract: scroll-contained content, rubber-band pull on touch and fine pointers with the shared overscroll curve, a built-in always-visible 44px refresh control for keyboard and mouse with hover and focus-visible states, a polite live status region, aria-busy reflection, spin progress with reduced-motion collapse, and busy-gated completion.
+</Card>
+<Card title="sectionFooter" href="/components/sectionfooter">
+The base Web twin renders the section footer from markup, and the bound twin is the list's group_footer_by attribute, which reads the footer off the section's first row exactly as the header reads the group value.
+</Card>
+<Card title="sectionHeader" href="/components/sectionheader">
+The base Web twin renders the list section header from markup, writing the same class and the same part name the bound group_by emitter writes, so one look has two ways in and a reader hears the group's own name either way.
 </Card>
 <Card title="split" href="/components/split">
 The structural twin provides the two/three-pane plan (paneRole resolution, collapseAt/expandAt width classes), the phone stack push with a back pop, the overlay sidebar, ARIA window-splitter dividers with drag and keyboard resize, and value/on:change detail routing.
@@ -291,5 +312,5 @@ The rows whose essence is a platform or vendor runtime the web renderer does not
 </Card>
 </CardGroup>
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

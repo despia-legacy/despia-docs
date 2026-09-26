@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"on:commit","type":"action","default":null},{"name":"on:denied","type":"action","default":null},{"name":"on:fail","type":"action","default":null},{"name":"on:finish","type":"action","default":null},{"name":"on:message","type":"action","default":null},{"name":"on:start","type":"action","default":null},{"name":"origin","type":"string","default":null},{"name":"path","type":"string","default":"/"}]
 actions: ["commit","denied","fail","finish","message","start"]
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -48,7 +48,7 @@ Every component in the library is authored at four rungs in the catalog (default
 
 | Renderer | Audited | Dated | Evidence |
 |---|---|---|---|
-| web | n/a | 2026-08-18 | Non-interactive host embed (the policy-constrained app-surface iframe): no interaction-state axis on the host itself; load/ready lifecycle is value-driven events, and the embedded page owns its own interactive states (OpenSource/Web/support/element-support.json DSXWebView row; packages/dom/src/elements.ts dsx-webview factory). |
+| web | n/a | 2026-08-18 | Non-interactive host embed (the policy-constrained app-surface iframe): no interaction-state axis on the host itself; load/ready lifecycle is value-driven events, and the embedded page owns its own interactive states (OpenSource/Engine/TypeScript/support/element-support.json DSXWebView row; packages/dom/src/elements.ts dsx-webview factory). |
 | ios | review | 2026-08-18 | Lifecycle states are first-class: an origin-less mount renders the native DSXWebUnavailable screen WITHOUT instantiating WKWebView (body guard, ClosedSource/DSX/Modules/Core/Dom/Components/Views/DSXWebView/swift/DSXWebView.swift), and screen readiness gates the frame settle on domFinish/domFail (store.hostsWebSurface; Conformance/lifecycle/readiness.json rule 9, record lane); CI-asserted native fallback (ClosedSource/RuntimeUITests/RuntimeLaunchUITests.swift testOriginlessDSXWebViewSelectsNativeErrorBeforeCreatingWebView). Verified-by-review; the visual capture awaits the iOS capture lane. |
 | android | review | 2026-08-18 | VERIFIED-BY-REVIEW: load-failure policy is DomFailurePolicy.kt (Dom module kotlin facet) + the native recoverable system error screen (Try again) asserted by instrumentation: DsxSystemScreenUiTest#compiledFrameworkFailureIsNativeResponsiveAndRecoverable + DomFailurePolicyTest (RuntimeAndroid androidTest); page-level states are the loaded web content's own. |
 | desktop | unaudited | unaudited | none recorded |
@@ -106,7 +106,7 @@ The rich Web twin mounts the composed app web surface as the same policy-constra
 
 Declared platforms: `ios`, `android`.
 
-**Adaptivity (web, 2026-08-18).** Pure fill-its-container embed host: the embedded page owns its presentation at every width; the host declares no phone/tablet/desktop variance of its own (OpenSource/Web/support/element-support.json DSXWebView row).
+**Adaptivity (web, 2026-08-18).** Pure fill-its-container embed host: the embedded page owns its presentation at every width; the host declares no phone/tablet/desktop variance of its own (OpenSource/Engine/TypeScript/support/element-support.json DSXWebView row).
 
 ## Theming
 
@@ -120,12 +120,12 @@ Web runtime: `rich`.
 
 | Renderer | Audited | Dated | Evidence |
 |---|---|---|---|
-| web | no, and named | 2026-08-18 | W11 disposition (b), dated decision: the twin mounts a policy-constrained iframe without the BridgeKit bridge (OpenSource/Web/support/element-support.json DSXWebView row keeps status partial, 'No BridgeKit bridge is faked'); the composed app-surface contract incl. its a11y tree is native-owned per OpenSource/Documentation/architecture/web-surface-policy.md, so the web host is not held to the library axe/keyboard bar. Red-by-record. |
+| web | no, and named | 2026-08-18 | W11 disposition (b), dated decision: the twin mounts a policy-constrained iframe without the BridgeKit bridge (OpenSource/Engine/TypeScript/support/element-support.json DSXWebView row keeps status partial, 'No BridgeKit bridge is faked'); the composed app-surface contract incl. its a11y tree is native-owned per OpenSource/Documentation/architecture/web-surface-policy.md, so the web host is not held to the library axe/keyboard bar. Red-by-record. |
 | ios | review | 2026-08-18 | WKWebView exposes the loaded page's accessibility tree to assistive tech (WebKit-owned); the component adds no native chrome; page-side a11y is the web column's plane. ClosedSource/DSX/Modules/Core/Dom/Components/Views/DSXWebView/swift/DSXWebView.swift. Verified-by-review; the visual capture awaits the iOS capture lane. |
 | android | review | 2026-08-18 | VERIFIED-BY-REVIEW: the platform android.webkit.WebView exposes the loaded page's own web accessibility tree; the failure screen is native Compose text + button (DsxSystemScreenUiTest asserts it is reachable and clickable). |
 | desktop | unaudited | unaudited | none recorded |
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

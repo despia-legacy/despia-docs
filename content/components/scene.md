@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"background","type":"color","default":"#000000"},{"name":"mode","type":"enum","default":"3d","values":["3d","2d","ar"]},{"name":"on:ready","type":"action","default":null}]
 actions: ["ready"]
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -25,14 +25,12 @@ Category: Scene - Live specimens: the [System gallery](/system).
 ## Usage
 
 ```dsx
-<scene background="#0b1020"><camera position="0 1.5 4" look-at="0 0 0"/><light kind="ambient" intensity="0.4"/><box color="#2563eb"/></scene>
+<scene style="background: #0b1020"><camera position="0 1.5 4" look-at="0 0 0"/><light kind="ambient" intensity="0.4"/><box color="#2563eb"/></scene>
 ```
 
 `scene` takes no children.
 
 ## Catalog specimen
-
-The catalog carries `SceneDefault` and does not serve it yet, so it is shown here as the code it is.
 
 `SceneDefault.dsx`, verbatim from the catalog:
 
@@ -60,8 +58,8 @@ Every component in the library is authored at four rungs in the catalog (default
 | Renderer | Audited | Dated | Evidence |
 |---|---|---|---|
 | web | n/a | 2026-09-07 | P23B audit 2026-09-07: NOT APPLICABLE, the canvas precedent. The scene grammar declares background, mode and on:ready only (OpenSource/Documentation/reference/stack-elements.json), so there is no hover, pressed, focus visible, disabled, loading, error or empty state to depict: measured live in the locked Playwright Chromium (evidence/p23b-logs/p23b-probe.json, harness evidence/p23b-logs/p23b-catalog-proof-probe.ts) the mounted host is role img with 0 focusable descendants at 390x844 touch and 1366x1024 fine pointer. The one state it does have, rest, is scheme correct and measured: fill rgba(17, 17, 24, 0.06) light and rgba(255, 255, 255, 0.09) dark. |
-| ios | n/a | 2026-09-07 | P23B audit 2026-09-07: NOT APPLICABLE for the same reason as the web column, the canvas precedent: the grammar declares background, mode and on:ready only, so there is no state ladder to depict. The iOS host is an SCNView bound at OpenSource/Engine/iOS/SceneElement.swift:565-572, and that file type checks inside the shipping app target: xcodebuild build -workspace ClosedSource/Runtime.xcworkspace -scheme Runtime -destination generic/platform=iOS Simulator reports BUILD SUCCEEDED with 0 errors (evidence/p23b-logs/ios-runtime-build.log). |
-| android | n/a | 2026-09-07 | P23B audit 2026-09-07: NOT APPLICABLE for the same reason as the other two columns, the canvas precedent: background, mode and on:ready are the whole grammar, so there is no state ladder. The Android home is ComposeStackComponents.defineNative("scene") at OpenSource/Engine/Android/render/src/main/kotlin/despia/engine/render/elements/SceneElements.kt:154-156, and check_element_unification.rb rule 3 passes with 0 failures. |
+| ios | n/a | 2026-09-07 | P23B audit 2026-09-07: NOT APPLICABLE for the same reason as the web column, the canvas precedent: the grammar declares background, mode and on:ready only, so there is no state ladder to depict. The iOS host is an SCNView bound at OpenSource/Engine/Swift/SceneElement.swift:565-572, and that file type checks inside the shipping app target: xcodebuild build -workspace ClosedSource/Runtime.xcworkspace -scheme Runtime -destination generic/platform=iOS Simulator reports BUILD SUCCEEDED with 0 errors (evidence/p23b-logs/ios-runtime-build.log). |
+| android | n/a | 2026-09-07 | P23B audit 2026-09-07: NOT APPLICABLE for the same reason as the other two columns, the canvas precedent: background, mode and on:ready are the whole grammar, so there is no state ladder. The Android home is ComposeStackComponents.defineNative("scene") at OpenSource/Engine/Kotlin/render/src/main/kotlin/despia/engine/render/elements/SceneElements.kt:154-156, and check_element_unification.rb rule 3 passes with 0 failures. |
 | desktop | unaudited | unaudited | none recorded |
 
 Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colour schemes, plus loading, error and empty where the component has them.
@@ -101,7 +99,7 @@ The DSX-native scene root renders in the browser through the in-kernel WebGL sur
 - The surface is installed by the boot path, so a sliced embed that never imports it falls to the labelled placeholder rather than to a silent blank.
 - A build with no WebGL context renders the honest labelled fallback inside the scene box, and the scheduled words of the ladder render their named placeholder rather than nothing.
 
-**Implementation notes.** The DSX-native scene root. Every NUMBER is the corpus-pinned kernel fold (OpenSource/Conformance/scene/), shared by all four renderers, which is why this fixture pins the root attribute contract and no per-renderer chrome: the scene vocabulary inside the box (camera, light, group, box, sphere, plane, model, text3d, anchor) is scene space, not stack children, and its defaults live in the corpus rather than in a builder. Web SSR emits the sized labelled box only, because the canvas is client-only and a generic child walk would paint unsupported markers for the scene-space tags.
+**Implementation notes.** The DSX-native scene root. Every NUMBER is the corpus-pinned kernel fold (OpenSource/Conformance/scene/), shared by all four renderers as ONE fold of source, and judged against that corpus on web, iOS and Android (the scene corpus has no Compose Desktop runner today, `evidence/DESKTOP-CENSUS.md`), which is why this fixture pins the root attribute contract and no per-renderer chrome: the scene vocabulary inside the box (camera, light, group, box, sphere, plane, model, text3d, anchor) is scene space, not stack children, and its defaults live in the corpus rather than in a builder. Web SSR emits the sized labelled box only, because the canvas is client-only and a generic child walk would paint unsupported markers for the scene-space tags.
 
 Declared platforms: `ios`, `android`.
 
@@ -126,5 +124,5 @@ Web runtime: `media`.
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

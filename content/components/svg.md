@@ -1,24 +1,24 @@
 ---
 title: svg
-description: The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization.
+description: The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T A Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization.
 order: 3
 section: components
 element: svg
 category: display
 scope: library
-platforms: web,ios,android
-properties: [{"name":"asset","type":"string","default":null},{"name":"d","type":"path-data","default":null},{"name":"fill","type":"color","default":null},{"name":"height","type":"number","default":null},{"name":"src","type":"string","default":null},{"name":"viewBox","type":"string","default":null},{"name":"width","type":"number","default":null}]
+platforms: web,ios,android,desktop
+properties: [{"name":"asset","type":"string","default":null},{"name":"d","type":"path-data","default":null},{"name":"fill","type":"color","default":null},{"name":"height","type":"number","default":null},{"name":"src","type":"markup","default":null},{"name":"viewBox","type":"string","default":null},{"name":"width","type":"number","default":null}]
 actions: []
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
 # svg
 
-The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization.
+The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T A Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization.
 
-<RefMeta platforms="Web,iOS,Android">
+<RefMeta platforms="Web,iOS,Android,Desktop">
 Category: Display - Live specimens: the [System gallery](/system).
 </RefMeta>
 
@@ -65,7 +65,7 @@ Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colo
 | `d` | `path-data` |  |  |
 | `fill` | `color` |  |  |
 | `height` | `number` |  |  |
-| `src` | `string` |  |  |
+| `src` | `markup` |  |  |
 | `viewBox` | `string` |  |  |
 | `width` | `number` |  |  |
 
@@ -82,9 +82,9 @@ Every element also carries the [universal attributes](/components/attributes): a
 | web | `supported` | the built in renderer implements this element |
 | ios | `reference` | the reference renderer this element is specified against |
 | android | `enforced` | implemented and pinned by the element parity test |
-| desktop | `uncaptured` | no desktop capture has measured it, which claims nothing in either direction |
+| desktop | `captured` | the desktop capture plane composed and measured this element at both locked widths |
 
-The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization.
+The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T A Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization.
 
 **Known limits on the web**
 
@@ -92,7 +92,7 @@ The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/
 - Scripts, styles, references, images, groups, animation, unknown attributes, and oversized documents fail closed. Inline SVG root width/height above 16384px are rejected, DSX host width/height are clamped to 16384px, and shape coordinates are independently bounded to an absolute value of 1000000000.
 - SVG is full-application-only because its locked slice exceeds both the default 40960-byte widget budget and the 50176-byte media qualification ceiling.
 
-**Implementation notes.** Native SVG subset renderer (no WebView): rect/circle/ellipse/line/polygon/polyline/path M L H V C S Q T Z; fill/stroke/stroke-width/opacity/viewBox.
+**Implementation notes.** Native SVG subset renderer (no WebView): rect/circle/ellipse/line/polygon/polyline/path M L H V C S Q T A Z; fill/stroke/stroke-width/opacity/viewBox. `A` (the elliptical arc) joined the subset on 2026-09-12: the framework's own brand/despia-logo.svg is four circular arcs, so until then the one SVG in this repository was the one this element could not draw, and a skipped `A` drew garbage rather than nothing because each parser's fallback branch consumed a single token and carried on. Both native lanes convert an arc to cubic segments of at most a quarter turn by the standard endpoint to centre conversion (SVG 1.1 F.6.5), judged against each other by OpenSource/Conformance/svg/arcs.json; the web lane emits the arc as real DOM SVG and the browser draws it. On every lane the two boolean flags must be SEPARATED from the coordinate that follows them: the SVG grammar allows them to run together and these tokenizers read numbers greedily, so a glued path is refused rather than guessed at.
 
 Declared platforms: `ios`, `android`.
 
@@ -117,5 +117,5 @@ Web runtime: `media`.
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

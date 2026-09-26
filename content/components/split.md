@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"collapseAt","type":"number","default":"760"},{"name":"contentIdeal","type":"number","default":"340"},{"name":"contentMax","type":"number","default":"480"},{"name":"contentMin","type":"number","default":"280"},{"name":"detailMin","type":"number","default":"360"},{"name":"expandAt","type":"number","default":"1104"},{"name":"on:change","type":"action","default":null},{"name":"paneRole","type":"enum","default":null,"values":["sidebar","content","detail"]},{"name":"panes","type":"number","default":null},{"name":"resizable","type":"bool","default":"true"},{"name":"sidebarIdeal","type":"number","default":"280"},{"name":"sidebarMax","type":"number","default":"360"},{"name":"sidebarMin","type":"number","default":"220"},{"name":"value","type":"expr","default":null}]
 actions: ["change"]
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -25,7 +25,7 @@ Category: Structure - Live specimens: the [System gallery](/system).
 ## Usage
 
 ```dsx
-<split value="dsx.variable.note"><list paneRole="sidebar" bind="dsx.variable.notes"><text bind="item.title"/></list><vstack paneRole="detail"><text value="{{ dsx.variable.note }}"/></vstack></split>
+<split value="dsx.variable.note"><list paneRole="sidebar" bind="dsx.variable.notes"><text bind="dsx.this.title"/></list><vstack paneRole="detail"><text value="{{ dsx.variable.note }}"/></vstack></split>
 ```
 
 `split` takes children.
@@ -41,7 +41,7 @@ Category: Structure - Live specimens: the [System gallery](/system).
     <variable as="notes">return [{ id: 1, title: 'First note' }, { id: 2, title: 'Second note' }]</variable>
   </head>
   <list paneRole="sidebar" bind="dsx.variable.notes" key="id">
-    <text value="{{ item.title }}"/>
+    <text value="{{ dsx.this.title }}"/>
   </list>
   <vstack paneRole="detail" style="padding: 12px">
     <text value="{{ dsx.variable.note }}"/>
@@ -66,7 +66,7 @@ Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colo
 
 | Attribute | Type | Default | Notes |
 |---|---|---|---|
-| `collapseAt` | `number` | `760` | Semantic renderers stack below this **container** width; native delegates the collapse to the platform split host. |
+| `collapseAt` | `number` | `760` | iOS and Web stack below this **container** width. |
 | `contentIdeal` | `number` | `340` |  |
 | `contentMax` | `number` | `480` |  |
 | `contentMin` | `number` | `280` |  |
@@ -106,7 +106,7 @@ The structural twin provides the two/three-pane plan (paneRole resolution, colla
 
 - Presentation resolves from the split's own container width (ResizeObserver) rather than a native split host; the platform Back chrome is a kernel-rendered button.
 
-**Implementation notes.** The two/three-pane adaptive container (component-library.md W9) - the shared planner is OpenSource/Engine/iOS/SplitPlan.swift with corpus OpenSource/Conformance/split/split.json (TS packages/dom/src/split.ts and Kotlin :core SplitPlan.kt run the same file). Apple renders a real NavigationSplitView (two panes = two columns, three = three; iOS 17+/macOS 14+ bridge value= to preferredCompactColumn so a non-empty selection pushes the detail on compact and the platform Back pop clears it + fires on:change). Android renders the plan's list-detail shape with Compose (:render SplitElement) - compact stack push, medium pinned pair + overlay sidebar, expanded all-pane row with the M3 readable margin. Web plans from the CONTAINER width via ResizeObserver (collapseAt/expandAt are live attributes) and adds draggable hairline dividers on fine pointers; native delegates the compact/regular switch to the platform split host, per system-defaults.md - the same division as `<tabs>`.
+**Implementation notes.** The two/three-pane adaptive container (component-library.md W9) - the shared planner is OpenSource/Engine/Swift/SplitPlan.swift with corpus OpenSource/Conformance/split/split.json (TS packages/dom/src/split.ts and Kotlin :core SplitPlan.kt run the same file). Apple renders a real NavigationSplitView (two panes = two columns, three = three; iOS 17+/macOS 14+ bridge value= to preferredCompactColumn so a non-empty selection pushes the detail on compact and the platform Back pop clears it + fires on:change). Android renders the plan's list-detail shape with Compose (:render SplitElement) - compact stack push, medium pinned pair + overlay sidebar, expanded all-pane row with the M3 readable margin. Web plans from the CONTAINER width via ResizeObserver (collapseAt/expandAt are live attributes) and adds draggable hairline dividers on fine pointers; native delegates the compact/regular switch to the platform split host, per system-defaults.md - the same division as `<tabs>`.
 
 Declared platforms: `ios`, `android`, `web`, `macos`, `windows`, `linux`.
 
@@ -131,5 +131,5 @@ Web runtime: `structural`.
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

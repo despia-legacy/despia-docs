@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"origin","type":"string","default":null},{"name":"src","type":"url","default":null}]
 actions: []
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -48,7 +48,7 @@ Every component in the library is authored at four rungs in the catalog (default
 
 | Renderer | Audited | Dated | Evidence |
 |---|---|---|---|
-| web | n/a | 2026-08-18 | Non-interactive host embed: no rest/hover/pressed/focus/disabled axis on the host itself; the registry-resolution outcome (dsx-view-unavailable card) is value-driven data, and the mounted screen component's interaction states are audited on that component's own rows (OpenSource/Web/support/element-support.json DSXView row; packages/dom/src/elements.ts dsx-view factory). |
+| web | n/a | 2026-08-18 | Non-interactive host embed: no rest/hover/pressed/focus/disabled axis on the host itself; the registry-resolution outcome (dsx-view-unavailable card) is value-driven data, and the mounted screen component's interaction states are audited on that component's own rows (OpenSource/Engine/TypeScript/support/element-support.json DSXView row; packages/dom/src/elements.ts dsx-view factory). |
 | ios | review | 2026-08-18 | Screen lifecycle is the state surface: loading/ready/failed/disappear broadcast on the stable dsx-view scheme, offline-first cached render + background revalidate, atomic content generations (never mixed deploys) (ClosedSource/DSX/Modules/Mandatory/Foundation/Components/Views/DSXView/swift/DSXView.swift header LIFECYCLE + DSXRemoteCache.swift). Verified-by-review; the visual capture awaits the iOS capture lane. |
 | android | review | 2026-08-18 | VERIFIED-BY-REVIEW: loading/ready/failed lifecycle broadcast on the stable surface (DSXViewComponent.kt header E1); loading placeholder = the kernel spinner (header: iOS ProgressView twin); failure strings surfaced (e.g. INTEGRITY message, DSXViewComponent.kt:134); offline-first cached render (DSXContent.cachedFile/freshFile). |
 | desktop | unaudited | unaudited | none recorded |
@@ -90,7 +90,7 @@ The rich Web twin mounts the screen component src names from this build's compil
 
 Declared platforms: `ios`, `android`.
 
-**Adaptivity (web, 2026-08-18).** Pure fill-its-container embed host: the host declares no phone/tablet/desktop variance of its own; presentation belongs to the mounted screen component, audited on its own rows (OpenSource/Web/support/element-support.json DSXView row).
+**Adaptivity (web, 2026-08-18).** Pure fill-its-container embed host: the host declares no phone/tablet/desktop variance of its own; presentation belongs to the mounted screen component, audited on its own rows (OpenSource/Engine/TypeScript/support/element-support.json DSXView row).
 
 ## Theming
 
@@ -104,12 +104,12 @@ Web runtime: `rich`.
 
 | Renderer | Audited | Dated | Evidence |
 |---|---|---|---|
-| web | no, and named | 2026-08-18 | W11 disposition (b), dated decision: the web twin is the documented registry-resolved fallback (OpenSource/Web/support/element-support.json DSXView row keeps status partial); the composed native-surface semantics are native-owned per OpenSource/Documentation/architecture/web-surface-policy.md, so the host's own a11y (labelled role=status unavailable card) is not held to the library axe/keyboard bar on this renderer. Red-by-record. |
-| ios | review | 2026-08-18 | Renders native SwiftUI from the fetched DSX, so standard component semantics apply unchanged (the kernel a11y pass applies on any element (StackStyle.apply, OpenSource/Engine/iOS/Stack.swift:6060-6092: a11yLabel/aria-label, a11yHint, a11yValue, a11yTrait/role, a11yGroup, a11yHidden; on:tap implies .isButton)); the component adds no chrome of its own. ClosedSource/DSX/Modules/Mandatory/Foundation/Components/Views/DSXView/swift/DSXView.swift. Verified-by-review; the visual capture awaits the iOS capture lane. |
+| web | no, and named | 2026-08-18 | W11 disposition (b), dated decision: the web twin is the documented registry-resolved fallback (OpenSource/Engine/TypeScript/support/element-support.json DSXView row keeps status partial); the composed native-surface semantics are native-owned per OpenSource/Documentation/architecture/web-surface-policy.md, so the host's own a11y (labelled role=status unavailable card) is not held to the library axe/keyboard bar on this renderer. Red-by-record. |
+| ios | review | 2026-08-18 | Renders native SwiftUI from the fetched DSX, so standard component semantics apply unchanged (the kernel a11y pass applies on any element (StackStyle.apply, OpenSource/Engine/Swift/Stack.swift:6060-6092: a11yLabel/aria-label, a11yHint, a11yValue, a11yTrait/role, a11yGroup, a11yHidden; on:tap implies .isButton)); the component adds no chrome of its own. ClosedSource/DSX/Modules/Mandatory/Foundation/Components/Views/DSXView/swift/DSXView.swift. Verified-by-review; the visual capture awaits the iOS capture lane. |
 | android | review | 2026-08-18 | VERIFIED-BY-REVIEW: the rendered remote markup carries its own element semantics (every element renders through the same StackNodeView pipeline); the surface adds no chrome needing labels beyond the kernel spinner placeholder (DSXViewComponent.kt). |
 | desktop | unaudited | unaudited | none recorded |
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 

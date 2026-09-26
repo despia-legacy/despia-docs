@@ -7,10 +7,10 @@ element: image
 category: display
 scope: library
 platforms: web,ios,android,desktop
-properties: [{"name":"a11yLabel","type":"string","default":null},{"name":"allowDownscaling","type":"bool","default":"true"},{"name":"asset","type":"string","default":null},{"name":"blurRadius","type":"number","default":"0"},{"name":"cache","type":"enum","default":"default","values":["default","none"]},{"name":"cachePolicy","type":"enum","default":"memoryDisk","values":["memory","disk","memoryDisk","none"]},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"contentFit","type":"enum","default":"cover","values":["cover","contain","fill","none","scaleDown"]},{"name":"contentPosition","type":"string","default":"center"},{"name":"fallback","type":"string","default":"none"},{"name":"fontSize","type":"number","default":"24"},{"name":"icon","type":"sf-symbol","default":null},{"name":"iconSize","type":"number","default":"24"},{"name":"on:error","type":"action","default":"none"},{"name":"on:load","type":"action","default":"none"},{"name":"placeholder","type":"string","default":"none"},{"name":"placeholderFit","type":"string","default":"cover"},{"name":"priority","type":"enum","default":"normal","values":["low","normal","high"]},{"name":"recyclingKey","type":"string","default":"none"},{"name":"src","type":"url","default":null},{"name":"systemImage","type":"sf-symbol","default":null},{"name":"tint","type":"color","default":null}]
+properties: [{"name":"a11yLabel","type":"string","default":null},{"name":"allowDownscaling","type":"bool","default":"true"},{"name":"asset","type":"string","default":null},{"name":"blurRadius","type":"number","default":"0"},{"name":"cache","type":"enum","default":"default","values":["default","none"]},{"name":"cachePolicy","type":"enum","default":"memoryDisk","values":["memory","disk","memoryDisk","none"]},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"contentFit","type":"enum","default":"cover","values":["cover","contain","fill","none","scaleDown"]},{"name":"contentPosition","type":"string","default":"center"},{"name":"fallback","type":"string","default":"none"},{"name":"fontSize","type":"number","default":"24"},{"name":"icon","type":"sf-symbol","default":null},{"name":"iconSize","type":"number","default":"24"},{"name":"on:error","type":"action","default":"none"},{"name":"on:load","type":"action","default":"none"},{"name":"placeholder","type":"string","default":"none"},{"name":"placeholderFit","type":"string","default":"cover"},{"name":"priority","type":"enum","default":"normal","values":["low","normal","high"]},{"name":"recyclingKey","type":"string","default":"none"},{"name":"sources","type":"string","default":null},{"name":"src","type":"url","default":null},{"name":"systemImage","type":"sf-symbol","default":null},{"name":"tint","type":"color","default":null}]
 actions: ["error","load"]
 catalog: 0.1.0
-commit: 4cfb269d9edbd23d395f2e7a0c771b0824e9f0d6
+commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -25,7 +25,7 @@ Category: Display - Live specimens: the [System gallery](/system).
 ## Usage
 
 ```dsx
-<image icon="heart.fill" iconSize="24" color="var(--dsx-accent)"/>
+<image icon="heart.fill" iconSize="24" style="color: var(--dsx-accent)"/>
 ```
 
 `image` takes no children.
@@ -76,6 +76,7 @@ Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colo
 | `placeholderFit` | `string` | `cover` |  |
 | `priority` | `low` \| `normal` \| `high` | `normal` | `high` |
 | `recyclingKey` | `string` | `none` | Identity across a recycled row, so a reused view does not flash the previous image. |
+| `sources` | `string` |  | Responsive candidates beside `src`, comma separated, width first (`400:/hero-400.jpg, 800:/hero-800.jpg`). The web emits `srcset`/`sizes` and the browser chooses; the natives take the narrowest candidate at least as wide as the box times the screen scale. |
 | `src` | `url` |  | Remote image (async, fills, placeholder while loading). |
 | `systemImage` | `sf-symbol` |  |  |
 | `tint` | `color` |  |  |
@@ -108,6 +109,8 @@ The base Web twin renders remote and relative images, every icon name in the sha
 - cache="none" is expressed as a per-mount cache-bust key; the default rides the browser's own HTTP memory/disk cache, which is the platform's equivalent of the native image cache tier.
 - The web icon tier is generated from OpenSource/Conformance/icons/sf-map.json and covers all 99 corpus rows; 89 draw a 24x24 stroke vector and 10 pictographic rows (apple.logo, bitcoinsign.circle.fill, books.vertical, crown.fill, flame.fill, metronome, pianokeys, target, tuningfork, waveform.badge.magnifyingglass) deliberately draw the corpus's own unicode fallback glyph instead.
 - Thirteen names the in-repo web previews author live in the corpus web_extra section rather than icons, because an icons row also pins a Material Symbols codepoint that the bundled Android subset font must carry.
+- The responsive source contract is the browser's to resolve: the twin emits the sources= candidates as srcset plus a sizes hint and never names the file it expects, because a browser may legally take a wider candidate it has already cached. sizes is the measured box in CSS pixels, or auto when no layout has happened yet (and always auto from the server twin, which has no layout). allowDownscaling="false" withholds both, so the author's full size src paints. Pinned by packages/dom/test/image-dom.test.ts and by the sourceCandidates section of OpenSource/Conformance/image/resolution.json.
+- on:progress is unsupported here, with the reason rather than a faked number: an `<img>` reports no byte progress, and making fetch the image transport would move every image off the HTTP cache tier that cachePolicy and on:load cacheType are defined against, onto a CORS surface an `<img>` does not have. A bound handler stamps data-dsx-unsupported="progress" so the absence is inspectable. The two native lanes do not support it either, for their own reason: the bytes are fetched by the shared content plane (DSXImageCache on Apple, DSXContent single flight transfers on Android) rather than by the element adapter, and that plane exposes no per byte callback, so the element cannot report one without inventing a number.
 
 **Implementation notes.** Icon glyph renders at font weight .semibold (Image.swift:23). Android resolves SF names through OpenSource/Conformance/icons/sf-map.json (StackIcons.kt).
 
@@ -134,5 +137,5 @@ Web runtime: `base`.
 
 Every element carries `a11yLabel`, `a11yHint`, `a11yValue`, `a11yTrait`, `a11yGroup` and `a11yHidden`. A control that draws an icon beside text is one group with one label, never two announcements; see the [universal attributes](/components/attributes).
 
-This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Web/support/element-support.json`, the specimen in `OpenSource/Catalog`).
+This page is GENERATED by ClosedSource/scripts/generate_component_docs.rb. A hand edit here is overwritten on the next run by design: fix the ledger instead (the attribute and event contract in `OpenSource/Documentation/reference/stack-elements.json`, the platform support and the audit in `OpenSource/Conformance/library/matrix.json`, the description and the web limits in `OpenSource/Engine/TypeScript/support/element-support.json`, the specimen in `OpenSource/Catalog`).
 
