@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"a11yChildren","type":"expr","default":null},{"name":"a11yLabel","type":"string","default":null},{"name":"commands","type":"expr","default":null},{"name":"on:draw","type":"action","default":null},{"name":"on:frame","type":"action","default":null},{"name":"on:layout","type":"action","default":null},{"name":"on:strokeEnd","type":"action","default":null},{"name":"on:strokeStart","type":"action","default":null},{"name":"opaque","type":"bool","default":"false"},{"name":"scale","type":"string","default":"device"}]
 actions: ["draw","frame","layout","strokeEnd","strokeStart"]
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

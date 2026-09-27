@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"autoscroll","type":"number","default":null},{"name":"axis","type":"enum","default":"vertical","values":["vertical","horizontal"]},{"name":"bind","type":"expr","default":null},{"name":"direction","type":"enum","default":"vertical","values":["vertical","horizontal"]},{"name":"group_by","type":"string","default":null},{"name":"group_footer_by","type":"string","default":null},{"name":"key","type":"string","default":"id"},{"name":"on:move","type":"action","default":null},{"name":"on:reachEnd","type":"action","default":null},{"name":"reorder","type":"bool","default":"false"},{"name":"scroll","type":"bool","default":"true"},{"name":"spacing","type":"number","default":"0"},{"name":"swipeFullLeading","type":"bool","default":"false"},{"name":"swipeFullTrailing","type":"bool","default":"false"},{"name":"swipeLeading","type":"expr","default":null},{"name":"swipeTrailing","type":"expr","default":null}]
 actions: ["move","reachEnd"]
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

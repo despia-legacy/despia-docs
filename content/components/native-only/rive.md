@@ -10,7 +10,7 @@ platforms: ios,android
 properties: [{"name":"a11yLabel","type":"string","default":null},{"name":"alignment","type":"string","default":"center"},{"name":"animation","type":"string","default":null},{"name":"artboard","type":"string","default":null},{"name":"autoplay","type":"bool","default":"true"},{"name":"fit","type":"string","default":"contain"},{"name":"inputs","type":"expr","default":null},{"name":"on:error","type":"action","default":null},{"name":"on:event","type":"action","default":null},{"name":"on:load","type":"action","default":null},{"name":"on:stateChange","type":"action","default":null},{"name":"ref","type":"string","default":null},{"name":"speed","type":"number","default":"1"},{"name":"src","type":"url","default":null},{"name":"stateMachine","type":"string","default":null}]
 actions: ["error","event","load","stateChange"]
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

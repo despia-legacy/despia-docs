@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-accent)"},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"label","type":"string","default":null},{"name":"mode","type":"enum","default":"date","values":["date","time","datetime"]},{"name":"on:change","type":"action","default":null}]
 actions: ["change"]
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

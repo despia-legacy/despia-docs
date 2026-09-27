@@ -10,7 +10,7 @@ platforms: ios,android
 properties: [{"name":"height","type":"number","default":"8"},{"name":"high","type":"color","default":"#FF453A"},{"name":"level","type":"number","default":"0"},{"name":"low","type":"color","default":"#30D158"},{"name":"mid","type":"color","default":"#FFD60A"},{"name":"track","type":"color","default":"var(--dsx-fill)"}]
 actions: []
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"autocapitalize","type":"enum","default":null,"values":["off","none","on","sentences","words","characters"]},{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"enterkeyhint","type":"enum","default":null,"values":["enter","done","go","next","previous","search","send"]},{"name":"maxLines","type":"number","default":"8"},{"name":"minLines","type":"number","default":"3"},{"name":"on:blur","type":"action","default":null},{"name":"on:change","type":"action","default":null},{"name":"on:focus","type":"action","default":null},{"name":"on:submit","type":"action","default":null},{"name":"placeholder","type":"string","default":null},{"name":"resize","type":"enum","default":"vertical","values":["vertical","none"]},{"name":"submitOnEnter","type":"bool","default":"false"}]
 actions: ["blur","change","focus","submit"]
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

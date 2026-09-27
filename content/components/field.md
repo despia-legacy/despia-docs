@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"form","type":"string","default":"form (inherited from enclosing <form as=>)"},{"name":"label","type":"string","default":null},{"name":"message","type":"string","default":null},{"name":"name","type":"string","default":null},{"name":"pattern","type":"regex","default":null},{"name":"placeholder","type":"string","default":null},{"name":"secure","type":"bool","default":"false"},{"name":"type","type":"enum","default":"text","values":["text","email","number","phone","url","secure","toggle","picker"]},{"name":"validate","type":"csv","default":null,"values":["required","email","url","phone","minLength:n","maxLength:n","pattern"]}]
 actions: []
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

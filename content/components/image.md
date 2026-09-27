@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"a11yLabel","type":"string","default":null},{"name":"allowDownscaling","type":"bool","default":"true"},{"name":"asset","type":"string","default":null},{"name":"blurRadius","type":"number","default":"0"},{"name":"cache","type":"enum","default":"default","values":["default","none"]},{"name":"cachePolicy","type":"enum","default":"memoryDisk","values":["memory","disk","memoryDisk","none"]},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"contentFit","type":"enum","default":"cover","values":["cover","contain","fill","none","scaleDown"]},{"name":"contentPosition","type":"string","default":"center"},{"name":"fallback","type":"string","default":"none"},{"name":"fontSize","type":"number","default":"24"},{"name":"icon","type":"sf-symbol","default":null},{"name":"iconSize","type":"number","default":"24"},{"name":"on:error","type":"action","default":"none"},{"name":"on:load","type":"action","default":"none"},{"name":"placeholder","type":"string","default":"none"},{"name":"placeholderFit","type":"string","default":"cover"},{"name":"priority","type":"enum","default":"normal","values":["low","normal","high"]},{"name":"recyclingKey","type":"string","default":"none"},{"name":"sources","type":"string","default":null},{"name":"src","type":"url","default":null},{"name":"systemImage","type":"sf-symbol","default":null},{"name":"tint","type":"color","default":null}]
 actions: ["error","load"]
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

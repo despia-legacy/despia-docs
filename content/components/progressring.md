@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"color","type":"color","default":"var(--dsx-accent)"},{"name":"label","type":"string","default":null},{"name":"lineWidth","type":"number","default":"10"},{"name":"max","type":"number","default":"1"},{"name":"size","type":"number","default":"88"},{"name":"trackColor","type":"color","default":"#2C2C2E"},{"name":"value","type":"number","default":"0"}]
 actions: []
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

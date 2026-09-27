@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"on:commit","type":"action","default":null},{"name":"on:denied","type":"action","default":null},{"name":"on:fail","type":"action","default":null},{"name":"on:finish","type":"action","default":null},{"name":"on:message","type":"action","default":null},{"name":"on:start","type":"action","default":null},{"name":"origin","type":"string","default":null},{"name":"path","type":"string","default":"/"}]
 actions: ["commit","denied","fail","finish","message","start"]
 catalog: 0.1.0
-commit: 10ab2358e69fe64fac0e57c6dd9f31d042cc4d86
+commit: 84cb9c827f770fb520dfb95c4dc8186476512631
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
