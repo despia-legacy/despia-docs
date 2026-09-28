@@ -43,17 +43,6 @@ body (pure markup):
 Save, and the page reloads. The same document renders natively on iOS and Android through
 the Despia app runtimes; markup is never platform-forked.
 
-## The visual editor
-
-```sh
-npx despia edit
-```
-
-serves the Canvas editor against your project: your documents in the sidebar,
-the canvas rendering and simulating them, and saves that write straight back to your
-files. The editor is included with the Despia CLI and runs locally; no account or hosted
-project is required.
-
 ## Ship something
 
 - `dsx build` compiles the deployable web build.
