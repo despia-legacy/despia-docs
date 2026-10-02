@@ -41,3 +41,23 @@ remaining edits see the rows below as they land.
 | 23:30 | `shot` with `pages/PageX` | screenshots | refused for every shot: "component pages/PageX is not in the registry" | The plan step needs `pages/PageX` (file lookup in `Components/` only) and the render step needs `PageX` (registry): no spelling passes both, so documents in a subfolder cannot be shot at all | Resolve shot documents through the registry (or by route) in both steps |
 | 23:32 | `verify --image --route /migrate/map` | the route as an image | wrong: rendered the entry (`/`, PageIndex) at 780 px, ignoring `--route` | The image itself was useful: it showed the compact header wrapping (wordmark, switcher, Ask AI), fixed in DocShell.css | `--route` should select the route; say which route was rendered in the index |
 | 23:35 | (fallback) `evidence/web-launch/shoot.mjs` | real route screenshots incl. open menus | Playwright over dist/, logged as a fallback because `shot` and `verify` could not do it | | |
+
+| 02:50 | `build` (final) | the tree after the popover CSS fix | worked, 3,774 s wall at load 50 to 66 | | Incremental builds; CPU-time SSR budget |
+
+## Final verdict
+
+**Correctness: better than writing files alone.** `lint` caught real bugs I would have shipped (a
+silent write in a formula, two-way binds on computed rows, the entity-before-JSE string trap), its
+messages nearly always carried the fix, and `migrate` codemods were safe. `describe` was the best
+verb: it summarised a 386-line shell as a contract with addresses and flagged the api's missing faces.
+
+**Speed: clearly slower.** A single `insert` took 10 min 44 s and a `set` 8.5 min under fleet load,
+because each re-checks the whole project; a 448-route build takes 9 to 63 minutes with no
+incremental mode. For a docs site that is mostly generated pages this pushes you to generate DSX
+from a script (which the rules allow) and to hand-edit the residue.
+
+**Proof verbs: not yet usable for this project.** `shot` and `verify --image` both failed on the
+customer path (subfolder documents, `--route` ignored, no way to open a menu), so the screenshots
+are Playwright over the built tree, logged as the fallback. The credential guard blocked the
+framework's own docs. These are the top fixes: resolve shot documents through the registry,
+honour `--route`, allow documented placeholders, and scope the guardian to the edited document.

@@ -90,6 +90,11 @@ query is an edge-cache hit keyed by query + filters + contentVersion.
 
 ## Framework gaps (written down, not bypassed)
 
+0. The credential guard refuses documentation placeholders (`-----BEGIN PRIVATE KEY-----`,
+   `AuthKey_XXXXXXXXXX.p8`) in the framework's own guides; compile.mjs inserts an invisible word joiner.
+   `despia shot` cannot render documents in a Components subfolder; `verify --image --route` ignores
+   the route; `shot` vars reach only the root document (no open-menu states). See CLI-ERGONOMICS.md.
+
 1. No per-route head rows (canonical, alternate): `assemble.mjs` stamps `<link rel=canonical>` and
    the markdown alternate into the built HTML.
 2. The build's sitemap has no `<lastmod>`: the compiler writes `sitemap.xml` (front matter / live v3
@@ -116,26 +121,22 @@ query is an edge-cache hit keyed by query + filters + contentVersion.
 - Widget (`<despia-support>`): attributes `mode="docs"`, `intent` (ask-ai, ask-human, propose-edit,
   request-feature), `space`, `page`, `markdown`, `origin`, and an `open()` method.
 
-## STOPPED 2026-10-02 ~19:30 (owner usage limit): state and how to resume
+## Proof (final tree, 2026-10-03)
 
-- Last commit is WIP (see `git log`): CSP stamping (`assemble.mjs` per-page meta CSP with inline-script
-  sha256s; `worker/index.ts` security headers), the search-panel loading spinner (added with
-  `despia insert` / `despia set`, one hand fix), `dsx.shots.json`, CLI-ERGONOMICS.md. Lint was green
-  (469 files, 0 errors, 0 warnings) before these last edits; NOT re-run after them.
-- NOT done: a complete build of the final tree. Two full builds were started; the first (pre App
-  Review) finished, the next were killed by time limits on a Mac at load 40 to 56 (dsx build of 448
-  routes takes 20 to 60 min here). So: no parity run on the final tree, no screenshots yet
-  (`evidence/web-launch/shots/` is empty).
-- Resume, in order:
-  1. `npm run compile && node node_modules/.bin/dsx lint` (expect 0/0).
-  2. `rm -rf dist && node node_modules/.bin/dsx build && node scripts/assemble.mjs` (long; run in the background).
-  3. `node scripts/redirects.mjs && node scripts/setup-parity.mjs` (target 189/189 + 189 .md + extras).
-  4. Screenshots the customer way: `despia shot` with `dsx.shots.json` (documents are addressed as
-     `pages/PageX` because shot does not search `Components/pages`); interaction states (switcher open,
-     help menu open) cannot be shot by `shot` (vars reach only the root): use `despia verify --image`
-     or, as a logged fallback, `evidence/web-launch/shoot.mjs` (Playwright over dist/).
-  5. `npx wrangler deploy --dry-run --outdir dist-worker` to type-check/bundle the worker (no deploy).
-  6. `despia review` on DocShell and the new components; commit.
+- `despia lint`: 469 files, 0 errors, 0 warnings (101 notices).
+- `despia build` + `assemble.mjs`: green, 448 routes (modern 237, legacy 189, migrate 3,
+  troubleshooting 4, releases 1, app-review 14); every page carries docs.js, its canonical, the
+  markdown alternate and a strict per-page CSP (inline scripts by sha256). 550 s on a quiet Mac,
+  up to 63 min at load 50+.
+- Parity (`npm run parity`, `evidence/web-launch/parity.txt`): setup.despia.com 189/189 pages resolve
+  in one 301 to a 200 page with its canonical; 189/189 `.md` siblings; 9/9 extras.
+- Worker: `wrangler deploy --dry-run` bundles clean (nodejs_compat added), 14.3 MB assets / 3.0 MB gzip.
+- Search core bench: 1.93 ms/query lexical, 3.27 ms hybrid CPU, cache hits ~0 (see above).
+- Screenshots `evidence/web-launch/shots/` (Playwright over dist/, the logged fallback because
+  `despia shot` cannot resolve `Components/pages/*` and `verify --image` ignores `--route`):
+  01 modern page, 02 legacy Steps/Tabs/Cards, 03 legacy banner + cards, 04 migration map,
+  05 switcher open, 06 help menu open, 07 search across all spaces, 08 troubleshooting,
+  09 App Review, 10 releases, 11 mobile legacy, 12 mobile help, 13 ParamFields dark.
 
 ## Open items
 
