@@ -1,0 +1,2 @@
+[parity] setup.despia.com pages: 189/189 resolve in one 301 to a 200 page with its canonical
+[parity] .md siblings: 189/189; extras (/, llms.txt, llms-full.txt, sitemap.xml, .md sample): 9/9
