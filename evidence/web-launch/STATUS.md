@@ -88,6 +88,23 @@ bge-m3 about $0.012 per million input tokens) that is about $0.0004 + $0.00007 +
 embedding, so well under one tenth of a cent per 1,000 cold queries before caching. Every repeated
 query is an edge-cache hit keyed by query + filters + contentVersion.
 
+## CMS versioning patch + schema (2026-10-03, commit 2817f32)
+
+- Applied `cms/docs-versioning.patch`: `DOCS_CONTENT` (build an older version from `versions/<v>/`),
+  pages filtered by `since`/`removed` against `DOCS_VERSION`, `versions.json` from
+  `data/docs-versions.json` (latest at `/`, older at `/v/<v>/`). Not applied: the inline
+  "> Added in ..." marker line, because DocShell already shows since/changed/removed as chips (it would
+  say it twice). Added the version picker (stock popover over `/versions.json`).
+- CMS schema v1 accepted: troubleshooting `platform: both`, `status`, `reportedAt`/`workaroundAt`/
+  `resolvedAt`/`resolvedIn`/`releaseNote` (fixedAt/releasedAt kept as aliases); App Review fields
+  already matched; releases read the changelog collection's fields and hide `status: upcoming`.
+- Lint after the patch: 0 errors, 0 warnings. Guarded build (rule 15:
+  `perl -e 'alarm shift; exec @ARGV' 240 heavy.sh node node_modules/.bin/dsx build`): killed by the
+  240 s alarm, exit 142, with no build output; heavy.sh appears to have still been waiting on its load
+  guard (load 22). The docs build needs about 550 s on a quiet Mac, so it can never finish inside the
+  240 s bound. Owner or root decision needed: a larger bound for this build, or an incremental
+  `despia build`. The last complete build (before this patch) is the proof above.
+
 ## Framework gaps (written down, not bypassed)
 
 0. The credential guard refuses documentation placeholders (`-----BEGIN PRIVATE KEY-----`,

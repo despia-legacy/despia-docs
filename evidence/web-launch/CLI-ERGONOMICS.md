@@ -61,3 +61,5 @@ customer path (subfolder documents, `--route` ignored, no way to open a menu), s
 are Playwright over the built tree, logged as the fallback. The credential guard blocked the
 framework's own docs. These are the top fixes: resolve shot documents through the registry,
 honour `--route`, allow documented placeholders, and scope the guardian to the edited document.
+
+| 03:28 | `perl alarm 240 heavy.sh dsx build` | rule 15 guarded build after the CMS patch | refused by the guard: exit 142 at 240 s, no output (heavy.sh still waiting on load) | The guard works as designed; the build cannot fit (448 routes take 550+ s even on a quiet Mac) | Incremental build, or a build bound sized to the project |
