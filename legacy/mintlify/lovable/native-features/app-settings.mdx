@@ -1,0 +1,63 @@
+---
+title: "App Settings"
+description: "Open your app's native settings page directly from within your Lovable mobile app to guide users to permission controls."
+icon: "gear"
+---
+
+<Note>
+  **This setting is incredible for re-engaging users!** It allows you to re-request users to grant push notification access, which keeps users engaged in your app. You only get one chance to ask for push permission, but this setting also allows you to use the deep link feature to request it multiple times without any limit, all while using your own custom UI.
+</Note>
+
+<iframe src="https://www.youtube.com/embed/hbr3nlHVqQc" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native settings navigation to my app using the Despia SDK from: https://www.npmjs.com/package/despia-native
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a settings navigation system that uses the Despia command: `despia("settingsapp://")` to open your app's native settings page where users can manage permissions like notifications, location, camera, and more.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and the native mobile OS. When triggered, Despia opens your app's dedicated settings page in the device's native settings application, allowing users to manage app-specific permissions, notifications, and preferences directly from the native interface.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Open App Settings
+
+Call the `despia()` function with the Settings Command:
+
+```javascript
+despia("settingsapp://")
+```
+
+## Resources
+
+- [NPM Package](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native settings navigation into your generated apps.
+
+For additional support or questions, please contact our support team at [support@despia.com](mailto:support@despia.com)

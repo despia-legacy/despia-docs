@@ -1,0 +1,73 @@
+---
+title: "Clipboard"
+description: "Retrieve clipboard content from users' devices within your Lovable application."
+icon: "copy"
+---
+
+<iframe src="https://www.youtube.com/embed/zoWQKLhlVp4" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Access clipboard content from native mobile devices in your application using the Despia SDK from: https://www.npmjs.com/package/despia-native
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  1. Import the Despia SDK in your component
+  2. Read clipboard data using `await despia('getclipboard://', ['clipboarddata'])`
+  3. Access the clipboard content through the returned object using `.clipboarddata`
+  4. Display or process the clipboard content in your application
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia SDK provides native bridge functionality to access device clipboard through async method calls. The clipboard content is returned as a JSON object with the text content accessible via the `clipboarddata` key.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Read Clipboard Content
+
+Access the clipboard and display the content in your UI:
+
+```tsx
+// Simple example - read and display clipboard
+const clipboardData = await despia('getclipboard://', ['clipboarddata']);
+const content = clipboardData.clipboarddata;
+
+// Display in UI
+<p>Clipboard: {content}</p>
+
+// Use in a React component
+const handlePasteFromClipboard = async () => {
+  const data = await despia('getclipboard://', ['clipboarddata']);
+  setInputValue(data.clipboarddata);
+};
+```
+
+## Resources
+
+- [NPM Package](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of clipboard access into your generated apps.
+
+For additional support or questions, please contact our support team at [support@despia.com](mailto:support@despia.com)

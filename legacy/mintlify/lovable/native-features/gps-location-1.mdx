@@ -1,0 +1,178 @@
+---
+title: "GPS Location"
+icon: "location-arrow"
+description: "Track and retrieve a user's real-time location data with configurable intervals using the Despia SDK."
+---
+
+<Note>
+  This is the second version of background location tracking in Despia. This version utilizes the real native system’s background task capabilities to send network requests while the app is closed. This ensures reliable background location tracking for GPS-based applications like taxi apps, delivery apps, and so on. Unlike the previous version, this version does not inherit any WebView GPS limitations because it uses real native modules.
+</Note>
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add location tracking functionality to my app using the Despia SDK from: https://www.npmjs.com/package/despia-native
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Start tracking by calling: `despia("location://?server=https://api.example.com/track&buffer=10")`
+
+  This will begin collecting GPS coordinates at the specified interval (buffer in seconds). The server parameter is optional - if omitted, locations are only stored locally.
+
+  Stop tracking and retrieve all collected data: `const data = await despia("stoplocation://", ["locationSession"])`
+
+  The response array includes objects with:
+
+  - **latitude** - GPS latitude coordinate
+  - **longitude** - GPS longitude coordinate
+  - **timestamp** - Unix timestamp when location was recorded (seconds since epoch)
+  - **gpsTimestamp** - GPS device timestamp (seconds since epoch)
+  - **speed** - current speed in meters per second (null if unavailable)
+  - **course** - direction of travel in degrees (0-360, null if unavailable)
+  - **altitude** - elevation above sea level in meters
+  - **horizontalAccuracy** - accuracy radius of lat/lng in meters (lower is better)
+  - **verticalAccuracy** - accuracy of altitude measurement in meters
+
+  Use this to track user movements, calculate distances, analyze travel patterns, or implement location-based features. The buffer interval prevents excessive battery drain by controlling update frequency.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it Works**: Despia activates the device's native GPS and location services to continuously monitor the user's position. Location updates are collected at the interval specified by the buffer parameter (in seconds). Each update is optionally sent to your server endpoint and always stored locally in an array. When tracking stops, all collected location points are returned to your JavaScript code for processing or display.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Start Location Tracking
+
+```javascript
+// With server endpoint (sends updates to your API)
+despia("location://?server=https://api.example.com/track&buffer=10");
+
+// Without server (local storage only)
+despia("location://?buffer=5");
+```
+
+**Parameters:**
+
+- `server` (optional) - API endpoint to receive location updates via POST
+- `buffer` (required) - Minimum seconds between location updates (e.g., 5, 10, 30)
+
+### 3. Stop Tracking and Retrieve Data
+
+```javascript
+const data = await despia("stoplocation://", ["locationSession"]);
+const locations = data.locationSession;
+// Stop tracking & update state
+console.log(locations);
+```
+
+### 4. Example Response
+
+```json
+[
+    {
+        "latitude": 25.276987,
+        "longitude": 55.296249,
+        "timestamp": 1737219125.5,
+        "gpsTimestamp": 1737219125.3,
+        "speed": 2.5,
+        "course": 87.3,
+        "altitude": 12.4,
+        "horizontalAccuracy": 5.2,
+        "verticalAccuracy": 3.8
+    },
+    {
+        "latitude": 25.277123,
+        "longitude": 55.296401,
+        "timestamp": 1737219135.7,
+        "gpsTimestamp": 1737219135.5,
+        "speed": 3.1,
+        "course": 89.7,
+        "altitude": 12.6,
+        "horizontalAccuracy": 4.8,
+        "verticalAccuracy": 3.5
+    },
+    {
+        "latitude": 25.277289,
+        "longitude": 55.296587,
+        "timestamp": 1737219145.9,
+        "gpsTimestamp": 1737219145.7,
+        "speed": null,
+        "course": null,
+        "altitude": 12.3,
+        "horizontalAccuracy": 6.1,
+        "verticalAccuracy": 4.2
+    }
+]
+```
+
+### 6. Calculate Distance and Analyze Movement
+
+```javascript
+const data = await despia("stoplocation://", ["locationSession"]);
+const locations = data.locationSession;
+
+// Filter for high-accuracy locations only
+const accurateLocations = locations.filter(loc => loc.horizontalAccuracy < 10);
+
+// Calculate total distance traveled (simple method)
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371000; // Earth's radius in meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    
+    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+              Math.cos(φ1) * Math.cos(φ2) *
+              Math.sin(Δλ/2) * Math.sin(Δλ/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    
+    return R * c; // Distance in meters
+}
+
+let totalDistance = 0;
+for (let i = 1; i < accurateLocations.length; i++) {
+    const prev = accurateLocations[i - 1];
+    const curr = accurateLocations[i];
+    totalDistance += calculateDistance(
+        prev.latitude, prev.longitude,
+        curr.latitude, curr.longitude
+    );
+}
+
+console.log(`Total distance: ${(totalDistance / 1000).toFixed(2)} km`);
+
+// Check if user is moving
+const isMoving = locations.some(loc => loc.speed && loc.speed > 0.5);
+console.log(`User is ${isMoving ? 'moving' : 'stationary'}`);
+```
+
+## Resources
+
+[**NPM Package**](https://www.npmjs.com/package/despia-native)
+
+View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native rewarded ads into your generated apps.
+
+For additional support or questions, please contact our support team at [support@despia.com](mailto:support@despia.com)

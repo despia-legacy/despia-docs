@@ -1,0 +1,200 @@
+---
+title: "Wrong Framework"
+description: "Why Despia is its own native runtime, and how to configure AI tools to work with it correctly."
+sidebarTitle: "Wrong Framework"
+icon: "code"
+---
+
+<Warning>
+  This is one of the most common issues users encounter, particularly when using AI tools to build their apps. If your AI assistant is generating Capacitor or Cordova-style code, read this page before continuing.
+</Warning>
+
+## The Mistake
+
+Many users and AI assistants assume Despia works like Capacitor or Cordova because all three convert web apps into native mobile apps. This assumption leads to:
+
+- Incorrect plugin usage
+- Broken native feature integrations
+- Wasted development time rebuilding incorrect setups
+- Unnecessary AI token spend from repeated corrections
+
+**Despia is its own native runtime with its own architecture, APIs, and documentation. While Despia was partly inspired by the limitations of frameworks like Capacitor, it works fundamentally differently under the hood.**
+
+<Info>
+  This is not a Despia bug. AI tools default to Capacitor and Cordova because years of public documentation for those frameworks exist online. Despia's context must be provided manually.
+</Info>
+
+## Why They Are Different
+
+|  | Capacitor / Cordova | Despia |
+| --- | --- | --- |
+| Architecture | Plugin bridge over WebView | Optimized native runtime with local server |
+| Offline support | Relies on service workers | Built-in Local Server |
+| Native features | Plugin ecosystem | First-party native feature SDKs |
+| Documentation | ionic.io / cordova.apache.org | setup.despia.com only |
+| AI training data | Widely available online | Must be provided manually |
+
+## The Only Official Documentation
+
+There is one source of truth for Despia:
+
+[**https://setup.despia.com**](https://setup.despia.com)
+
+<Warning>
+  Do not rely on generic hybrid app guides, Capacitor or Cordova documentation, third-party blog posts, or AI-generated code that has not been grounded in Despia's official docs.
+</Warning>
+
+---
+
+## Getting Your AI to Use Despia Correctly
+
+There are three approaches, listed from most effective to least. Use whichever fits your tool and workflow.
+
+### Option 1: Add the Despia MCP (Recommended)
+
+The Despia MCP server gives your AI assistant direct, always-up-to-date knowledge of the `despia-native` package, including available native features, correct syntax, and implementation patterns. It is the most reliable way to ensure your AI writes correct Despia code without you having to explain the API.
+
+**MCP URL:** `https://setup.despia.com/mcp`
+
+<Tabs>
+  <Tab title="Lovable, Bolt, v0">
+    If your tool supports MCP, paste the URL directly into the MCP settings:
+
+    ```text
+    https://setup.despia.com/mcp
+    ```
+
+    Look for **Add MCP** or **MCP Settings** in your builder's settings panel.
+  </Tab>
+  <Tab title="Cursor">
+    Add to `~/.cursor/mcp.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "despia": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+        }
+      }
+    }
+    ```
+
+    Restart Cursor after saving.
+  </Tab>
+  <Tab title="VS Code">
+    Add to `.vscode/mcp.json` in your project root:
+
+    ```json
+    {
+      "servers": {
+        "despia": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Windsurf">
+    Go to **Settings \> Plugins \> Add MCP Server** and add:
+
+    ```json
+    {
+      "mcpServers": {
+        "despia": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Claude Desktop">
+    Add to your `claude_desktop_config.json`:
+
+    - **Mac:** `~/Library/Application Support/Claude/claude_desktop_config.json`
+    - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+
+    ```json
+    {
+      "mcpServers": {
+        "despia": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+<Note>
+  Local tools (Cursor, VS Code, Windsurf, Claude Desktop) require **Node.js v18 or higher**.
+</Note>
+
+---
+
+### Option 2: Add the Documentation Index via llms.txt
+
+If you cannot or do not want to configure an MCP, Despia publishes a machine-readable documentation index that AI tools can read directly:
+
+[**https://setup.despia.com/llms.txt**](https://setup.despia.com/llms.txt)
+
+This file lists every available documentation page. Paste the URL into your AI tool's system prompt or custom knowledge so it can discover and fetch the correct pages before generating code.
+
+```text
+Before writing any Despia code, fetch and read https://setup.despia.com/llms.txt
+to discover all available documentation pages, then read the relevant pages.
+```
+
+<Tip>
+  This approach works with any AI tool that can fetch URLs, including ChatGPT with browsing enabled, Claude, and most coding assistants. It requires no installation or configuration beyond a single line in your system prompt.
+</Tip>
+
+---
+
+### Option 3: Add a System Prompt
+
+If neither of the above options is available, add the following to your system prompt or custom instructions. This is the minimum required to prevent the AI from defaulting to Capacitor or Cordova.
+
+```text
+Always read and refer to https://setup.despia.com before writing any code.
+This app uses Despia, not Capacitor, Cordova, or any other hybrid framework.
+Despia has its own native runtime, local server, and native feature SDKs.
+Do not use Capacitor plugins, Cordova plugins, or any assumptions from other frameworks.
+Always attach https://setup.despia.com to your queries for context.
+```
+
+<Note>
+  For Lovable users: add the above to your **Knowledge** or **Custom Instructions** in Lovable's settings so it applies to every prompt automatically. See the [Lovable integration guides](/lovable/how-it-works) for details.
+</Note>
+
+---
+
+## Pre-Support Checklist
+
+Before contacting support, confirm the following:
+
+<Steps>
+  <Step title="Check your documentation source">
+    You are only referencing [setup.despia.com](https://setup.despia.com) for implementation guidance. No other source is official.
+  </Step>
+  <Step title="Check your AI tool's context">
+    You have configured your AI tool using one of the three options above: MCP, llms.txt, or a system prompt.
+  </Step>
+  <Step title="Check your AI queries">
+    You are attaching [https://setup.despia.com](https://setup.despia.com) to your queries so the AI has live access to the correct context.
+  </Step>
+  <Step title="Check for mixed code">
+    You are not mixing Despia code with Capacitor plugins, Cordova plugins, or any other hybrid framework patterns.
+  </Step>
+</Steps>
+
+## Contacting Support
+
+If you have confirmed all of the above and are still experiencing issues, contact the Despia support team at [**support@despia.com**](mailto:support@despia.com) and include:
+
+- A description of what you are trying to implement
+- The relevant code or error message
+- Which AI tool you are using, if applicable

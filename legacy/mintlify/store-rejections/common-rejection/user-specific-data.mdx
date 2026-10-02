@@ -1,0 +1,285 @@
+---
+title: "User-Specific Data"
+description: "Your app was rejected because it collects personal data that isn't necessary for its functionality. Here's how to fix it."
+icon: "align-left"
+---
+
+## What are user-specific data rejections?
+
+**App stores reject apps that collect unnecessary personal information**
+
+Apple and Google enforce data minimization. If your app asks for gender, birthday, phone number, or other personal details without a clear reason tied to app functionality, it will be rejected.
+
+Common rejection messages:
+
+- "Your app collects user data that is not necessary for its functionality"
+- "The app requests personal information without clear justification"
+- "Data collection does not appear to be required for the app's core features"
+- "Your app asks for information that is not relevant to its purpose"
+
+These rejections require removing unnecessary data collection or clearly justifying it.
+
+---
+
+## Why this happens
+
+**Data minimization is a core privacy principle**
+
+Both Apple and Google require apps to collect only data that's necessary for the app to function. Collecting data "just in case" or for unspecified future use is not allowed.
+
+Common mistakes:
+
+- Asking for gender in a calculator app
+- Requiring birthday for a notes app
+- Collecting phone number when email is sufficient
+- Mandatory profile fields that aren't used anywhere
+- Copying signup forms from web without considering necessity
+- Collecting data for analytics or marketing without disclosure
+
+---
+
+## How to fix it
+
+### Only collect what you use
+
+**Every data field must serve a clear purpose in your app**
+
+Before asking for any personal information, answer: "What feature breaks if we don't have this?"
+
+If you can't point to a specific feature that needs the data, don't collect it.
+
+| Data field   | Acceptable reason                     | Not acceptable                     |
+| :----------- | :------------------------------------ | :--------------------------------- |
+| Gender       | Fitness app calculating calorie needs | Social app "for personalization"   |
+| Birthday     | Age-restricted content verification   | Generic app "for birthday rewards" |
+| Phone number | SMS-based authentication              | "To contact you about updates"     |
+| Location     | Map/navigation features               | "To improve our services"          |
+| Full name    | Legal/financial transactions          | "To personalize your experience"   |
+| Photo        | Profile-based social features         | Notes app "for your account"       |
+
+---
+
+### Remove unnecessary fields
+
+**The easiest fix is deletion**
+
+If a data field isn't essential, remove it entirely. You can always add it later when you have a clear use case.
+
+**Common fields to reconsider:**
+
+- Gender (rarely needed outside health/fitness)
+- Birthday (rarely needed outside age verification)
+- Phone number (email often sufficient)
+- Full legal name (username often sufficient)
+- Address (only needed for shipping/delivery)
+- Profile photo (only needed for social features)
+
+**Before:**
+
+```
+Sign Up
+- Email *
+- Password *
+- Full Name *
+- Gender *
+- Birthday *
+- Phone Number *
+- Address
+```
+
+**After:**
+
+```
+Sign Up
+- Email *
+- Password *
+```
+
+Collect additional data only when the user accesses features that need it.
+
+---
+
+### Make optional fields truly optional
+
+**If it's not required, don't require it**
+
+If you want to offer personalization but the data isn't essential, make the field optional and explain why you're asking.
+
+- Profile (optional)
+  - Display Name - Shown to other users in comments
+  - Birthday (optional) - We'll send you a special offer on your birthday
+
+**Users can skip optional fields. If most of your users skip a field, that's a sign you don't need it.**
+
+---
+
+### Justify collection in the app
+
+**Explain why you need each piece of data**
+
+If data is truly necessary, explain it at the point of collection. Reviewers look for this.
+
+**Wrong:**
+
+```
+Gender
+○ Male
+○ Female
+○ Other
+```
+
+No explanation. Reviewer will ask why a to-do app needs gender.
+
+**Right:**
+
+```
+Biological Sex
+○ Male
+○ Female
+
+This is used to calculate your basal metabolic rate 
+and personalize calorie recommendations.
+```
+
+Clear connection to app functionality.
+
+---
+
+### Collect data progressively
+
+**Ask for data when it's needed, not upfront**
+
+Don't front-load all data collection in signup. Collect information when the user reaches features that need it.
+
+**Wrong flow:**
+
+1. Signup: Email, password, name, gender, birthday, phone, location
+2. App: User never uses features that need most of that data
+
+**Right flow:**
+
+1. Signup: Email, password
+2. Later: User uses fitness feature → Ask for gender/weight
+
+This shows reviewers that each piece of data has a purpose.
+
+---
+
+### Update privacy disclosure
+
+**Your privacy policy must explain data usage**
+
+Every piece of data you collect must be disclosed in your privacy policy with a clear explanation of why.
+
+**Required for each data type:**
+
+- What data you collect
+- Why you need it (specific feature or purpose)
+- How you use it
+- Who you share it with (if anyone)
+- How users can delete it
+
+If you can't write a clear justification in your privacy policy, you probably shouldn't collect it.
+
+See: [Privacy Policy Rejections](https://setup.despia.com/roadblocks/app-review/privacy-policy)
+
+---
+
+### Special categories require extra care
+
+**Some data types have additional restrictions**
+
+Certain data categories are considered sensitive and require stronger justification:
+
+**Health data:**
+
+- Only collect if app is health-focused
+- Must explain specific health feature that needs it
+- Additional App Store disclosures required
+
+**Financial data:**
+
+- Only collect if processing payments or providing financial services
+- Must have appropriate security measures
+- Often requires additional compliance
+
+**Location data:**
+
+- Must have clear feature requiring location
+- "While using" vs "Always" must match actual need
+- Explain in location permission prompt
+
+**Contacts/Photos:**
+
+- Only access if user explicitly uses sharing/import feature
+- Don't request on first launch
+- Explain what you'll do with access
+
+---
+
+### What reviewers check
+
+**Reviewers evaluate data necessity during review**
+
+They will:
+
+- Sign up and note every data field requested
+- Check if collected data appears anywhere in the app
+- Verify data fields connect to visible features
+- Read your privacy policy for justification
+- Flag mismatches between collection and usage
+
+**Red flags for reviewers:**
+
+- Many required fields during signup
+- Personal data collected but never displayed/used
+- No explanation for why data is needed
+- Privacy policy doesn't mention collected data
+- Data fields that don't match app category
+
+---
+
+## Quick checklist
+
+**Before collecting any data:**
+
+1. Can the app function without this data?
+2. What specific feature uses this data?
+3. Is this the minimum data needed for that feature?
+4. Can this be optional instead of required?
+5. Is collection explained at point of request?
+
+**For your app:**
+
+ 6. Signup only asks for essential fields
+ 7. Additional data collected progressively when needed
+ 8. Optional fields are clearly marked optional
+ 9. Each field has visible use in the app
+10. Privacy policy explains all data collection
+
+---
+
+## Common rejection reasons
+
+| Rejection                       | Fix                                         |
+| :------------------------------ | :------------------------------------------ |
+| "Collects unnecessary data"     | Remove fields not tied to specific features |
+| "Gender/birthday not justified" | Remove or explain connection to feature     |
+| "Too much data at signup"       | Move to progressive collection              |
+| "No explanation for data use"   | Add context text at point of collection     |
+| "Privacy policy mismatch"       | Update policy to match actual collection    |
+
+---
+
+## Still stuck?
+
+If you keep getting rejected for data collection:
+
+1. List every data field you collect and write one sentence explaining the feature that needs it
+2. If you can't write that sentence, remove the field
+3. Have someone unfamiliar with your app sign up and ask "why are they asking for this?" at each field
+4. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Your rejection notice in full
+   - List of data fields you collect
+   - Explanation of why each field is needed
+   - Screenshot of your signup/profile flow

@@ -1,0 +1,94 @@
+---
+title: "Simple Storage"
+description: "Persist data directly on the user's device using simple read/write commands with the Despia SDK."
+icon: "database"
+---
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add local storage functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  <Danger>
+    **This SDK is compatible only with the Native Despia Runtime. Ensure that the User Agent string includes “despia” before running this code. If the User Agent string doesn’t include “despia” you can use Local Storage as a web fallback.**
+  </Danger>
+  Create a local storage system that uses Despia URLs like: `despia("writevalue://{YOUR-JSON-STRING-DATA}")` to save data and `const data = await despia("readvalue://", ["storedValues"])` to retrieve data. The data is stored as a single string on the device and returned in the response object.
+
+  You can access the data like this:
+
+  ```javascript
+  const userData = { refresh_token: "SSBMT1ZFIERFU1BJQSBOQVRJVkUgU08gTVVDSCBJIFdBTk5BIEtJU1MgSVQh" };
+  const encoded = encodeURIComponent(JSON.stringify(userData));
+  await despia(`writevalue://${encoded}`);
+  
+  const data = await despia("readvalue://", ["storedValues"]);
+  const userData = JSON.parse(decodeURIComponent(data.storedValues));
+  console.log(userData.refresh_token);
+  ```
+
+  <Note>
+    **Refrain from blocking any UI elements or adding loading screens before data is loaded. This is because most sessions will not have initial data yet if no data has been stored.**
+  </Note>
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and native device storage. Store user preferences, tokens, or settings directly on the device. Data persists between app sessions and is accessed through simple URL commands that trigger native storage operations.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Write Data
+
+Save data to device storage:
+
+```javascript
+const userData = { refresh_token: "SSBMT1ZFIERFU1BJQSBOQVRJVkUgU08gTVVDSCBJIFdBTk5BIEtJU1MgSVQh" };
+const encoded = encodeURIComponent(JSON.stringify(userData));
+await despia(`writevalue://${encoded}`);
+```
+
+### 3. Read Data
+
+Retrieve stored data:
+
+```javascript
+const data = await despia("readvalue://", ["storedValues"]);
+const userData = JSON.parse(decodeURIComponent(data.storedValues));
+console.log(userData);
+```
+
+## Storage Details
+
+- **Single key-value pair**: One storage slot per app
+- **String format**: Data must be URL-encoded strings (use JSON for objects)
+- **Promise-based**: Use `await` to retrieve data asynchronously
+- **Property access**: Request `["storedValues"]` to get stored data
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native device storage into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

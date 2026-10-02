@@ -1,0 +1,344 @@
+---
+title: "OCR"
+description: "Run native optical character recognition on any image on iOS and Android, with no server round-trips and no third-party API keys."
+icon: "barcode-scan"
+---
+
+Run optical character recognition on any image using the device's native on-device text engine, returning the extracted text straight to your web app. Read from a hosted image, a photo the user picks, a multi-page document scan, or raw image bytes already held in memory. Recognition runs entirely on-device, so it works offline and never sends image data anywhere. Useful for receipts, invoices, business cards, ID capture, handwritten notes, and any flow where you would otherwise ship an image to a cloud OCR service.
+
+<Info>
+  Assign `window.onVisionEvent` before issuing the first call. Results are delivered to that callback as soon as recognition finishes, and any event emitted before the callback exists is dropped rather than queued.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+OCR is a two-part flow. Assign `window.onVisionEvent` to receive results, then call `vision://ocr` with the image you want recognized. Each call fires a `queued` event the moment it is accepted, then a `success` event carrying the extracted text once recognition completes, or an `error` event if it fails. Every event echoes back the `id` you passed, so a single callback can route results across many requests running at once.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onVisionEvent = function (evt) {
+    if (evt.type === 'ocr' && evt.status === 'success') {
+        console.log(evt.text)
+    }
+}
+
+if (isDespia) {
+    const src = encodeURIComponent('https://cdn.example.com/receipt.jpg')
+    despia(`vision://ocr?id=receipt-1&src=${src}`)
+}
+```
+
+The result text is normalized before delivery: every line is trimmed of leading and trailing whitespace, consecutive blank lines collapse to a single break, and the whole string is stripped at both ends. The `lines` array is left as the engine produced it, so each line object holds the raw recognized text if you need it. `evt.text` is ready to display or parse without further cleanup.
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `src` | Yes | The image to recognize. Accepts a hosted HTTPS URL, a picker token (`@imagepicker`, `@filepicker`, `@documentscanner`), a `data:` URI, or a raw base64 string. URL and data URI values must be wrapped with `encodeURIComponent`. |
+| `id` | No | A label echoed on every event for this request. Use it to correlate results when several jobs run concurrently. Defaults to an auto-generated UUID. |
+| `lang` | No | BCP-47 language hint, comma-separated for multiple scripts. Advisory only, both platforms auto-detect by default. See Choosing a recognition language. |
+
+---
+
+## Reading the result
+
+Assign `window.onVisionEvent` once. It receives every event for every request, each tagged with the `id` you supplied and a `status` describing what happened.
+
+```javascript
+window.onVisionEvent = function (evt) {
+    switch (evt.status) {
+        case 'queued':
+            showSpinner(evt.id)
+            break
+        case 'success':
+            renderText(evt.id, evt.text)
+            break
+        case 'error':
+            showError(evt.id, evt.error.code)
+            break
+        case 'dismissed':
+            hideSpinner(evt.id)
+            break
+    }
+}
+```
+
+A successful result carries the full text and a per-line breakdown. A `data:` URI or hosted receipt produces a `success` event shaped like this:
+
+```json
+{
+    "type": "ocr",
+    "id": "receipt-1",
+    "status": "success",
+    "text": "MARKET FRESHMilk 3.20\nBread 2.40\nTotal 5.60",
+    "lines": [
+        { "text": "MARKET FRESH", "confidence": 0.98 },
+        { "text": "Milk 3.20", "confidence": 0.95 },
+        { "text": "Bread 2.40", "confidence": 0.96 },
+        { "text": "Total 5.60", "confidence": 0.97 }
+    ]
+}
+```
+
+On Android the recognizer does not expose a per-line score, so `confidence` is absent. The same receipt produces:
+
+```json
+{
+    "type": "ocr",
+    "id": "receipt-1",
+    "status": "success",
+    "text": "MARKET FRESH\nMilk 3.20\nBread 2.40\nTotal 5.60",
+    "lines": [
+        { "text": "MARKET FRESH" },
+        { "text": "Milk 3.20" },
+        { "text": "Bread 2.40" },
+        { "text": "Total 5.60" }
+    ]
+}
+```
+
+A failure carries a stable `code` and an advisory `message`:
+
+```json
+{
+    "type": "ocr",
+    "id": "receipt-1",
+    "status": "error",
+    "error": {
+        "code": "fetch_failed",
+        "message": "could not fetch https://cdn.example.com/receipt.jpg"
+    }
+}
+```
+
+The four statuses:
+
+<ParamField path="queued" type="object">
+  The request was accepted and recognition is running. Carries only `type` and `id`.
+</ParamField>
+
+<ParamField path="success" type="object">
+  Recognition completed. Carries `text`, the full extracted string with lines joined by `\n`, and `lines`, an array of `{ text, confidence? }` objects in reading order. `confidence` is a float from `0` to `1` on iOS; it is omitted on Android, where the recognizer does not expose a per-line score. Treat a missing `confidence` as unknown rather than zero.
+</ParamField>
+
+<ParamField path="error" type="object">
+  Recognition failed. Carries `error.code`, a stable machine-readable string you can branch on, and `error.message`, a human-readable detail for logging. See Error reference for the full list.
+</ParamField>
+
+<ParamField path="dismissed" type="object">
+  The user closed a picker or the document scanner without selecting anything. No text was produced. Carries only `type` and `id`.
+</ParamField>
+
+---
+
+## Recognizing a hosted image
+
+Pass an HTTPS URL as `src` to recognize an image already hosted on your CDN or storage. The native side fetches it with the WebView's cookies and user-agent attached, so images behind your app's own session are reachable without extra authentication.
+
+```javascript
+if (isDespia) {
+    const src = encodeURIComponent('https://cdn.example.com/invoices/42.png')
+    despia(`vision://ocr?id=invoice-42&src=${src}`)
+}
+```
+
+<Warning>
+  `src` must be a publicly reachable HTTPS URL. Data URLs, blob URLs, and `file://` paths are not fetched over the network and will not resolve. If your app produces an image on the client, a canvas export or a processed photo, upload it to your storage layer first and pass the returned HTTPS URL. To recognize in-memory bytes directly without an upload, use a data URI instead, covered below.
+</Warning>
+
+---
+
+## Letting the user choose an image
+
+Three picker tokens open a native chooser instead of taking a URL. Pass one as `src` and the user's selection flows straight into recognition.
+
+`@imagepicker` opens the system photo library. `@filepicker` opens a file browser filtered to images. Both let the user pick an existing image; the difference is purely which native chooser appears.
+
+```javascript
+if (isDespia) {
+    // Photo library
+    despia(`vision://ocr?id=from-photos&src=@imagepicker`)
+
+    // File browser, images only
+    despia(`vision://ocr?id=from-files&src=@filepicker`)
+}
+```
+
+Closing a picker without choosing fires a `dismissed` event on that request's `id`. Pickers are modal, so only one can be open at a time; a second picker request issued while one is already open returns `picker_busy` immediately while the first stays on screen.
+
+---
+
+## Scanning a multi-page document
+
+`@documentscanner` opens the native document camera with automatic edge detection and perspective correction. The user captures one or more pages, confirms the batch, and every page is recognized together and returned in a single `success` event. The pages are concatenated in capture order into `evt.text`, separated by line breaks like any other text, so you can render or parse the whole document as one string.
+
+```javascript
+if (isDespia) {
+    despia(`vision://ocr?id=contract&src=@documentscanner`)
+}
+```
+
+A two-page scan arrives as one `success` event, every page's lines flattened into a single `lines` array and joined into `text`:
+
+```json
+{
+    "type": "ocr",
+    "id": "contract",
+    "status": "success",
+    "text": "RENTAL AGREEMENT\nTenant: A. Smith\nTerm: 12 months\nSigned in duplicate\nLandlord: B. Jones",
+    "lines": [
+        { "text": "RENTAL AGREEMENT", "confidence": 0.99 },
+        { "text": "Tenant: A. Smith", "confidence": 0.97 },
+        { "text": "Term: 12 months", "confidence": 0.98 },
+        { "text": "Signed in duplicate", "confidence": 0.96 },
+        { "text": "Landlord: B. Jones", "confidence": 0.97 }
+    ]
+}
+```
+
+If the device has no document scanner available, the request fails with `scanner_unsupported`. If the scanner opens but errors before recognition starts, it fails with `scanner_failed`. Closing the scanner without confirming any pages fires `dismissed`.
+
+---
+
+## Recognizing an in-memory image
+
+When the image already exists in the page as bytes, a canvas export, a generated graphic, a freshly decoded blob, pass it inline as a data URI and skip the upload entirely. A bare base64 string is also accepted as a fallback, though a data URI is preferred because it declares the image type.
+
+```javascript
+if (isDespia) {
+    const dataUri = `data:image/jpeg;base64,${base64String}`
+    despia(`vision://ocr?id=inline&src=${encodeURIComponent(dataUri)}`)
+}
+```
+
+In-memory images are recognized on the same parallel path as hosted URLs, so they run alongside any other in-flight jobs without blocking.
+
+---
+
+## Choosing a recognition language
+
+Both platforms auto-detect the script by default, so most apps never set `lang`. Pass it only when you already know the script and want to constrain recognition, which improves accuracy for non-Latin text. On Android the hint selects the recognizer for Latin, Chinese, Japanese, Korean, or Devanagari script; on iOS it narrows the candidate languages the engine considers.
+
+```javascript
+if (isDespia) {
+    // Single script
+    const src = encodeURIComponent(imageUrl)
+    despia(`vision://ocr?id=cn&lang=zh-Hans&src=${src}`)
+
+    // Multiple scripts, comma-separated
+    despia(`vision://ocr?id=mixed&lang=ja,en-US&src=${src}`)
+}
+```
+
+The value is a BCP-47 tag or a comma-separated list of them. Omit it for English and other Latin-script content.
+
+---
+
+## Running several jobs at once
+
+Recognition jobs are independent. Issue as many `vision://ocr` calls as you need with distinct `id` values, and each result arrives on the callback as it finishes. Results come back in completion order, not the order you submitted them, so always key off `evt.id` rather than assuming a sequence.
+
+```javascript
+const results = {}
+
+window.onVisionEvent = function (evt) {
+    if (evt.type !== 'ocr') return
+    if (evt.status === 'success') results[evt.id] = evt.text
+    if (evt.status === 'error')   console.warn(evt.id, evt.error.code)
+}
+
+if (isDespia) {
+    const pages = [
+        { id: 'page-1', url: urlA },
+        { id: 'page-2', url: urlB },
+        { id: 'page-3', url: urlC },
+    ]
+
+    pages.forEach(({ id, url }) => {
+        despia(`vision://ocr?id=${id}&src=${encodeURIComponent(url)}`)
+    })
+}
+```
+
+Hosted, in-memory, and local-file jobs all run in parallel. The picker tokens are the one exception: because they present a modal chooser, only one picker job can be active at a time.
+
+---
+
+## Error reference
+
+Every failure arrives as an `error` event with a stable `code`. Messages are advisory and may change; branch on the code.
+
+| Code | Cause |
+| --- | --- |
+| `unknown_command` | The URL host was something other than `ocr` |
+| `missing_src` | No `src` parameter was provided |
+| `invalid_src` | `src` did not match any supported form |
+| `invalid_data_uri` | A `data:` URI could not be decoded |
+| `fetch_failed` | The hosted image could not be fetched |
+| `fetch_empty` | The fetch succeeded but returned no data |
+| `file_unreadable` | A local or picked file could not be read |
+| `decode_failed` | The bytes could not be decoded into an image |
+| `ocr_failed` | The recognition engine returned an error |
+| `picker_busy` | A picker is already open and the new request was rejected |
+| `picker_failed` | A selection was made but the image could not be loaded |
+| `no_presenter` | A picker was requested before a screen was available to present it |
+| `scanner_unsupported` | The document scanner is not available on this device |
+| `scanner_failed` | The document scanner errored before recognition began |
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

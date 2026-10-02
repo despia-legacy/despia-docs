@@ -1,0 +1,552 @@
+---
+title: "OAuth Failures"
+icon: "link-horizontal"
+description: "OAuth not working in your Despia native app? This guide focuses on the key difference between web OAuth and Despia native OAuth."
+---
+
+## The core concept
+
+**The login page decides the OAuth flow based on user agent.**
+
+When your login page loads, check if it's running in Despia:
+
+```javascript
+const userAgent = navigator.userAgent.toLowerCase();
+const isDespia = userAgent.includes('despia');
+
+if (isDespia) {
+  // Use Despia native flow
+  // redirect_uri: https://yourapp.com/native-callback
+} else {
+  // Use standard web flow  
+  // redirect_uri: https://yourapp.com/auth
+}
+```
+
+**Why this matters:** The OAuth browser session (ASWebAuthenticationSession/Chrome Custom Tabs) has the _browser's_ user agent, not Despia's. So you can't check user agent in the callback page - you must decide the flow on the login page.
+
+---
+
+## Two complete flows
+
+### Web flow (standard OAuth)
+
+**When:** `userAgent` doesn't include 'despia'
+
+**Flow:**
+
+1. Login page → redirects to OAuth provider
+2. OAuth provider → redirects back to `/auth`
+3. `/auth` page → sets session, navigates to `/dashboard`
+
+**Code - Login page:**
+
+```javascript
+// On login button click
+async function handleLogin() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isDespia = userAgent.includes('despia');
+  
+  if (!isDespia) {
+    // Web flow: redirect directly
+    window.location.href = 'https://provider.com/oauth/authorize?' +
+      'client_id=xxx&' +
+      'redirect_uri=' + encodeURIComponent('https://yourapp.com/auth') + '&' +
+      'response_type=code';
+  }
+}
+```
+
+**Code - /auth page:**
+
+```javascript
+// Parse tokens from URL
+const code = new URLSearchParams(window.location.search).get('code');
+
+if (code) {
+  // Exchange for tokens
+  const response = await fetch('/api/token', {
+    method: 'POST',
+    body: JSON.stringify({ code })
+  });
+  
+  const { access_token } = await response.json();
+  
+  // Store session
+  localStorage.setItem('access_token', access_token);
+  
+  // Navigate to app
+  window.location.href = '/dashboard';
+}
+```
+
+---
+
+### Despia native flow
+
+**When:** `userAgent` includes 'despia'
+
+**Flow:**
+
+1. Login page → calls `despia('oauth://...')` to open native browser
+2. OAuth provider → redirects to `/native-callback` (in native browser)
+3. `/native-callback` → extracts tokens, redirects to deeplink with `oauth/` prefix
+4. Native app → intercepts deeplink, closes browser, navigates to `/auth`
+5. `/auth` page → receives tokens from URL, sets session
+
+**Code - Login page:**
+
+```javascript
+import despia from 'despia-native';
+
+async function handleLogin() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isDespia = userAgent.includes('despia');
+  
+  if (isDespia) {
+    // Despia flow: open in native browser
+    const oauthUrl = 'https://provider.com/oauth/authorize?' +
+      'client_id=xxx&' +
+      'redirect_uri=' + encodeURIComponent('https://yourapp.com/native-callback') + '&' +
+      'response_type=code';
+    
+    // Opens ASWebAuthenticationSession (iOS) or Chrome Custom Tabs (Android)
+    despia(`oauth://?url=${encodeURIComponent(oauthUrl)}`);
+  }
+}
+```
+
+**Code - /native-callback page:**
+
+```javascript
+// This page runs inside the native browser session
+// Extract tokens and close the browser
+
+const code = new URLSearchParams(window.location.search).get('code');
+
+if (code) {
+  // Exchange for tokens
+  const response = await fetch('/api/token', {
+    method: 'POST',
+    body: JSON.stringify({ code })
+  });
+  
+  const { access_token, refresh_token } = await response.json();
+  
+  // Redirect to deeplink to CLOSE the browser
+  // The oauth/ prefix tells Despia to close the browser session
+  window.location.href = 
+    `yourappdeeplink://oauth/auth?` +
+    `access_token=${encodeURIComponent(access_token)}&` +
+    `refresh_token=${encodeURIComponent(refresh_token)}`;
+}
+```
+
+**Code - /auth page (receives deeplink):**
+
+```javascript
+// Parse tokens from URL (deeplink redirects here)
+const searchParams = new URLSearchParams(window.location.search);
+const access_token = searchParams.get('access_token');
+const refresh_token = searchParams.get('refresh_token');
+
+if (access_token) {
+  // Store session
+  localStorage.setItem('access_token', decodeURIComponent(access_token));
+  if (refresh_token) {
+    localStorage.setItem('refresh_token', decodeURIComponent(refresh_token));
+  }
+  
+  // Navigate to app
+  window.location.href = '/dashboard';
+}
+```
+
+---
+
+## Key differences
+
+| Step | Web Flow | Despia Flow |
+| :-- | :-- | :-- |
+| **Login page** | `window.location.href = oauthUrl` | `despia('oauth://?url=...')` |
+| **OAuth redirect** | → `/auth` | → `/native-callback` |
+| **Callback action** | Set session, navigate | Redirect to deeplink |
+| **Deeplink** | None | `yourappdeeplink://oauth/auth?tokens` |
+| **Browser closes** | N/A | When deeplink called |
+| **Final landing** | `/auth` (already there) | `/auth` (via deeplink) |
+
+---
+
+## Apple Sign-In special handling
+
+Apple Sign-In on iOS devices needs different handling:
+
+```javascript
+async function handleAppleLogin() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isIOSDespia = userAgent.includes('despia-iphone') || 
+                       userAgent.includes('despia-ipad');
+  const isAndroidDespia = userAgent.includes('despia-android');
+  
+  const appleOAuthUrl = 'https://appleid.apple.com/auth/authorize?...';
+  
+  if (isIOSDespia) {
+    // iOS: Direct redirect (triggers native Apple dialog)
+    window.location.href = appleOAuthUrl;
+    
+  } else if (isAndroidDespia) {
+    // Android: Use oauth:// for Chrome Custom Tabs
+    despia(`oauth://?url=${encodeURIComponent(appleOAuthUrl)}`);
+    
+  } else {
+    // Web: Standard redirect
+    window.location.href = appleOAuthUrl;
+  }
+}
+```
+
+**Why:** iOS has native Apple Sign-In built into WebKit. Direct redirect triggers the native dialog.
+
+---
+
+## Troubleshooting
+
+### Browser session doesn't open
+
+**Problem:** User clicks login, nothing happens.
+
+**Check:**
+
+```javascript
+console.log('User agent:', navigator.userAgent);
+console.log('Is Despia:', navigator.userAgent.includes('despia'));
+console.log('OAuth URL:', oauthUrl);
+```
+
+**Common issues:**
+
+- OAuth URL not properly encoded: Use `encodeURIComponent()`
+- Missing `yourappdeeplink://` prefix: `despia('oauth://?url=...')` not just `despia(url)`
+- Testing in web browser instead of Despia app
+
+---
+
+### Provider blocks login inside the app
+
+**Problem:** The provider's login page opens inside your app's WebView instead of a secure browser. Google shows `403: disallowed_useragent`. Other providers show a blank page, a security warning, or refuse to load.
+
+**Cause:** On the login page the Despia branch redirects the WebView straight to the provider URL with `window.location.href` instead of opening a secure browser session.
+
+In the Despia flow you never send the provider URL to the WebView. Google and Apple block OAuth inside embedded WebViews, and most providers' terms forbid it. Always hand the URL to `oauth://`, which opens ASWebAuthenticationSession on iOS or Chrome Custom Tabs on Android, a session the provider trusts.
+
+**Wrong:**
+
+```javascript
+// Loads the provider inside the WebView, blocked by Google and others
+if (isDespia) {
+  window.location.href = oauthUrl;
+}
+```
+
+**Right:**
+
+```javascript
+// Opens a secure browser session the provider accepts
+if (isDespia) {
+  despia(`oauth://?url=${encodeURIComponent(oauthUrl)}`);
+}
+```
+
+The one exception is Apple Sign-In on iOS, which is built into WebKit and uses a direct redirect on purpose. See the Apple Sign-In section above. Every other provider, and Apple on Android, must go through `oauth://`.
+
+---
+
+### Browser doesn't close after login
+
+**Problem:** User completes OAuth, stuck in browser.
+
+**Cause:** Missing `oauth/` prefix in deeplink.
+
+**Wrong:**
+
+```javascript
+// Browser won't close
+window.location.href = `yourappdeeplink://auth?access_token=${token}`;
+```
+
+**Right:**
+
+```javascript
+// Browser closes because of oauth/ prefix
+window.location.href = `yourappdeeplink://oauth/auth?access_token=${token}`;
+```
+
+The `oauth/` prefix in the deeplink is what tells Despia to close ASWebAuthenticationSession/Chrome Custom Tabs.
+
+---
+
+### Tokens not reaching /auth page
+
+**Problem:** Browser closes but user not logged in.
+
+**Check /auth page:**
+
+```javascript
+console.log('Full URL:', window.location.href);
+console.log('Access token:', new URLSearchParams(window.location.search).get('access_token'));
+```
+
+**Common issues:**
+
+- Tokens not encoded in callback: Use `encodeURIComponent(token)` when building deeplink
+- Reading from wrong place: Tokens are in query params (`?`), not hash (`#`)
+- Not decoding: Use `decodeURIComponent()` when parsing
+
+---
+
+### Redirect URI mismatch
+
+**Problem:** OAuth provider shows "redirect\_uri mismatch" or "invalid redirect URI" error.
+
+**Cause:** The callback URL your code sends is not registered with the OAuth provider, or the callback page was added or renamed without updating the provider.
+
+**Fix:**
+
+1. For Despia flow: register `https://yourapp.com/native-callback`
+2. For web flow: register `https://yourapp.com/auth`
+3. URLs must match **exactly**, no trailing slash differences
+
+**Whenever you add or rename a native callback page, register that exact URL with the provider.** A custom `/native-callback` or `/native-callback.html` is a redirect URI like any other. If you switch from `/native-callback` to `/native-callback.html` (the SPA fix below), that is a different URL, so register `https://yourapp.com/native-callback.html` or every login fails with an invalid redirect URI error.
+
+---
+
+### Hash tokens lost in SPA routing
+
+**Problem:** Tokens disappear from the URL hash before your callback code runs. Common with implicit-flow providers that return `#access_token=...`.
+
+**Cause:** SPA routers (React Router, Vue Router, and similar) handle the route change and strip the `#` fragment before your component mounts and reads it.
+
+**Solution:** For any SPA, use a static `native-callback.html` in your `public/` folder as the callback. It loads directly with no router involved, so the hash survives. Treat this as the default for SPAs, not just a fallback.
+
+**Create /native-callback.html:**
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Completing sign in...</title>
+</head>
+<body>
+  <div style="padding: 2rem; text-align: center;">
+    Completing sign in...
+  </div>
+  
+  <script>
+    (function() {
+      // Parse hash tokens
+      const hash = window.location.hash.substring(1);
+      const params = new URLSearchParams(hash);
+      const access_token = params.get('access_token');
+      const refresh_token = params.get('refresh_token');
+      
+      if (access_token) {
+        // Redirect to deeplink to close browser
+        window.location.href = 
+          `myapp://oauth/auth?` +
+          `access_token=${encodeURIComponent(access_token)}&` +
+          `refresh_token=${encodeURIComponent(refresh_token || '')}`;
+      }
+    })();
+  </script>
+</body>
+</html>
+```
+
+**Update OAuth redirect:**
+
+```text
+redirect_uri: https://yourapp.com/native-callback.html
+```
+
+Register this exact `.html` URL with your provider, see Redirect URI mismatch above, or you get an invalid redirect URI error.
+
+**Why this works:** Static HTML loads directly, no router involved, hash preserved.
+
+---
+
+## Complete implementation
+
+**1. Login page (handles both flows):**
+
+```tsx
+import despia from 'despia-native';
+
+async function handleLogin() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isDespia = userAgent.includes('despia');
+  
+  // Get OAuth URL from your backend
+  const response = await fetch('/api/oauth/start', {
+    method: 'POST',
+    body: JSON.stringify({
+      // Different redirect URIs for different flows
+      redirect_uri: isDespia 
+        ? 'https://yourapp.com/native-callback'
+        : 'https://yourapp.com/auth',
+      is_native: isDespia
+    }),
+    headers: { 'Content-Type': 'application/json' }
+  });
+  
+  const { oauth_url } = await response.json();
+  
+  if (isDespia) {
+    // Despia: Open native browser session
+    despia(`oauth://?url=${encodeURIComponent(oauth_url)}`);
+  } else {
+    // Web: Standard redirect
+    window.location.href = oauth_url;
+  }
+}
+```
+
+**2. /native-callback page (Despia only):**
+
+```tsx
+// Runs in native browser session
+(function() {
+  // Get authorization code
+  const code = new URLSearchParams(window.location.search).get('code');
+  
+  if (code) {
+    // Exchange for tokens
+    fetch('/api/oauth/exchange', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(r => r.json())
+      .then(({ access_token, refresh_token }) => {
+        // Close browser with deeplink
+        window.location.href = 
+          `yourappdeeplink://oauth/auth?` +
+          `access_token=${encodeURIComponent(access_token)}&` +
+          `refresh_token=${encodeURIComponent(refresh_token)}`;
+      });
+  }
+})();
+```
+
+**3. /auth page (both flows):**
+
+```tsx
+// Runs on page load
+(function() {
+  // Check for code (web flow)
+  const code = new URLSearchParams(window.location.search).get('code');
+  
+  if (code) {
+    // Web flow: Exchange code for tokens
+    fetch('/api/oauth/exchange', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+      headers: { 'Content-Type': 'application/json' }
+    })
+      .then(r => r.json())
+      .then(({ access_token, refresh_token }) => {
+        localStorage.setItem('access_token', access_token);
+        localStorage.setItem('refresh_token', refresh_token);
+        window.location.href = '/dashboard';
+      });
+    return;
+  }
+  
+  // Check for tokens (Despia flow via deeplink)
+  const access_token = new URLSearchParams(window.location.search).get('access_token');
+  
+  if (access_token) {
+    // Despia flow: Tokens already in URL
+    const refresh_token = new URLSearchParams(window.location.search).get('refresh_token');
+    
+    localStorage.setItem('access_token', decodeURIComponent(access_token));
+    if (refresh_token) {
+      localStorage.setItem('refresh_token', decodeURIComponent(refresh_token));
+    }
+    
+    window.location.href = '/dashboard';
+  }
+})();
+```
+
+---
+
+## Debug checklist
+
+When OAuth isn't working:
+
+**On login page:**
+
+- Check user agent: `console.log(navigator.userAgent)`
+- Verify correct flow selected
+- Verify the Despia branch uses `despia('oauth://?url=...')`, never `window.location.href` to the provider
+- Verify OAuth URL is valid
+- Verify OAuth URL is encoded
+
+**In /native-callback (Despia only):**
+
+- Check page loads: `console.log('Callback loaded')`
+- Check tokens received: `console.log('Token:', !!access_token)`
+- Check deeplink format: `myapp://oauth/auth?...`
+- Verify `oauth/` prefix present
+- Verify the callback path you use is registered with the provider
+
+**In /auth page:**
+
+- Check URL: `console.log(window.location.href)`
+- Check for code (web): `console.log('Code:', code)`
+- Check for tokens (Despia): `console.log('Token:', access_token)`
+- Verify tokens stored in localStorage
+- Verify navigation to /dashboard happens
+
+---
+
+## Remember
+
+**The login page determines the flow.**
+
+- Check `navigator.userAgent.includes('despia')`
+- If true → Despia flow with `despia('oauth://...')` and `/native-callback`
+- If false → Web flow with standard redirect and `/auth`
+
+**Never redirect the WebView to the provider.**
+
+- In the Despia branch, always use `despia('oauth://?url=...')`
+- A direct `window.location.href` to the provider loads it inside the WebView, which Google and most providers block
+- Only exception: Apple Sign-In on iOS, which uses a direct redirect by design
+
+**The `oauth/` prefix is critical.**
+
+- Deeplink format: `yourappdeeplink://oauth/auth?tokens`
+- Without `oauth/` → browser won't close
+- With `oauth/` → browser closes and app receives tokens
+
+**SPAs should use a static native-callback.html.**
+
+- SPA routers strip the `#` fragment before your code reads it
+- A static `public/native-callback.html` bypasses the router and preserves the hash
+- Register the exact `.html` URL with your provider
+
+**Register every callback path with the provider.**
+
+- Adding or renaming `/native-callback` or `/native-callback.html` means updating the provider
+- A path the provider does not know returns an invalid redirect URI error
+
+**Apple Sign-In on iOS is special.**
+
+- Check for `despia-iphone` or `despia-ipad`
+- Use direct redirect (no `oauth://` prefix)
+- Native Apple dialog opens automatically
+
+---
+
+For support or questions, contact: [support@despia.com](mailto:support@despia.com)

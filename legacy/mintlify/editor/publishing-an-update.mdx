@@ -1,0 +1,149 @@
+---
+title: "Publishing an Update"
+description: "Ship a new binary after your first submission, and know which changes need one at all."
+icon: "rocket"
+---
+
+After your first submission, most of what you change never goes near the stores again. Your web layer is fetched fresh on every launch, so pages, logic, styling, and fixes reach every installed app over the air with no build, no review, and no credits. A new binary is only needed when the native layer itself changes, and everything that goes into producing one runs from the Despia dashboard.
+
+<Info>
+  The heavy setup is already behind you. Your developer accounts are linked, bundle IDs are registered, and the app records exist, so an update is a version bump, a publish, and a submission.
+</Info>
+
+---
+
+## What needs a new binary
+
+| Change | How it ships |
+| :-- | :-- |
+| Pages, styling, copy, features, bug fixes | Over the air, on next launch |
+| Backend, API, and database changes | Over the air, on next launch |
+| App icon or splash screen | Publish a new binary |
+| Enabling or disabling a native capability | Publish a new binary |
+| iOS targets: App Clip, Share Extension, Home Widget | Publish a new binary |
+| Push, in-app purchase, or OAuth configuration | Publish a new binary |
+| Bundle IDs, App Groups, associated domains | Publish a new binary |
+| Store listing text, screenshots, keywords | Store console only, no binary |
+
+Most apps publish a new binary once or twice a year. Everything else is a web deploy.
+
+---
+
+## Publishing the update
+
+<Steps>
+  <Step title="Raise the version">
+    Open Settings, Configuration, Versioning and press Big, Medium, or Small. The version has to be higher than every version the stores have already seen, including anything in review or rejected.
+  </Step>
+  <Step title="Open Publish and pick a platform">
+    Select iOS or Android. Each platform publishes on its own run, so an update going to both stores means two publishes.
+  </Step>
+  <Step title="Press Publish Project">
+    Despia builds the app on its own infrastructure, handling code signing and provisioning. Builds usually take 15 to 30 minutes.
+  </Step>
+  <Step title="Wait for the build to reach the store">
+    On iOS the signed build is uploaded to App Store Connect automatically and appears in TestFlight after 10 to 30 minutes of processing. On Android the AAB is uploaded to your internal testing track automatically, and an APK is produced alongside it for direct device testing.
+  </Step>
+  <Step title="Submit for review">
+    In App Store Connect, create the new version, attach the processed build, and add What's New text. In the Play Console, promote the internal testing release to production and add release notes. Then submit.
+  </Step>
+</Steps>
+
+Second and later reviews are usually faster than the first, typically 24 to 72 hours on iOS and quicker on Android.
+
+<Warning>
+  Changing anything in the editor without publishing has no effect on your users. The stores still hold the previous binary and the new setting exists only in the dashboard. Publishing without raising the version first fails at upload, because neither store accepts a version it has already seen.
+</Warning>
+
+---
+
+## When the Android upload does not happen automatically
+
+Automatic delivery to internal testing depends on Despia's service account having access to your app in the Play Console. Not every account type supports automated uploads, and the most common cause of a build that never appears is that the service account email was never invited to the app as an admin.
+
+Nothing is lost when this happens. The AAB is produced either way and is available for download, so there are two ways forward.
+
+**Invite the service account and publish again.** Invite the service account email to the app with admin access, then publish a new build. Every build after that uploads on its own.
+
+**Upload the AAB yourself.** Download the AAB from Despia and add it to the internal testing track in the Play Console by hand. This is the faster route when you only need this one release out, since it skips a second build entirely.
+
+Neither option changes the binary. The AAB is the same file whichever way it reaches the Play Console.
+
+---
+
+## Deploy the web layer after the binary is approved, not before
+
+This is the ordering mistake that breaks apps in production. Web code that calls a capability the installed binary does not have will fail on every user who has not updated yet.
+
+<Steps>
+  <Step title="Make the native change in Despia">
+  </Step>
+  <Step title="Raise the version">
+  </Step>
+  <Step title="Publish and submit">
+  </Step>
+  <Step title="Wait for approval">
+  </Step>
+  <Step title="Deploy the web layer">
+  </Step>
+  <Step title="Gate the new UI behind a version check">
+  </Step>
+</Steps>
+
+Approval does not put everyone on the new binary at once, so there is always a window where both versions are live. Gate anything that depends on the new capability so both groups get a coherent experience.
+
+```jsx
+import { VersionGuard } from 'despia-version-guard';
+
+<VersionGuard min_version="2.0.0" fallback={<LegacyPayments />}>
+  <NewPaymentsFlow />
+</VersionGuard>
+```
+
+Once the older binary is deprecated far enough, remove the guard.
+
+---
+
+## Batch native changes
+
+Every publish costs a build and every submission costs review time. If two native changes are landing in the same release window, put them in one binary rather than two sequential submissions. This matters most early on, while you are still adding foundational capabilities.
+
+Over-the-air deploys have no such cost. There is no reason to batch web changes.
+
+---
+
+## Rolling out gradually
+
+Both stores can hold an approved update back from part of your userbase. Apple's phased release spreads it over seven days and can be paused, keeping everyone else on the previous version. Google's staged rollout runs on percentages you raise yourself and can be halted outright.
+
+Worth using on any release touching purchases, authentication, or push. A wave of one-star reviews after an update is usually a regression, so check crash reports and your recent web deploys before assuming otherwise.
+
+---
+
+## When an update is rejected
+
+The version already live is unaffected. Users keep running the approved binary and nothing is taken down while you fix the problem.
+
+The rejected version number is spent, so raise the version again, publish, and resubmit. Use the reviewer notes field to explain anything non-obvious in the build, particularly a permission that is not visibly tied to app functionality or a capability that needs a test account to exercise. Most rejections come down to setup rather than the runtime.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Versioning" icon="code-branch" href="https://setup.despia.com/editor/versioning">
+    Set and raise the app version
+  </Card>
+
+  <Card title="Editor updates" icon="wrench" href="https://setup.despia.com/best-practices/updates/editor">
+    Native change and rebuild practices
+  </Card>
+
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

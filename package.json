@@ -8,10 +8,12 @@
   },
   "scripts": {
     "sync": "node scripts/sync-content.mjs",
-    "compile": "node scripts/compile.mjs",
+    "compile": "node scripts/port-legacy.mjs && node scripts/migrate-map.mjs && node scripts/compile.mjs",
     "build": "npm run compile && dsx build && node scripts/assemble.mjs",
     "dev": "npm run compile && dsx dev",
-    "lint": "npm run compile && dsx lint --strict"
+    "lint": "npm run compile && dsx lint --strict",
+    "redirects": "node scripts/redirects.mjs",
+    "parity": "node scripts/setup-parity.mjs"
   },
   "dependencies": {
     "@despia-native/compiler": "0.1.0",

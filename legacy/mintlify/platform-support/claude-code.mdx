@@ -1,0 +1,156 @@
+---
+title: "Despia for Claude Code"
+description: "Ship your Claude Code web app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
+icon: "code"
+---
+
+You are building a web app with Claude Code. Despia wraps it for iOS and Android, with native billing, push notifications, install attribution, and offline support included. No React Native, no Xcode, no separate mobile codebase.
+
+---
+
+## How it works
+
+Despia loads your web app inside a native Swift and Kotlin shell. Your existing code runs as-is. Native capabilities are exposed via `despia()` calls from your existing JavaScript.
+
+Point Despia at your deployed web app URL and click publish from the dashboard. Despia manages signing, provisioning, and submission to both stores.
+
+---
+
+## In-app purchases, built in
+
+Apple and Google require their own billing systems for digital content. Implementing this natively means integrating StoreKit for iOS and Google Play Billing for Android, two separate native SDKs in Swift and Kotlin. Despia includes RevenueCat as a built-in, accessible from your web layer.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+} else {
+    // Web fallback, links purchase to the user's account
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`
+}
+```
+
+Check entitlements on every app load:
+
+```javascript
+async function checkEntitlements() {
+    const data   = await despia('getpurchasehistory://', ['restoredData'])
+    const active = (data.restoredData ?? []).filter(p => p.isActive)
+    if (active.some(p => p.entitlementId === 'premium')) unlockPremium()
+    if (active.some(p => p.entitlementId === 'no_ads'))  removeAds()
+}
+
+checkEntitlements()
+window.onRevenueCatPurchase = checkEntitlements
+```
+
+Configure entitlements in your RevenueCat dashboard. Attach your iOS and Android products to a single entitlement identifier. Both platforms return the same `entitlementId`, no platform-specific code.
+
+---
+
+## Push notifications, built in
+
+OneSignal is included. No APNs certificates, no Firebase project, no native SDK setup:
+
+```javascript
+despia(`setonesignalplayerid://?user_id=${userId}`)
+```
+
+Call on every authenticated app load. Send targeted notifications from your backend using OneSignal's REST API with `include_external_user_ids`.
+
+---
+
+## Install attribution and ad analytics, built in
+
+AppsFlyer ships with every Despia app. Injected automatically on every page load:
+
+```javascript
+despia.appsFlyerReferrer     // 'tiktok_ad', 'meta_organic', 'organic'
+despia.appsFlyerAttribution  // full attribution object
+despia.appsFlyerUID          // unique AppsFlyer user ID
+```
+
+Log conversion events back to TikTok Ads, Meta Ads, and Google Ads:
+
+```javascript
+despia('appsflyer://log_event?event_name=purchase&event_values={"revenue":9.99,"currency":"USD"}')
+```
+
+Without attribution you cannot know which campaign drove each install, optimise spend by channel, or accurately report ROAS.
+
+---
+
+## Offline support
+
+Add `@despia/local` to serve your app from `http://localhost` on the device after first launch. Full offline capability, instant boot, no service worker complexity.
+
+```bash
+npm install --save-dev @despia/local
+```
+
+```javascript
+// vite.config.js
+import { despiaLocalPlugin } from '@despia/local/vite'
+
+export default {
+    plugins: [react(), despiaLocalPlugin({ outDir: 'dist' })]
+}
+```
+
+OTA updates are included at no cost. When you redeploy, the update reaches users on their next launch without App Store review.
+
+---
+
+## One codebase
+
+Your web app is the source of truth. iOS, Android, and web all run the same code. Changes deploy to all three simultaneously via OTA, no native project to maintain alongside your web codebase.
+
+---
+
+## Using Claude Code with Despia
+
+The AI prompts on each Despia feature page are designed to work with any AI coding assistant. Paste the prompt from the feature page into your Claude Code session and it will install `despia-native`, detect the runtime, implement the feature, and handle the web fallback.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia    = navigator.userAgent.toLowerCase().includes('despia')
+const isDespiaIOS = isDespia && /iphone|ipad/i.test(navigator.userAgent)
+const isDespiaAndroid = isDespia && /android/i.test(navigator.userAgent)
+
+// Purchases
+if (isDespia) despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+
+// Notifications (on every authenticated load)
+if (isDespia) {
+    despia(`setonesignalplayerid://?user_id=${userId}`)
+}
+
+// Storage Vault
+await despia(`setvault://?key=userId&value=${userId}&locked=false`)
+const data = await despia('readvault://?key=userId', ['userId'])
+
+// Haptics
+if (isDespia) despia('successhaptic://')
+```
+
+<CardGroup cols={2}>
+  <Card title="In-App Purchases" icon="credit-card" href="/native-features/revenuecat">
+    RevenueCat built in
+  </Card>
+
+  <Card title="Push Notifications" icon="bell" href="/native-features/onesignal">
+    OneSignal built in
+  </Card>
+
+  <Card title="AppsFlyer" icon="chart-bar" href="/analytics/appsflyer">
+    Attribution built in
+  </Card>
+
+  <Card title="Native Features" icon="mobile" href="/native-features">
+    All despia() capabilities
+  </Card>
+</CardGroup>

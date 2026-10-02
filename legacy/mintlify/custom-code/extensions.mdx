@@ -1,0 +1,979 @@
+---
+title: "Extensions"
+description: "Reference for building native iOS and Android plugins for Despia."
+icon: "puzzle-piece"
+tag: "Soon"
+hidden: true
+---
+
+Reference for the Despia Extension SDK. An Extension exposes native iOS and Android functionality to the web app through the standard `despia()` call, the same call exposed by the `despia-native` NPM package.
+
+<Warning>
+  Extensions are currently reserved for Despia employees and Despia Whitelabel resellers. Public availability is not yet open. If you are a partner and need access, contact [support@despia.com](mailto:support@despia.com).
+</Warning>
+
+---
+
+## How `despia()` works
+
+The web app calls native code through a single global function published by `despia-native`:
+
+```javascript
+import despia from 'despia-native'
+
+// Fire and forget. No response expected.
+despia('haptic://?style=light')
+
+// Await a single response variable. Resolves within 30 seconds or with null on failure.
+const data = await despia('battery://', ['battery_level'])
+const level = data.battery_level
+
+// Fire and listen. Define a window-scoped listener for an async push.
+window.on_export_done = function(data) { saveTo(data.url) }
+despia('export://?format=pdf')
+```
+
+Under the hood, the call assigns the URL string to `window.despia`. The native runtime intercepts the assignment, dispatches to the matching handler, and pushes results back to the WebView. There are two return channels: `window.<varName>` for awaited responses (read by `despia-native` via the variable observer with a 30-second timeout), and direct calls to `window.<callback>(payload)` for fire-and-listen and streaming patterns.
+
+This is the contract every Extension implements. You expose a URL scheme, you write to a variable or call a window function, and the web app reads the response. You do not implement any JavaScript-side bridge.
+
+---
+
+## Three response patterns
+
+There are exactly three ways an Extension can communicate back to the web app. The choice is determined by **whether the operation has a bounded duration**, not by how complex the response is.
+
+| Pattern | Use when | Web app call | Native call |
+| --- | --- | --- | --- |
+| **Variable** | Bounded native work. You can guarantee completion in under 30 seconds. | `const data = await despia('scheme://', ['var'])` | `despia.variable("var", value)` |
+| **Fire and listen** | Single response with no upper time bound. Anything waiting on the user, the network without timeout, or any unbounded operation. | `despia('scheme://')` then define `window.<callback> = function(data) {...}` | `despia.event("callback_name", payload)` |
+| **Stream / event** | Multiple pushes over time. Observers, push notifications, in-progress scan results. | Define `window.<callback> = function(payload) {...}` once. | `despia.event("callback_name", payload)` per push. |
+
+<Warning>
+  **Anything that waits for user input must use fire-and-listen, never variable.** Alert prompts, picker dialogs, native photo pickers, file pickers, biometric confirmation sheets, and OAuth login flows all wait on the user, who has no SLA. Treating these as awaited variables guarantees a 30-second hang and a `undefined` resolve when the user reads the dialog slowly.
+</Warning>
+
+### Variable
+
+For deterministic native work where you can guarantee a result inside 30 seconds. Reading device sensors (battery, geolocation), reading SDK state (HealthKit step count, active RevenueCat entitlements, contacts), running a cryptographic operation, hitting your own backend with a timeout. The web app awaits one line and gets a value or `null`.
+
+```javascript
+const data = await despia('battery://', ['battery_level'])
+data.battery_level   // 87 | null on failure
+```
+
+```swift
+despia.action("level") {
+    despia.variable("battery_level", 87)
+}
+```
+
+If you cannot honestly say "this finishes in under 30 seconds, every time, on every device", do not use a variable. Use fire-and-listen.
+
+### Fire and listen
+
+For any operation with no enforceable upper time bound. The web app fires the action and registers a `window.<callback>` listener. The native side calls the listener when work finishes, however long that takes.
+
+This is the right pattern for:
+
+- **User input**: alert prompts, picker dialogs, photo / file pickers, biometric prompts, OAuth login windows, share sheets
+- **Long-running native work**: PDF export, video transcoding, large file uploads, ML inference
+- **Anything that calls into another app**: deep-linking out to settings or the camera, returning later
+
+```javascript
+// Always define the listener BEFORE firing the action.
+window.on_prompt_done = function(data) {
+    if (data.cancelled) return
+    console.log('User entered:', data.value)
+}
+
+despia('alert://prompt?message=What is your name?&placeholder=Jane')
+```
+
+```swift
+despia.action("prompt") {
+    let alert = UIAlertController(
+        title: nil,
+        message: despia.params.message,
+        preferredStyle: .alert
+    )
+    alert.addTextField { $0.placeholder = despia.params.placeholder }
+    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+        despia.event("on_prompt_done", ["cancelled": true, "value": ""])
+    })
+    alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+        let value = alert.textFields?.first?.text ?? ""
+        despia.event("on_prompt_done", ["cancelled": false, "value": value])
+    })
+    UIApplication.shared.topViewController?.present(alert, animated: true)
+}
+```
+
+The naming convention is to prefix the callback with `on_` (e.g. `on_prompt_done`, `on_purchase_complete`, `on_export_finished`). The `despia.event` call is a no-op if the listener isn't defined, which is why listeners must be registered before firing.
+
+### Stream / event
+
+Same mechanism as fire-and-listen, but the native side calls the listener repeatedly. Use for live BLE scan results, push notification deliveries, customer-info change observers, and similar genuine streams.
+
+```javascript
+// Called every time a new device appears.
+window.on_device_discovered = function(device) {
+    appendDevice(device.name, device.rssi)
+}
+
+// The final result still goes through the variable channel.
+const data = await despia('ble://?duration=5', ['ble_result'])
+```
+
+```swift
+// Inside the BLE delegate, called every discovery.
+despia.event("on_device_discovered", ["name": name, "rssi": rssi, "uuid": uuid])
+```
+
+Variable and event channels combine freely. A single action can stream live updates via `event` while still resolving an awaited final-result variable, as long as the final result is bounded.
+
+---
+
+## Picking the right pattern
+
+Use this decision flow for every action you build.
+
+```text
+Does the action wait on the user (prompt, picker, biometric, OAuth, share sheet)?
+    YES  →  fire and listen
+    NO   →  next question
+
+Can the action take longer than 30 seconds (large upload, video processing, ML)?
+    YES  →  fire and listen
+    NO   →  next question
+
+Does the action push multiple values over time (observer, scan stream)?
+    YES  →  stream (event), or event + variable for the final result
+    NO   →  variable
+```
+
+When in doubt, prefer fire-and-listen. The cost is one extra `window.<callback>` definition. The cost of mis-using a variable for an unbounded operation is a 30-second hang for every user every time.
+
+---
+
+## Folder layout
+
+```text
+despia-extension-<scheme>/
+├── despia-extension.json    spec
+├── extension_config.json    local dev only, gitignored
+├── .gitignore
+└── Sources/
+    ├── ios/<scheme>.swift
+    └── android/<scheme>.kt
+```
+
+Folder name must be `despia-extension-<scheme>` matching the `scheme` field in the spec.
+
+---
+
+## Delivery
+
+Two delivery paths. Both produce identical builds.
+
+| Path | How |
+| --- | --- |
+| Dashboard upload | Zip the folder, upload in the project's Extensions section. |
+| GitHub sync | Place the folder under `/despia/extensions/` in your web app repo. Connect repo via **GitHub \> Web App** in the dashboard. |
+
+---
+
+## API reference: `despia` global
+
+The Extension SDK exposes a single global called `despia` in both Swift and Kotlin source files. It is implicit, no import needed. The full surface:
+
+### `despia.action(name, closure)`
+
+Registers a handler for `despia('<scheme>://<name>?...')`. Closures must register at file scope.
+
+```swift
+despia.action("scan") {
+    // your code
+}
+```
+
+```kotlin
+despia.action("scan") {
+    // your code
+}
+```
+
+### `despia.hydration(closure)`
+
+Runs once per WebView page load. Use for SDK initialisation. Make it idempotent.
+
+```swift
+despia.hydration {
+    SDK.configure(apiKey: despia.env.api_key)
+}
+```
+
+### `despia.params.<key>`
+
+Reads a typed URL param. The type is determined by the spec's declaration for that param.
+
+```swift
+let id: String  = despia.params.product_id     // String, "" if missing
+let qty: Int?   = despia.params.quantity       // optional for non-String types
+let price: Double? = despia.params.price
+let live: Bool? = despia.params.is_live
+let meta: [String: Any]? = despia.params.metadata as? [String: Any]
+```
+
+```kotlin
+val id: String   = despia.params["product_id"]
+val qty: Int?    = despia.params.int("quantity")
+val price: Double? = despia.params.double("price")
+val live: Boolean? = despia.params.bool("is_live")
+val meta: Map<*, *>? = despia.params.json("metadata")
+```
+
+### `despia.env.<key>`
+
+Reads a value configured in the dashboard. Always returns `String`. Empty string if no value is configured. Defaults declared in the spec apply automatically.
+
+```swift
+let key = despia.env.api_key
+```
+
+```kotlin
+val key = despia.env.api_key
+```
+
+### `despia.files["<key>"].data` and `.array`
+
+Reads binary data uploaded via `window.native.set_file()` from the web app. The web app sends a `@file/<uuid>` token in the URL; the runtime resolves it to native bytes before your closure runs.
+
+```swift
+let blob: Data?   = despia.files["upload"].data
+let blobs: [Data] = despia.files["uploads"].array
+```
+
+```kotlin
+val blob: ByteArray?      = despia.files["upload"].data
+val blobs: Array<ByteArray> = despia.files["uploads"].array
+```
+
+UUIDs are single-use. Reading once consumes them.
+
+### `despia.variable(name, value)`
+
+Sets `window.<name> = value`. This is the primary response channel. The web app reads it with `await despia('scheme://...', ['name'])`.
+
+**Failure semantics: write `null` to signal failure.** `despia-native` resolves the awaited promise with `null` for that key, which is the standard "I tried and it didn't work" signal across all extensions.
+
+```swift
+// Success
+despia.variable("battery_level", 87)
+
+// Failure
+despia.variable("battery_level", NSNull())
+```
+
+```kotlin
+// Success
+despia.variable("battery_level", 87)
+
+// Failure
+despia.variable("battery_level", null)
+```
+
+Values must be JSON-serialisable. Strings, numbers, booleans, arrays, and string-keyed maps. No `Date` (use ISO strings), no `URL` (use String).
+
+### `despia.event(callbackName, payload)`
+
+Calls `window.<callbackName>(payload)` if defined. Use this for the fire-and-listen pattern (single async response that may exceed 30 seconds) and for streams (multiple pushes over time). No-op if the web app hasn't defined the callback.
+
+```swift
+// Fire and listen: one push when work completes
+despia.event("on_export_done", ["url": fileURL])
+
+// Stream: many pushes during a scan
+despia.event("on_device_discovered", ["uuid": uuid, "rssi": rssi])
+```
+
+```kotlin
+despia.event("on_export_done", mapOf("url" to fileURL))
+despia.event("on_device_discovered", mapOf("uuid" to uuid, "rssi" to rssi))
+```
+
+---
+
+## Variable extension: battery level
+
+The smallest possible extension. One action, one variable. Reads battery level. Resolves immediately.
+
+### despia-extension.json
+
+```json
+{
+  "$schema":          "https://schema.despia.com/extension/v1",
+  "id":               "com.example.battery",
+  "name":             "Battery",
+  "scheme":           "battery",
+  "version":          "1.0.0",
+  "description":      "Read device battery level.",
+  "author":           "Example Inc.",
+  "minDespiaVersion": "2.0.0",
+  "platforms":        ["ios", "android"],
+
+  "hosts": [
+    {
+      "name":    "level",
+      "handler": "native",
+      "params":  [],
+      "returns": { "varName": "battery_level" }
+    }
+  ]
+}
+```
+
+### Sources/ios/battery.swift
+
+```swift
+import UIKit
+
+despia.action("level") {
+    UIDevice.current.isBatteryMonitoringEnabled = true
+    let pct = UIDevice.current.batteryLevel
+    if pct < 0 {
+        despia.variable("battery_level", NSNull())   // unknown
+    } else {
+        despia.variable("battery_level", Int(pct * 100))
+    }
+}
+```
+
+### Sources/android/battery.kt
+
+```kotlin
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
+
+despia.action("level") {
+    val intent = context.registerReceiver(null, IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+    val level = intent?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+    val scale = intent?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+    if (level < 0 || scale <= 0) {
+        despia.variable("battery_level", null)
+    } else {
+        despia.variable("battery_level", (level * 100) / scale)
+    }
+}
+```
+
+### Web app
+
+```javascript
+import despia from 'despia-native'
+
+const data = await despia('battery://', ['battery_level'])
+
+if (data.battery_level === null) {
+    console.log('Battery level unavailable')
+} else {
+    console.log(`Battery: ${data.battery_level}%`)
+}
+```
+
+That is the entire pattern. Three files, twenty lines each, one line of caller code.
+
+---
+
+## Fire-and-listen extension: alert prompt
+
+The canonical user-input case. The web app shows a native text-input prompt and waits for the user to type. Because the user has no SLA, this **must** be fire-and-listen, not variable. A user reading the dialog for 31 seconds would otherwise hang the call.
+
+### despia-extension.json
+
+```json
+{
+  "$schema":          "https://schema.despia.com/extension/v1",
+  "id":               "com.example.alert",
+  "name":             "Alert Prompt",
+  "scheme":           "alert",
+  "version":          "1.0.0",
+  "description":      "Show a native text-input prompt.",
+  "author":           "Example Inc.",
+  "minDespiaVersion": "2.0.0",
+  "platforms":        ["ios", "android"],
+
+  "hosts": [
+    {
+      "name":    "prompt",
+      "handler": "native",
+      "params": [
+        { "name": "message",     "type": "String", "required": true  },
+        { "name": "placeholder", "type": "String", "required": false },
+        { "name": "default",     "type": "String", "required": false }
+      ],
+      "returns": null
+    }
+  ],
+
+  "events": [
+    {
+      "name":         "on_prompt_done",
+      "callbackName": "on_prompt_done",
+      "payload": [
+        { "name": "cancelled", "type": "Bool"   },
+        { "name": "value",     "type": "String" }
+      ]
+    }
+  ]
+}
+```
+
+`returns` is `null` because the action does not write a variable. The completion is delivered through the `on_prompt_done` event when (or if) the user dismisses the dialog.
+
+### Sources/ios/alert.swift
+
+```swift
+import UIKit
+
+private extension UIApplication {
+    var topViewController: UIViewController? {
+        var vc = connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow?.rootViewController }
+            .first
+        while let presented = vc?.presentedViewController { vc = presented }
+        return vc
+    }
+}
+
+despia.action("prompt") {
+    let message     = despia.params.message
+    let placeholder = despia.params.placeholder
+    let initial     = despia.params.default
+
+    let alert = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+    alert.addTextField { tf in
+        tf.placeholder = placeholder
+        tf.text        = initial
+    }
+    alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
+        despia.event("on_prompt_done", ["cancelled": true, "value": ""])
+    })
+    alert.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+        let value = alert.textFields?.first?.text ?? ""
+        despia.event("on_prompt_done", ["cancelled": false, "value": value])
+    })
+
+    DispatchQueue.main.async {
+        UIApplication.shared.topViewController?.present(alert, animated: true)
+    }
+}
+```
+
+### Sources/android/alert.kt
+
+```kotlin
+import android.app.AlertDialog
+import android.text.InputType
+import android.widget.EditText
+import android.os.Handler
+import android.os.Looper
+
+despia.action("prompt") {
+    val message     = despia.params["message"]
+    val placeholder = despia.params["placeholder"]
+    val initial     = despia.params["default"]
+
+    Handler(Looper.getMainLooper()).post {
+        val input = EditText(activity).apply {
+            inputType = InputType.TYPE_CLASS_TEXT
+            hint      = placeholder
+            setText(initial)
+        }
+        AlertDialog.Builder(activity)
+            .setMessage(message)
+            .setView(input)
+            .setPositiveButton("OK") { _, _ ->
+                despia.event("on_prompt_done", mapOf(
+                    "cancelled" to false,
+                    "value"     to input.text.toString()
+                ))
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                despia.event("on_prompt_done", mapOf(
+                    "cancelled" to true,
+                    "value"     to ""
+                ))
+            }
+            .setOnCancelListener {
+                despia.event("on_prompt_done", mapOf(
+                    "cancelled" to true,
+                    "value"     to ""
+                ))
+            }
+            .show()
+    }
+}
+```
+
+Notice both implementations always emit `on_prompt_done` exactly once, on every exit path: OK, Cancel, and (Android) tap-outside-to-dismiss. Failing to emit on any path leaves the listener hanging forever.
+
+### Web app
+
+```javascript
+import despia from 'despia-native'
+
+// Define the listener BEFORE firing. The native side may complete before
+// the JS event loop runs again, and despia.event is a no-op without a listener.
+window.on_prompt_done = function(result) {
+    if (result.cancelled) {
+        console.log('User cancelled')
+        return
+    }
+    console.log('User entered:', result.value)
+}
+
+function askName() {
+    despia('alert://prompt'
+        + '?message='     + encodeURIComponent('What is your name?')
+        + '&placeholder=' + encodeURIComponent('Jane'))
+}
+```
+
+The reason this can never be a variable is simple: the user might take 5 seconds, 5 minutes, or 5 hours. There is no upper bound. The 30-second variable timeout is for deterministic native operations only.
+
+---
+
+## Stream extension: BLE scanner
+
+Combines the variable channel (final scan result, bounded by the `duration` param) with the event channel (live discoveries during the scan). Also demonstrates typed params, dashboard config, and capabilities.
+
+### despia-extension.json
+
+```json
+{
+  "$schema":          "https://schema.despia.com/extension/v1",
+  "id":               "com.example.ble",
+  "name":             "Bluetooth LE",
+  "scheme":           "ble",
+  "version":          "1.0.0",
+  "description":      "Scan for nearby Bluetooth Low Energy devices.",
+  "author":           "Example Inc.",
+  "minDespiaVersion": "2.0.0",
+  "platforms":        ["ios", "android"],
+
+  "vars": [
+    {
+      "name":     "service_uuid_filter",
+      "type":     "String",
+      "required": false,
+      "label":    "Service UUID filter",
+      "hint":     "Leave blank to scan all devices."
+    }
+  ],
+
+  "hosts": [
+    {
+      "name":    "scan",
+      "handler": "native",
+      "params": [
+        { "name": "duration", "type": "Int", "required": false }
+      ],
+      "returns": { "varName": "ble_result" }
+    }
+  ],
+
+  "events": [
+    {
+      "name":         "on_device_discovered",
+      "callbackName": "on_device_discovered",
+      "payload": [
+        { "name": "name", "type": "String" },
+        { "name": "uuid", "type": "String" },
+        { "name": "rssi", "type": "Int"    }
+      ]
+    }
+  ],
+
+  "capabilities": {
+    "ios": [
+      {
+        "key":   "NSBluetoothAlwaysUsageDescription",
+        "setup": "auto",
+        "value": "Used to discover nearby devices."
+      }
+    ],
+    "android": [
+      { "key": "android.permission.BLUETOOTH_SCAN",       "setup": "auto" },
+      { "key": "android.permission.BLUETOOTH_CONNECT",    "setup": "auto" },
+      { "key": "android.permission.ACCESS_FINE_LOCATION", "setup": "auto" }
+    ]
+  }
+}
+```
+
+### Sources/ios/ble.swift
+
+```swift
+import CoreBluetooth
+
+private final class BLEManager: NSObject, CBCentralManagerDelegate {
+    static let shared = BLEManager()
+    private var central: CBCentralManager?
+    private var found: [String: [String: Any]] = [:]
+    private var done: (([[String: Any]]) -> Void)?
+
+    func scan(duration: Int, filter: String?) async -> [[String: Any]]? {
+        await withCheckedContinuation { cont in
+            self.found = [:]
+            self.done = { cont.resume(returning: $0) }
+            if self.central == nil {
+                self.central = CBCentralManager(delegate: self, queue: nil)
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                let services = filter.flatMap { [CBUUID(string: $0)] }
+                self.central?.scanForPeripherals(withServices: services, options: nil)
+                DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(duration)) {
+                    self.central?.stopScan()
+                    self.done?(Array(self.found.values))
+                    self.done = nil
+                }
+            }
+        }
+    }
+
+    func centralManagerDidUpdateState(_ central: CBCentralManager) {}
+    func centralManager(_ central: CBCentralManager,
+                        didDiscover peripheral: CBPeripheral,
+                        advertisementData: [String: Any],
+                        rssi RSSI: NSNumber) {
+        let uuid = peripheral.identifier.uuidString
+        let dev: [String: Any] = [
+            "name": peripheral.name ?? "Unknown",
+            "uuid": uuid,
+            "rssi": RSSI.intValue
+        ]
+        if found[uuid] == nil { despia.event("on_device_discovered", dev) }
+        found[uuid] = dev
+    }
+}
+
+despia.action("scan") {
+    let duration = despia.params.duration as? Int ?? 5
+    let filter   = despia.env.service_uuid_filter
+    let devices  = await BLEManager.shared.scan(
+        duration: duration,
+        filter:   filter.isEmpty ? nil : filter
+    )
+    if let devices {
+        despia.variable("ble_result", ["devices": devices, "count": devices.count])
+    } else {
+        despia.variable("ble_result", NSNull())
+    }
+}
+```
+
+### Sources/android/ble.kt
+
+```kotlin
+import android.bluetooth.BluetoothAdapter
+import android.bluetooth.le.*
+import android.os.Handler
+import android.os.Looper
+import android.os.ParcelUuid
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+
+private object BLEManager {
+    private val adapter = BluetoothAdapter.getDefaultAdapter()
+    private val found = mutableMapOf<String, Map<String, Any>>()
+    private var cb: ScanCallback? = null
+    private val handler = Handler(Looper.getMainLooper())
+
+    suspend fun scan(durationSec: Int, filter: String?): List<Map<String, Any>>? =
+        suspendCancellableCoroutine { cont ->
+            found.clear()
+            val scanner = adapter?.bluetoothLeScanner ?: return@suspendCancellableCoroutine cont.resume(null)
+            cb = object : ScanCallback() {
+                override fun onScanResult(type: Int, result: ScanResult) {
+                    val uuid = result.device.address
+                    val dev = mapOf(
+                        "name" to (result.device.name ?: "Unknown"),
+                        "uuid" to uuid,
+                        "rssi" to result.rssi
+                    )
+                    if (!found.containsKey(uuid)) despia.event("on_device_discovered", dev)
+                    found[uuid] = dev
+                }
+            }
+            val filters = filter?.let {
+                listOf(ScanFilter.Builder().setServiceUuid(ParcelUuid.fromString(it)).build())
+            }
+            val settings = ScanSettings.Builder()
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+            scanner.startScan(filters, settings, cb)
+            handler.postDelayed({
+                scanner.stopScan(cb)
+                cont.resume(found.values.toList())
+                cb = null
+            }, durationSec * 1000L)
+        }
+}
+
+despia.action("scan") {
+    val duration = despia.params.int("duration") ?: 5
+    val filter   = despia.env.service_uuid_filter
+    val devices  = BLEManager.scan(duration, filter.ifEmpty { null })
+    if (devices != null) {
+        despia.variable("ble_result", mapOf("devices" to devices, "count" to devices.size))
+    } else {
+        despia.variable("ble_result", null)
+    }
+}
+```
+
+### Web app
+
+```javascript
+import despia from 'despia-native'
+
+// Live stream of devices as they appear during the scan.
+window.on_device_discovered = function(device) {
+    appendDevice(device.name, device.rssi)
+}
+
+// Wait for the final result. Resolves within 30 seconds (or sooner).
+const data = await despia('ble://?duration=5', ['ble_result'])
+
+if (data.ble_result === null) {
+    console.log('BLE unavailable on this device')
+} else {
+    console.log(`Found ${data.ble_result.count} devices`)
+}
+```
+
+---
+
+## `despia-extension.json` reference
+
+Complete schema. Every field, every type.
+
+### Top-level
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `$schema` | string | Yes | Always `https://schema.despia.com/extension/v1`. |
+| `id` | string | Yes | Reverse-DNS, lowercase. Globally unique. |
+| `name` | string | Yes | Display name in the dashboard. |
+| `scheme` | string | Yes | Lowercase alphanumeric. Public identity. Immutable after publish. Cannot collide with reserved schemes. |
+| `version` | string | Yes | Semver. |
+| `description` | string | Yes | One-line summary. |
+| `author` | string | Yes | Author or organisation. |
+| `minDespiaVersion` | string | Yes | Minimum compatible runtime, semver. |
+| `platforms` | string\[\] | Yes | Subset of `["ios", "android"]`. |
+| `dependencies` | object | No | `{ ios: [...], android: [...] }`. |
+| `vars` | array | No | Dashboard config fields. |
+| `hosts` | array | Yes | Action declarations. At least one. |
+| `events` | array | No | Push event declarations. |
+| `autoInject` | array | No | Vars written to `window` on every page load. |
+| `capabilities` | object | No | `{ ios: [...], android: [...] }`. |
+
+### `dependencies`
+
+```json
+"dependencies": {
+  "ios": [
+    {
+      "package":  "https://github.com/RevenueCat/purchases-ios.git",
+      "version":  "4.0.0",
+      "products": ["RevenueCat"]
+    }
+  ],
+  "android": [
+    { "artifact": "com.revenuecat.purchases:purchases:6.0.0" }
+  ]
+}
+```
+
+iOS entry: `package` (SPM git URL), `version` (semver), `products` (SPM product names). Android entry: `artifact` (Maven `group:name:version`). System frameworks need no entry.
+
+### `vars`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Becomes `despia.env.<name>`. snake\_case. |
+| `type` | enum | Yes | `String` / `Int` / `Double` / `Bool` / `JSON`. Affects dashboard form rendering. `despia.env.<key>` always returns `String`. |
+| `required` | bool | No | Build fails if missing in dashboard. |
+| `sensitive` | bool | No | Masks value in UI and logs. |
+| `default` | any | No | Fallback when no dashboard value. |
+| `options` | array | No | Restrict input to enum. Renders as dropdown. |
+| `label`, `hint`, `placeholder` | string | No | Form display. |
+
+### `hosts`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | URL host segment. snake\_case. Unique within the extension. |
+| `handler` | enum | Yes | `"native"` runs your closure. `"static"` resolves a JSON template, no native code. |
+| `params` | array | Yes | May be `[]`. Each item: `{ name, type, required? }`. |
+| `returns` | object or null | Yes | `{ "varName": "..." }` or `null`. |
+| `response` | object | static only | JSON template using `{{ ext.* }}`, `{{ vars.* }}`, `{{ platform }}`. |
+
+Required-param enforcement: if a required param is missing, the closure never runs. The runtime writes `{ error: "Missing required param: <name>" }` to `returns.varName` if defined.
+
+### `events`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | Yes | Internal identifier. snake\_case. |
+| `callbackName` | string | Yes | The `window.<callbackName>` function name. Valid JS identifier. |
+| `payload` | array | Yes | Documentation of the payload shape. Items: `{ name, type }`. |
+
+### `autoInject`
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `varName` | string | Yes | Name on `window`. Valid JS identifier. |
+| `value` | string | Yes | Literal or template using `{{ ext.* }}`, `{{ vars.* }}`, `{{ platform }}`. Always a string on the JS side. |
+
+### `capabilities`
+
+iOS entry:
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `key` | Yes | `Info.plist` key (e.g. `NSCameraUsageDescription`) or Despia capability identifier (`PUSH_NOTIFICATIONS`, `BACKGROUND_MODES`, `HEALTHKIT`, `IN_APP_PURCHASE`, `ASSOCIATED_DOMAINS`). |
+| `setup` | Yes | `"auto"` or `"manual"`. |
+| `value` | When `key` is a usage-description plist key | The string written to `Info.plist`. |
+| `appliesTo` | No | Build target array. Defaults to `["main"]`. |
+
+Android entry:
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `key` | Yes | Manifest permission, e.g. `android.permission.CAMERA`. |
+| `setup` | Yes | `"auto"` or `"manual"`. |
+
+---
+
+## Param decoding
+
+The runtime decodes URL params into typed values before invoking the closure.
+
+| Spec type | Swift | Kotlin | Accepts |
+| --- | --- | --- | --- |
+| `String` | `despia.params.<key>` returns `String` | `despia.params["<key>"]` | Any value. Empty string if missing. |
+| `Int` | `despia.params.<key>` as `Int?` | `despia.params.int("<key>")` | `"5"`, `"5.0"` (truncated), negatives. |
+| `Double` | `despia.params.<key>` as `Double?` | `despia.params.double("<key>")` | `"3.14"`, `"3,14"` (locale-tolerant). |
+| `Bool` | `despia.params.<key>` as `Bool?` | `despia.params.bool("<key>")` | `true`/`1`/`yes`/`on`, `false`/`0`/`no`/`off`. Case-insensitive. |
+| `JSON` | `despia.params.<key> as? [String: Any]` | `despia.params.json("<key>")` | URL-encoded JSON, double-encoded JSON, bare object literals. |
+
+Pre-decoding normalisation: trims whitespace and zero-width unicode (U\+200B, U\+FEFF, U\+00A0); decodes `+` as space unless the value looks like JSON; applies percent-decoding once, then again if still encoded.
+
+---
+
+## File bridge
+
+For binary data or JSON over 8KB. The web app stores data in native memory, sends a UUID through the URL.
+
+```javascript
+// File, Blob, ArrayBuffer, or Uint8Array
+const uuid = await window.native.set_file(blob)
+const data = await despia('upload://?file=@file/' + uuid, ['upload_result'])
+
+// Multiple
+const uuids = await Promise.all(files.map(window.native.set_file))
+const ids = uuids.map(u => '@file/' + u).join(',')
+await despia('upload://multi?files=' + ids, ['upload_result'])
+
+// Large JSON
+const uuid = await window.native.set_data({ records: largeArray })
+await despia('worker://process?payload=@file/' + uuid, ['process_result'])
+```
+
+Native side reads the resolved bytes:
+
+```swift
+let blob:  Data?  = despia.files["file"].data
+let blobs: [Data] = despia.files["files"].array
+```
+
+```kotlin
+val blob:  ByteArray?       = despia.files["file"].data
+val blobs: Array<ByteArray> = despia.files["files"].array
+```
+
+UUIDs are single-use. The runtime auto-evicts them after the first read.
+
+---
+
+## Reserved schemes
+
+Owned by the runtime. Build fails if your `scheme` matches:
+
+```text
+http, https, about, blob, data, file
+healthkit, writehealthkit, localcdn, revenuecat
+location, stoplocation, bioauth, setvault, readvault
+oauth, widget, mailto, tel, sms
+```
+
+---
+
+## Behaviour rules
+
+These describe how the runtime and the `despia-native` SDK behave. Build extensions to match.
+
+**Variables are for bounded operations only.** A variable response is only correct when you can guarantee completion in under 30 seconds on every device. Anything that waits for the user (alert prompts, picker dialogs, biometric confirmation sheets, OAuth windows, file pickers, share sheets) **must** use fire-and-listen via `despia.event`. Anything that waits on a network call without a strict timeout, or any potentially long native work (PDF export, video transcode, large uploads, ML inference), must also use fire-and-listen. The 30-second timeout is for deterministic operations like reading sensors, reading SDK state, or running a local cryptographic operation.
+
+**The 30-second window.** `despia-native` waits 30 seconds for awaited variables. If your action takes longer, the web side times out and resolves with `undefined`. For longer or unbounded work, use fire-and-listen instead.
+
+**`null` means failure.** When `despia-native` sees `window.<varName> === null`, it resolves immediately with `null` for that key. Use this as the universal failure signal across all variable returns. For event callbacks, include an `error` field in the payload instead.
+
+**Pre-clearing.** Before each `await despia('scheme://', ['var'])` call, `despia-native` deletes `window[var]` to avoid stale resolves. Your action must always set the variable, even on failure (set it to `null`). Otherwise the call hangs until timeout.
+
+**Multi-variable awaits.** `await despia('scheme://', ['a', 'b', 'c'])` waits for all three. Each must be defined and non-null and non-`"n/a"`. If any one stays unset, the call resolves to `{}` after 5 minutes. Set every promised variable in your action.
+
+**Listeners must be defined before firing.** For fire-and-listen, register `window.<callback>` before calling `despia(...)`. The native side may complete before the JS event loop runs again, and `despia.event` is a no-op if the listener isn't defined.
+
+**Closures register at file scope.** `despia.action` and `despia.hydration` calls go at the top level of the file, not inside functions or classes. The runtime auto-discovers them on file load.
+
+**State lives in singletons.** Use `static let shared` (Swift) or `private object` (Kotlin) for state across calls. Files stay loaded for the WebView lifetime.
+
+**Hydration is idempotent.** It runs on every page load including SPA route reloads. Check `if SDK.isConfigured` before re-initialising.
+
+**Payloads are JSON-only.** Strings, numbers, booleans, arrays, string-keyed maps. No `Date` (use ISO strings), no `URL` (use String), no custom classes.
+
+**The web app never imports anything besides `despia-native`.** No script tags, no extension-specific packages. The single import gives access to every extension.
+
+---
+
+## What the build system handles
+
+| You write | Build does |
+| --- | --- |
+| `dependencies.ios` | Generates `Package.swift`, fetches packages |
+| `dependencies.android` | Generates `build.gradle` deps, fetches Maven artifacts |
+| `capabilities.ios` | Writes `Info.plist`, entitlements, target capabilities |
+| `capabilities.android` | Writes `AndroidManifest.xml` permissions and uses-features |
+| `vars` | Generates dashboard config form |
+| Dashboard values | Writes encrypted `extension_config.json` into the build |
+| `Sources/ios/<file>.swift` | Compiles into the main binary, registers actions |
+| `Sources/android/<file>.kt` | Compiles into the main binary, registers actions |
+| `hosts` | Routes URLs to closures, validates required params |
+| `autoInject` | Injects variables on every page load |
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="despia-native on NPM" icon="code" href="https://www.npmjs.com/package/despia-native">
+    Web-side SDK
+  </Card>
+
+  <Card title="Partner support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

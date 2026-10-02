@@ -1,0 +1,358 @@
+---
+title: "Reference"
+description: "Complete API reference for despia-intelligence: run, models, runtime, events, and error codes."
+icon: "code"
+---
+
+<Info>
+  This beta feature is currently unavailable. We are moving off a dependency that is no longer open source and onto our own local AI infrastructure, so that every Despia user gets a fully open source, license-compliant experience.
+</Info>
+
+<br />Run language models on-device with one function call. Models load via the device's native AI acceleration stack. Inference jobs auto-resume across backgrounding. Downloads continue when users close the app.
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-intelligence
+    ```
+
+    ```bash pnpm
+    pnpm add despia-intelligence
+    ```
+
+    ```bash yarn
+    yarn add despia-intelligence
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import intelligence from 'despia-intelligence';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-intelligence/index.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import intelligence from 'https://cdn.jsdelivr.net/npm/despia-intelligence/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Runtime detection
+
+The SDK resolves runtime state once at import time and exposes it synchronously. Gate every call behind `intelligence.runtime.ok` so the same code works in a desktop browser preview.
+
+```javascript
+intelligence.runtime.ok       // boolean
+intelligence.runtime.status   // 'ready' | 'outdated' | 'unavailable'
+intelligence.runtime.message  // string | null
+
+if (!intelligence.runtime.ok) {
+  showBanner(intelligence.runtime.message)
+  return
+}
+```
+
+When `ok` is `false`, every API returns a not-ready handle. `models.available()` resolves to an empty array. The SDK never throws on a missing runtime, so your code can branch cleanly without try/catch.
+
+---
+
+## Run
+
+Fire an inference job and wire callbacks for streaming tokens and the final result.
+
+```javascript
+const call = intelligence.run({
+  type:   'text',
+  model:  'qwen3-0.6b',
+  prompt: 'Summarise this article.',
+  system: 'Be concise.',
+  stream: true,
+}, {
+  stream:   (chunk) => output.textContent = chunk,
+  complete: (text)  => save(text),
+  error:    (err)   => console.error(err.code, err.message),
+})
+```
+
+<Warning>
+  `stream(chunk)` receives the full accumulated text so far, not a delta. Use `el.textContent = chunk` (replace), never `el.textContent += chunk` (append). Appending will produce exponentially duplicated output.
+</Warning>
+
+<ParamField path="type" type="string" required>
+  Routes the call. `'text'` is the only enabled value in this release.
+</ParamField>
+
+<ParamField path="model" type="string" required>
+  Model id, e.g. `'qwen3-0.6b'`. Must be installed first via `models.download()`.
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The user prompt
+</ParamField>
+
+<ParamField path="system" type="string">
+  System-level instruction context for the session
+</ParamField>
+
+<ParamField path="stream" type="boolean">
+  When `true`, fires `stream` callbacks as tokens generate
+</ParamField>
+
+Any extra key on the params object is forwarded to the native layer as-is. Arrays become comma-separated after URL encoding. You do not need to encode values yourself.
+
+```javascript
+intelligence.run({
+  type:        'text',
+  model:       'qwen3-0.6b',
+  prompt:      'Hello.',
+  temperature: 0.7,
+  top_p:       0.95,
+  max_tokens:  256,
+}, handler)
+```
+
+### Handler callbacks
+
+<ParamField path="stream" type="(chunk: string) => void">
+  Fires for each snapshot. `chunk` is the full accumulated text so far, not a delta.
+</ParamField>
+
+<ParamField path="complete" type="(text: string) => void">
+  Fires once when inference finishes. `text` is the complete response string.
+</ParamField>
+
+<ParamField path="error" type="(err: { code, message }) => void">
+  Fires on failure. See [error codes](#error-codes).
+</ParamField>
+
+<ParamField path="interrupted" type="(intent: object) => void">
+  Optional notification hook. Fires once per active job on `focusout`. Use for UI affordances or analytics. Resume itself is automatic.
+</ParamField>
+
+### Returns
+
+`run()` returns a call handle synchronously. The same destructure works whether the runtime is ready or not.
+
+<ResponseField name="ok" type="boolean">
+  `true` when the runtime is ready and the call was queued, `false` when not
+</ResponseField>
+
+<ResponseField name="intent" type="object | null">
+  The original params object, storable and re-firable. `null` on the not-ready handle.
+</ResponseField>
+
+<ResponseField name="cancel" type="() => void">
+  Removes this job from the SDK. No further callbacks fire.
+</ResponseField>
+
+```javascript
+const call = intelligence.run(params, handler)
+
+call.intent   // original params object
+call.cancel() // drops the job, no further callbacks
+```
+
+---
+
+## Models
+
+Manage the on-device model catalogue. Models are downloaded from Hugging Face into the Despia container and reused across launches.
+
+<Tabs>
+  <Tab title="Available">
+    ```javascript
+    // Full catalogue the runtime can install
+    const all = await intelligence.models.available()
+    // [{ id: 'qwen3-0.6b', name: 'Qwen3 0.6B', category: 'text' }, ...]
+    ```
+  </Tab>
+  <Tab title="Installed">
+    ```javascript
+    // Currently downloaded to this device
+    const installed = await intelligence.models.installed()
+    const ready = installed.some(m => m.id === 'qwen3-0.6b')
+    ```
+  </Tab>
+  <Tab title="Download">
+    ```javascript
+    // Fire-and-forget, progress arrives via the callback object
+    intelligence.models.download('qwen3-0.6b', {
+      onStart:    ()    => showDownloadUI(),
+      onProgress: (pct) => bar.style.width = pct + '%',
+      onEnd:      ()    => hideDownloadUI(),
+      onError:    (err) => showError(err),
+    })
+    ```
+  </Tab>
+  <Tab title="Remove">
+    ```javascript
+    // Remove one model
+    await intelligence.models.remove('qwen3-0.6b')
+    
+    // Clear everything (use for a "free up space" button)
+    await intelligence.models.removeAll()
+    ```
+  </Tab>
+</Tabs>
+
+<ResponseField name="models.available()" type="() => Promise<Model[]>">
+  Full catalogue the runtime can install. Returns `[]` when `runtime.ok` is false.
+</ResponseField>
+
+<ResponseField name="models.installed()" type="() => Promise<Model[]>">
+  Currently downloaded to this device
+</ResponseField>
+
+<ResponseField name="models.download(id, callbacks)" type="(id, { onStart, onProgress, onEnd, onError }) => void">
+  Starts a background download. Fire-and-forget, results arrive via the callback object.
+</ResponseField>
+
+<ResponseField name="models.remove(id)" type="(id: string) => Promise">
+  Remove one model by id
+</ResponseField>
+
+<ResponseField name="models.removeAll()" type="() => Promise">
+  Remove every downloaded model
+</ResponseField>
+
+---
+
+## Download events
+
+Per-call callbacks for the component that started the download. Global events for app-wide state that needs to survive anything, including a force-quit mid-download.
+
+```javascript
+const off = intelligence.on('downloadEnd', (modelId) => markInstalled(modelId))
+off() // unsubscribe
+
+intelligence.once('downloadEnd', (modelId) => showFirstDownloadBadge())
+```
+
+<ResponseField name="downloadStart" type="(modelId: string) => void">
+  Fires when a download begins
+</ResponseField>
+
+<ResponseField name="downloadProgress" type="(modelId: string, pct: number) => void">
+  Fires on progress updates. `pct` is a 0 to 100 integer in both the global event and the per-call `onProgress` callback.
+</ResponseField>
+
+<ResponseField name="downloadEnd" type="(modelId: string) => void">
+  Fires when a download completes successfully
+</ResponseField>
+
+<ResponseField name="downloadError" type="(modelId: string, err: object) => void">
+  Fires on download failure
+</ResponseField>
+
+The pattern: session callbacks for in-session UX (a progress bar on the settings page), global events for permanent state (a tab bar badge that needs to survive a force-quit).
+
+---
+
+## Background and return
+
+Inference sessions do not survive backgrounding. The native context is torn down when iOS or Android suspend the WebView. The SDK handles this for you. Every in-flight job is re-fired automatically with the same params and the same handler when the user returns.
+
+Just write your code as if backgrounding does not exist. The SDK only re-fires jobs that were genuinely interrupted: jobs that complete normally never re-fire, jobs that error out never re-fire, jobs you explicitly `.cancel()` never re-fire. Any number of concurrent jobs all resume.
+
+---
+
+## Error codes
+
+| Code | Source | Description |
+| --- | --- | --- |
+| `2` | `run` | Missing `id` parameter on the native bridge call |
+| `3` | `run` | Runtime inference error, see `err.message` for detail |
+
+```javascript
+intelligence.run(params, {
+  error: (err) => {
+    if (err.code === 3) {
+      console.error('Inference failed:', err.message)
+      fallbackToCloud()
+    }
+  },
+})
+```
+
+---
+
+## React hook
+
+```jsx
+import { useState, useEffect, useRef } from 'react'
+import intelligence from 'despia-intelligence'
+
+function useInference(model) {
+  const [text, setText]       = useState('')
+  const [running, setRunning] = useState(false)
+  const callRef               = useRef(null)
+
+  const run = (prompt, system) => {
+    if (!intelligence.runtime.ok) return
+    setText('')
+    setRunning(true)
+    callRef.current = intelligence.run({
+      type: 'text', model, prompt, system, stream: true,
+    }, {
+      stream:   (chunk) => setText(chunk),
+      complete: (full)  => { setText(full); setRunning(false) },
+      error:    ()      => setRunning(false),
+    })
+  }
+
+  useEffect(() => () => callRef.current?.cancel(), [])
+  return { text, running, run }
+}
+```
+
+---
+
+## Environment check
+
+```javascript
+if (intelligence.runtime.ok) {
+  // Use Despia Local AI
+} else {
+  // Fallback for non-Despia environment
+}
+```
+
+The SDK never throws when the runtime is missing. It returns a not-ready handle so your code can branch cleanly. The same code path works in the Despia WebView and in a desktop browser preview.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-intelligence">
+    despia-intelligence
+  </Card>
+
+  <Card title="Introduction" icon="book-open" href="/local-intelligence/introduction">
+    Overview, model selection, and FAQs
+  </Card>
+
+  <Card title="GitHub" icon="github" href="https://github.com/despia/despia-intelligence">
+    Source on GitHub
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

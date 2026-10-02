@@ -1,0 +1,333 @@
+---
+title: "Reference"
+description: "Complete reference for Despia PostHog analytics, schemes, parameters, injected globals, and feature flags."
+icon: "code"
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Capture an event
+
+Fire any named event with optional properties. This is the core call. PostHog merges your properties with the device context it captures automatically , OS, app version, screen size, and more. Your keys take precedence on any conflict.
+
+```javascript
+const props = {
+    plan: "pro",
+    revenue: 29.99,
+    currency: "USD"
+}
+despia(`posthog://capture?event=Checkout&properties=${encodeURIComponent(JSON.stringify(props))}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `event` | Yes | Event name. Case-sensitive. Pass as-is, no encoding needed. |
+| `properties` | No | Key-value pairs attached to the event. Wrap with `encodeURIComponent(JSON.stringify(...))`. Values can be strings, numbers, booleans, or flat arrays. Nested objects are not supported. |
+
+Use a consistent naming convention. PastTense verbs work well, e.g. `Signed Up`, `Checkout Completed`, `Article Read`. Avoid PII in event properties , use person properties via `identify` instead.
+
+---
+
+## Identify a user
+
+Associates the current anonymous device ID with a known user. Call this as soon as a user logs in. All subsequent events link to this identity until reset is called.
+
+```javascript
+const person = {
+    email: "user@example.com",
+    name: "Jane Smith",
+    plan: "pro",
+    created_at: "2025-01-15"
+}
+despia(`posthog://identify?distinct_id=user_123&properties=${encodeURIComponent(JSON.stringify(person))}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `distinct_id` | Yes | Your internal user ID. Pass as-is, no encoding needed. |
+| `properties` | No | Person properties stored on the PostHog person record, not event properties. Wrap with `encodeURIComponent(JSON.stringify(...))`. |
+
+Person properties on the PostHog person record have separate retention and access controls from event properties. Never send raw PII as event properties , put it on the person record where you can manage it.
+
+After identify fires, `despia.postHogDistinctId` and `despia.postHogSessionId` update in place and reflect the new identity.
+
+---
+
+## Merge a pre-signup ID
+
+Merges two distinct IDs into the same person. Use this at signup when a user has generated anonymous events before logging in and you want the pre-signup history to merge into their identified profile.
+
+```javascript
+despia('posthog://alias?alias=user_123')
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `alias` | Yes | The new ID to merge into the current `distinct_id`. Pass as-is, no encoding needed. |
+
+Call once at signup, immediately before or after `posthog://identify`. Do not call repeatedly. PostHog merges the anonymous session history permanently.
+
+---
+
+## Set group context
+
+Links all subsequent events in the session to a group , an organization, team, workspace, or account. Must be called again if the user switches group context.
+
+```javascript
+const groupProps = {
+    name: "Acme Corp",
+    plan: "enterprise",
+    employee_count: 500
+}
+despia(`posthog://group?type=company&key=acme_corp&properties=${encodeURIComponent(JSON.stringify(groupProps))}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `type` | Yes | Group type key, e.g. `company`, `team`, `workspace`. Must match a group type defined in your PostHog project. Pass as-is. |
+| `key` | Yes | Unique identifier for the specific group. Pass as-is. |
+| `properties` | No | Group-level properties stored on the group record. Wrap with `encodeURIComponent(JSON.stringify(...))`. |
+
+PostHog has a hard limit of 5 group types per project. Group types are created automatically on first use. Coordinate type naming with your PostHog project owner before shipping , renaming a type later requires a backfill.
+
+---
+
+## Track a screen view
+
+Sends a `$screen` event to PostHog with `$screen_name` set to the provided value. Use this on every route change inside your app.
+
+```javascript
+const props = { source: "tab_bar" }
+despia(`posthog://screen?name=Settings&properties=${encodeURIComponent(JSON.stringify(props))}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `name` | Yes | Screen or view name, e.g. `Settings`, `Checkout`, `Profile`. Pass as-is. |
+| `properties` | No | Additional properties attached to the screen event. Wrap with `encodeURIComponent(JSON.stringify(...))`. |
+
+---
+
+## Set person properties
+
+Sets or updates properties on the PostHog person record without capturing an event. Use this when a user updates their profile or when you receive new attributes from your backend.
+
+```javascript
+const props = { plan: "enterprise", seats: 10 }
+despia(`posthog://set_person_properties?properties=${encodeURIComponent(JSON.stringify(props))}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `properties` | Yes | Properties to set. Merges with existing person properties. Wrap with `encodeURIComponent(JSON.stringify(...))`. |
+
+---
+
+## Register super properties
+
+Registers super properties , key-value pairs automatically appended to every subsequent `capture` call for the lifetime of the session. Useful for stable session-level context like `locale` or `app_version`.
+
+```javascript
+const superProps = { locale: navigator.language, app_version: "3.2.1" }
+despia(`posthog://register?properties=${encodeURIComponent(JSON.stringify(superProps))}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `properties` | Yes | Properties to register. Persisted across page loads until `posthog://unregister` or `posthog://reset`. Wrap with `encodeURIComponent(JSON.stringify(...))`. |
+
+Super properties merge with event-level properties. If the same key appears in both, the event-level value wins.
+
+---
+
+## Remove a super property
+
+Removes a single super property by key. The next captured event will no longer carry that key.
+
+```javascript
+despia('posthog://unregister?key=experiment_group')
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `key` | Yes | The super property key to remove. Pass as-is. |
+
+---
+
+## Reset on logout
+
+Resets all user data and starts a fresh session. Clears the `distinct_id`, all person properties, all super properties, all group associations, and the session. Call this on logout only.
+
+```javascript
+despia('posthog://reset')
+```
+
+After reset fires, the native layer updates `despia.postHogDistinctId`, `despia.postHogSessionId`, and `despia.postHogFlags` in place. Reads of those globals immediately after the call reflect the refreshed values.
+
+---
+
+## Opt out of tracking
+
+Opts the user out of all PostHog tracking. No events are sent and no data is stored from this point forward. Persists across sessions until `posthog://opt_in` is called.
+
+```javascript
+despia('posthog://opt_out')
+```
+
+This is the GDPR consent cutoff. Under GDPR, analytics tracking requires explicit user consent before any data is collected. Call `opt_out` when the user declines your consent prompt. PostHog enforces the cutoff at the SDK level , events fired after `opt_out` are dropped before they reach PostHog servers.
+
+`despia.postHogOptedOut` updates to `true` when this fires.
+
+---
+
+## Opt in to tracking
+
+Opts the user in to PostHog tracking. Call this when the user explicitly accepts analytics in your consent prompt.
+
+```javascript
+despia('posthog://opt_in')
+```
+
+`despia.postHogOptedOut` updates to `false` when this fires.
+
+---
+
+## Reading current state
+
+The native layer keeps four globals live on the `despia` object. They update in place whenever their value changes, with no page reload required. Read them when you need the current value , do not snapshot them at boot, since the page-load push is asynchronous and may arrive after your startup code runs.
+
+```javascript
+despia.postHogDistinctId  // current PostHog distinct_id
+despia.postHogSessionId   // current session ID
+despia.postHogOptedOut    // true if the user has opted out
+despia.postHogFlags       // all evaluated feature flag values, keyed by flag name
+```
+
+| Global | Type | Description |
+| --- | --- | --- |
+| `postHogDistinctId` | string | Updates on page load, after `identify`, and after `reset`. Defaults to `""` until the native layer populates it. |
+| `postHogSessionId` | string | Updates on page load, after `identify`, after `reset`, and once the first captured event opens a session. Defaults to `""`. |
+| `postHogOptedOut` | boolean | Updates on page load and after `opt_in` / `opt_out`. Defaults to `false`. |
+| `postHogFlags` | object | Updates on page load and whenever PostHog pushes new flag values. Defaults to `{}`. A flag not yet loaded is absent from the object , use `"flag_name" in despia.postHogFlags` to check. |
+
+Reading a feature flag is synchronous and always reflects the most recent push from PostHog. No scheme call is needed.
+
+```javascript
+const enabled = despia.postHogFlags["new_checkout"]      // boolean flag
+const variant = despia.postHogFlags["checkout_variant"]  // multivariate, e.g. "control" or "test_v2"
+```
+
+---
+
+## Standard auth flow
+
+Correct call order for a standard login and logout sequence.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+// 1. On app load , register session-level super properties
+if (isDespia) {
+    const superProps = { locale: navigator.language, app_version: window.APP_VERSION }
+    despia(`posthog://register?properties=${encodeURIComponent(JSON.stringify(superProps))}`)
+}
+
+// 2. On login , identify the user
+if (isDespia) {
+    const person = { email: user.email, plan: user.plan }
+    despia(`posthog://identify?distinct_id=${user.id}&properties=${encodeURIComponent(JSON.stringify(person))}`)
+}
+
+// 3. For B2B apps , associate with org after identify
+if (isDespia) {
+    const groupProps = { name: user.orgName, plan: user.orgPlan }
+    despia(`posthog://group?type=company&key=${user.orgId}&properties=${encodeURIComponent(JSON.stringify(groupProps))}`)
+}
+
+// 4. Track actions
+if (isDespia) {
+    const props = { plan: "pro", revenue: 29.99 }
+    despia(`posthog://capture?event=Checkout&properties=${encodeURIComponent(JSON.stringify(props))}`)
+}
+
+// 5. On logout , reset everything
+if (isDespia) {
+    despia('posthog://reset')
+}
+```
+
+---
+
+## Not bridged
+
+| Capability | Reason |
+| --- | --- |
+| `getFeatureFlag` / `isFeatureEnabled` | Use `despia.postHogFlags` , synchronous, always current, no scheme call needed |
+| `reloadFeatureFlags` / `onFeatureFlags` | Flag values are cached natively and pushed into `despia.postHogFlags` automatically |
+| Session recording controls | Configured project-side in PostHog, not a per-user runtime concern |
+| Surveys | Run via PostHog's own JS embed, not a native SDK surface |
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="PostHog Dashboard" icon="chart-line" href="https://app.posthog.com">
+    Configure feature flags, funnels, and session recordings
+  </Card>
+
+  <Card title="PostHog Docs" icon="book" href="https://posthog.com/docs">
+    Feature flags, person properties, and group analytics
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

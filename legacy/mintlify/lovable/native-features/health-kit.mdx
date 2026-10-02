@@ -1,0 +1,118 @@
+---
+title: "HealthKit"
+icon: "heart-pulse"
+description: "Retrieve and display health and fitness data from users' Apple HealthKit within your Lovable application."
+---
+
+<iframe src="https://www.youtube.com/embed/EWYHfjZ01yc" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native HealthKit access functionality to read and write users' health and fitness data including steps, heart rate, body mass, distance, and other health metrics using the Despia SDK from: https://www.npmjs.com/package/despia-native
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Read HealthKit data using `await despia('healthkit://read?types=HKQuantityTypeIdentifierStepCount&days={DAYS-COUNT}', ['healthkitResponse'])` which returns a JSON object with the requested HealthKit data as `healthkitResponse`
+
+  You can request multiple health data types in a single call by comma-separating them. Here is an example of reading multiple metrics:
+
+  ```javascript
+  const healthData = await despia('healthkit://read?types=HKQuantityTypeIdentifierStepCount,HKQuantityTypeIdentifierHeartRate&days=7', ['healthkitResponse']);
+  console.log(healthData.healthkitResponse); // Access the health data from the object
+  
+  // Expected output format:
+  {
+    "HKQuantityTypeIdentifierStepCount": [
+      {"date": "2025-11-17T20:00:00Z", "value": 19906, "unit": "count"},
+      {"date": "2025-11-18T20:00:00Z", "value": 23954, "unit": "count"}
+    ],
+    "HKQuantityTypeIdentifierHeartRate": [
+      {"date": "2025-11-17T20:00:00Z", "value": 0, "unit": "count/min"},
+      {"date": "2025-11-18T20:00:00Z", "value": 0, "unit": "count/min"}
+    ]
+  }
+  ```
+
+  Write HealthKit data using `despia('writehealthkit://HKQuantityTypeIdentifierStepCount//10000')` to save numeric values to HealthKit.
+
+  Works with all valid HealthKit keys - simply use any valid HealthKit identifier in the `types` parameter. Multiple identifiers can be comma-separated for batch reads.
+
+  For a complete list of all available HealthKit identifiers, refer to Apple's official documentation:
+
+  - **HKQuantityTypeIdentifier** (numerical values like steps, heart rate, body measurements): https://developer.apple.com/documentation/healthkit/hkquantitytypeidentifier
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia SDK provides native bridge functionality to access and write Apple HealthKit data through async method calls. Read health data by specifying the HealthKit types you want to access and the number of days to retrieve, which returns as a JSON object via `healthkitResponse`.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+---
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Read HealthKit Data
+
+Access Native HealthKit Data and process it:
+
+```javascript
+// Read step count for the last 7 days
+const health = await despia('healthkit://read?types=HKQuantityTypeIdentifierStepCount&days=7', ['healthkitResponse']);
+console.log(healthData.healthkitResponse); // Access the health data from the window object
+
+// Expected output format:
+{
+  "HKQuantityTypeIdentifierStepCount": [
+    {"date": "2025-11-17T20:00:00Z", "value": 19906, "unit": "count"},
+    {"date": "2025-11-18T20:00:00Z", "value": 23954, "unit": "count"}
+  ],
+  "HKQuantityTypeIdentifierHeartRate": [
+    {"date": "2025-11-17T20:00:00Z", "value": 0, "unit": "count/min"},
+    {"date": "2025-11-18T20:00:00Z", "value": 0, "unit": "count/min"}
+  ]
+}
+```
+
+### 3. Write HealthKit Data
+
+Write numeric values to HealthKit:
+
+```javascript
+// Example: Write step count
+despia('writehealthkit://HKQuantityTypeIdentifierStepCount//10000');
+```
+
+## Available HealthKit Identifiers
+
+For a complete list of all available HealthKit identifiers, refer to Apple's official documentation:
+
+- [HealthKit Data Types Overview](https://developer.apple.com/documentation/healthkit/data-types) - Complete overview of all HealthKit data types
+
+## Resources
+
+### NPM Package
+
+View full [NPM documentation](https://www.npmjs.com/package/despia-native) for additional configuration options
+
+### Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native HealthKit access into your generated apps.
+
+For additional support or questions, please contact our support team at [support@despia.com](mailto:support@despia.com)

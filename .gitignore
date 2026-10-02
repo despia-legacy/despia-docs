@@ -10,3 +10,14 @@ public/search-index.json
 public/llms.txt
 public/llms-full.txt
 .wrangler/
+content/legacy/
+content/migrate/map.md
+public/legacy/
+public/migrate/
+public/troubleshooting/
+public/troubleshooting.json
+public/canonical.json
+public/sitemap.xml
+public/migrate-map.json
+public/**/*.md
+public/index.md

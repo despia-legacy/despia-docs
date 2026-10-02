@@ -1,0 +1,845 @@
+---
+title: "Automatic"
+icon: "code-branch"
+description: "Complete guide for building and publishing Android applications using Despia."
+---
+
+<Warning>
+  **Google Play has changed how apps are created.** You must now register your package name **before** creating your app listing. Once set, the package name cannot be changed. Get your Bundle ID from **Despia \> Project \> Android \> Bundle ID** and enter it when registering your package name in the Play Console.
+</Warning>
+
+<iframe src="https://www.youtube.com/embed/5Y78EpiKtKI" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+## **Table of Contents**
+
+1. [Prerequisites](#prerequisites)
+2. [Initial Setup in Despia](#initial-setup-in-despia)
+3. [Creating App Icons](#creating-app-icons)
+4. [Creating Splash Screens](#creating-splash-screens)
+5. [Google Play Console Setup](#google-play-console-setup)
+6. [Understanding APK vs AAB](#understanding-apk-vs-aab)
+7. [Building Your App](#building-your-app)
+8. [Testing Your App](#testing-your-app)
+9. [Store Listing Requirements](#store-listing-requirements)
+10. [Publishing to Production](#publishing-to-production)
+11. [Over-the-Air Updates](#over-the-air-updates)
+12. [Troubleshooting](#troubleshooting)
+
+---
+
+## **Prerequisites**
+
+Before you begin, ensure you have:
+
+- A **deployed web application** with HTTPS enabled
+- Access to the **Despia platform**
+- **Google Play Console account** (\$25 one-time registration fee)
+- **Design software** (Canva recommended for icon/splash creation)
+- Basic understanding of Android app submission process
+
+---
+
+## **Initial Setup in Despia**
+
+### **Configure Your Web App Source**
+
+Navigate to your Despia project dashboard and locate the **Dynamic App Store Source** section.
+
+**Critical Requirements:**
+
+- Your URL **must** use HTTPS (HTTP will not work)
+- Verify the URL is correct and accessible
+
+**Verification Steps:**
+
+1. Copy your web app URL from Despia
+2. Open a new browser tab
+3. Paste and load the URL
+4. Confirm your application loads correctly
+
+> **Common Error:** Typos in the URL will cause build failures. Always test your URL before proceeding.
+
+---
+
+## **Creating App Icons**
+
+### **Requirements**
+
+Android requires **two different icons**:
+
+| **Icon Type** | **Purpose** | **Dimensions** | **Format** | **Background** |
+| :-- | :-- | :-- | :-- | :-- |
+| iOS Icon | Internal use | 1024 x 1024 px | PNG | No transparency |
+| Android Icon | Launcher & home screen | 1024 x 1024 px | PNG | No transparency |
+
+> **Important:** Even if you're only building an Android app, you must upload both iOS and Android icons.
+
+### **Differences Between Icons**
+
+**iOS Icon:**
+
+- Less safe area required
+- Logo can be closer to edges
+- Standard padding
+
+**Android Icon:**
+
+- Requires significant safe area
+- Logo must be centered with extra padding
+- Android zooms into icons, so elements must be smaller
+- Despia provides a preview of how it will appear on Android devices
+
+### **Creating Icons in Canva**
+
+#### **iOS Icon**
+
+1. **Create New Design**
+   - Set dimensions: 1024 x 1024 px
+   - Choose a background color (no transparency)
+2. **Design Your Icon**
+   - Upload your logo
+   - Center with standard padding
+   - Use solid background color
+3. **Export Settings**
+   - File type: **PNG**
+   - Quality: High
+   - **Disable "Transparent Background"**
+4. **Upload to Despia**
+   - Navigate to iOS Icon section
+   - Click "Upload Icon"
+   - Drag and drop your PNG file
+
+#### **Android Icon**
+
+1. **Create New Design**
+   - Set dimensions: 1024 x 1024 px
+   - Use same background as iOS icon
+2. **Design Considerations**
+   - Make logo smaller than iOS version
+   - Add significant safe area padding
+   - Keep critical elements away from edges
+   - Center the logo
+3. **Preview in Despia**
+   - Despia shows preview of Android display
+   - Verify nothing gets cut off
+   - Adjust if needed
+4. **Export Settings**
+   - File type: **PNG**
+   - Quality: High
+   - **Disable "Transparent Background"**
+5. **Upload to Despia**
+   - Navigate to Android Icon section
+   - Click "Upload Icon"
+   - Verify preview looks correct
+
+### **Common Icon Mistakes**
+
+| **Issue** | **Result** |
+| :-- | :-- |
+| Wrong dimensions (not 1024x1024) | Build failure |
+| Transparent background | Build failure |
+| JPEG format | Build failure |
+| Logo too close to edges (Android) | Elements cut off |
+| Missing iOS icon | Cannot build Android app |
+
+---
+
+## **Creating Splash Screens**
+
+### **Requirements**
+
+- **Dimensions:** 1024 x 1024 pixels
+- **Format:** GIF (can be static or animated)
+- **Background:** **Must have transparent background** (opposite of icons!)
+
+> **Critical Difference:** Icons cannot have transparent backgrounds, but splash screens **must** have transparent backgrounds.
+
+### **Creating the Splash Screen**
+
+1. **Design in Canva**
+   - Use 1024 x 1024 dimensions
+   - Center your logo
+   - Make logo fill most of the frame
+   - Optionally add animations:
+     - Fade in
+     - Blur in
+     - Swipe effects
+     - Bounce animations
+2. **Export as GIF**
+   - Select "Download" → "GIF"
+   - **Enable "Transparent Background"** (critical!)
+   - Choose animation settings if applicable
+   - Download to your computer
+3. **Upload to Despia**
+   - Scroll to "Splash Screen Layout" section for Android
+   - Click "Upload Icon"
+   - Select your GIF file
+   - Click "Done"
+   - Verify splash screen appears correctly
+
+---
+
+## **Google Play Console Setup**
+
+### **Creating Your Account**
+
+1. **Visit Google Play Console**
+   - Go to [play.google.com/console](https://play.google.com/console)
+   - Sign in with your Google account
+2. **Pay Registration Fee**
+   - One-time fee: \$25 USD
+   - Payment required before creating apps
+   - Lifetime access to publish apps
+3. **Complete Account Setup**
+   - Provide developer information
+   - Accept terms and conditions
+   - Set up payment profile (for paid apps)
+
+### **Account Types**
+
+| **Account Type** | **Open Testing Requirement** | **Production Access** |
+| :-- | :-- | :-- |
+| Individual | 14 days with 20\+ testers | After testing period |
+| Business (LLC) | None | Immediate access |
+
+> **Note:** Individual accounts must complete 14 days of open testing with at least 20 testers before publishing to production. Business accounts can publish directly.
+
+### **Creating Your App**
+
+Google Play now requires you to **register your package name before creating your app listing**. Follow these steps in order:
+
+1. **Get Your Bundle ID from Despia**
+   - In Despia, go to **Project → Android → Bundle ID**
+   - Copy the Bundle ID shown — this is your package name
+2. **Register Your Package Name in Play Console**
+   - In Google Play Console, click **"Register package name"**
+   - Enter the Bundle ID you copied from Despia
+   - Confirm and save
+3. **Create Your App Listing**
+   - Click "Create app"
+   - Fill in app details:
+     - App name
+     - Default language
+     - App or game category
+     - Free or paid
+   - The package name is already set from the previous step
+4. **App Privacy Settings**
+   - Declare if app is primarily for children
+   - Set up privacy policy URL (required)
+5. **Save and Continue**
+   - Google Play Console creates your app listing
+   - You'll see a dashboard with to-do items
+
+> **Critical:** The package name cannot be changed once registered. Always copy it directly from Despia to avoid typos.
+
+---
+
+## **Understanding APK vs AAB**
+
+### **File Formats**
+
+| **Format** | **Name** | **Purpose** | **Size** | **Recommended** |
+| :-- | :-- | :-- | :-- | :-- |
+| APK | Android Package | Direct installation | Larger | Testing only |
+| AAB | Android App Bundle | Play Store distribution | Smaller | Production |
+
+### **APK (Android Package)**
+
+**What it is:**
+
+- Direct installation file
+- Can be installed on devices manually
+- Contains all resources for all device types
+
+**When to use:**
+
+- Internal testing on your device
+- Sharing with testers directly
+- Quick testing before upload
+
+**How to install:**
+
+1. Download APK from Despia
+2. Transfer to Android device
+3. Enable "Install from unknown sources"
+4. Tap APK file to install
+
+### **AAB (Android App Bundle)**
+
+**What it is:**
+
+- Google Play Store distribution format
+- Optimized for each device type
+- Smaller download size for users
+
+**When to use:**
+
+- Uploading to Google Play Console
+- Production releases
+- Internal testing track (recommended)
+
+**Benefits:**
+
+- Google Play generates optimized APKs per device
+- Users download only what their device needs
+- Smaller app size on user devices
+
+### **Which Should You Use?**
+
+**For Testing:**
+
+- Use APK for quick local testing
+- Use AAB for internal testing track (better workflow)
+
+**For Production:**
+
+- Always use AAB
+- Required by Google Play for new apps since August 2021
+
+---
+
+## **Building Your App**
+
+### **Build Process in Despia**
+
+1. **Verify All Assets Uploaded**
+   - iOS icon
+   - Android icon
+   - Splash screen (GIF)
+   - Web app URL configured
+2. **Initiate Build**
+   - Navigate to Despia dashboard
+   - Click "Publish App"
+   - Select Android platform
+   - Choose build type (APK or AAB)
+3. **Build Configuration**
+   - Despia automatically configures build settings
+   - Generates signed application
+   - Build time: typically 15-30 minutes
+4. **Download Build**
+   - APK: Download and install directly
+   - AAB: Download for upload to Play Console
+
+### **Build Outputs**
+
+After successful build, you'll receive:
+
+| **Output** | **Use Case** |
+| :-- | :-- |
+| APK file | Manual device installation |
+| AAB file | Upload to Google Play Console |
+| Build logs | Troubleshooting if needed |
+
+---
+
+## **Testing Your App**
+
+### **Method 1: Direct APK Installation**
+
+**Steps:**
+
+1. **Build APK in Despia**
+   - Select APK build option
+   - Download completed APK
+2. **Enable Installation on Device**
+   - Settings → Security
+   - Enable "Install from unknown sources" or "Install unknown apps"
+   - Allow installation from your browser/file manager
+3. **Transfer APK to Device**
+   - Email to yourself
+   - Upload to cloud storage
+   - Direct USB transfer
+   - AirDroid or similar tools
+4. **Install and Test**
+   - Tap APK file on device
+   - Confirm installation
+   - Test all features thoroughly
+
+### **Method 2: Internal Testing Track (Recommended)**
+
+**Steps:**
+
+1. **Build AAB in Despia**
+   - Select AAB build option
+   - Download completed AAB
+2. **Upload to Play Console**
+   - Open Google Play Console
+   - Navigate to your app
+   - Go to Testing → Internal testing
+   - Click "Create new release"
+3. **Add AAB File**
+   - Upload your AAB file
+   - Wait for processing (5-10 minutes)
+   - Add release notes
+4. **Configure Testers**
+   - Create tester list
+   - Add email addresses
+   - Save tester list
+5. **Start Rollout**
+   - Review release
+   - Click "Start rollout to Internal testing"
+   - Share link with testers
+6. **Testers Install**
+   - Testers receive email invitation
+   - Click link to opt-in
+   - Install from Play Store
+
+### **Testing Checklist**
+
+- Test on multiple Android versions
+- Verify all features work correctly
+- Check push notifications (if applicable)
+- Test in-app purchases (if applicable)
+- Verify offline functionality
+- Check different screen sizes
+- Test performance and loading times
+
+---
+
+## **Store Listing Requirements**
+
+Google Play Console uses a comprehensive to-do list system to guide you through setup.
+
+### **Required Information**
+
+#### **App Details**
+
+| **Field** | **Description** | **Character Limit** |
+| :-- | :-- | :-- |
+| App name | Your app's display name | 50 characters |
+| Short description | Brief app overview | 80 characters |
+| Full description | Detailed description | 4000 characters |
+| App category | Primary category | Select from list |
+
+#### **Graphics Requirements**
+
+**App Icon**
+
+- Already handled in Despia
+- 512 x 512 px (automatically generated)
+
+**Feature Graphic**
+
+- Dimensions: 1024 x 500 px
+- Format: PNG or JPEG
+- Required for store listing
+
+**Screenshots** (Required)
+
+- Minimum: 2 screenshots
+- Maximum: 8 screenshots
+- Dimensions:
+  - Minimum: 320 px
+  - Maximum: 3840 px
+- Aspect ratio: 16:9 or 9:16
+- Format: PNG or JPEG
+
+**Optional Graphics:**
+
+- Promo video (YouTube URL)
+- TV banner (for Android TV apps)
+- Wear OS screenshots (for wear apps)
+
+### **Privacy & Compliance**
+
+#### **Privacy Policy**
+
+**Requirements:**
+
+- Must be hosted on permanent URL
+- Must be accessible without login
+- Must explain data collection and usage
+- Required for all apps
+
+**What to include:**
+
+- What data you collect
+- How you use the data
+- How you protect user data
+- Third-party services used
+- Contact information
+
+#### **App Access**
+
+Answer questions about:
+
+- Does app require login?
+- Are there special access requirements?
+- Demo account credentials (if needed for review)
+
+#### **Ads Declaration**
+
+Declare whether your app:
+
+- Contains ads
+- Uses ad frameworks
+- Shows ads from third parties
+
+#### **Content Rating**
+
+Complete content rating questionnaire:
+
+- Violence
+- Sexual content
+- Language
+- Drug use
+- User interactions
+
+### **Target Audience**
+
+Specify:
+
+- Age groups
+- Content appropriate for children
+- COPPA compliance (if applicable)
+
+### **Store Listing Setup Process**
+
+1. **Main Store Listing**
+   - Navigate to "Main store listing"
+   - Fill in all required fields
+   - Upload graphics
+   - Save draft
+2. **App Content**
+   - Privacy policy
+   - App access
+   - Ads
+   - Content rating
+   - Target audience
+   - News apps declaration
+3. **Store Settings**
+   - App category
+   - Tags
+   - Contact details
+
+> **Time Required:** Approximately 1-2 hours to complete all sections thoroughly.
+
+---
+
+## **Publishing to Production**
+
+### **Pre-Publication Checklist**
+
+- All store listing sections completed
+- Screenshots uploaded
+- Feature graphic created and uploaded
+- Privacy policy URL provided
+- Content rating completed
+- App access information provided
+- AAB file uploaded to testing track
+- App tested thoroughly
+- Release notes written
+
+### **Publication Process**
+
+#### **For Business Accounts**
+
+1. **Promote from Internal Testing**
+   - Navigate to Testing → Internal testing
+   - Find your release
+   - Click "Promote release"
+   - Select "Production"
+2. **Review and Confirm**
+   - Review all information
+   - Confirm rollout
+   - Submit for review
+3. **Wait for Review**
+   - Initial review: 1-7 days (typically 1-3 days)
+   - App goes live automatically upon approval
+
+#### **For Individual Accounts**
+
+1. **Promote to Open Testing**
+   - Navigate to Testing → Internal testing
+   - Click "Promote release"
+   - Select "Open testing"
+2. **Tester Requirements**
+   - Minimum: 20 testers
+   - Duration: 14 consecutive days
+   - Testers must have app installed
+3. **Getting Testers**
+   - Friends and family
+   - Social media
+   - Testing services (available for ~\$20)
+   - Community forums
+4. **After Testing Period**
+   - Promote to Production
+   - Follow same process as business accounts
+
+### **Review Status**
+
+Check review status in Play Console:
+
+| **Status** | **Meaning** |
+| :-- | :-- |
+| Pending review | Waiting for Google review |
+| Under review | Currently being reviewed |
+| Approved | App is live in store |
+| Rejected | Issues found, check feedback |
+
+### **Common Rejection Reasons**
+
+- Privacy policy missing or incorrect
+- Incomplete store listing
+- Icon/graphics issues
+- Functionality problems
+- Content policy violations
+- Misleading description
+- Broken features in app
+
+---
+
+## **Over-the-Air Updates**
+
+### **Understanding OTA Updates**
+
+Despia Android apps support **over-the-air (OTA) updates**, meaning:
+
+- Update web app and mobile app updates automatically
+- No Google Play review needed for web changes
+- No rebuild required
+- Instant deployment
+- No cloud credits consumed
+
+### **When OTA Works**
+
+Changes that update automatically:
+
+- UI/UX modifications
+- Content updates
+- Bug fixes in web code
+- Feature additions (web-based)
+- Style changes
+- Business logic updates
+- Database changes
+
+### **When Rebuild Required**
+
+You only need to rebuild when changing:
+
+- Package name
+- App permissions
+- Icons
+- Splash screen
+- Push notification configuration
+- Native Android configurations
+
+**Rebuild Frequency:** Typically once or twice per year
+
+### **Testing OTA Updates**
+
+1. **Make Change in Web App**
+   - Update your web application
+   - Deploy to production
+2. **Close Android App**
+   - Force close the app completely
+   - Wait 2-3 seconds
+3. **Reopen App**
+   - Launch app again
+   - Changes appear immediately
+
+> **Pro Tip:** Critical bug fixes can be deployed instantly without waiting days for Google Play review.
+
+---
+
+## **Troubleshooting**
+
+### **Build Failures**
+
+#### **Invalid Icon Dimensions**
+
+**Error:** "Icon size must be 1024x1024"
+
+**Solution:**
+
+- Verify both icons are exactly 1024x1024 pixels
+- Check export settings in design tool
+- Re-export and upload
+
+#### **Transparent Background Issues**
+
+**Error:** "Icon contains transparency"
+
+**Solution:**
+
+- Icons: Must have solid background (no transparency)
+- Splash screen: Must have transparent background
+- Re-export with correct settings
+
+#### **Missing iOS Icon**
+
+**Error:** "iOS icon required"
+
+**Solution:**
+
+- Upload iOS icon even for Android-only apps
+- This is a requirement of the Despia platform
+- Use same design with appropriate padding
+
+### **Installation Issues**
+
+#### **APK Won't Install**
+
+**Issue:** "App not installed" error
+
+**Solution:**
+
+- Enable "Install from unknown sources"
+- Check device storage space
+- Uninstall previous version
+- Verify APK downloaded completely
+
+#### **Play Store Installation Failed**
+
+**Issue:** Cannot install from internal testing
+
+**Solution:**
+
+- Verify tester email is added to list
+- Check tester opted into testing
+- Wait 5-10 minutes after opt-in
+- Clear Play Store cache
+
+### **Play Console Issues**
+
+#### **Upload Failed**
+
+**Issue:** AAB file won't upload
+
+**Solution:**
+
+- Check file is AAB format (not APK)
+- Verify file isn't corrupted
+- Check internet connection
+- Try different browser
+
+#### **Processing Stuck**
+
+**Issue:** AAB stuck in processing
+
+**Solution:**
+
+- Wait up to 30 minutes
+- Check for error notifications
+- Verify AAB file integrity
+- Contact Play Console support if persists
+
+### **Testing Issues**
+
+#### **Open Testing Not Working**
+
+**Issue:** Cannot reach 20 testers or 14 days
+
+**Solution:**
+
+- Use testing services (~\$20 for guaranteed testers)
+- Share on social media and forums
+- Ask friends and family
+- Consider business account for instant access
+
+#### **App Crashes on Specific Devices**
+
+**Issue:** Works on some devices but crashes on others
+
+**Solution:**
+
+- Check Android version compatibility
+- Test on multiple devices
+- Review crash reports in Play Console
+- Check device-specific issues
+
+---
+
+## **Additional Resources**
+
+### **Despia Resources**
+
+- **Dashboard Support:** Click "Get Support" in Despia dashboard
+- **Customer Support:** Available via Intercom
+- **Email Support:** [support@despia.com](mailto:support@despia.com)
+
+### **Google Resources**
+
+- [Play Console Help Center](https://support.google.com/googleplay/android-developer/)
+- [Google Play Policy Center](https://play.google.com/about/developer-content-policy/)
+- [Android Developer Documentation](https://developer.android.com/)
+- [Play Console Academy](https://playacademy.withgoogle.com/)
+
+### **Design Resources**
+
+- **Canva:** Icon and splash screen creation
+- **Icon Size Reference:** 1024x1024px
+- **Screenshot Tools:** Device frames and mockups
+
+---
+
+## **Quick Reference**
+
+### **Essential Dimensions**
+
+| **Asset** | **Dimensions** | **Format** | **Background** |
+| :-- | :-- | :-- | :-- |
+| iOS Icon | 1024 x 1024 | PNG | Solid (no transparency) |
+| Android Icon | 1024 x 1024 | PNG | Solid (no transparency) |
+| Splash Screen | 1024 x 1024 | GIF | Transparent |
+| Feature Graphic | 1024 x 500 | PNG/JPEG | Any |
+| Screenshots | Min 320px | PNG/JPEG | Any |
+
+### **Build Timeline**
+
+| **Stage** | **Duration** |
+| :-- | :-- |
+| Despia Build | 15-30 minutes |
+| Google Play Processing | 5-10 minutes |
+| Internal Testing Setup | Immediate |
+| Open Testing (Individual) | 14 days minimum |
+| Google Play Review | 1-7 days (avg 1-3) |
+| **Total Time (Business)** | **2-8 days** |
+| **Total Time (Individual)** | **16-22 days** |
+
+### **Cost Breakdown**
+
+| **Item** | **Cost** | **Frequency** |
+| :-- | :-- | :-- |
+| Google Play Developer | \$25 | One-time |
+| Despia Build Credits | Varies | Per build |
+| OTA Updates | \$0 | Unlimited |
+| Testing Services (optional) | ~\$20 | If needed |
+
+---
+
+## **Conclusion**
+
+You now have a complete guide to publishing your Despia Android application to the Google Play Store. The process involves:
+
+1. Setting up your web app URL in Despia
+2. Creating properly sized icons (both iOS and Android) and splash screen
+3. Creating Google Play Console account
+4. Building and uploading your app
+5. Completing store listing requirements
+6. Testing thoroughly
+7. Publishing to production
+8. Leveraging OTA updates for continuous deployment
+
+**Key Advantages:**
+
+- Ship native Android app from web application
+- Over-the-air updates without rebuilds
+- Faster deployment compared to traditional Android development
+- Save on repeated build costs
+- Fix critical bugs instantly
+
+**Account Comparison:**
+
+| **Feature** | **Individual** | **Business** |
+| :-- | :-- | :-- |
+| Cost | \$25 | \$25 |
+| Open Testing | Required (14 days) | Not required |
+| Production Access | After testing | Immediate |
+| Recommended For | Hobby projects | Serious apps |
+
+**Need Help?**
+
+- Click "Get Support" in Despia dashboard
+- Email: [support@despia.com](mailto:support@despia.com)
+- Check video tutorials for visual guides

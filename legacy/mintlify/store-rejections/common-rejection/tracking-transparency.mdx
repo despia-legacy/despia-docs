@@ -1,0 +1,408 @@
+---
+title: "Tracking Transparency"
+description: "Your app was rejected for issues with Apple's App Tracking Transparency (ATT). Here's what went wrong and how to fix it."
+icon: "align-left"
+---
+
+## What are tracking transparency rejections?
+
+**Apple requires disclosure and consent for user tracking**
+
+Since iOS 14.5, apps that track users across apps and websites must request permission using the App Tracking Transparency framework. Apple rejects apps that track without permission or declare tracking incorrectly.
+
+Common rejection messages:
+
+- "Your app tracks users but does not request permission"
+- "Your app's privacy declarations do not match its tracking behavior"
+- "Your app does not respect the user's tracking preference"
+
+These rejections block your app until you fix the tracking implementation or declarations.
+
+**Note for WebView apps:** Because you can add web tracking tools via OTA updates, some developers declare ATT proactively. This is a gray area covered in "Pre-tracking consent" below.
+
+---
+
+## Why this happens
+
+**Apple enforces strict tracking rules**
+
+Tracking means linking user or device data with third-party data for advertising, or sharing user data with data brokers.
+
+Common mistakes:
+
+- Using advertising SDKs without proper ATT declaration
+- App Store privacy labels don't match actual tracking
+- Declaring "no tracking" but using Facebook SDK, Google Ads, or similar
+- Not respecting user's tracking choice in your code
+- Not declaring Device ID in App Store Connect when using ad SDKs
+- Sending Vendor ID to third-party tracking services (still counts as tracking)
+- Adding tracking via OTA web update without updating declarations
+
+---
+
+## How to fix it
+
+### Understand what counts as tracking
+
+**Apple's definition is specific**
+
+Tracking occurs when you link user or device data from your app with data from other companies' apps, websites, or offline properties for advertising or measurement purposes.
+
+**This IS tracking:**
+
+- Displaying targeted ads based on user data from other apps
+- Sharing device ID with advertising networks
+- Using third-party SDKs that combine your user data with other sources
+- Sending IDFA to any ad network
+- Sending Vendor ID (`despia.uuid`) to ad networks or data brokers
+- Using Facebook SDK for ad attribution
+- Using Google Ads conversion tracking
+- Loading third-party tracking scripts that receive any device identifier
+
+**This is NOT tracking:**
+
+- Using Vendor ID (`despia.uuid`) for your own app
+- Analytics that stay within your app (Mixpanel, Amplitude)
+- Crash reporting (Crashlytics, Sentry)
+- First-party advertising (showing your own ads)
+- Fraud detection
+- Credit/payment processing
+- Linking devices to user accounts in your own database
+
+If you're unsure, assume it's tracking and declare it.
+
+---
+
+### Declare tracking in App Store Connect
+
+**Your privacy declarations must be accurate**
+
+Go to App Store Connect and declare your tracking data correctly.
+
+**Steps:**
+
+1. Open App Store Connect
+2. Go to your app \> App Privacy
+3. Under "Data Types", select "Device ID" if you use IDFA
+4. Under "Data Use", select "Tracking" for any data used for tracking purposes
+5. Save and submit
+
+**What to declare:**
+
+| SDK/Feature       | Data Type | Data Use              |
+| :---------------- | :-------- | :-------------------- |
+| Facebook Ads SDK  | Device ID | Tracking, Advertising |
+| Google Ads/AdMob  | Device ID | Tracking, Advertising |
+| Adjust, AppsFlyer | Device ID | Tracking, Analytics   |
+| TikTok Ads        | Device ID | Tracking, Advertising |
+| Custom IDFA usage | Device ID | Tracking              |
+
+If you use any advertising or attribution SDK, you almost certainly need to declare Device ID for Tracking.
+
+---
+
+### ATT prompt is handled automatically
+
+**Despia shows the ATT prompt following store best practices**
+
+If your app tracks users, the Despia runtime automatically shows the ATT prompt at the appropriate time. The prompt text follows Apple's current best practices at the time of publishing.
+
+You don't need to configure the prompt. Just check the user's response in your code:
+
+```javascript
+import despia from 'despia-native';
+
+// Check if user disabled tracking
+const isTrackingDisabled = despia.trackingDisabled;
+
+if (isTrackingDisabled) {
+  // Don't send data to ad networks
+  // Use contextual ads instead
+} else {
+  // User allowed tracking
+  // Safe to use IDFA and ad attribution
+}
+```
+
+See: [App Privacy](https://setup.despia.com/lovable/native-features/app-privacy)
+
+---
+
+### Vendor ID is not IDFA
+
+`despia.uuid`**is the Vendor ID, not the advertising identifier**
+
+Despia provides access to the device's Vendor ID (IDFV) through `despia.uuid`. This is different from IDFA and does not require ATT consent when used internally.
+
+| Identifier            | What it is                           | Requires ATT?             |
+| :-------------------- | :----------------------------------- | :------------------------ |
+| IDFA (Advertising ID) | Used for ad tracking across apps     | Yes                       |
+| IDFV (Vendor ID)      | Unique to your app/developer account | No (when used internally) |
+
+\*\*You can use \*\*`despia.uuid`**freely for:**
+
+- Linking devices to user accounts in your own database
+- Preventing account sharing
+- Analytics within your own systems
+- Fraud detection
+- Session management
+
+\*\*You still need ATT if you send \*\*`despia.uuid`**to:**
+
+- Ad networks (Facebook, Google, TikTok)
+- Attribution services (Adjust, AppsFlyer)
+- Data brokers
+- Any third-party that links identifiers across apps
+
+The identifier itself doesn't determine tracking. Where you send it does. Keeping `despia.uuid` in your own backend is not tracking. Sending it to advertising services is.
+
+See: [Device Indexing](https://setup.despia.com/lovable/native-features/device-indexing)
+
+---
+
+### Pre-tracking consent: a gray area
+
+**Declaring ATT for future tracking is conservative but not required**
+
+Some WebView app developers declare ATT proactively, with the intent to collect tracking consent for potential future use. This is a gray area.
+
+**The reasoning:**
+
+1. `despia.uuid` (Vendor ID) identifies the device
+2. Vendor ID links to a user ID in your database
+3. Your web app can add analytics tools like PostHog via OTA updates
+4. If those tools share data with advertisers, you need prior consent
+5. Having consent stored in advance means you're compliant when that day comes
+
+**The gray area:**
+
+Collecting tracking consent before you actually track could be considered "pre-tracking." Apple's guidelines focus on actual tracking behavior, not intent. There's no clear ruling on whether declaring ATT for potential future tracking is required, recommended, or unnecessary.
+
+**Two approaches:**
+
+| Approach            | Pros                                                        | Cons                                                          |
+| :------------------ | :---------------------------------------------------------- | :------------------------------------------------------------ |
+| Declare ATT now     | Protected if you add tracking later, consent already stored | Users see prompt when you're not actually tracking yet        |
+| Declare when needed | No unnecessary prompts, matches actual behavior             | Must update App Store declarations before adding any tracking |
+
+**Our suggestion:**
+
+We lean conservative. If there's any chance you'll add web analytics or tracking tools in the future, declaring ATT upfront avoids the risk of non-compliance. But this is a gray area with no clear Apple guidance. The decision is yours based on your app's roadmap and risk tolerance.
+
+**If you choose proactive declaration:**
+
+```javascript
+import despia from 'despia-native';
+
+// Sync consent to backend on app load
+const syncTrackingConsent = async (userId) => {
+  await fetch('/api/sync-privacy', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      userId,
+      trackingDisabled: despia.trackingDisabled,
+      timestamp: new Date().toISOString()
+    })
+  });
+};
+
+// Later, when you add analytics, check consent first
+const initAnalytics = async (userId) => {
+  const consent = await getConsentFromBackend(userId);
+  
+  if (!consent.trackingDisabled) {
+    // User allowed tracking
+    posthog.init('your-key');
+    posthog.identify(userId);
+  }
+};
+```
+
+This stores consent server-side so any future OTA updates can check it before initializing tracking tools.
+
+---
+
+### Vendor ID with third-party SDKs is still tracking
+
+**Sending Vendor ID to ad networks creates a tracking scenario**
+
+The Vendor ID (`despia.uuid`) doesn't require ATT by itself. But if you send it to third-party advertising or tracking services, you're now tracking under Apple's definition.
+
+**This is tracking:**
+
+- Sending `despia.uuid` to Facebook Pixel
+- Passing Vendor ID to Google Ads conversion tracking
+- Linking `despia.uuid` with any third-party ad network
+- Using Vendor ID as a user identifier in analytics SDKs that share data with advertisers
+
+Apple's definition of tracking is linking device data with data from other companies for advertising purposes. The identifier type doesn't matter. What matters is where you send it.
+
+**OTA updates create serious risk**
+
+WebView apps can load JavaScript dynamically without App Store review. This creates a dangerous scenario:
+
+1. You submit app with "no tracking" declared
+2. App gets approved
+3. You push an over-the-air update that adds tracking JavaScript
+4. Your app now tracks users without ATT consent
+5. Your App Store declarations are now false
+
+**Consequences:**
+
+- App removal from the store
+- Developer account suspension
+- Violation of App Store Review Guidelines 5.1.2
+- Potential legal issues under GDPR/CCPA
+
+**Options:**
+
+- Update App Store declarations before enabling any tracking code
+- Or declare ATT proactively and store consent for future use (see "Pre-tracking consent" above)
+
+The choice depends on your roadmap and risk tolerance.
+
+---
+
+### Respect the user's choice
+
+**If they say no, don't track**
+
+Apple verifies that apps respect the user's tracking preference. If the user denies permission, you must not:
+
+- Collect IDFA
+- Send device identifiers to ad networks
+- Use fingerprinting to identify users
+- Attempt to link user data with third-party data
+
+**Check tracking status before sending data:**
+
+```javascript
+import despia from 'despia-native';
+
+const sendAdEvent = (eventName, eventData) => {
+  // Only send to ad network if tracking is allowed
+  if (!despia.trackingDisabled) {
+    adNetwork.trackEvent(eventName, eventData);
+  }
+};
+```
+
+Sync the consent status with your backend for compliance:
+
+```javascript
+// Sync with backend for compliance records
+fetch('/api/sync-privacy', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    userId: user.id,
+    trackingDisabled: despia.trackingDisabled,
+    timestamp: new Date().toISOString()
+  })
+});
+```
+
+---
+
+### If you don't track, don't implement ATT
+
+**Only show the prompt if you actually track**
+
+If your app doesn't track users, don't add the ATT prompt. Showing it unnecessarily causes rejection.
+
+**Signs you don't need ATT:**
+
+- No advertising SDKs
+- No Facebook/Google/TikTok ad attribution
+- Only first-party analytics
+- No IDFA usage
+
+**In this case:**
+
+1. Don't implement ATT prompt
+2. Declare "No" for tracking in App Store Connect
+3. Remove any advertising SDK code paths
+
+If you're not tracking, don't pretend you are. Apple will reject apps that show ATT for no reason.
+
+---
+
+### Common SDK configurations
+
+**How to handle popular SDKs**
+
+| SDK                           | Tracking? | What to do                                |
+| :---------------------------- | :-------- | :---------------------------------------- |
+| `despia.uuid` (internal only) | No        | Safe for your own backend                 |
+| `despia.uuid` → ad networks   | Yes       | Requires ATT, declare tracking            |
+| OneSignal (push only)         | No        | No ATT needed, don't declare tracking     |
+| RevenueCat                    | No        | No ATT needed, don't declare tracking     |
+| Firebase Analytics            | No        | No ATT needed, analytics only             |
+| PostHog, Mixpanel, Segment    | Maybe     | Check if they share data with advertisers |
+| Facebook SDK (login only)     | No        | No ATT needed if not using ad features    |
+| Facebook SDK (ads)            | Yes       | Implement ATT, declare tracking           |
+| Google AdMob                  | Yes       | Implement ATT, declare tracking           |
+| Adjust/AppsFlyer              | Yes       | Implement ATT, declare tracking           |
+
+**Note on web analytics:** Tools like PostHog, Mixpanel, and Segment may or may not constitute tracking depending on their configuration and data sharing agreements. Check each tool's privacy documentation. If unsure, consult with a privacy professional or take a conservative approach.
+
+If you use an SDK for multiple purposes, check whether your specific usage involves tracking.
+
+---
+
+## Quick checklist
+
+**If you DO track:**
+
+1. Tracking declared in App Store Connect \> App Privacy \> Data Types
+2. Device ID listed under tracked data
+3. ATT prompt shows automatically via Despia runtime
+4. User's choice respected in code
+5. No tracking if user denies permission
+6. Backend syncs consent status
+
+**If you DON'T track:**
+
+1. "No" selected for tracking in App Store Connect
+2. No ATT prompt needed
+3. No advertising SDKs or IDFA usage
+4. No Device ID declared for tracking purposes
+5. Using `despia.uuid` (Vendor ID) for internal purposes is fine
+6. Do NOT send `despia.uuid` to third-party ad/tracking services
+7. Do NOT add tracking via OTA update without updating declarations first
+
+**If you might track in the future (gray area):**
+
+Some developers declare ATT proactively to store consent for potential future use. This is a conservative approach but not required. See "Pre-tracking consent" above. If you choose this:
+
+1. Declare tracking in App Store Connect
+2. ATT prompt shows automatically via Despia runtime
+3. Store consent in backend (`despia.trackingDisabled`)
+4. Check consent before initializing any web analytics later
+
+---
+
+## Common rejection reasons
+
+| Rejection                       | Fix                                                                  |
+| :------------------------------ | :------------------------------------------------------------------- |
+| "Tracks without permission"     | Ensure ATT prompt shows before any tracking                          |
+| "Privacy labels don't match"    | Update App Store Connect declarations                                |
+| "ATT without tracking purpose"  | Remove ATT if you don't actually track                               |
+| "Does not respect user choice"  | Check `despia.trackingDisabled` before sending data                  |
+| "Tracking added after approval" | Submit app update with correct declarations before enabling tracking |
+
+---
+
+## Still stuck?
+
+If you keep getting rejected for tracking issues:
+
+1. List every SDK in your app and determine if any perform tracking
+2. Compare your App Store Connect privacy declarations with actual SDK usage
+3. Verify you're checking `despia.trackingDisabled` before sending data to ad networks
+4. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Your rejection notice in full
+   - List of SDKs in your app
+   - Screenshot of App Store Connect privacy declarations

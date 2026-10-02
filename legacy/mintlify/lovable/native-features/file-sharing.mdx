@@ -1,0 +1,79 @@
+---
+title: "File Sharing"
+description: "Enable native file sharing capabilities in your Lovable mobile app, allowing users to share files of any type through their device's built-in sharing system."
+icon: "file-arrow-up"
+---
+
+<iframe src="https://www.youtube.com/embed/bnc59WIsDCQ" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native file sharing functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a file sharing system that uses file sharing URLs like: `despia("https://cdn.filesharingdomain.com/path/to/file.pdf")` to open the native sharing modal and allow users to share files through their device's built-in sharing options (email, messages, social media, cloud storage, etc.).
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  **Important:** Served files via HTTPS must have proper content-type and content-disposition headers for optimal sharing functionality.
+
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and native mobile sharing systems. When users tap a share button, Despia opens the device's native sharing modal with the specified file, allowing users to share content through any app installed on their device, including email, messaging, social media, and cloud storage platforms. All file types are supported.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Execute File Sharing**
+
+Call the `despia()` function with a File Sharing URL:
+
+```javascript
+despia("https://cdn.filesharingdomain.com/documents/report.pdf");
+```
+
+### **File Server Requirements**
+
+Files served via HTTPS must have proper headers:
+
+- **Content-Type:** Appropriate MIME type for the file (e.g., `application/pdf`, `image/jpeg`, `video/mp4`)
+- **Content-Disposition:** Should include filename for download (e.g., `attachment; filename="report.pdf"`)
+
+**File Type Support** Supports all file types including:
+
+- Documents (PDF, DOC, DOCX, TXT)
+- Images (JPG, PNG, GIF, SVG, WEBP)
+- Videos (MP4, MOV, AVI, MKV)
+- Audio (MP3, WAV, M4A, FLAC)
+- Archives (ZIP, RAR, 7Z)
+- Spreadsheets (XLS, XLSX, CSV)
+- Presentations (PPT, PPTX)
+- And any other file format
+
+## **Resources**
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+### **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native file sharing capabilities into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

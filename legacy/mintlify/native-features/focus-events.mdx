@@ -1,0 +1,138 @@
+---
+title: "Focus Events"
+description: "Detect when your app enters the foreground or background using global window callbacks."
+icon: "eye"
+---
+
+Despia fires global `window.focusin()` and `window.focusout()` callbacks whenever the app moves between foreground and background. Define these functions in your web code to react to lifecycle changes such as resuming sessions, refreshing data, or pausing media.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+The native runtime invokes `window.focusin()` when the app returns to the foreground and `window.focusout()` when it leaves. Attach handlers directly to the window object to receive these events.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    window.focusin = () => {
+        console.log('App focused in')
+    }
+
+    window.focusout = () => {
+        console.log('App focused out')
+    }
+}
+```
+
+The `focusout` callback fires once per background transition. The `focusin` callback fires every time the app returns to the foreground, including the first launch resume.
+
+---
+
+## Refresh data on resume
+
+Use `focusin` to revalidate session state or pull fresh content when the user returns to the app.
+
+```javascript
+if (isDespia) {
+    window.focusin = async () => {
+        await refreshAuthToken()
+        await loadLatestFeed()
+    }
+}
+```
+
+---
+
+## Pause activity on background
+
+Use `focusout` to stop timers, pause video playback, or persist unsaved state before the app is suspended.
+
+```javascript
+if (isDespia) {
+    window.focusout = () => {
+        videoPlayer.pause()
+        clearInterval(pollHandle)
+        saveDraftLocally()
+    }
+}
+```
+
+---
+
+## Track session duration
+
+Combine both events to measure how long the user stays inside the app per session.
+
+```javascript
+let sessionStart = Date.now()
+
+if (isDespia) {
+    window.focusin = () => {
+        sessionStart = Date.now()
+    }
+
+    window.focusout = () => {
+        const durationMs = Date.now() - sessionStart
+        analytics.track('session_end', { durationMs })
+    }
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

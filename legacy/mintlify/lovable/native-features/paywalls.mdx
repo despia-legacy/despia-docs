@@ -1,0 +1,79 @@
+---
+title: "Paywalls"
+icon: "coins"
+description: "Monetize your Lovable mobile app with seamless payment processing through Apple and Google's native billing systems using RevenueCat Paywalls."
+---
+
+<iframe src="https://www.youtube.com/embed/UNQKJndVBXA" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native mobile monetization to my app using the Despia SDK from: https://www.npmjs.com/package/despia-native
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a payment system that uses RevenueCat Paywalls by calling: `despia(revenuecat://launchPaywall?external_id={USER_ID}&offering={OFFERING})`
+
+  This will launch a native paywall interface configured in your RevenueCat dashboard, handling purchases through Apple App Store and Google Play billing.
+
+  Add a button to launch the paywall for your app's offerings, for example:
+
+  - `"default"` - your main offering
+  - `"premium"` - premium tier offering
+  - `"annual_sale"` - special promotional offering
+
+  <Note>
+    The Despia Native Runtime will call the global function `onRevenueCatPurchase()` when an in-app purchase or subscription is successfully made on the client side. **Although this should not grant access immediately, it's a good time to start polling your backend to check if the RevenueCat webhook has already updated the user's status or plan permissions.**
+  </Note>
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Payment confirmation will happen via RevenueCat's Webhooks, so make sure to include or instruct me to set up the correct backend structure.
+
+  **You can find the documentation about this here:** [**https://www.revenuecat.com/docs/integrations/webhooks**](https://www.revenuecat.com/docs/integrations/webhooks)
+
+  - Read and follow all best practices for Webhook events here: [**https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields**](https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields)
+  - Check out the sample Webhook event schemas here: [**https://www.revenuecat.com/docs/integrations/webhooks/sample-events**](https://www.revenuecat.com/docs/integrations/webhooks/sample-events)
+
+  Once the payment is confirmed on the backend, the backend should send a webhook to the frontend to let it know that this user's in-app purchase session was completed.
+
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it Works:** Despia acts as a bridge between your Lovable app and native mobile payment systems. When users tap a button to launch the paywall, Despia displays a native RevenueCat Paywalls interface configured in your RevenueCat dashboard. The paywall handles the complete purchase flow through Apple's App Store or Google Play Store, ensuring secure transactions and automatic subscription management.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Launch Paywall
+
+Call the `despia()` function with a RevenueCat Paywalls Command:
+
+```javascript
+despia("revenuecat://launchPaywall?external_id=user_777&offering=default");
+```
+
+## Resources
+
+- [NPM Package](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native mobile paywalls into your generated apps.
+
+For additional support or questions, please contact our support team at [support@despia.com](mailto:support@despia.com)

@@ -1,0 +1,177 @@
+---
+title: "Haptic Feedback"
+description: "Trigger native tactile feedback through Despia using five preset haptic patterns mapped to standard interaction types."
+icon: "waveform"
+---
+
+<iframe src="https://www.youtube.com/embed/ch6OOeVxWXA" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Note>
+
+Five fire-and-forget URL schemes trigger the corresponding native haptic generator on iOS and the equivalent vibration pattern on Android. Each scheme maps to a standard interaction type, so picking the right one is mostly about matching intent (success, warning, error) rather than tweaking intensity.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Each scheme is fire-and-forget. The native runtime triggers the haptic immediately, your JavaScript keeps running. There are no parameters and no return value.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('lighthaptic://')
+}
+```
+
+In a regular browser the call is a no-op behind the `isDespia` guard, so the same code is safe to run during web preview.
+
+---
+
+## The five haptic patterns
+
+| Scheme | When to use it |
+| :-- | :-- |
+| `lighthaptic://` | Subtle confirmations, toggle flips, minor selections, list item presses |
+| `heavyhaptic://` | Important commits, primary CTA taps, power-up activation |
+| `successhaptic://` | Completed transactions, saved state, finished workflows |
+| `warninghaptic://` | Confirmation needed, destructive action prompts, cautionary states |
+| `errorhaptic://` | Failed validation, rejected actions, network errors |
+
+Match the pattern to user intent rather than trying to engineer custom intensity through repeated calls. iOS users in particular are conditioned by system apps to read these patterns as signals (the success/warning/error trio matches Apple's UINotificationFeedbackGenerator), so reusing them keeps your app feeling native.
+
+---
+
+## Wire haptics to user actions
+
+Call `despia('...haptic://')` directly at the call site. No helper, no wrapper, no abstraction. The scheme is already short and reads clearly.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function onSavePressed() {
+    if (isDespia) despia('heavyhaptic://')
+    saveDocument()
+}
+
+function onSaveSuccess() {
+    if (isDespia) despia('successhaptic://')
+}
+
+function onSaveFailed() {
+    if (isDespia) despia('errorhaptic://')
+}
+```
+
+In React, call directly inside event handlers. Avoid putting haptic calls inside `useEffect` reactions to derived state, since renders can fire faster than the user perceives, leading to phantom buzzing.
+
+```jsx
+function SubmitButton({ onSubmit }) {
+    async function handleClick() {
+        if (isDespia) despia('heavyhaptic://')
+        try {
+            await onSubmit()
+            if (isDespia) despia('successhaptic://')
+        } catch {
+            if (isDespia) despia('errorhaptic://')
+        }
+    }
+
+    return <button onClick={handleClick}>Submit</button>
+}
+```
+
+---
+
+## Game and confirmation patterns
+
+Haptics work well in two places where regular web apps cannot reach: game-style feedback loops and confirmation dialogs. Both rely on the user feeling the result rather than reading it.
+
+```javascript
+function onGameEvent(type) {
+    if (!isDespia) return
+
+    switch (type) {
+        case 'powerup':  despia('heavyhaptic://');   break
+        case 'damage':   despia('errorhaptic://');   break
+        case 'victory':  despia('successhaptic://'); break
+        case 'level-up': despia('successhaptic://'); break
+    }
+}
+
+function onDeleteConfirm(confirmed) {
+    if (!isDespia) return
+
+    if (confirmed) {
+        despia('heavyhaptic://')
+        deleteItem()
+    } else {
+        despia('warninghaptic://')
+    }
+}
+```
+
+<Warning>
+  Users can disable system haptics under Settings, Sounds & Haptics, System Haptics, or globally under Accessibility, Touch, Vibration. Some Focus modes also suppress vibrations. The SDK call still succeeds in those cases, it just produces no tactile output. Never use a haptic as the only feedback channel for an important state change, always pair it with visual or audio feedback.
+</Warning>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

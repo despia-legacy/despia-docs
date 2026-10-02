@@ -1,0 +1,147 @@
+---
+title: "Introduction"
+description: "Your app got rejected. Take a breath. This is normal, fixable, and part of shipping apps."
+icon: "hand-horns"
+---
+
+## Rejections are part of the game
+
+Every developer gets rejected. Apple and Google review millions of apps and enforce strict guidelines to protect users. Sometimes your app genuinely violates a rule. Sometimes the reviewer misunderstood your app. Sometimes the guidelines are vague and you guessed wrong.
+
+None of this means your app is bad or that you failed.
+
+The app review process is a conversation. The store tells you what they found, you fix it or explain why they're wrong, and you resubmit. Most rejections resolve in one or two rounds.
+
+**Some perspective:**
+
+- First-time submissions get rejected more often (reviewers don't know your app yet)
+- Even billion-dollar apps get rejected regularly
+- Many rejections are minor issues that take 10 minutes to fix
+- Reviewers are human and sometimes make mistakes
+- You can appeal if you disagree with a rejection
+
+## Why rejections happen
+
+**Technical issues:** Your app crashes, shows blank screens, has broken features, or doesn't work on certain devices. These are straightforward to fix once you know what broke.
+
+**Guideline violations:** Apple and Google have hundreds of rules about privacy, payments, content, and user experience. Nobody memorizes them all. You learn by building and occasionally getting caught.
+
+**Incomplete submissions:** Missing privacy policy, wrong screenshots, unclear app description, or metadata that doesn't match what the app does. Easy fixes, annoying to discover.
+
+**Design and UX problems:** The app feels like a website, not a mobile app. Navigation is confusing. The UI is too small to tap. Both stores care about user experience.
+
+**Platform-specific requirements:** iOS requires things Android doesn't, and vice versa. Sign in with Apple on iOS, specific permission handling on Android, different payment rules. Each platform has its own rules.
+
+**Timing and reviewer variance:** The same app can pass one review and fail another. Guidelines get interpreted differently. New reviewers are stricter. Policy changes happen without warning.
+
+## How to handle a rejection
+
+**1. Read the rejection carefully**
+
+Both Apple and Google include specific guideline references and descriptions in rejection notices. Read the exact wording. Sometimes they tell you exactly what to fix.
+
+**2. Don't panic or rage-reply**
+
+Wait an hour before responding. Angry replies don't help and can make things worse. The reviewer is doing their job.
+
+**3. Fix what you can fix**
+
+If the rejection is valid, fix it. Most issues take less time to fix than to argue about.
+
+**4. Appeal if you disagree**
+
+If you believe the reviewer made a mistake, reply with a clear, polite explanation. Include screenshots or videos showing how the feature works. Reviewers do reverse decisions when shown evidence.
+
+**5. Resubmit and move on**
+
+Fix the issue, resubmit, and continue working on your app. Don't let one rejection derail your momentum.
+
+## Apple vs Google: key differences
+
+Both stores want quality apps that respect users, but they enforce rules differently.
+
+| Aspect             | Apple App Store                                  | Google Play                    |
+| :----------------- | :----------------------------------------------- | :----------------------------- |
+| Review time        | 24-48 hours typical                              | Minutes to 7 days              |
+| Review style       | Human reviewers, thorough                        | Mix of automated and human     |
+| Strictness         | Stricter on design/UX                            | Stricter on policy/content     |
+| Payment rules      | Must use IAP for digital goods                   | Must use IAP for digital goods |
+| Login requirements | Sign in with Apple required if social login used | No equivalent requirement      |
+| Tracking           | ATT prompt required                              | No equivalent requirement      |
+| Appeals            | Reply to rejection in App Store Connect          | Appeal through Play Console    |
+| Rejection detail   | Usually specific guideline cited                 | Sometimes vague                |
+
+**Apple** is pickier about user experience. They reject apps that feel like websites, have confusing navigation, or don't follow iOS design conventions. They also enforce Sign in with Apple and ATT strictly.
+
+**Google** is faster but less predictable. You might get approved in minutes or wait days. Policy violations around content, ads, and data collection trigger rejections. Automated systems catch some issues before human review.
+
+**Submit to both, but expect different feedback.** An app that passes Apple might fail Google for different reasons, and vice versa.
+
+---
+
+## Common rejection categories
+
+We've compiled guides for the most common rejection reasons. Each guide explains why the rejection happens, how to fix it, and how to avoid it next time.
+
+### Functionality and design
+
+| Guide                                                                                                     | Platforms    | What it covers                                              |
+| :-------------------------------------------------------------------------------------------------------- | :----------- | :---------------------------------------------------------- |
+| [Minimum Functionality](https://setup.despia.com/store-rejections/common-rejection/minimum-functionality) | iOS, Android | App is too simple, limited features, single webpage wrapper |
+| [Non-Mobile Design](https://setup.despia.com/store-rejections/common-rejection/non-mobile-design)         | iOS, Android | App looks like a website, not optimized for touch/mobile    |
+| [Spam and Copies](https://setup.despia.com/store-rejections/common-rejection/spam-and-copies)             | iOS, Android | App is too similar to existing apps, no differentiation     |
+
+### Payments and monetization
+
+| Guide                                                                                               | Platforms    | What it covers                                      |
+| :-------------------------------------------------------------------------------------------------- | :----------- | :-------------------------------------------------- |
+| [In-App Purchases](https://setup.despia.com/store-rejections/common-rejection/in-app-purchases)     | iOS, Android | Digital goods must use Apple/Google IAP, not Stripe |
+| [Deceptive Paywalls](https://setup.despia.com/store-rejections/common-rejection/deceptive-paywalls) | iOS, Android | Subscription UI is misleading, pricing not clear    |
+
+### Privacy and data
+
+| Guide                                                                                                     | Platforms    | What it covers                       |
+| :-------------------------------------------------------------------------------------------------------- | :----------- | :----------------------------------- |
+| [Privacy Policy](https://setup.despia.com/store-rejections/common-rejection/privacy-policy)               | iOS, Android | Missing or inadequate privacy policy |
+| [Tracking Transparency](https://setup.despia.com/store-rejections/common-rejection/tracking-transparency) | iOS          | ATT prompt required before tracking  |
+| [AI Processing Consent](https://setup.despia.com/store-rejections/common-rejection/ai-processing)         | iOS, Android | User data sent to AI without consent |
+| [User-Specific Data](https://setup.despia.com/store-rejections/common-rejection/user-specific-data)       | iOS, Android | Collecting data you don't need       |
+
+### Authentication
+
+| Guide                                                                                                       | Platforms               | What it covers                                       |
+| :---------------------------------------------------------------------------------------------------------- | :---------------------- | :--------------------------------------------------- |
+| [Social Login](https://setup.despia.com/store-rejections/common-rejection/social-login-options)             | iOS (required), Android | Third-party login requires Sign in with Apple on iOS |
+| [Blank Screen Redirects](https://setup.despia.com/store-rejections/common-rejection/blank-screen-redirects) | iOS, Android            | White/blank screens during OAuth flow                |
+
+## Tips for faster approvals
+
+**Test on real devices.** Simulators and emulators miss issues that real devices catch. Test on older phones too.
+
+**Record a demo video.** If your app requires setup, login, or special conditions to work, include a video showing the full flow. Reviewers have limited time.
+
+**Write clear review notes.** Both stores have fields for reviewer notes. Use them to explain anything non-obvious. Include test accounts if login is required.
+
+**Check your metadata.** Screenshots should show current UI. Description should match what the app does. Keywords shouldn't include competitor names.
+
+**Submit early in the week.** Apps submitted Monday through Wednesday often get reviewed faster than Friday submissions.
+
+**Keep your app simple for first submission.** Get approved with core features first, then add complexity in updates. Established apps get more leeway.
+
+**Handle both platforms separately.** Apple and Google have different review processes and timelines. Don't assume passing one means you'll pass the other.
+
+## The long game
+
+Rejections feel bad in the moment but matter less than you think. A week from now you won't remember the rejection. A month from now your app will be live and you'll be focused on users, not reviewers.
+
+Every shipped app has a rejection story. It's a rite of passage, not a roadblock.
+
+Fix the issue. Resubmit. Keep building.
+
+---
+
+## Related links
+
+- [Apple App Store Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
+- [Google Play Policy Center](https://play.google.com/about/developer-content-policy/)
+- [Despia Native Features](https://setup.despia.com)

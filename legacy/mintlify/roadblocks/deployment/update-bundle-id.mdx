@@ -1,0 +1,62 @@
+---
+title: "Update Bundle IDs"
+icon: "gear"
+---
+
+A Bundle ID on iOS and a Package Name on Android are the permanent identity of your app. They tie your project to its code signing certificates, provisioning profiles, store records, and every native capability your app is entitled to use. Once a build has been signed against one of these identifiers, it cannot be changed from inside the Editor.
+
+<Warning>
+  Bundle IDs and Package Names cannot be edited after they are set. They are locked to your project's code signing and provisioning, so changing one in place would invalidate every existing certificate, profile, and store record tied to the app.
+</Warning>
+
+---
+
+## Why they are locked
+
+Apple and Google both treat the app identifier as the unique, immutable key for an app across their entire ecosystem. On iOS this is the Bundle ID, on Android it is the Package Name (the `applicationId`). The identifier is baked into:
+
+- The signing certificate and provisioning profile used to build the binary.
+- The App Store Connect and Google Play Console records for the app.
+- Push notification credentials, App Groups, associated domains, and any other entitlement granted to that identity.
+
+Because all of this is keyed to the identifier, editing it after the first signed build would orphan the existing signing setup and break the link to your store listing. There is no safe in-place rename on either platform, which is why the field is read-only once set.
+
+---
+
+## Requesting a change
+
+If you set the wrong identifier or need to move to a different one, our team can repoint your project manually. This works the same way for both the iOS Bundle ID and the Android Package Name. Email [support@despia.com](mailto:support@despia.com) with both values.
+
+<Steps>
+  <Step title="Email support">
+    Send a message to [support@despia.com](mailto:support@despia.com) from the account that owns the project.
+  </Step>
+  <Step title="Include the old and new identifier">
+    State the current (old) value and the new value you want, exactly as they should appear. Note which platform it applies to if you are only changing one.
+
+    ```text
+    Old Bundle ID:    com.example.oldapp
+    New Bundle ID:    com.example.newapp
+    
+    Old Package Name: com.example.oldapp
+    New Package Name: com.example.newapp
+    ```
+  </Step>
+  <Step title="We update it">
+    Our team applies the change and re-links your project's code signing and provisioning. This is completed within 72 hours.
+  </Step>
+</Steps>
+
+<Info>
+  Changing a Bundle ID or Package Name starts a fresh identity. A new App Store Connect or Google Play Console record is required for the new identifier, and the app cannot inherit reviews, ratings, or installs from a listing tied to the old one.
+</Info>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

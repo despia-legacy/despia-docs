@@ -1,0 +1,3741 @@
+---
+title: "Webhooks"
+description: "Complete implementation guide for processing RevenueCat webhooks with authorization validation, event type handling, and entitlement management."
+icon: "webhook"
+---
+
+## Webhook Flow Diagram
+
+```mermaid
+flowchart TD
+    Start([Webhook Received]) --> ValidateAuth{Validate<br/>Authorization<br/>Header?}
+    
+    ValidateAuth -->|Invalid| Return401[Return 401<br/>Unauthorized]
+    ValidateAuth -->|Valid| ParseBody[Parse JSON Body]
+    
+    ParseBody --> GetUserID[Extract app_user_id<br/>from event]
+    GetUserID --> GetEntitlements[Extract Active<br/>Entitlements]
+    
+    GetEntitlements --> CheckEventType{Check<br/>Event Type}
+    
+    CheckEventType -->|INITIAL_PURCHASE| InitialPurchase[Process Initial Purchase<br/>- Grant access<br/>- Update user status<br/>- Send welcome email]
+    
+    CheckEventType -->|RENEWAL| Renewal[Process Renewal<br/>- Extend access<br/>- Update billing date<br/>- Log transaction]
+    
+    CheckEventType -->|CANCELLATION| Cancellation[Process Cancellation<br/>- Schedule access removal<br/>- Send survey email<br/>- Update churn metrics]
+    
+    CheckEventType -->|UNCANCELLATION| Uncancellation[Process Uncancellation<br/>- Restore full access<br/>- Update status<br/>- Send confirmation]
+    
+    CheckEventType -->|BILLING_ISSUE| BillingIssue[Process Billing Issue<br/>- Flag account<br/>- Send payment reminder<br/>- Set grace period]
+    
+    CheckEventType -->|EXPIRATION| Expiration[Process Expiration<br/>- Remove access<br/>- Archive user data<br/>- Send win-back email]
+    
+    CheckEventType -->|REFUND| Refund[Process Refund<br/>- Revoke access immediately<br/>- Log refund<br/>- Update analytics]
+    
+    CheckEventType -->|REFUND_REVERSED| RefundReversed[Process Refund Reversal<br/>- Restore access<br/>- Update records<br/>- Notify user]
+    
+    CheckEventType -->|PRODUCT_CHANGE| ProductChange[Process Product Change<br/>- Update tier/features<br/>- Adjust limits<br/>- Log upgrade/downgrade]
+    
+    CheckEventType -->|SUBSCRIPTION_PAUSED| Paused[Process Pause<br/>- Temporarily suspend<br/>- Set resume date<br/>- Update UI access]
+    
+    CheckEventType -->|SUBSCRIPTION_EXTENDED| Extended[Process Extension<br/>- Update expiry date<br/>- Log extension<br/>- Send confirmation]
+    
+    CheckEventType -->|TRIAL_STARTED| TrialStart[Process Trial Start<br/>- Grant trial access<br/>- Set trial end date<br/>- Send onboarding]
+    
+    CheckEventType -->|TRIAL_CANCELLED| TrialCancel[Process Trial Cancel<br/>- Remove trial access<br/>- Send feedback survey<br/>- Update metrics]
+    
+    CheckEventType -->|TRANSFER| Transfer[Process Transfer<br/>- Move subscription<br/>- Update ownership<br/>- Sync across accounts]
+    
+    CheckEventType -->|NON_RENEWING_PURCHASE| NonRenewing[Process Non-Renewing<br/>- Grant time-limited access<br/>- Set expiration<br/>- No auto-renewal]
+    
+    CheckEventType -->|INVOICE_ISSUANCE| Invoice[Process Invoice<br/>- Store invoice data<br/>- Send to accounting<br/>- Update billing]
+    
+    CheckEventType -->|TEMPORARY_ENTITLEMENT| TempEntitlement[Process Temp Entitlement<br/>- Grant temporary access<br/>- Set auto-expiry<br/>- Log store issue]
+    
+    CheckEventType -->|VIRTUAL_CURRENCY| VirtualCurrency[Process Virtual Currency<br/>- Update balance<br/>- Log transaction<br/>- Sync wallet]
+    
+    CheckEventType -->|EXPERIMENT_ENROLLMENT| Experiment[Process Experiment<br/>- Assign variant<br/>- Track enrollment<br/>- Update analytics]
+    
+    CheckEventType -->|Unknown Event| UnknownEvent[Log Unknown Event<br/>- Store for review<br/>- Alert team<br/>- Continue gracefully]
+    
+    InitialPurchase --> SyncDatabase[Sync to Database]
+    Renewal --> SyncDatabase
+    Cancellation --> SyncDatabase
+    Uncancellation --> SyncDatabase
+    BillingIssue --> SyncDatabase
+    Expiration --> SyncDatabase
+    Refund --> SyncDatabase
+    RefundReversed --> SyncDatabase
+    ProductChange --> SyncDatabase
+    Paused --> SyncDatabase
+    Extended --> SyncDatabase
+    TrialStart --> SyncDatabase
+    TrialCancel --> SyncDatabase
+    Transfer --> SyncDatabase
+    NonRenewing --> SyncDatabase
+    Invoice --> SyncDatabase
+    TempEntitlement --> SyncDatabase
+    VirtualCurrency --> SyncDatabase
+    Experiment --> SyncDatabase
+    UnknownEvent --> SyncDatabase
+    
+    SyncDatabase --> OptionalFetch{Need Full<br/>Customer Data?}
+    
+    OptionalFetch -->|Yes| FetchAPI[Call GET /subscribers<br/>API for complete data]
+    OptionalFetch -->|No| Return200
+    
+    FetchAPI --> Return200[Return 200 OK]
+    
+    Return401 --> End([End])
+    Return200 --> End
+    
+    style Start fill:#e1f5e1
+    style Return200 fill:#e1f5e1
+    style Return401 fill:#ffe1e1
+    style End fill:#e1e1e1
+    style ValidateAuth fill:#fff4e1
+    style CheckEventType fill:#e1f0ff
+```
+
+---
+
+## JavaScript Implementation
+
+### Complete Webhook Handler
+
+```javascript
+// Environment configuration
+const WEBHOOK_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET || 'MYSECRET';
+const REVENUECAT_API_KEY = process.env.REVENUECAT_API_KEY;
+
+/**
+ * Main webhook handler
+ * POST /webhooks/revenuecat
+ */
+async function handleRevenueCatWebhook(req, res) {
+  try {
+    // Step 1: Validate Authorization Header
+    if (!validateAuthorization(req)) {
+      console.warn('Unauthorized webhook attempt');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // Step 2: Parse webhook body
+    const event = req.body?.event;
+    if (!event) {
+      console.error('Invalid webhook body - missing event');
+      return res.status(400).json({ error: 'Invalid webhook body' });
+    }
+    
+    // Step 3: Extract key information
+    const eventType = event.type;
+    const appUserId = event.app_user_id;
+    const environment = event.environment; // PRODUCTION or SANDBOX
+    const eventId = event.id;
+    
+    console.log(`Processing webhook: ${eventType} for user ${appUserId} (${environment})`);
+    
+    // Step 4: Check for duplicate event (idempotency)
+    const isDuplicate = await checkDuplicateEvent(eventId);
+    if (isDuplicate) {
+      console.log(`Duplicate event ${eventId} - already processed`);
+      return res.status(200).json({ message: 'Event already processed' });
+    }
+    
+    // Step 5: Extract entitlements and subscriber info
+    const activeEntitlements = extractEntitlementsFromEvent(event);
+    const subscriberAttributes = event.subscriber_attributes || {};
+    const externalUserId = subscriberAttributes.$email?.value || 
+                          subscriberAttributes.$displayName?.value || 
+                          appUserId;
+    
+    // Step 6: Process event based on type
+    await processWebhookEvent({
+      eventType,
+      appUserId,
+      externalUserId,
+      environment,
+      activeEntitlements,
+      subscriberAttributes,
+      event
+    });
+    
+    // Step 7: Sync entitlements to database
+    await syncEntitlementsToDatabase(appUserId, activeEntitlements, event);
+    
+    // Step 8: Mark event as processed
+    await markEventAsProcessed(eventId);
+    
+    // Step 9: Return success
+    return res.status(200).json({ message: 'Webhook processed successfully' });
+    
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+    
+    // Return 200 to prevent retries for our internal errors
+    // Return 500 only if we want RevenueCat to retry
+    return res.status(200).json({ 
+      message: 'Webhook received but processing failed',
+      error: error.message 
+    });
+  }
+}
+
+/**
+ * Validate Authorization Header
+ * RevenueCat sends: Authorization: Bearer MYSECRET
+ * We validate against configured secret
+ */
+function validateAuthorization(req) {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return false;
+  }
+  
+  // Strip "Bearer " prefix if present
+  const token = authHeader.startsWith('Bearer ') 
+    ? authHeader.slice(7) 
+    : authHeader;
+  
+  return token === WEBHOOK_SECRET;
+}
+
+/**
+ * Process webhook event based on type
+ */
+async function processWebhookEvent({ eventType, appUserId, externalUserId, environment, activeEntitlements, event }) {
+  
+  // Extract critical entitlement data from webhook
+  const entitlementData = extractEntitlementData(event);
+  
+  // Always sync entitlements to database for ALL events
+  // This ensures database stays in sync with RevenueCat
+  await syncEntitlementsToDatabase(appUserId, entitlementData, event);
+  
+  // Get detailed subscriber data if needed for complex processing
+  // const subscriberData = await fetchSubscriberData(appUserId);
+  
+  switch (eventType) {
+    
+    // ==========================================
+    // PURCHASE EVENTS
+    // ==========================================
+    
+    case 'INITIAL_PURCHASE':
+      console.log(`Initial purchase for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Grant access to premium features
+      // - Update user status in database
+      // - Send welcome email
+      // - Track conversion in analytics
+      // - Update subscription tier
+      
+      await handleInitialPurchase({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        productId: event.product_id,
+        price: event.price,
+        currency: event.currency,
+        purchaseDate: event.purchased_at_ms,
+        expirationDate: event.expiration_at_ms,
+        store: event.store,
+        isTrialConversion: event.is_trial_conversion
+      });
+      break;
+      
+    case 'RENEWAL':
+      console.log(`Renewal for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Extend subscription access
+      // - Update next billing date
+      // - Log successful payment
+      // - Update LTV metrics
+      
+      await handleRenewal({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        expirationDate: event.expiration_at_ms,
+        price: event.price,
+        currency: event.currency
+      });
+      break;
+      
+    case 'NON_RENEWING_PURCHASE':
+      console.log(`Non-renewing purchase for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Grant time-limited access
+      // - Set expiration date
+      // - No auto-renewal expected
+      
+      await handleNonRenewingPurchase({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        productId: event.product_id,
+        expirationDate: event.expiration_at_ms
+      });
+      break;
+    
+    // ==========================================
+    // CANCELLATION EVENTS
+    // ==========================================
+    
+    case 'CANCELLATION':
+      console.log(`Cancellation for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Schedule access removal at period end
+      // - Send feedback survey
+      // - Offer win-back discount
+      // - Update churn analytics
+      // - Flag account as "cancelled"
+      
+      await handleCancellation({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        expirationDate: event.expiration_at_ms,
+        cancellationReason: event.cancellation_reason,
+        autoResumeDate: event.auto_resume_at_ms
+      });
+      break;
+      
+    case 'UNCANCELLATION':
+      console.log(`Uncancellation for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Restore subscription to active state
+      // - Remove cancellation flag
+      // - Send confirmation email
+      
+      await handleUncancellation({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        expirationDate: event.expiration_at_ms
+      });
+      break;
+    
+    // ==========================================
+    // TRIAL EVENTS
+    // ==========================================
+    
+    case 'TRIAL_STARTED':
+      console.log(`Trial started for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Grant trial access to features
+      // - Set trial end date
+      // - Send onboarding emails
+      // - Track trial starts
+      
+      await handleTrialStarted({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        expirationDate: event.expiration_at_ms,
+        productId: event.product_id
+      });
+      break;
+      
+    case 'TRIAL_CANCELLED':
+      console.log(`Trial cancelled for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Remove trial access
+      // - Send feedback survey
+      // - Update trial conversion metrics
+      
+      await handleTrialCancelled({
+        appUserId,
+        externalUserId,
+        cancellationReason: event.cancellation_reason
+      });
+      break;
+    
+    // ==========================================
+    // BILLING EVENTS
+    // ==========================================
+    
+    case 'BILLING_ISSUE':
+      console.log(`Billing issue for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Flag account with payment problem
+      // - Send payment update reminder
+      // - Start grace period
+      // - Alert user via email/push
+      
+      await handleBillingIssue({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        gracePeriodExpiresAt: event.grace_period_expires_at_ms
+      });
+      break;
+      
+    case 'EXPIRATION':
+      console.log(`Subscription expired for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Remove premium access
+      // - Archive user data
+      // - Send win-back campaign
+      // - Update user to free tier
+      
+      await handleExpiration({
+        appUserId,
+        externalUserId,
+        expirationReason: event.expiration_reason,
+        expirationDate: event.expiration_at_ms
+      });
+      break;
+    
+    // ==========================================
+    // REFUND EVENTS
+    // ==========================================
+    
+    case 'REFUND':
+      console.log(`Refund issued for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Revoke access immediately
+      // - Log refund for accounting
+      // - Update analytics
+      // - Flag potential abuse
+      
+      await handleRefund({
+        appUserId,
+        externalUserId,
+        productId: event.product_id,
+        price: event.price,
+        currency: event.currency
+      });
+      break;
+      
+    case 'REFUND_REVERSED':
+      console.log(`Refund reversed for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Restore access
+      // - Update accounting records
+      // - Notify user
+      
+      await handleRefundReversed({
+        appUserId,
+        externalUserId,
+        activeEntitlements
+      });
+      break;
+    
+    // ==========================================
+    // SUBSCRIPTION CHANGES
+    // ==========================================
+    
+    case 'PRODUCT_CHANGE':
+      console.log(`Product changed for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Update tier/plan
+      // - Adjust feature access
+      // - Update usage limits
+      // - Log upgrade or downgrade
+      
+      await handleProductChange({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        newProductId: event.new_product_id,
+        oldProductId: event.product_id,
+        expirationDate: event.expiration_at_ms
+      });
+      break;
+      
+    case 'SUBSCRIPTION_PAUSED':
+      console.log(`Subscription paused for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Temporarily suspend access
+      // - Set auto-resume date
+      // - Update UI to show paused state
+      
+      await handleSubscriptionPaused({
+        appUserId,
+        externalUserId,
+        autoResumeDate: event.auto_resume_at_ms
+      });
+      break;
+      
+    case 'SUBSCRIPTION_EXTENDED':
+      console.log(`Subscription extended for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Update expiration date
+      // - Log extension reason
+      // - Send confirmation
+      
+      await handleSubscriptionExtended({
+        appUserId,
+        externalUserId,
+        newExpirationDate: event.expiration_at_ms,
+        extensionReason: 'promotional' // or from event data
+      });
+      break;
+    
+    // ==========================================
+    // TRANSFER EVENTS
+    // ==========================================
+    
+    case 'TRANSFER':
+      console.log(`Subscription transferred for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Move subscription to new user
+      // - Update ownership records
+      // - Sync across accounts
+      
+      await handleTransfer({
+        fromUserId: event.transferred_from?.[0],
+        toUserId: appUserId,
+        activeEntitlements
+      });
+      break;
+    
+    // ==========================================
+    // SPECIAL EVENTS
+    // ==========================================
+    
+    case 'INVOICE_ISSUANCE':
+      console.log(`Invoice issued for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Store invoice data
+      // - Send to accounting system
+      // - Update billing records
+      
+      await handleInvoiceIssuance({
+        appUserId,
+        externalUserId,
+        invoiceData: event
+      });
+      break;
+      
+    case 'TEMPORARY_ENTITLEMENT_GRANT':
+      console.log(`Temporary entitlement granted for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Grant temporary access (store issue)
+      // - Set auto-expiry
+      // - Log for monitoring
+      
+      await handleTemporaryEntitlement({
+        appUserId,
+        externalUserId,
+        activeEntitlements,
+        expirationDate: event.expiration_at_ms
+      });
+      break;
+      
+    case 'VIRTUAL_CURRENCY_TRANSACTION':
+      console.log(`Virtual currency transaction for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Update virtual currency balance
+      // - Log transaction
+      // - Sync wallet state
+      
+      await handleVirtualCurrency({
+        appUserId,
+        externalUserId,
+        amount: event.amount,
+        currency: event.currency,
+        transactionType: event.transaction_type
+      });
+      break;
+      
+    case 'EXPERIMENT_ENROLLMENT':
+      console.log(`Experiment enrollment for ${appUserId}`);
+      
+      // TODO: Implement your logic
+      // - Assign user to variant
+      // - Track enrollment
+      // - Update analytics
+      
+      await handleExperimentEnrollment({
+        appUserId,
+        externalUserId,
+        experimentId: event.experiment_id,
+        variantId: event.variant_id
+      });
+      break;
+    
+    // ==========================================
+    // UNKNOWN EVENTS (Future-proofing)
+    // ==========================================
+    
+    default:
+      console.warn(`Unknown event type: ${eventType}`);
+      
+      // TODO: Implement your logic
+      // - Log for review
+      // - Alert team
+      // - Store for manual processing
+      
+      await handleUnknownEvent({
+        eventType,
+        appUserId,
+        externalUserId,
+        event
+      });
+      break;
+  }
+}
+
+/**
+ * Fetch complete subscriber data from RevenueCat API
+ * Recommended after processing webhook for consistent data format
+ */
+async function fetchSubscriberData(appUserId) {
+  try {
+    const response = await fetch(
+      `https://api.revenuecat.com/v1/subscribers/${appUserId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${REVENUECAT_API_KEY}`,
+          'Content-Type': 'application/json',
+          'X-Platform': 'stripe' // Optional: helps with analytics
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      throw new Error(`RevenueCat API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data.subscriber;
+    
+  } catch (error) {
+    console.error('Error fetching subscriber data:', error);
+    return null;
+  }
+}
+
+/**
+ * Fetch customer data from RevenueCat API V2 (recommended for real-time checks)
+ * Use this as authoritative source of truth when validating subscription status
+ */
+async function fetchCustomerDataV2(customerId, projectId) {
+  try {
+    const response = await fetch(
+      `https://api.revenuecat.com/v2/projects/${projectId}/customers/${customerId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${REVENUECAT_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        console.warn(`Customer ${customerId} not found in RevenueCat`);
+        return null;
+      }
+      throw new Error(`RevenueCat V2 API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return data;
+    
+  } catch (error) {
+    console.error('Error fetching customer data from V2 API:', error);
+    return null;
+  }
+}
+
+/**
+ * Self-healing subscription status check
+ * 1. Check database first (fast)
+ * 2. If discrepancy detected, verify with RevenueCat V2 API
+ * 3. Sync database if mismatch found
+ */
+async function verifyAndSyncSubscriptionStatus(appUserId, projectId) {
+  try {
+    // Step 1: Get current database status
+    const dbStatus = await getSubscriptionStatusFromDB(appUserId);
+    
+    // Step 2: Get authoritative status from RevenueCat V2
+    const rcData = await fetchCustomerDataV2(appUserId, projectId);
+    
+    if (!rcData) {
+      console.warn(`Customer ${appUserId} not found in RevenueCat`);
+      return dbStatus; // Trust database if customer doesn't exist
+    }
+    
+    // Step 3: Check for active entitlements
+    // V2 API returns expires_at as milliseconds timestamp
+    const hasActiveEntitlements = rcData.active_entitlements?.items?.length > 0;
+    const rcIsActive = hasActiveEntitlements && 
+      rcData.active_entitlements.items.some(ent => {
+        return ent.expires_at > Date.now();
+      });
+    
+    // Step 4: Detect discrepancy
+    if (dbStatus?.is_active !== rcIsActive) {
+      console.warn(`Subscription status mismatch for ${appUserId}:`, {
+        database: dbStatus?.is_active ? 'active' : 'inactive',
+        revenuecat: rcIsActive ? 'active' : 'inactive'
+      });
+      
+      // Step 5: Sync database with RevenueCat (source of truth)
+      await syncDatabaseWithRevenueCat(appUserId, rcData);
+      
+      console.log(`Synced ${appUserId} subscription status from RevenueCat`);
+    }
+    
+    // Extract customer email and display name from attributes
+    const email = rcData.attributes?.items?.find(attr => attr.name === '$email')?.value || null;
+    const displayName = rcData.attributes?.items?.find(attr => attr.name === '$displayName')?.value || null;
+    
+    return {
+      appUserId,
+      isActive: rcIsActive,
+      entitlements: rcData.active_entitlements?.items || [],
+      email,
+      displayName,
+      lastSeen: rcData.last_seen_at,
+      experiment: rcData.experiment,
+      syncedAt: new Date()
+    };
+    
+  } catch (error) {
+    console.error('Error in verifyAndSyncSubscriptionStatus:', error);
+    
+    // Fallback to database status on error
+    const dbStatus = await getSubscriptionStatusFromDB(appUserId);
+    return dbStatus;
+  }
+}
+
+/**
+ * Get subscription status from database
+ */
+async function getSubscriptionStatusFromDB(appUserId) {
+  // TODO: Implement with your database
+  // Example:
+  // const result = await db.query(
+  //   'SELECT * FROM user_subscriptions WHERE app_user_id = $1',
+  //   [appUserId]
+  // );
+  // return result.rows[0];
+  
+  return null;
+}
+
+/**
+ * Sync database with RevenueCat data
+ */
+async function syncDatabaseWithRevenueCat(appUserId, rcData) {
+  // TODO: Implement with your database
+  // Update user_subscriptions table with V2 API data
+  
+  const hasActiveEntitlements = rcData.active_entitlements?.items?.length > 0;
+  
+  // Extract email and display name from attributes
+  const email = rcData.attributes?.items?.find(attr => attr.name === '$email')?.value || null;
+  const displayName = rcData.attributes?.items?.find(attr => attr.name === '$displayName')?.value || null;
+  
+  // Get latest expiration from active entitlements
+  const latestExpiration = hasActiveEntitlements 
+    ? Math.max(...rcData.active_entitlements.items.map(ent => ent.expires_at))
+    : null;
+  
+  // Convert entitlements to database format
+  const entitlementsForDB = {};
+  if (hasActiveEntitlements) {
+    rcData.active_entitlements.items.forEach(ent => {
+      entitlementsForDB[ent.entitlement_id] = {
+        entitlement_id: ent.entitlement_id,
+        expires_at: ent.expires_at
+      };
+    });
+  }
+  
+  // Example database sync:
+  // await db.query(`
+  //   UPDATE user_subscriptions 
+  //   SET 
+  //     is_active = $1,
+  //     entitlements = $2,
+  //     expires_at = $3,
+  //     email = $4,
+  //     external_user_id = $5,
+  //     last_seen_at = $6,
+  //     last_revenuecat_sync_at = NOW()
+  //   WHERE app_user_id = $7
+  // `, [
+  //   hasActiveEntitlements,
+  //   JSON.stringify(entitlementsForDB),
+  //   latestExpiration ? new Date(latestExpiration) : null,
+  //   email,
+  //   displayName || email,
+  //   rcData.last_seen_at ? new Date(rcData.last_seen_at) : null,
+  //   appUserId
+  // ]);
+  
+  console.log(`Database synced for ${appUserId}`, {
+    hasActive: hasActiveEntitlements,
+    entitlementCount: Object.keys(entitlementsForDB).length,
+    email,
+    latestExpiration: latestExpiration ? new Date(latestExpiration).toISOString() : null
+  });
+}
+
+/**
+ * Extract complete entitlement data from webhook event
+ * Based on actual RevenueCat webhook structure
+ */
+function extractEntitlementData(event) {
+  return {
+    // Entitlements (the key field!)
+    entitlements: event.entitlements || {},
+    
+    // User identification
+    appUserId: event.app_user_id,
+    originalAppUserId: event.original_app_user_id,
+    aliases: event.aliases || [],
+    
+    // Subscriber attributes (email, displayName, custom attributes)
+    subscriberAttributes: event.subscriber_attributes || {},
+    
+    // Product information
+    productId: event.product_id || event.new_product_id,
+    oldProductId: event.product_id, // For product changes
+    newProductId: event.new_product_id, // For product changes
+    
+    // Subscription dates
+    purchasedAtMs: event.purchased_at_ms,
+    expirationAtMs: event.expiration_at_ms,
+    originalPurchaseDateMs: event.original_purchase_date_ms,
+    
+    // Grace period (billing issues)
+    gracePeriodExpiresAtMs: event.grace_period_expires_at_ms,
+    
+    // Trial information
+    isTrialConversion: event.is_trial_conversion,
+    
+    // Cancellation
+    cancellationReason: event.cancellation_reason,
+    autoResumeAtMs: event.auto_resume_at_ms,
+    
+    // Expiration reason
+    expirationReason: event.expiration_reason,
+    
+    // Transfer information
+    transferredFrom: event.transferred_from,
+    transferredTo: event.transferred_to,
+    
+    // Metadata
+    store: event.store,
+    environment: event.environment,
+    periodType: event.period_type,
+    
+    // Pricing
+    price: event.price,
+    priceInPurchasedCurrency: event.price_in_purchased_currency,
+    currency: event.currency,
+    
+    // Event tracking
+    eventId: event.id,
+    eventType: event.type,
+    eventTimestampMs: event.event_timestamp_ms
+  };
+}
+
+/**
+ * Extract entitlements from webhook event
+ * Handles the nested structure from RevenueCat webhooks
+ * 
+ * IMPORTANT: Entitlements structure from RevenueCat:
+ * {
+ *   "entitlement_id": {
+ *     "expires_date": "2026-01-17T12:00:00Z",
+ *     "grace_period_expires_date": null,
+ *     "product_identifier": "yearly_pro",
+ *     "purchase_date": "2025-01-17T12:00:00Z"
+ *   }
+ * }
+ */
+function extractEntitlementsFromEvent(event) {
+  // Entitlements are nested under event.entitlements
+  // Structure: { entitlement_id: { expires_date, product_identifier, ... } }
+  const entitlements = event.entitlements || {};
+  
+  // Convert to array format with expiration checking
+  const activeEntitlements = {};
+  
+  Object.keys(entitlements).forEach(entitlementId => {
+    const entitlement = entitlements[entitlementId];
+    
+    // Check if entitlement is active
+    const expiresDate = entitlement.expires_date;
+    const isActive = !expiresDate || new Date(expiresDate) > new Date();
+    
+    if (isActive) {
+      activeEntitlements[entitlementId] = {
+        entitlement_id: entitlementId,
+        product_id: entitlement.product_identifier,
+        expires_at: expiresDate,
+        purchase_date: entitlement.purchase_date,
+        grace_period_expires_at: entitlement.grace_period_expires_date
+      };
+    }
+  });
+  
+  return activeEntitlements;
+}
+
+/**
+ * Sync entitlements to database
+ * Updates user_subscriptions table with current entitlements from webhook
+ * 
+ * CRITICAL: This function MUST be called for EVERY webhook event to keep
+ * the database in sync with RevenueCat's source of truth
+ */
+async function syncEntitlementsToDatabase(appUserId, entitlementData, event) {
+  try {
+    // Extract entitlements
+    const entitlements = entitlementData.entitlements || event.entitlements || {};
+    const activeEntitlements = extractEntitlementsFromEvent({ entitlements });
+    const hasActiveEntitlements = Object.keys(activeEntitlements).length > 0;
+    
+    // Get subscriber attributes
+    const subscriberAttributes = entitlementData.subscriberAttributes || event.subscriber_attributes || {};
+    const email = subscriberAttributes.$email?.value || null;
+    const displayName = subscriberAttributes.$displayName?.value || null;
+    
+    // Product information
+    const productId = entitlementData.productId || event.product_id || event.new_product_id;
+    
+    // Dates
+    const expiresAt = entitlementData.expirationAtMs 
+      ? new Date(entitlementData.expirationAtMs) 
+      : (event.expiration_at_ms ? new Date(event.expiration_at_ms) : null);
+    
+    const purchasedAt = entitlementData.purchasedAtMs
+      ? new Date(entitlementData.purchasedAtMs)
+      : (event.purchased_at_ms ? new Date(event.purchased_at_ms) : null);
+    
+    const gracePeriodExpiresAt = entitlementData.gracePeriodExpiresAtMs
+      ? new Date(entitlementData.gracePeriodExpiresAtMs)
+      : (event.grace_period_expires_at_ms ? new Date(event.grace_period_expires_at_ms) : null);
+    
+    // Determine subscription status based on event type
+    let subscriptionStatus = 'expired';
+    let autoRenew = true;
+    let billingIssue = false;
+    let cancelledAt = null;
+    
+    if (hasActiveEntitlements) {
+      if (event.type === 'TRIAL_STARTED') {
+        subscriptionStatus = 'trial';
+      } else if (event.type === 'SUBSCRIPTION_PAUSED') {
+        subscriptionStatus = 'paused';
+        autoRenew = false;
+      } else if (event.type === 'CANCELLATION') {
+        subscriptionStatus = 'cancelled';
+        autoRenew = false;
+        cancelledAt = new Date(event.event_timestamp_ms || Date.now());
+      } else if (event.type === 'BILLING_ISSUE') {
+        subscriptionStatus = 'billing_issue';
+        billingIssue = true;
+      } else {
+        subscriptionStatus = 'active';
+      }
+    } else {
+      // No active entitlements
+      subscriptionStatus = 'expired';
+      autoRenew = false;
+    }
+    
+    // Store information
+    const store = entitlementData.store || event.store;
+    const environment = entitlementData.environment || event.environment;
+    
+    console.log(`Syncing entitlements for ${appUserId}:`, {
+      hasActive: hasActiveEntitlements,
+      status: subscriptionStatus,
+      entitlementCount: Object.keys(activeEntitlements).length,
+      entitlements: Object.keys(activeEntitlements),
+      productId,
+      expiresAt,
+      email
+    });
+    
+    // TODO: Implement database update
+    // This is the CRITICAL sync point - update your database here
+    /*
+    await db.query(`
+      INSERT INTO user_subscriptions (
+        app_user_id,
+        external_user_id,
+        email,
+        is_active,
+        subscription_status,
+        product_id,
+        entitlements,
+        expires_at,
+        purchased_at,
+        cancelled_at,
+        grace_period_expires_at,
+        auto_renew,
+        billing_issue,
+        store,
+        environment,
+        last_webhook_event_id,
+        last_webhook_event_type,
+        last_updated
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW()
+      )
+      ON CONFLICT (app_user_id) 
+      DO UPDATE SET
+        external_user_id = COALESCE(EXCLUDED.external_user_id, user_subscriptions.external_user_id),
+        email = COALESCE(EXCLUDED.email, user_subscriptions.email),
+        is_active = EXCLUDED.is_active,
+        subscription_status = EXCLUDED.subscription_status,
+        product_id = EXCLUDED.product_id,
+        entitlements = EXCLUDED.entitlements,
+        expires_at = EXCLUDED.expires_at,
+        purchased_at = COALESCE(EXCLUDED.purchased_at, user_subscriptions.purchased_at),
+        cancelled_at = EXCLUDED.cancelled_at,
+        grace_period_expires_at = EXCLUDED.grace_period_expires_at,
+        auto_renew = EXCLUDED.auto_renew,
+        billing_issue = EXCLUDED.billing_issue,
+        store = EXCLUDED.store,
+        environment = EXCLUDED.environment,
+        last_webhook_event_id = EXCLUDED.last_webhook_event_id,
+        last_webhook_event_type = EXCLUDED.last_webhook_event_type,
+        last_updated = NOW()
+    `, [
+      appUserId,
+      displayName || email,
+      email,
+      hasActiveEntitlements,
+      subscriptionStatus,
+      productId,
+      JSON.stringify(activeEntitlements),
+      expiresAt,
+      purchasedAt,
+      cancelledAt,
+      gracePeriodExpiresAt,
+      autoRenew,
+      billingIssue,
+      store,
+      environment,
+      event.id,
+      event.type
+    ]);
+    */
+    
+    // Also sync to normalized entitlements table
+    await syncEntitlementsToNormalizedTable(appUserId, activeEntitlements, event);
+    
+  } catch (error) {
+    console.error('Error syncing entitlements to database:', error);
+    throw error;
+  }
+}
+
+/**
+ * Check for duplicate event (idempotency)
+ */
+async function checkDuplicateEvent(eventId) {
+  // TODO: Implement with your database
+  // Check if eventId exists in processed_events table
+  // Return true if exists, false otherwise
+  
+  // Example:
+  // const exists = await db.query(
+  //   'SELECT 1 FROM processed_webhook_events WHERE event_id = $1',
+  //   [eventId]
+  // );
+  // return exists.rows.length > 0;
+  
+  return false;
+}
+
+/**
+ * Mark event as processed
+ */
+async function markEventAsProcessed(eventId) {
+  // TODO: Implement with your database
+  // Insert eventId into processed_events table
+  
+  // Example:
+  // await db.query(
+  //   'INSERT INTO processed_webhook_events (event_id, processed_at) VALUES ($1, NOW())',
+  //   [eventId]
+  // );
+}
+
+// ==========================================
+// EVENT HANDLER TEMPLATES
+// Implement these functions with your business logic
+// ==========================================
+
+async function handleInitialPurchase(data) {
+  // TODO: Implement
+  // - Update user subscription status in database
+  // - Grant access to premium features
+  // - Send welcome email
+  // - Track conversion event in analytics
+  
+  console.log('Initial purchase handler - implement your logic here', data);
+}
+
+async function handleRenewal(data) {
+  // TODO: Implement
+  // - Update subscription end date
+  // - Log successful payment
+  // - Update customer LTV
+  
+  console.log('Renewal handler - implement your logic here', data);
+}
+
+async function handleNonRenewingPurchase(data) {
+  // TODO: Implement
+  console.log('Non-renewing purchase handler - implement your logic here', data);
+}
+
+async function handleCancellation(data) {
+  // TODO: Implement
+  // - Update subscription status to "cancelled"
+  // - Schedule access removal for expiration date
+  // - Send feedback survey
+  // - Track churn reason
+  
+  console.log('Cancellation handler - implement your logic here', data);
+}
+
+async function handleUncancellation(data) {
+  // TODO: Implement
+  console.log('Uncancellation handler - implement your logic here', data);
+}
+
+async function handleTrialStarted(data) {
+  // TODO: Implement
+  console.log('Trial started handler - implement your logic here', data);
+}
+
+async function handleTrialCancelled(data) {
+  // TODO: Implement
+  console.log('Trial cancelled handler - implement your logic here', data);
+}
+
+async function handleBillingIssue(data) {
+  // TODO: Implement
+  // - Flag account
+  // - Send payment reminder email
+  // - Start grace period
+  
+  console.log('Billing issue handler - implement your logic here', data);
+}
+
+async function handleExpiration(data) {
+  // TODO: Implement
+  // - Remove premium access
+  // - Downgrade to free tier
+  // - Send win-back email
+  
+  console.log('Expiration handler - implement your logic here', data);
+}
+
+async function handleRefund(data) {
+  // TODO: Implement
+  // - Immediately revoke access
+  // - Log refund
+  // - Update accounting
+  
+  console.log('Refund handler - implement your logic here', data);
+}
+
+async function handleRefundReversed(data) {
+  // TODO: Implement
+  console.log('Refund reversed handler - implement your logic here', data);
+}
+
+async function handleProductChange(data) {
+  // TODO: Implement
+  // - Update subscription tier
+  // - Adjust feature access
+  // - Log upgrade/downgrade
+  
+  console.log('Product change handler - implement your logic here', data);
+}
+
+async function handleSubscriptionPaused(data) {
+  // TODO: Implement
+  console.log('Subscription paused handler - implement your logic here', data);
+}
+
+async function handleSubscriptionExtended(data) {
+  // TODO: Implement
+  console.log('Subscription extended handler - implement your logic here', data);
+}
+
+async function handleTransfer(data) {
+  // TODO: Implement
+  console.log('Transfer handler - implement your logic here', data);
+}
+
+async function handleInvoiceIssuance(data) {
+  // TODO: Implement
+  console.log('Invoice issuance handler - implement your logic here', data);
+}
+
+async function handleTemporaryEntitlement(data) {
+  // TODO: Implement
+  console.log('Temporary entitlement handler - implement your logic here', data);
+}
+
+async function handleVirtualCurrency(data) {
+  // TODO: Implement
+  console.log('Virtual currency handler - implement your logic here', data);
+}
+
+async function handleExperimentEnrollment(data) {
+  // TODO: Implement
+  console.log('Experiment enrollment handler - implement your logic here', data);
+}
+
+async function handleUnknownEvent(data) {
+  // TODO: Implement
+  // - Log event for manual review
+  // - Alert development team
+  // - Store in database for later processing
+  
+  console.log('Unknown event handler - implement your logic here', data);
+}
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+
+/**
+ * Check if user has active entitlement (V2 API format)
+ * V2 API returns expires_at as milliseconds timestamp
+ */
+function hasActiveEntitlementV2(customerData, entitlementId = null) {
+  if (!customerData?.active_entitlements?.items) {
+    return false;
+  }
+  
+  return customerData.active_entitlements.items.some(ent => {
+    // If entitlementId specified, check for specific entitlement
+    if (entitlementId && ent.entitlement_id !== entitlementId) {
+      return false;
+    }
+    
+    // Check if entitlement is still valid
+    // expires_at is in milliseconds timestamp
+    return ent.expires_at > Date.now();
+  });
+}
+
+/**
+ * Determine if we should verify status with RevenueCat
+ */
+function shouldVerifyWithRevenueCat(cachedStatus) {
+  if (!cachedStatus) {
+    return true; // No cached data, must check
+  }
+  
+  // Always verify if subscription expires soon (within 24 hours)
+  if (cachedStatus.expires_at) {
+    const expiresAt = new Date(cachedStatus.expires_at);
+    const hoursUntilExpiry = (expiresAt - new Date()) / (1000 * 60 * 60);
+    
+    if (hoursUntilExpiry < 24) {
+      return true; // Verify near expiration
+    }
+  }
+  
+  // Verify if billing issue detected
+  if (cachedStatus.billing_issue) {
+    return true;
+  }
+  
+  // Verify if recently cancelled (within 48 hours)
+  if (cachedStatus.cancelled_at) {
+    const cancelledAt = new Date(cachedStatus.cancelled_at);
+    const hoursSinceCancellation = (new Date() - cancelledAt) / (1000 * 60 * 60);
+    
+    if (hoursSinceCancellation < 48) {
+      return true; // Verify recent cancellations
+    }
+  }
+  
+  // Verify if cache is stale (older than 1 hour)
+  if (cachedStatus.last_updated) {
+    const lastUpdated = new Date(cachedStatus.last_updated);
+    const hoursSinceUpdate = (new Date() - lastUpdated) / (1000 * 60 * 60);
+    
+    if (hoursSinceUpdate > 1) {
+      return true; // Cache is stale
+    }
+  }
+  
+  return false; // Use cached data
+}
+
+/**
+ * Check if user has active entitlement
+ */
+function hasActiveEntitlement(activeEntitlements, entitlementId) {
+  return activeEntitlements[entitlementId]?.expires_date_ms 
+    ? activeEntitlements[entitlementId].expires_date_ms > Date.now()
+    : false;
+}
+
+/**
+ * Get all active entitlement IDs
+ */
+function getActiveEntitlementIds(activeEntitlements) {
+  return Object.keys(activeEntitlements).filter(entitlementId => 
+    hasActiveEntitlement(activeEntitlements, entitlementId)
+  );
+}
+
+/**
+ * Get all active entitlement IDs from V2 API customer data
+ */
+function getActiveEntitlementIdsV2(customerData) {
+  if (!customerData?.active_entitlements?.items) {
+    return [];
+  }
+  
+  return customerData.active_entitlements.items
+    .filter(ent => ent.expires_at > Date.now())
+    .map(ent => ent.entitlement_id);
+}
+
+/**
+ * Get customer email from V2 API attributes
+ */
+function getCustomerEmailV2(customerData) {
+  if (!customerData?.attributes?.items) {
+    return null;
+  }
+  
+  const emailAttr = customerData.attributes.items.find(
+    attr => attr.name === '$email'
+  );
+  
+  return emailAttr?.value || null;
+}
+
+/**
+ * Get customer display name from V2 API attributes
+ */
+function getCustomerDisplayNameV2(customerData) {
+  if (!customerData?.attributes?.items) {
+    return null;
+  }
+  
+  const nameAttr = customerData.attributes.items.find(
+    attr => attr.name === '$displayName'
+  );
+  
+  return nameAttr?.value || null;
+}
+
+/**
+ * Get custom attribute from V2 API customer data
+ */
+function getCustomerAttributeV2(customerData, attributeName) {
+  if (!customerData?.attributes?.items) {
+    return null;
+  }
+  
+  const attr = customerData.attributes.items.find(
+    a => a.name === attributeName
+  );
+  
+  return attr?.value || null;
+}
+
+/**
+ * Extract user email from subscriber attributes
+ */
+function getUserEmail(subscriberAttributes) {
+  return subscriberAttributes.$email?.value || null;
+}
+
+/**
+ * Extract custom attributes
+ */
+function getCustomAttribute(subscriberAttributes, key) {
+  return subscriberAttributes[key]?.value || null;
+}
+
+// ==========================================
+// EXPRESS.JS EXAMPLE
+// ==========================================
+
+// const express = require('express');
+// const app = express();
+// 
+// app.use(express.json());
+// 
+// app.post('/webhooks/revenuecat', handleRevenueCatWebhook);
+// 
+// app.listen(3000, () => {
+//   console.log('Webhook server running on port 3000');
+// });
+
+// ==========================================
+// NEXT.JS API ROUTE EXAMPLE
+// ==========================================
+
+// // pages/api/webhooks/revenuecat.js
+// export default async function handler(req, res) {
+//   if (req.method !== 'POST') {
+//     return res.status(405).json({ error: 'Method not allowed' });
+//   }
+//   
+//   return handleRevenueCatWebhook(req, res);
+// }
+
+module.exports = {
+  handleRevenueCatWebhook,
+  validateAuthorization,
+  
+  // V1 API
+  fetchSubscriberData,
+  
+  // V2 API
+  fetchCustomerDataV2,
+  verifyAndSyncSubscriptionStatus,
+  getSubscriptionStatusFromDB,
+  syncDatabaseWithRevenueCat,
+  hasActiveEntitlementV2,
+  getActiveEntitlementIdsV2,
+  getCustomerEmailV2,
+  getCustomerDisplayNameV2,
+  getCustomerAttributeV2,
+  shouldVerifyWithRevenueCat,
+  
+  // Entitlement Management
+  extractEntitlementData,
+  extractEntitlementsFromEvent,
+  syncEntitlementsToDatabase,
+  syncEntitlementsToNormalizedTable,
+  getUserEntitlements,
+  userHasEntitlement,
+  
+  // Helper functions (V1/Webhook format)
+  hasActiveEntitlement,
+  getActiveEntitlementIds,
+  getUserEmail,
+  getCustomAttribute
+};
+```
+
+---
+
+## Quick Start
+
+### 1. Set Up Webhook in RevenueCat Dashboard
+
+1. Navigate to **Integrations** → **Webhooks**
+2. Click **Add new configuration**
+3. Set Authorization Header: `Bearer MYSECRET`
+4. Enter your webhook URL: `https://yourdomain.com/webhooks/revenuecat`
+5. Select environment (Production, Sandbox, or Both)
+
+### 2. Configure Your Server
+
+```dotenv
+// .env file
+REVENUECAT_WEBHOOK_SECRET=MYSECRET
+REVENUECAT_API_KEY=your_api_key_here
+```
+
+### 3. Deploy Webhook Endpoint
+
+Deploy the handler to your server and ensure it responds within 60 seconds.
+
+### 4. Test with RevenueCat Dashboard
+
+Use the "Send Test Event" button in RevenueCat dashboard to verify your implementation.
+
+---
+
+## Database Schema Example
+
+```sql
+-- Track processed events (idempotency)
+CREATE TABLE processed_webhook_events (
+  event_id VARCHAR(255) PRIMARY KEY,
+  event_type VARCHAR(100) NOT NULL,
+  app_user_id VARCHAR(255) NOT NULL,
+  environment VARCHAR(20), -- PRODUCTION or SANDBOX
+  processed_at TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_app_user_id ON processed_webhook_events(app_user_id);
+CREATE INDEX idx_processed_at ON processed_webhook_events(processed_at);
+CREATE INDEX idx_event_type ON processed_webhook_events(event_type);
+
+-- User subscriptions table
+CREATE TABLE user_subscriptions (
+  id SERIAL PRIMARY KEY,
+  app_user_id VARCHAR(255) UNIQUE NOT NULL,
+  external_user_id VARCHAR(255),
+  email VARCHAR(255),
+  
+  -- Subscription status
+  is_active BOOLEAN DEFAULT false,
+  subscription_status VARCHAR(50), -- active, cancelled, expired, trial, paused
+  product_id VARCHAR(255),
+  entitlements JSONB, -- Store active entitlements as JSON
+  
+  -- Dates
+  expires_at TIMESTAMP,
+  purchased_at TIMESTAMP,
+  cancelled_at TIMESTAMP,
+  trial_end_at TIMESTAMP,
+  
+  -- Flags
+  auto_renew BOOLEAN DEFAULT true,
+  billing_issue BOOLEAN DEFAULT false,
+  
+  -- Metadata
+  store VARCHAR(50), -- app_store, play_store, stripe, etc
+  environment VARCHAR(20), -- PRODUCTION or SANDBOX
+  
+  -- Tracking
+  last_webhook_event_id VARCHAR(255),
+  last_webhook_event_type VARCHAR(100),
+  last_revenuecat_sync_at TIMESTAMP,
+  last_updated TIMESTAMP DEFAULT NOW(),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_external_user_id ON user_subscriptions(external_user_id);
+CREATE INDEX idx_email ON user_subscriptions(email);
+CREATE INDEX idx_subscription_status ON user_subscriptions(subscription_status);
+CREATE INDEX idx_is_active ON user_subscriptions(is_active);
+CREATE INDEX idx_expires_at ON user_subscriptions(expires_at);
+
+-- Dedicated entitlements table (normalized approach)
+CREATE TABLE user_entitlements (
+  id SERIAL PRIMARY KEY,
+  app_user_id VARCHAR(255) NOT NULL,
+  entitlement_id VARCHAR(255) NOT NULL,
+  product_id VARCHAR(255) NOT NULL,
+  
+  -- Status
+  is_active BOOLEAN DEFAULT true,
+  
+  -- Dates
+  granted_at TIMESTAMP DEFAULT NOW(),
+  expires_at TIMESTAMP,
+  grace_period_expires_at TIMESTAMP,
+  purchase_date TIMESTAMP,
+  
+  -- Metadata
+  store VARCHAR(50),
+  environment VARCHAR(20),
+  
+  -- Tracking
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW(),
+  
+  UNIQUE(app_user_id, entitlement_id)
+);
+
+CREATE INDEX idx_entitlement_user ON user_entitlements(app_user_id);
+CREATE INDEX idx_entitlement_id ON user_entitlements(entitlement_id);
+CREATE INDEX idx_entitlement_active ON user_entitlements(is_active);
+CREATE INDEX idx_entitlement_expires ON user_entitlements(expires_at);
+
+-- Track RevenueCat API calls for monitoring
+CREATE TABLE revenuecat_api_calls (
+  id SERIAL PRIMARY KEY,
+  endpoint VARCHAR(255) NOT NULL, -- v1/subscribers or v2/customers
+  app_user_id VARCHAR(255),
+  status_code INTEGER,
+  response_time_ms INTEGER,
+  error_message TEXT,
+  called_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_api_endpoint ON revenuecat_api_calls(endpoint);
+CREATE INDEX idx_api_user ON revenuecat_api_calls(app_user_id);
+CREATE INDEX idx_api_called_at ON revenuecat_api_calls(called_at);
+
+-- Webhook delivery failures (for retry logic)
+CREATE TABLE webhook_failures (
+  id SERIAL PRIMARY KEY,
+  event_id VARCHAR(255) NOT NULL,
+  event_type VARCHAR(100) NOT NULL,
+  app_user_id VARCHAR(255) NOT NULL,
+  error_message TEXT,
+  retry_count INTEGER DEFAULT 0,
+  next_retry_at TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  resolved_at TIMESTAMP
+);
+
+CREATE INDEX idx_webhook_failures_user ON webhook_failures(app_user_id);
+CREATE INDEX idx_webhook_failures_retry ON webhook_failures(next_retry_at);
+```
+
+### Database Sync Functions
+
+```javascript
+/**
+ * Sync entitlements to normalized table
+ * Recommended for complex entitlement logic
+ */
+async function syncEntitlementsToNormalizedTable(appUserId, activeEntitlements, event) {
+  // Get all entitlement IDs from event
+  const entitlementIds = Object.keys(activeEntitlements);
+  
+  // Mark all existing entitlements as inactive first
+  await db.query(`
+    UPDATE user_entitlements 
+    SET is_active = false, updated_at = NOW()
+    WHERE app_user_id = $1
+  `, [appUserId]);
+  
+  // Insert or update each active entitlement
+  for (const entitlementId of entitlementIds) {
+    const ent = activeEntitlements[entitlementId];
+    
+    await db.query(`
+      INSERT INTO user_entitlements (
+        app_user_id,
+        entitlement_id,
+        product_id,
+        is_active,
+        expires_at,
+        grace_period_expires_at,
+        purchase_date,
+        store,
+        environment,
+        updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+      ON CONFLICT (app_user_id, entitlement_id)
+      DO UPDATE SET
+        product_id = EXCLUDED.product_id,
+        is_active = EXCLUDED.is_active,
+        expires_at = EXCLUDED.expires_at,
+        grace_period_expires_at = EXCLUDED.grace_period_expires_at,
+        purchase_date = EXCLUDED.purchase_date,
+        store = EXCLUDED.store,
+        environment = EXCLUDED.environment,
+        updated_at = NOW()
+    `, [
+      appUserId,
+      entitlementId,
+      ent.product_id,
+      true,
+      ent.expires_at ? new Date(ent.expires_at) : null,
+      ent.grace_period_expires_at ? new Date(ent.grace_period_expires_at) : null,
+      ent.purchase_date ? new Date(ent.purchase_date) : null,
+      event.store,
+      event.environment
+    ]);
+  }
+}
+
+/**
+ * Get user's active entitlements from database
+ */
+async function getUserEntitlements(appUserId) {
+  const result = await db.query(`
+    SELECT 
+      entitlement_id,
+      product_id,
+      expires_at,
+      grace_period_expires_at,
+      purchase_date,
+      is_active
+    FROM user_entitlements
+    WHERE app_user_id = $1 
+      AND is_active = true
+      AND (expires_at IS NULL OR expires_at > NOW())
+    ORDER BY purchase_date DESC
+  `, [appUserId]);
+  
+  // Convert to object format
+  const entitlements = {};
+  result.rows.forEach(row => {
+    entitlements[row.entitlement_id] = {
+      product_id: row.product_id,
+      expires_at: row.expires_at,
+      grace_period_expires_at: row.grace_period_expires_at,
+      purchase_date: row.purchase_date
+    };
+  });
+  
+  return entitlements;
+}
+
+/**
+ * Check if user has specific entitlement
+ */
+async function userHasEntitlement(appUserId, entitlementId) {
+  const result = await db.query(`
+    SELECT 1 FROM user_entitlements
+    WHERE app_user_id = $1 
+      AND entitlement_id = $2
+      AND is_active = true
+      AND (expires_at IS NULL OR expires_at > NOW())
+    LIMIT 1
+  `, [appUserId, entitlementId]);
+  
+  return result.rows.length > 0;
+}
+```
+
+---
+
+## Database Schema Example
+
+---
+
+## Environment Variables
+
+Create a `.env` file with the following configuration:
+
+```
+# RevenueCat Configuration
+REVENUECAT_API_KEY=your_secret_api_key_here
+REVENUECAT_PROJECT_ID=your_project_id_here
+REVENUECAT_WEBHOOK_SECRET=MYSECRET
+
+# Database Configuration
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+
+# Application Configuration
+NODE_ENV=production
+PORT=3000
+
+# Optional: Rate Limiting
+REVENUECAT_API_RATE_LIMIT=480
+REVENUECAT_API_RATE_WINDOW=60000
+
+# Optional: Caching
+CACHE_TTL_SECONDS=3600
+ENABLE_REVENUECAT_CACHE=true
+
+# Optional: Monitoring
+ENABLE_API_CALL_TRACKING=true
+ENABLE_WEBHOOK_FAILURE_TRACKING=true
+```
+
+### Security Notes
+
+**Never commit these values to version control:**
+
+```
+# .gitignore
+.env
+.env.local
+.env.*.local
+```
+
+**Use environment-specific files:**
+
+```
+.env.development
+.env.staging
+.env.production
+```
+
+**Validate environment variables on startup:**
+
+```javascript
+// config/env.js
+const requiredEnvVars = [
+  'REVENUECAT_API_KEY',
+  'REVENUECAT_PROJECT_ID',
+  'REVENUECAT_WEBHOOK_SECRET',
+  'DATABASE_URL'
+];
+
+function validateEnvironment() {
+  const missing = requiredEnvVars.filter(key => !process.env[key]);
+  
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}`
+    );
+  }
+  
+  console.log('Environment variables validated');
+}
+
+validateEnvironment();
+```
+
+---
+
+## Database Schema Example
+
+---
+
+## Security Best Practices
+
+### 1. Always Validate Authorization
+
+```javascript
+// Never skip authorization validation
+if (!validateAuthorization(req)) {
+  return res.status(401).json({ error: 'Unauthorized' });
+}
+```
+
+### 2. Respond Quickly
+
+```javascript
+// Respond within 60 seconds
+// Defer heavy processing to background jobs
+await queueBackgroundJob('process-webhook', event);
+return res.status(200).json({ message: 'Accepted' });
+```
+
+### 3. Handle Duplicates
+
+```javascript
+// Implement idempotency using event.id
+const isDuplicate = await checkDuplicateEvent(event.id);
+if (isDuplicate) {
+  return res.status(200).json({ message: 'Already processed' });
+}
+```
+
+### 4. Use HTTPS Only
+
+Configure your webhook URL with HTTPS. HTTP is not supported.
+
+### 5. Verify Event Structure
+
+```javascript
+// Validate required fields
+if (!event || !event.type || !event.app_user_id) {
+  return res.status(400).json({ error: 'Invalid event structure' });
+}
+```
+
+---
+
+## Testing Guide
+
+### Test with RevenueCat Dashboard
+
+1. Go to **Integrations** → **Webhooks**
+2. Click on your webhook configuration
+3. Click **Send Test Event**
+4. Select event type
+5. Verify your endpoint receives and processes the event
+
+### Test with Sandbox Purchases
+
+Make test purchases in sandbox environment:
+
+```javascript
+// The environment field will be "SANDBOX"
+if (event.environment === 'SANDBOX') {
+  console.log('Test purchase - skip production workflows');
+}
+```
+
+---
+
+## Common Patterns
+
+### Sync Subscription Status
+
+```javascript
+async function syncSubscriptionStatus(appUserId, event) {
+  const activeEntitlements = event.entitlements || {};
+  const hasActiveSubscription = Object.keys(activeEntitlements).length > 0;
+  
+  await db.query(`
+    UPDATE user_subscriptions 
+    SET subscription_status = $1,
+        entitlements = $2,
+        expires_at = $3,
+        last_updated = NOW()
+    WHERE app_user_id = $4
+  `, [
+    hasActiveSubscription ? 'active' : 'expired',
+    JSON.stringify(activeEntitlements),
+    event.expiration_at_ms ? new Date(event.expiration_at_ms) : null,
+    appUserId
+  ]);
+}
+```
+
+### Send Email Notification
+
+```javascript
+async function sendCancellationEmail(email, data) {
+  // Use your email service
+  await emailService.send({
+    to: email,
+    template: 'subscription-cancelled',
+    data: {
+      userName: data.externalUserId,
+      expirationDate: new Date(data.expirationDate).toLocaleDateString(),
+      feedbackUrl: 'https://yourapp.com/feedback'
+    }
+  });
+}
+```
+
+### Update Analytics
+
+```javascript
+async function trackWebhookEvent(eventType, userId, data) {
+  await analytics.track({
+    userId,
+    event: `Subscription ${eventType}`,
+    properties: {
+      productId: data.productId,
+      price: data.price,
+      currency: data.currency,
+      environment: data.environment
+    }
+  });
+}
+```
+
+---
+
+## Troubleshooting
+
+### Webhooks Not Received
+
+- Verify HTTPS endpoint is accessible
+- Check authorization header matches exactly
+- Ensure server responds within 60 seconds
+- Check RevenueCat dashboard for delivery errors
+
+### Duplicate Events
+
+- Implement idempotency using `event.id`
+- Check database for already-processed events
+- Return 200 OK even for duplicates
+
+### Missing Data
+
+- Use `GET /subscribers` API for complete data
+- Check `event.entitlements` for active subscriptions
+- Verify `event.subscriber_attributes` for custom data
+
+---
+
+## RevenueCat API: V1 vs V2
+
+RevenueCat provides two API versions for fetching customer data. Understanding when to use each is critical for building a robust subscription system.
+
+### API V1 - Subscribers Endpoint
+
+**Endpoint:**
+
+```shellscript
+GET https://api.revenuecat.com/v1/subscribers/{app_user_id}
+```
+
+**Use Cases:**
+
+- Fetching complete subscriber information after webhook
+- Getting subscriber attributes and custom metadata
+- Historical purchase data
+- Integration aliases (multiple IDs for same customer)
+
+**Example Request:**
+
+```shellscript
+curl -X GET "https://api.revenuecat.com/v1/subscribers/user_abc123" \
+  -H "Authorization: Bearer YOUR_REVENUECAT_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+**Example Response:**
+
+```json
+{
+  "request_date": "2025-01-17T12:00:00Z",
+  "request_date_ms": 1737115200000,
+  "subscriber": {
+    "original_app_user_id": "user_abc123",
+    "original_application_version": "1.0",
+    "first_seen": "2024-01-01T00:00:00Z",
+    "last_seen": "2025-01-17T10:00:00Z",
+    "management_url": "https://apps.apple.com/account/subscriptions",
+    "original_purchase_date": "2024-01-15T12:00:00Z",
+    "non_subscriptions": {},
+    "subscriptions": {
+      "yearly_pro": {
+        "auto_resume_date": null,
+        "billing_issues_detected_at": null,
+        "expires_date": "2025-02-15T12:00:00Z",
+        "grace_period_expires_date": null,
+        "is_sandbox": false,
+        "original_purchase_date": "2024-02-15T12:00:00Z",
+        "ownership_type": "PURCHASED",
+        "period_type": "normal",
+        "purchase_date": "2025-01-15T12:00:00Z",
+        "refunded_at": null,
+        "store": "app_store",
+        "unsubscribe_detected_at": null
+      }
+    },
+    "entitlements": {
+      "pro": {
+        "expires_date": "2025-02-15T12:00:00Z",
+        "grace_period_expires_date": null,
+        "product_identifier": "yearly_pro",
+        "purchase_date": "2025-01-15T12:00:00Z"
+      }
+    },
+    "subscriber_attributes": {
+      "$email": {
+        "value": "user@example.com",
+        "updated_at_ms": 1737115200000
+      },
+      "$displayName": {
+        "value": "John Doe",
+        "updated_at_ms": 1737115200000
+      }
+    }
+  }
+}
+```
+
+**JavaScript Implementation:**
+
+```javascript
+async function getSubscriberV1(appUserId) {
+  const response = await fetch(
+    `https://api.revenuecat.com/v1/subscribers/${appUserId}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${REVENUECAT_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  
+  if (!response.ok) {
+    throw new Error(`RevenueCat V1 API error: ${response.status}`);
+  }
+  
+  const data = await response.json();
+  return data.subscriber;
+}
+```
+
+---
+
+### API V2 - Customers Endpoint (Recommended for Real-Time Checks)
+
+**Endpoint:**
+
+```shellscript
+GET https://api.revenuecat.com/v2/projects/{project_id}/customers/{customer_id}
+```
+
+**Use Cases:**
+
+- Real-time subscription status verification
+- Source of truth for active entitlements
+- Self-healing when webhooks fail or are delayed
+- Backup validation before granting access
+
+**Why V2 is Better for Status Checks:**
+
+- Returns active entitlements directly
+- Cleaner, more focused response structure
+- Explicitly shows what's currently active
+- Better for programmatic status checks
+- Includes customer attributes in paginated format
+- Provides experiment enrollment data
+- Tracks customer metadata (last_seen, platform, country, etc.)
+
+**Important V2 API Differences:**
+
+- `expires_at` is returned as **milliseconds timestamp** (not ISO date string)
+- `active_entitlements.items` contains only `entitlement_id` and `expires_at` (no product_id)
+- Customer attributes (email, displayName) are in separate `attributes.items` array
+- No `subscriptions` object - only active entitlements are returned
+- Responses are paginated (though most apps fit in single page)
+
+**Example Request:**
+
+```shellscript
+curl -X GET "https://api.revenuecat.com/v2/projects/abc123/customers/user_abc123" \
+  -H "Authorization: Bearer YOUR_REVENUECAT_API_KEY" \
+  -H "Content-Type: application/json"
+```
+
+**Example Response:**
+
+```json
+{
+  "object": "customer",
+  "id": "19b8de26-77c1-49f1-aa18-019a391603e2",
+  "project_id": "proj1ab2c3d4",
+  "first_seen_at": 1658399423658,
+  "last_seen_at": 1658399423658,
+  "last_seen_app_version": "1.0.0",
+  "last_seen_country": "US",
+  "last_seen_platform": "android",
+  "last_seen_platform_version": "35",
+  "active_entitlements": {
+    "object": "list",
+    "items": [
+      {
+        "object": "customer.active_entitlement",
+        "entitlement_id": "pro",
+        "expires_at": 1768651200000
+      },
+      {
+        "object": "customer.active_entitlement",
+        "entitlement_id": "premium_features",
+        "expires_at": 1768651200000
+      }
+    ],
+    "next_page": null,
+    "url": "/v2/projects/proj1ab2c3d4/customers/19b8de26-77c1-49f1-aa18-019a391603e2/active_entitlements"
+  },
+  "experiment": {
+    "object": "experiment_enrollment",
+    "id": "exp_123",
+    "name": "pricing_test_v2",
+    "variant": "a"
+  },
+  "attributes": {
+    "object": "list",
+    "items": [
+      {
+        "object": "customer.attribute",
+        "name": "$email",
+        "value": "user@example.com",
+        "updated_at": 1658399423658
+      },
+      {
+        "object": "customer.attribute",
+        "name": "$displayName",
+        "value": "John Doe",
+        "updated_at": 1658399423658
+      }
+    ],
+    "next_page": null,
+    "url": "/v2/projects/proj1ab2c3d4/customers/19b8de26-77c1-49f1-aa18-019a391603e2/attributes"
+  }
+}
+```
+
+**JavaScript Implementation:**
+
+```javascript
+async function getCustomerV2(customerId, projectId) {
+  const response = await fetch(
+    `https://api.revenuecat.com/v2/projects/${projectId}/customers/${customerId}`,
+    {
+      headers: {
+        'Authorization': `Bearer ${REVENUECAT_API_KEY}`,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+  
+  if (!response.ok) {
+    if (response.status === 404) {
+      return null; // Customer not found
+    }
+    throw new Error(`RevenueCat V2 API error: ${response.status}`);
+  }
+  
+  return await response.json();
+}
+
+// Check if customer has active entitlement
+function hasActiveEntitlementV2(customerData, entitlementId) {
+  if (!customerData?.active_entitlements?.items) {
+    return false;
+  }
+  
+  return customerData.active_entitlements.items.some(ent => {
+    if (entitlementId && ent.entitlement_id !== entitlementId) {
+      return false;
+    }
+    
+    const expiresAt = new Date(ent.expires_at);
+    return expiresAt > new Date();
+  });
+}
+```
+
+---
+
+### Comparison: V1 vs V2
+
+| Feature                  | V1 (/subscribers)                   | V2 (/customers)                            |
+| :----------------------- | :---------------------------------- | :----------------------------------------- |
+| **Response Structure**   | Detailed, nested                    | Clean, paginated                           |
+| **Active Entitlements**  | In `entitlements` object            | Explicit `active_entitlements.items` array |
+| **Timestamp Format**     | ISO date strings                    | Milliseconds (numbers)                     |
+| **Customer Attributes**  | `subscriber_attributes` object      | `attributes.items` array (paginated)       |
+| **Product Information**  | Includes product_id in entitlements | Only entitlement_id + expires_at           |
+| **Subscription Details** | Full subscription history           | Not included                               |
+| **Experiment Data**      | Not included                        | Included in `experiment` object            |
+| **Customer Metadata**    | Limited                             | Rich (last_seen, platform, country, etc.)  |
+| **Primary Use Case**     | Full customer history               | Real-time status checks                    |
+| **Best For**             | After webhook processing            | Self-healing validation                    |
+| **Rate Limit**           | 480 requests/minute                 | 480 requests/minute                        |
+| **Project ID Required**  | No                                  | Yes                                        |
+| **Response Size**        | Larger (more metadata)              | Smaller (focused data)                     |
+
+---
+
+### Working with V2 API Responses
+
+**Extract active entitlements:**
+
+```javascript
+const rcData = await fetchCustomerDataV2(userId, projectId);
+
+// Check if user has any active access
+const hasAccess = rcData?.active_entitlements?.items?.length > 0 &&
+  rcData.active_entitlements.items.some(ent => ent.expires_at > Date.now());
+
+// Get all active entitlement IDs
+const entitlementIds = rcData?.active_entitlements?.items
+  ?.filter(ent => ent.expires_at > Date.now())
+  .map(ent => ent.entitlement_id) || [];
+// Result: ["pro", "premium_features"]
+
+// Check specific entitlement
+const hasPro = rcData?.active_entitlements?.items?.some(ent => 
+  ent.entitlement_id === 'pro' && ent.expires_at > Date.now()
+);
+```
+
+**Extract customer attributes:**
+
+```javascript
+const rcData = await fetchCustomerDataV2(userId, projectId);
+
+// Get email
+const email = rcData?.attributes?.items
+  ?.find(attr => attr.name === '$email')
+  ?.value;
+
+// Get display name
+const displayName = rcData?.attributes?.items
+  ?.find(attr => attr.name === '$displayName')
+  ?.value;
+
+// Get custom attribute
+const customValue = rcData?.attributes?.items
+  ?.find(attr => attr.name === 'my_custom_attribute')
+  ?.value;
+```
+
+**Get customer metadata:**
+
+```javascript
+const rcData = await fetchCustomerDataV2(userId, projectId);
+
+const metadata = {
+  firstSeen: new Date(rcData.first_seen_at),
+  lastSeen: new Date(rcData.last_seen_at),
+  appVersion: rcData.last_seen_app_version,
+  country: rcData.last_seen_country,
+  platform: rcData.last_seen_platform, // "ios", "android", etc.
+  platformVersion: rcData.last_seen_platform_version
+};
+```
+
+**Get experiment enrollment:**
+
+```javascript
+const rcData = await fetchCustomerDataV2(userId, projectId);
+
+if (rcData.experiment) {
+  console.log('User in experiment:', rcData.experiment.name);
+  console.log('Variant:', rcData.experiment.variant); // "a", "b", "control", etc.
+}
+```
+
+**Complete example:**
+
+```javascript
+async function checkUserAccess(userId, projectId) {
+  const rcData = await fetchCustomerDataV2(userId, projectId);
+  
+  if (!rcData) {
+    return {
+      hasAccess: false,
+      error: 'Customer not found'
+    };
+  }
+  
+  // Get active entitlements
+  const activeEntitlements = rcData.active_entitlements?.items
+    ?.filter(ent => ent.expires_at > Date.now()) || [];
+  
+  // Get customer info
+  const email = rcData.attributes?.items
+    ?.find(attr => attr.name === '$email')?.value;
+  
+  return {
+    hasAccess: activeEntitlements.length > 0,
+    entitlements: activeEntitlements.map(ent => ent.entitlement_id),
+    email,
+    lastSeen: new Date(rcData.last_seen_at),
+    experiment: rcData.experiment
+  };
+}
+```
+
+---
+
+### Self-Healing Pattern
+
+Use this pattern to ensure your database stays synchronized with RevenueCat, even if webhooks are missed or delayed.
+
+#### The Problem
+
+Webhooks can fail due to:
+
+- Network issues during delivery
+- Server downtime when webhook arrives
+- Processing errors in your handler
+- Race conditions with concurrent events
+- Webhook delivery delays (2+ hours for cancellations)
+
+#### The Solution: Database + API V2 Backup
+
+```mermaid
+flowchart TD
+    Start([User Request:<br/>Check Subscription Status])
+    
+    Start --> CheckDB[1. Check Database<br/>subscription_status table<br/><i>Fast - local query</i>]
+    
+    CheckDB --> IsDefinitive{Is status<br/>definitive?}
+    
+    IsDefinitive -->|YES| ReturnCached[Return cached<br/>status]
+    IsDefinitive -->|NO<br/>expired soon,<br/>billing issue, etc| CallAPI[2. Call RevenueCat V2<br/>GET /v2/customers/id<br/><i>Authoritative</i>]
+    
+    CallAPI --> Compare[3. Compare results]
+    
+    Compare --> HasDiscrepancy{Discrepancy<br/>detected?}
+    
+    HasDiscrepancy -->|NO| ReturnRC[Return RC<br/>status]
+    HasDiscrepancy -->|YES| SyncDB[4. Sync Database<br/>with RevenueCat<br/>source of truth]
+    
+    SyncDB --> ReturnSynced[5. Return synced<br/>status to user]
+    
+    ReturnCached --> End([End])
+    ReturnRC --> End
+    ReturnSynced --> End
+    
+    style Start fill:#e1f5e1
+    style End fill:#e1e1e1
+    style CheckDB fill:#e1f0ff
+    style CallAPI fill:#fff4e1
+    style IsDefinitive fill:#ffe1e1
+    style HasDiscrepancy fill:#ffe1e1
+    style ReturnCached fill:#e1f5e1
+    style ReturnRC fill:#e1f5e1
+    style ReturnSynced fill:#e1f5e1
+    style Compare fill:#f0f0f0
+    style SyncDB fill:#fff4e1
+```
+
+#### Implementation
+
+```javascript
+/**
+ * Get subscription status with self-healing
+ * Uses database for speed, RevenueCat V2 API for accuracy
+ */
+async function getSubscriptionStatus(userId, projectId) {
+  // Step 1: Check database first (fast)
+  const dbStatus = await db.query(
+    'SELECT * FROM user_subscriptions WHERE app_user_id = $1',
+    [userId]
+  );
+  
+  const cachedStatus = dbStatus.rows[0];
+  
+  // Step 2: Determine if we need to verify with RevenueCat
+  const needsVerification = shouldVerifyWithRevenueCat(cachedStatus);
+  
+  if (!needsVerification) {
+    return {
+      isActive: cachedStatus?.is_active || false,
+      entitlements: cachedStatus?.entitlements || {},
+      source: 'database'
+    };
+  }
+  
+  // Step 3: Fetch from RevenueCat V2 (authoritative)
+  const rcData = await getCustomerV2(userId, projectId);
+  
+  if (!rcData) {
+    // Customer doesn't exist in RevenueCat
+    return {
+      isActive: false,
+      entitlements: {},
+      source: 'revenuecat',
+      error: 'Customer not found'
+    };
+  }
+  
+  // Step 4: Check for active entitlements
+  const hasActive = hasActiveEntitlementV2(rcData);
+  
+  // Step 5: Detect discrepancy and sync if needed
+  if (cachedStatus && cachedStatus.is_active !== hasActive) {
+    console.warn('Subscription status mismatch detected', {
+      userId,
+      database: cachedStatus.is_active,
+      revenuecat: hasActive
+    });
+    
+    // Sync database with RevenueCat (source of truth)
+    await syncSubscriptionStatus(userId, rcData);
+  }
+  
+  return {
+    isActive: hasActive,
+    entitlements: rcData.active_entitlements?.items || [],
+    subscriptions: rcData.subscriptions?.items || [],
+    source: 'revenuecat',
+    synced: true
+  };
+}
+
+/**
+ * Determine if we should verify status with RevenueCat
+ */
+function shouldVerifyWithRevenueCat(cachedStatus) {
+  if (!cachedStatus) {
+    return true; // No cached data, must check
+  }
+  
+  // Always verify if subscription expires soon (within 24 hours)
+  if (cachedStatus.expires_at) {
+    const expiresAt = new Date(cachedStatus.expires_at);
+    const hoursUntilExpiry = (expiresAt - new Date()) / (1000 * 60 * 60);
+    
+    if (hoursUntilExpiry < 24) {
+      return true; // Verify near expiration
+    }
+  }
+  
+  // Verify if billing issue detected
+  if (cachedStatus.billing_issue) {
+    return true;
+  }
+  
+  // Verify if recently cancelled (within 48 hours)
+  if (cachedStatus.cancelled_at) {
+    const cancelledAt = new Date(cachedStatus.cancelled_at);
+    const hoursSinceCancellation = (new Date() - cancelledAt) / (1000 * 60 * 60);
+    
+    if (hoursSinceCancellation < 48) {
+      return true; // Verify recent cancellations
+    }
+  }
+  
+  // Verify if cache is stale (older than 1 hour)
+  if (cachedStatus.last_updated) {
+    const lastUpdated = new Date(cachedStatus.last_updated);
+    const hoursSinceUpdate = (new Date() - lastUpdated) / (1000 * 60 * 60);
+    
+    if (hoursSinceUpdate > 1) {
+      return true; // Cache is stale
+    }
+  }
+  
+  return false; // Use cached data
+}
+
+/**
+ * Sync database with RevenueCat data
+ */
+async function syncSubscriptionStatus(userId, rcData) {
+  const hasActive = hasActiveEntitlementV2(rcData);
+  const latestSubscription = rcData.subscriptions?.items?.[0];
+  
+  await db.query(`
+    INSERT INTO user_subscriptions (
+      app_user_id,
+      is_active,
+      entitlements,
+      expires_at,
+      product_id,
+      store,
+      last_updated
+    ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+    ON CONFLICT (app_user_id) 
+    DO UPDATE SET
+      is_active = $2,
+      entitlements = $3,
+      expires_at = $4,
+      product_id = $5,
+      store = $6,
+      last_updated = NOW()
+  `, [
+    userId,
+    hasActive,
+    JSON.stringify(rcData.active_entitlements?.items || []),
+    latestSubscription?.expires_at,
+    latestSubscription?.product_id,
+    latestSubscription?.store
+  ]);
+  
+  console.log(`Synced subscription status for ${userId} from RevenueCat`);
+}
+```
+
+---
+
+### Rate Limiting
+
+Both V1 and V2 APIs share the same rate limit:
+
+**Limit:** 480 requests per minute per API key
+
+**Best Practices:**
+
+1. **Cache aggressively** - Store results in database
+2. **Use webhooks as primary** - API calls as backup only
+3. **Implement exponential backoff** on rate limit errors
+4. **Monitor API usage** - Set up alerts at 80% capacity
+
+```javascript
+// Rate limit error handling
+async function callRevenueCatAPI(url, options) {
+  try {
+    const response = await fetch(url, options);
+    
+    if (response.status === 429) {
+      // Rate limited
+      const retryAfter = response.headers.get('Retry-After') || 60;
+      console.warn(`Rate limited. Retry after ${retryAfter}s`);
+      
+      // Wait and retry
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+      return callRevenueCatAPI(url, options);
+    }
+    
+    return response;
+    
+  } catch (error) {
+    console.error('RevenueCat API error:', error);
+    throw error;
+  }
+}
+```
+
+---
+
+### When to Use Which API
+
+| Scenario                      | Use API V1  | Use API V2  |
+| :---------------------------- | :---------- | :---------- |
+| After processing webhook      | ✅ Yes       | ⚠️ Optional |
+| Real-time status check        | ❌ No        | ✅ Yes       |
+| Self-healing validation       | ❌ No        | ✅ Yes       |
+| Getting subscriber attributes | ✅ Yes       | ❌ No        |
+| Checking active entitlements  | ⚠️ Possible | ✅ Better    |
+| Historical purchase data      | ✅ Yes       | ⚠️ Limited  |
+| Building customer profile     | ✅ Yes       | ❌ No        |
+
+**General Rule:** Use V2 for status checks, V1 for detailed customer information.
+
+---
+
+## API Endpoint Examples
+
+### Subscription Status Endpoint
+
+Create an endpoint that clients can call to check subscription status:
+
+```javascript
+// GET /api/subscription-status
+async function handleSubscriptionStatus(req, res) {
+  try {
+    const userId = req.user.id; // From authentication middleware
+    const projectId = process.env.REVENUECAT_PROJECT_ID;
+    
+    // Use self-healing pattern
+    const status = await verifyAndSyncSubscriptionStatus(userId, projectId);
+    
+    return res.json({
+      isActive: status.isActive,
+      entitlements: status.entitlements,
+      subscriptions: status.subscriptions,
+      syncedAt: status.syncedAt
+    });
+    
+  } catch (error) {
+    console.error('Error checking subscription status:', error);
+    return res.status(500).json({ error: 'Failed to check subscription status' });
+  }
+}
+```
+
+### Force Sync Endpoint
+
+Create an endpoint to manually trigger sync with RevenueCat:
+
+```javascript
+// POST /api/sync-revenuecat
+async function handleForceSync(req, res) {
+  try {
+    const userId = req.user.id;
+    const projectId = process.env.REVENUECAT_PROJECT_ID;
+    
+    // Fetch fresh data from RevenueCat V2
+    const rcData = await fetchCustomerDataV2(userId, projectId);
+    
+    if (!rcData) {
+      return res.status(404).json({ error: 'Customer not found in RevenueCat' });
+    }
+    
+    // Sync to database
+    await syncDatabaseWithRevenueCat(userId, rcData);
+    
+    return res.json({
+      message: 'Subscription synced successfully',
+      isActive: hasActiveEntitlementV2(rcData),
+      entitlements: rcData.active_entitlements?.items || [],
+      syncedAt: new Date()
+    });
+    
+  } catch (error) {
+    console.error('Error syncing with RevenueCat:', error);
+    return res.status(500).json({ error: 'Failed to sync subscription' });
+  }
+}
+```
+
+### Check Specific Entitlement
+
+```javascript
+// GET /api/entitlement/:entitlementId
+async function handleCheckEntitlement(req, res) {
+  try {
+    const userId = req.user.id;
+    const entitlementId = req.params.entitlementId;
+    const projectId = process.env.REVENUECAT_PROJECT_ID;
+    
+    // Check database first
+    const dbStatus = await getSubscriptionStatusFromDB(userId);
+    
+    // If uncertain, verify with RevenueCat
+    if (!dbStatus || shouldVerifyWithRevenueCat(dbStatus)) {
+      const rcData = await fetchCustomerDataV2(userId, projectId);
+      
+      if (rcData) {
+        await syncDatabaseWithRevenueCat(userId, rcData);
+        
+        const hasEntitlement = rcData.active_entitlements?.items?.some(ent => 
+          ent.entitlement_id === entitlementId && 
+          new Date(ent.expires_at) > new Date()
+        );
+        
+        return res.json({
+          hasAccess: hasEntitlement,
+          entitlementId,
+          source: 'revenuecat'
+        });
+      }
+    }
+    
+    // Use database status
+    const entitlements = dbStatus?.entitlements || {};
+    const hasAccess = hasActiveEntitlement(entitlements, entitlementId);
+    
+    return res.json({
+      hasAccess,
+      entitlementId,
+      source: 'database'
+    });
+    
+  } catch (error) {
+    console.error('Error checking entitlement:', error);
+    return res.status(500).json({ error: 'Failed to check entitlement' });
+  }
+}
+```
+
+### Debug Endpoint (Development Only)
+
+```javascript
+// GET /api/debug/subscription/:userId
+// WARNING: Only enable in development/staging
+async function handleDebugSubscription(req, res) {
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ error: 'Not available in production' });
+  }
+  
+  try {
+    const userId = req.params.userId;
+    const projectId = process.env.REVENUECAT_PROJECT_ID;
+    
+    // Get data from all sources
+    const [dbStatus, rcV1Data, rcV2Data] = await Promise.all([
+      getSubscriptionStatusFromDB(userId),
+      fetchSubscriberData(userId),
+      fetchCustomerDataV2(userId, projectId)
+    ]);
+    
+    return res.json({
+      database: dbStatus,
+      revenueCatV1: rcV1Data,
+      revenueCatV2: rcV2Data,
+      comparison: {
+        dbActive: dbStatus?.is_active,
+        v1Active: rcV1Data?.entitlements ? Object.keys(rcV1Data.entitlements).length > 0 : false,
+        v2Active: rcV2Data?.active_entitlements?.items?.length > 0,
+        match: dbStatus?.is_active === (rcV2Data?.active_entitlements?.items?.length > 0)
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error in debug endpoint:', error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+```
+
+### Express.js Router Example
+
+```javascript
+const express = require('express');
+const router = express.Router();
+const { authenticate } = require('../middleware/auth');
+
+// Webhook endpoint (no auth required)
+router.post('/webhooks/revenuecat', handleRevenueCatWebhook);
+
+// Protected endpoints (require authentication)
+router.get('/subscription-status', authenticate, handleSubscriptionStatus);
+router.post('/sync-revenuecat', authenticate, handleForceSync);
+router.get('/entitlement/:entitlementId', authenticate, handleCheckEntitlement);
+
+// Debug endpoint (development only)
+if (process.env.NODE_ENV !== 'production') {
+  router.get('/debug/subscription/:userId', handleDebugSubscription);
+}
+
+module.exports = router;
+```
+
+### Next.js API Routes Example
+
+```javascript
+// pages/api/subscription-status.js
+import { verifyAndSyncSubscriptionStatus } from '@/lib/revenuecat';
+import { getServerSession } from 'next-auth';
+
+export default async function handler(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  const session = await getServerSession(req, res);
+  if (!session) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  const status = await verifyAndSyncSubscriptionStatus(
+    session.user.id,
+    process.env.REVENUECAT_PROJECT_ID
+  );
+  
+  return res.json(status);
+}
+```
+
+```javascript
+// pages/api/sync-revenuecat.js
+import { fetchCustomerDataV2, syncDatabaseWithRevenueCat } from '@/lib/revenuecat';
+import { getServerSession } from 'next-auth';
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  const session = await getServerSession(req, res);
+  if (!session) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  
+  const rcData = await fetchCustomerDataV2(
+    session.user.id,
+    process.env.REVENUECAT_PROJECT_ID
+  );
+  
+  if (!rcData) {
+    return res.status(404).json({ error: 'Customer not found' });
+  }
+  
+  await syncDatabaseWithRevenueCat(session.user.id, rcData);
+  
+  return res.json({
+    message: 'Synced successfully',
+    syncedAt: new Date()
+  });
+}
+```
+
+---
+
+## Sample Webhook Events
+
+### Understanding Event Structure
+
+All RevenueCat webhooks follow this structure:
+
+```json
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "unique_event_id",
+    "type": "INITIAL_PURCHASE",
+    "app_user_id": "user_abc123",
+    "aliases": ["$RCAnonymousID:abc123"],
+    "original_app_user_id": "user_abc123",
+    "product_id": "yearly_pro",
+    "period_type": "normal",
+    "purchased_at_ms": 1737115200000,
+    "expiration_at_ms": 1768651200000,
+    "environment": "PRODUCTION",
+    "store": "app_store",
+    "entitlements": {
+      "pro": {
+        "expires_date": "2026-01-17T12:00:00Z",
+        "product_identifier": "yearly_pro",
+        "purchase_date": "2025-01-17T12:00:00Z"
+      }
+    },
+    "subscriber_attributes": {
+      "$email": {
+        "value": "user@example.com",
+        "updated_at_ms": 1737115200000
+      },
+      "$displayName": {
+        "value": "John Doe",
+        "updated_at_ms": 1737115200000
+      }
+    },
+    "event_timestamp_ms": 1737115200000
+  }
+}
+```
+
+### Key Fields to Extract
+
+| Field            | Location                                   | Purpose            | Example              |
+| :--------------- | :----------------------------------------- | :----------------- | :------------------- |
+| **Event ID**     | `event.id`                                 | Idempotency        | `"unique_event_id"`  |
+| **Event Type**   | `event.type`                               | Determine action   | `"INITIAL_PURCHASE"` |
+| **User ID**      | `event.app_user_id`                        | Identify user      | `"user_abc123"`      |
+| **Product ID**   | `event.product_id`                         | What was purchased | `"yearly_pro"`       |
+| **Entitlements** | `event.entitlements`                       | Active access      | `{ "pro": {...} }`   |
+| **Email**        | `event.subscriber_attributes.$email.value` | Contact user       | `"user@example.com"` |
+| **Expires At**   | `event.expiration_at_ms`                   | When access ends   | `1768651200000`      |
+| **Environment**  | `event.environment`                        | Production/Sandbox | `"PRODUCTION"`       |
+| **Store**        | `event.store`                              | Purchase platform  | `"app_store"`        |
+
+### Sample: Initial Purchase
+
+```json
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "abc123-def456-ghi789",
+    "type": "INITIAL_PURCHASE",
+    "app_user_id": "user_123",
+    "original_app_user_id": "user_123",
+    "product_id": "yearly_pro",
+    "period_type": "normal",
+    "purchased_at_ms": 1737115200000,
+    "expiration_at_ms": 1768651200000,
+    "environment": "PRODUCTION",
+    "store": "app_store",
+    "entitlements": {
+      "pro": {
+        "expires_date": "2026-01-17T12:00:00Z",
+        "grace_period_expires_date": null,
+        "product_identifier": "yearly_pro",
+        "purchase_date": "2025-01-17T12:00:00Z"
+      }
+    },
+    "subscriber_attributes": {
+      "$email": {
+        "value": "user@example.com",
+        "updated_at_ms": 1737115200000
+      }
+    },
+    "event_timestamp_ms": 1737115200000,
+    "price": 99.99,
+    "currency": "USD",
+    "is_trial_conversion": false,
+    "takehome_percentage": 0.85
+  }
+}
+```
+
+**Extract:**
+
+- User: `event.app_user_id` → `"user_123"`
+- Email: `event.subscriber_attributes.$email.value` → `"user@example.com"`
+- Entitlements: `event.entitlements` → `{ "pro": {...} }`
+- Active: Check if `entitlements.pro.expires_date` \> now
+- Product: `event.product_id` → `"yearly_pro"`
+
+### Sample: Renewal
+
+```json
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "renewal-event-123",
+    "type": "RENEWAL",
+    "app_user_id": "user_123",
+    "product_id": "yearly_pro",
+    "period_type": "normal",
+    "purchased_at_ms": 1768651200000,
+    "expiration_at_ms": 1800187200000,
+    "environment": "PRODUCTION",
+    "store": "app_store",
+    "entitlements": {
+      "pro": {
+        "expires_date": "2027-01-17T12:00:00Z",
+        "product_identifier": "yearly_pro",
+        "purchase_date": "2026-01-17T12:00:00Z"
+      }
+    },
+    "event_timestamp_ms": 1768651200000,
+    "price": 99.99,
+    "currency": "USD"
+  }
+}
+```
+
+**Action:** Update `expires_at` to new date, keep entitlements active.
+
+### Sample: Cancellation
+
+```json
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "cancel-event-123",
+    "type": "CANCELLATION",
+    "app_user_id": "user_123",
+    "product_id": "yearly_pro",
+    "expiration_at_ms": 1768651200000,
+    "environment": "PRODUCTION",
+    "store": "app_store",
+    "entitlements": {
+      "pro": {
+        "expires_date": "2026-01-17T12:00:00Z",
+        "product_identifier": "yearly_pro",
+        "purchase_date": "2025-01-17T12:00:00Z"
+      }
+    },
+    "cancellation_reason": "UNSUBSCRIBE",
+    "event_timestamp_ms": 1737202800000
+  }
+}
+```
+
+**Important:**
+
+- Entitlements STILL ACTIVE until `expires_date`
+- Update status to "cancelled"
+- Schedule access removal at `expiration_at_ms`
+
+### Sample: Expiration
+
+```json
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "expire-event-123",
+    "type": "EXPIRATION",
+    "app_user_id": "user_123",
+    "product_id": "yearly_pro",
+    "expiration_at_ms": 1768651200000,
+    "environment": "PRODUCTION",
+    "store": "app_store",
+    "entitlements": {},
+    "expiration_reason": "UNSUBSCRIBE",
+    "event_timestamp_ms": 1768651200000
+  }
+}
+```
+
+**Action:** Remove all access - `entitlements` is now empty `{}`
+
+### Sample: Billing Issue
+
+```json
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "billing-event-123",
+    "type": "BILLING_ISSUE",
+    "app_user_id": "user_123",
+    "product_id": "yearly_pro",
+    "expiration_at_ms": 1768651200000,
+    "environment": "PRODUCTION",
+    "store": "app_store",
+    "entitlements": {
+      "pro": {
+        "expires_date": "2026-01-17T12:00:00Z",
+        "grace_period_expires_date": "2026-01-24T12:00:00Z",
+        "product_identifier": "yearly_pro",
+        "purchase_date": "2025-01-17T12:00:00Z"
+      }
+    },
+    "grace_period_expires_at_ms": 1769256000000,
+    "event_timestamp_ms": 1768651200000
+  }
+}
+```
+
+**Action:**
+
+- Entitlements STILL ACTIVE during grace period
+- Flag account with billing issue
+- Access expires at `grace_period_expires_date` if not resolved
+
+### Sample: Product Change
+
+```json
+{
+  "api_version": "1.0",
+  "event": {
+    "id": "product-change-123",
+    "type": "PRODUCT_CHANGE",
+    "app_user_id": "user_123",
+    "product_id": "monthly_pro",
+    "new_product_id": "yearly_pro",
+    "expiration_at_ms": 1800187200000,
+    "environment": "PRODUCTION",
+    "store": "app_store",
+    "entitlements": {
+      "pro": {
+        "expires_date": "2027-01-17T12:00:00Z",
+        "product_identifier": "yearly_pro",
+        "purchase_date": "2026-01-17T12:00:00Z"
+      }
+    },
+    "event_timestamp_ms": 1768651200000
+  }
+}
+```
+
+**Action:**
+
+- Update `product_id` to `new_product_id`
+- Entitlements remain active
+- Update expiration date
+
+### Entitlement Extraction Code
+
+```json
+// Extract entitlements from any webhook event
+function extractEntitlementsFromEvent(event) {
+  const entitlements = event.entitlements || {};
+  const activeEntitlements = {};
+  
+  Object.keys(entitlements).forEach(entitlementId => {
+    const ent = entitlements[entitlementId];
+    
+    // Check if still active
+    const expiresDate = ent.expires_date;
+    const isActive = !expiresDate || new Date(expiresDate) > new Date();
+    
+    if (isActive) {
+      activeEntitlements[entitlementId] = {
+        entitlement_id: entitlementId,
+        product_id: ent.product_identifier,
+        expires_at: expiresDate,
+        purchase_date: ent.purchase_date,
+        grace_period_expires_at: ent.grace_period_expires_date
+      };
+    }
+  });
+  
+  return activeEntitlements;
+}
+
+// Usage in webhook handler
+const activeEntitlements = extractEntitlementsFromEvent(event.event);
+const hasAccess = Object.keys(activeEntitlements).length > 0;
+
+// Store in database
+await db.query(`
+  UPDATE user_subscriptions 
+  SET 
+    entitlements = $1,
+    is_active = $2,
+    last_updated = NOW()
+  WHERE app_user_id = $3
+`, [
+  JSON.stringify(activeEntitlements),
+  hasAccess,
+  event.event.app_user_id
+]);
+```
+
+### Common Patterns
+
+**Check if user has specific entitlement:**
+
+```javascript
+function hasEntitlement(activeEntitlements, entitlementId) {
+  return activeEntitlements[entitlementId] !== undefined;
+}
+
+const hasPro = hasEntitlement(activeEntitlements, 'pro');
+```
+
+**Check if ANY entitlement is active:**
+
+```javascript
+const hasAnyAccess = Object.keys(activeEntitlements).length > 0;
+```
+
+**Get all active entitlement IDs:**
+
+```javascript
+const activeIds = Object.keys(activeEntitlements);
+// ["pro", "premium_features"]
+```
+
+**Get expiration dates:**
+
+```javascript
+const expirationDates = Object.values(activeEntitlements).map(ent => ({
+  id: ent.entitlement_id,
+  expires: ent.expires_at
+}));
+```
+
+---
+
+## Entitlement Sync Strategy
+
+### Why Sync is Critical
+
+Your database must stay synchronized with RevenueCat to provide accurate access control. Out-of-sync entitlements cause:
+
+- Users losing access they paid for (churn)
+- Users gaining unauthorized access (revenue loss)
+- Poor user experience
+- Support tickets
+
+### Three-Layer Sync Architecture
+
+```mermaid
+flowchart TD
+    RC[RevenueCat - Source of Truth<br/>• App Store / Play Store / Stripe<br/>• Handles refunds, renewals, cancellations]
+    
+    RC -->|Webhooks - Primary Sync<br/>INITIAL_PURCHASE<br/>RENEWAL<br/>CANCELLATION<br/>EXPIRATION<br/>etc.| DB
+    
+    DB[Your Database - Cached State]
+    
+    subgraph DB_Tables [" "]
+        T1[user_subscriptions<br/>• is_active<br/>• entitlements JSON<br/>• expires_at<br/>• product_id]
+        T2[user_entitlements<br/>• entitlement_id<br/>• expires_at<br/>• is_active<br/>• product_id]
+    end
+    
+    DB -.-> DB_Tables
+    
+    DB -->|API V2 - Backup Verification<br/>When:<br/>• Webhook missed<br/>• Near expiration<br/>• Billing issues<br/>• User-triggered check| APP
+    
+    APP[Your Application<br/>• Feature gates<br/>• Access control<br/>• UI rendering]
+    
+    style RC fill:#e1f5e1
+    style DB fill:#fff4e1
+    style APP fill:#e1f0ff
+    style T1 fill:#f0f0f0
+    style T2 fill:#f0f0f0
+    style DB_Tables fill:none,stroke:none
+```
+
+### Sync Flow Per Webhook
+
+**Every webhook event follows this flow:**
+
+```javascript
+// 1. Webhook arrives
+POST /webhooks/revenuecat
+{
+  "event": {
+    "type": "RENEWAL",
+    "app_user_id": "user_123",
+    "entitlements": {
+      "pro": {
+        "expires_date": "2026-01-17T12:00:00Z",
+        "product_identifier": "yearly_pro",
+        "purchase_date": "2025-01-17T12:00:00Z"
+      }
+    },
+    ...
+  }
+}
+
+// 2. Extract entitlements
+const entitlementData = extractEntitlementData(event);
+// Returns: {
+//   entitlements: { "pro": {...} },
+//   productId: "yearly_pro",
+//   expirationAtMs: 1768651200000,
+//   ...
+// }
+
+// 3. Sync to database (CRITICAL - happens for EVERY event)
+await syncEntitlementsToDatabase(appUserId, entitlementData, event);
+// Updates:
+// - user_subscriptions.entitlements = { "pro": {...} }
+// - user_subscriptions.is_active = true
+// - user_subscriptions.expires_at = "2026-01-17"
+// - user_entitlements rows
+
+// 4. Process event-specific logic
+switch(event.type) {
+  case 'RENEWAL':
+    // Send thank you email
+    // Update analytics
+    break;
+  ...
+}
+
+// 5. Return 200 OK to RevenueCat
+```
+
+### Handling Missed Webhooks
+
+Even with webhooks, you need backup verification:
+
+```javascript
+async function getUserAccess(userId) {
+  // 1. Check database (fast)
+  const dbStatus = await getUserEntitlements(userId);
+  
+  // 2. Determine if verification needed
+  const needsVerification = shouldVerifyWithRevenueCat({
+    expires_at: dbStatus.expires_at,
+    billing_issue: dbStatus.billing_issue,
+    last_updated: dbStatus.last_updated
+  });
+  
+  if (!needsVerification) {
+    return dbStatus; // Trust database
+  }
+  
+  // 3. Verify with RevenueCat V2 API
+  const rcData = await fetchCustomerDataV2(userId, projectId);
+  
+  // 4. Detect mismatch
+  const dbHasAccess = Object.keys(dbStatus.entitlements).length > 0;
+  const rcHasAccess = rcData?.active_entitlements?.items?.length > 0;
+  
+  if (dbHasAccess !== rcHasAccess) {
+    console.warn('Entitlement mismatch - syncing from RevenueCat');
+    
+    // 5. Sync database with source of truth
+    await syncDatabaseWithRevenueCat(userId, rcData);
+  }
+  
+  return {
+    entitlements: rcData.active_entitlements?.items || [],
+    source: 'revenuecat',
+    synced: true
+  };
+}
+```
+
+### Critical Sync Points
+
+**ALWAYS sync entitlements on these events:**
+
+| Event            | Database Update                     | Notes                     |
+| :--------------- | :---------------------------------- | :------------------------ |
+| INITIAL_PURCHASE | Add entitlements                    | Grant access immediately  |
+| RENEWAL          | Update expires_at                   | Extend access             |
+| CANCELLATION     | Keep entitlements, set cancelled_at | Access until expiration   |
+| EXPIRATION       | Clear entitlements                  | Remove access             |
+| BILLING_ISSUE    | Keep entitlements, set grace period | Access during grace       |
+| PRODUCT_CHANGE   | Update entitlements & product_id    | May change access level   |
+| REFUND           | Clear entitlements                  | Revoke access immediately |
+| REFUND_REVERSED  | Restore entitlements                | Re-grant access           |
+
+### Example: Cancellation Sync
+
+```javascript
+// Webhook: CANCELLATION
+{
+  "type": "CANCELLATION",
+  "app_user_id": "user_123",
+  "entitlements": {
+    "pro": {
+      "expires_date": "2026-01-17T12:00:00Z", // STILL ACTIVE
+      "product_identifier": "yearly_pro"
+    }
+  },
+  "expiration_at_ms": 1768651200000
+}
+
+// Database update
+await db.query(`
+  UPDATE user_subscriptions SET
+    subscription_status = 'cancelled',
+    cancelled_at = NOW(),
+    auto_renew = false,
+    entitlements = $1,  -- KEEP entitlements (still has access)
+    expires_at = $2,    -- Access until this date
+    last_updated = NOW()
+  WHERE app_user_id = $3
+`, [
+  JSON.stringify({ "pro": {...} }), // Entitlements still active
+  new Date(1768651200000),          // Expiration date
+  "user_123"
+]);
+
+// User still has access until expiration_at
+// On expiration date, EXPIRATION webhook will:
+// - Clear entitlements: {}
+// - Set is_active = false
+```
+
+### Example: Expiration Sync
+
+```javascript
+// Webhook: EXPIRATION
+{
+  "type": "EXPIRATION",
+  "app_user_id": "user_123",
+  "entitlements": {},  // EMPTY - no more access
+  "expiration_reason": "UNSUBSCRIBE"
+}
+
+// Database update
+await db.query(`
+  UPDATE user_subscriptions SET
+    subscription_status = 'expired',
+    is_active = false,
+    entitlements = '{}',  -- Clear entitlements
+    auto_renew = false,
+    last_updated = NOW()
+  WHERE app_user_id = $1
+`, ["user_123"]);
+
+// Also deactivate in normalized table
+await db.query(`
+  UPDATE user_entitlements SET
+    is_active = false,
+    updated_at = NOW()
+  WHERE app_user_id = $1
+`, ["user_123"]);
+
+// User loses access immediately
+```
+
+### Sync Verification Schedule
+
+**When to verify with RevenueCat API:**
+
+```javascript
+function shouldVerifyWithRevenueCat(dbStatus) {
+  if (!dbStatus) return true; // No data
+  
+  // 1. Expires within 24 hours
+  if (dbStatus.expires_at) {
+    const hoursUntilExpiry = 
+      (new Date(dbStatus.expires_at) - new Date()) / (1000 * 60 * 60);
+    if (hoursUntilExpiry < 24 && hoursUntilExpiry > 0) {
+      return true; // Verify near expiration
+    }
+  }
+  
+  // 2. Billing issue active
+  if (dbStatus.billing_issue) {
+    return true; // May have been resolved
+  }
+  
+  // 3. Recently cancelled (within 48 hours)
+  if (dbStatus.cancelled_at) {
+    const hoursSinceCancel = 
+      (new Date() - new Date(dbStatus.cancelled_at)) / (1000 * 60 * 60);
+    if (hoursSinceCancel < 48) {
+      return true; // User might uncancelled
+    }
+  }
+  
+  // 4. Cache stale (> 1 hour old)
+  if (dbStatus.last_updated) {
+    const hoursSinceUpdate = 
+      (new Date() - new Date(dbStatus.last_updated)) / (1000 * 60 * 60);
+    if (hoursSinceUpdate > 1) {
+      return true; // Refresh stale cache
+    }
+  }
+  
+  return false; // Trust database
+}
+```
+
+### Monitoring Sync Health
+
+Track sync issues in your application:
+
+```javascript
+// Track when database and RevenueCat disagree
+async function logSyncDiscrepancy(userId, dbStatus, rcStatus) {
+  await db.query(`
+    INSERT INTO sync_discrepancies (
+      app_user_id,
+      db_is_active,
+      rc_is_active,
+      db_entitlements,
+      rc_entitlements,
+      detected_at
+    ) VALUES ($1, $2, $3, $4, $5, NOW())
+  `, [
+    userId,
+    dbStatus.is_active,
+    rcStatus.active_entitlements?.items?.length > 0,
+    JSON.stringify(dbStatus.entitlements),
+    JSON.stringify(rcStatus.active_entitlements?.items)
+  ]);
+}
+
+// Alert on frequent discrepancies
+const discrepancyRate = await db.query(`
+  SELECT COUNT(*) as count
+  FROM sync_discrepancies
+  WHERE detected_at > NOW() - INTERVAL '1 hour'
+`);
+
+if (discrepancyRate.rows[0].count > 10) {
+  // Send alert - webhooks may be failing
+  await sendAlert('High entitlement sync discrepancy rate');
+}
+```
+
+---
+
+## Working with Entitlements
+
+### Understanding Entitlements vs Products
+
+**Product ID** = What the user purchased (e.g., "monthly_pro", "yearly_premium")\
+**Entitlement ID** = What access they have (e.g., "pro", "premium_features")
+
+One product can grant multiple entitlements. Multiple products can grant the same entitlement.
+
+```javascript
+// Example: Both products grant the same "pro" entitlement
+{
+  "monthly_pro": { entitlements: ["pro"] },
+  "yearly_pro": { entitlements: ["pro"] }
+}
+```
+
+### Check User Access
+
+```javascript
+// Method 1: Check database (fast)
+async function checkUserAccess(userId, requiredEntitlement) {
+  const result = await db.query(`
+    SELECT 1 FROM user_entitlements
+    WHERE app_user_id = $1 
+      AND entitlement_id = $2
+      AND is_active = true
+      AND (expires_at IS NULL OR expires_at > NOW())
+  `, [userId, requiredEntitlement]);
+  
+  return result.rows.length > 0;
+}
+
+// Method 2: Check RevenueCat API (authoritative)
+async function checkUserAccessFromRC(userId, projectId, requiredEntitlement) {
+  const rcData = await fetchCustomerDataV2(userId, projectId);
+  
+  if (!rcData?.active_entitlements?.items) {
+    return false;
+  }
+  
+  return rcData.active_entitlements.items.some(ent => 
+    ent.entitlement_id === requiredEntitlement &&
+    new Date(ent.expires_at) > new Date()
+  );
+}
+
+// Method 3: Combined (self-healing)
+async function checkUserAccessSafe(userId, projectId, requiredEntitlement) {
+  // Check database first
+  const hasAccessDB = await checkUserAccess(userId, requiredEntitlement);
+  
+  // If database says no access, verify with RevenueCat
+  if (!hasAccessDB) {
+    return await checkUserAccessFromRC(userId, projectId, requiredEntitlement);
+  }
+  
+  return true;
+}
+```
+
+### Middleware for Route Protection
+
+```javascript
+// Express middleware
+function requireEntitlement(entitlementId) {
+  return async (req, res, next) => {
+    const userId = req.user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Not authenticated' });
+    }
+    
+    const hasAccess = await userHasEntitlement(userId, entitlementId);
+    
+    if (!hasAccess) {
+      return res.status(403).json({ 
+        error: 'Access denied',
+        required_entitlement: entitlementId 
+      });
+    }
+    
+    next();
+  };
+}
+
+// Usage
+app.get('/api/premium-feature', 
+  requireEntitlement('pro'), 
+  handlePremiumFeature
+);
+```
+
+### Frontend Entitlement Check
+
+```javascript
+// API endpoint for frontend
+app.get('/api/my-entitlements', async (req, res) => {
+  const userId = req.user.id;
+  
+  // Get from database
+  const entitlements = await getUserEntitlements(userId);
+  
+  // Return entitlement list
+  return res.json({
+    entitlements: Object.keys(entitlements),
+    details: entitlements
+  });
+});
+
+// Frontend usage (React example)
+function useEntitlements() {
+  const [entitlements, setEntitlements] = useState([]);
+  
+  useEffect(() => {
+    fetch('/api/my-entitlements')
+      .then(res => res.json())
+      .then(data => setEntitlements(data.entitlements));
+  }, []);
+  
+  const hasAccess = (entitlementId) => {
+    return entitlements.includes(entitlementId);
+  };
+  
+  return { entitlements, hasAccess };
+}
+
+// Component
+function PremiumFeature() {
+  const { hasAccess } = useEntitlements();
+  
+  if (!hasAccess('pro')) {
+    return <UpgradePrompt />;
+  }
+  
+  return <PremiumContent />;
+}
+```
+
+### Entitlement-Based Feature Flags
+
+```javascript
+const FEATURES = {
+  'advanced_analytics': ['pro', 'enterprise'],
+  'api_access': ['enterprise'],
+  'unlimited_exports': ['pro', 'enterprise'],
+  'priority_support': ['enterprise']
+};
+
+function userCanAccessFeature(userEntitlements, featureId) {
+  const requiredEntitlements = FEATURES[featureId];
+  
+  if (!requiredEntitlements) {
+    return true; // Feature not gated
+  }
+  
+  return requiredEntitlements.some(entId => 
+    userEntitlements.includes(entId)
+  );
+}
+
+// Usage
+const userEntitlements = ['pro'];
+const canExport = userCanAccessFeature(userEntitlements, 'unlimited_exports'); // true
+const hasAPI = userCanAccessFeature(userEntitlements, 'api_access'); // false
+```
+
+### Sync Entitlements After Webhook
+
+```javascript
+async function handleInitialPurchase(data) {
+  const { appUserId, activeEntitlements, event } = data;
+  
+  // 1. Sync to user_subscriptions (JSONB column)
+  await syncEntitlementsToDatabase(appUserId, activeEntitlements, event);
+  
+  // 2. Sync to user_entitlements (normalized table)
+  await syncEntitlementsToNormalizedTable(appUserId, activeEntitlements, event);
+  
+  // 3. Grant access in your app
+  const entitlementIds = Object.keys(activeEntitlements);
+  await grantFeatureAccess(appUserId, entitlementIds);
+  
+  // 4. Send confirmation email
+  if (data.externalUserId) {
+    await sendWelcomeEmail(data.externalUserId, entitlementIds);
+  }
+  
+  console.log(`Granted entitlements to ${appUserId}:`, entitlementIds);
+}
+```
+
+### Query Active Users by Entitlement
+
+```javascript
+// Get all users with specific entitlement
+async function getUsersWithEntitlement(entitlementId) {
+  const result = await db.query(`
+    SELECT 
+      u.app_user_id,
+      u.email,
+      e.expires_at
+    FROM user_subscriptions u
+    JOIN user_entitlements e ON u.app_user_id = e.app_user_id
+    WHERE e.entitlement_id = $1
+      AND e.is_active = true
+      AND (e.expires_at IS NULL OR e.expires_at > NOW())
+    ORDER BY e.expires_at DESC
+  `, [entitlementId]);
+  
+  return result.rows;
+}
+
+// Get users expiring soon
+async function getUsersExpiringSoon(entitlementId, daysUntilExpiry = 7) {
+  const result = await db.query(`
+    SELECT 
+      u.app_user_id,
+      u.email,
+      e.expires_at,
+      EXTRACT(DAY FROM (e.expires_at - NOW())) as days_until_expiry
+    FROM user_subscriptions u
+    JOIN user_entitlements e ON u.app_user_id = e.app_user_id
+    WHERE e.entitlement_id = $1
+      AND e.is_active = true
+      AND e.expires_at > NOW()
+      AND e.expires_at < NOW() + INTERVAL '1 day' * $2
+    ORDER BY e.expires_at ASC
+  `, [entitlementId, daysUntilExpiry]);
+  
+  return result.rows;
+}
+```
+
+### Analytics and Reporting
+
+```javascript
+// Get entitlement breakdown
+async function getEntitlementStats() {
+  const result = await db.query(`
+    SELECT 
+      entitlement_id,
+      COUNT(DISTINCT app_user_id) as user_count,
+      COUNT(DISTINCT CASE WHEN environment = 'PRODUCTION' THEN app_user_id END) as production_users,
+      COUNT(DISTINCT CASE WHEN environment = 'SANDBOX' THEN app_user_id END) as sandbox_users
+    FROM user_entitlements
+    WHERE is_active = true
+      AND (expires_at IS NULL OR expires_at > NOW())
+    GROUP BY entitlement_id
+    ORDER BY user_count DESC
+  `);
+  
+  return result.rows;
+}
+
+// Get subscription revenue metrics
+async function getSubscriptionMetrics() {
+  const result = await db.query(`
+    SELECT 
+      product_id,
+      COUNT(*) as active_subscriptions,
+      COUNT(CASE WHEN billing_issue = true THEN 1 END) as billing_issues,
+      COUNT(CASE WHEN subscription_status = 'cancelled' THEN 1 END) as cancelled,
+      AVG(EXTRACT(EPOCH FROM (expires_at - NOW())) / 86400) as avg_days_remaining
+    FROM user_subscriptions
+    WHERE is_active = true
+    GROUP BY product_id
+    ORDER BY active_subscriptions DESC
+  `);
+  
+  return result.rows;
+}
+```
+
+---
+
+## Additional Resources
+
+- [RevenueCat Webhooks Documentation](https://www.revenuecat.com/docs/integrations/webhooks)
+- [Event Types Reference](https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields)
+- [REST API Documentation (V1)](https://www.revenuecat.com/docs/api-v1)
+- [REST API Documentation (V2)](https://www.revenuecat.com/docs/api-v2)

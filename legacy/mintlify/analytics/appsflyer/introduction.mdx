@@ -1,0 +1,162 @@
+---
+title: "Introduction"
+description: "Native AppsFlyer attribution, deep linking, events, identity, consent, and ad revenue, fully managed by Despia and controlled from your web layer."
+icon: "circle-info"
+---
+
+Despia embeds the native AppsFlyer SDK in your iOS and Android builds and manages its entire lifecycle for you: initialization at launch, session tracking on every foreground, attribution resolution, deep link handling, and local caching. Your web layer never touches the SDK directly. It reads injected variables and sends commands through the `appsflyer://` scheme.
+
+<Info>
+  Enable AppsFlyer for your app and add your AppsFlyer Dev Key (plus your Apple App ID on iOS) to your project configuration, then rebuild. No data flows until the SDK is enabled and the app is rebuilt.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Despia activates the native AppsFlyer SDK at app launch and starts a new session every time the app returns to the foreground. Attribution data is resolved natively, cached on the device, and injected into your web layer on every page load, with no setup, no requests, and no waiting:
+
+```javascript
+despia.appsFlyerAttribution  // full attribution object, null until first resolution
+despia.appsFlyerReferrer     // e.g. "tiktok_ad", "facebook_organic", "organic"
+despia.appsFlyerUID          // unique AppsFlyer device ID
+```
+
+Commands fired from your web layer using `despia("appsflyer://...")` are intercepted natively and forwarded to AppsFlyer in real time. AppsFlyer then postbacks to your connected partners (Meta, TikTok, Google) based on your dashboard configuration. Emails and phone numbers are hashed with SHA256 on the device before transmission, so raw PII never leaves the app.
+
+When a user arrives through a OneLink, an ad click or a creator's affiliate link, the native layer resolves it and delivers the click's metadata (the product, creator, invite code, or offer you attached to the link) to your web app through the `window.onAppsFlyerDeepLink` callback. This works even for a brand-new user who installs from the store first: AppsFlyer stores the click server-side and delivers it on that first launch (deferred deep linking). Your app reads the payload and decides what to do with it, redirect, fetch, or render the right content in place. Put anything a fresh install must receive into `deep_link_sub1` through `deep_link_sub10`, the fields AppsFlyer guarantees on deferred resolution.
+
+<Info>
+  On iOS, the AppsFlyer SDK waits up to 60 seconds for the App Tracking Transparency prompt to be answered before finalizing install attribution. This is handled automatically.
+</Info>
+
+---
+
+## Feature map
+
+<CardGroup cols={2}>
+  <Card title="Attribution" icon="bullseye-arrow" href="/analytics/appsflyer/attribution">
+    Read where every user came from, TikTok, Meta, Google, affiliate, or organic, through injected variables.
+  </Card>
+
+  <Card title="Deep Linking" icon="link" href="/analytics/appsflyer/deeplinking">
+    Receive OneLink payloads (direct and deferred) through a callback and open the right content in your app.
+  </Card>
+
+  <Card title="Events" icon="bolt" href="/analytics/appsflyer/events">
+    Log standard and custom in-app events back to AppsFlyer, Meta, and TikTok.
+  </Card>
+
+  <Card title="Campaigns" icon="rectangle-ad" href="/analytics/appsflyer/campaigns">
+    Connect Meta and TikTok as integrated partners and measure which campaigns drive the most valuable users.
+  </Card>
+
+  <Card title="Ad Revenue" icon="chart-line" href="/analytics/appsflyer/ad-revenue">
+    Report impression-level ad revenue per network for LTV and ROAS reporting.
+  </Card>
+
+  <Card title="User Identity" icon="fingerprint" href="/analytics/appsflyer/identity">
+    Set your customer user ID, pass hashed email and phone, and read the AppsFlyer UID.
+  </Card>
+
+  <Card title="Consent" icon="shield-check" href="/analytics/appsflyer/consent">
+    Forward GDPR and DMA consent choices from your cookie banner to the native SDK.
+  </Card>
+
+  <Card title="Testing" icon="flask" href="/analytics/appsflyer/testing">
+    Verify installs, events, and user IDs end to end before going live.
+  </Card>
+</CardGroup>
+
+---
+
+## Quick start
+
+<Steps>
+  <Step title="Enable AppsFlyer for your app">
+    Add your AppsFlyer Dev Key (and Apple App ID on iOS) to your project configuration and rebuild. The SDK, session tracking, and attribution injection activate automatically.
+  </Step>
+  <Step title="Read the referrer">
+    ```javascript
+    if (despia.appsFlyerReferrer === "tiktok_ad") {
+        showTikTokWelcome()
+    }
+    ```
+  </Step>
+  <Step title="Identify the user at login">
+    ```javascript
+    despia("appsflyer://set_user_id?customer_user_id=" + encodeURIComponent(userId))
+    ```
+  </Step>
+  <Step title="Log your first event">
+    ```javascript
+    despia("appsflyer://log_event?event_name=af_login&event_values=" + encodeURIComponent("{}"))
+    ```
+  </Step>
+  <Step title="Handle deep links">
+    Define the callback early, before your bundle loads, and open the right content from the payload.
+
+    ```javascript
+    window.onAppsFlyerDeepLink = (payload) => {
+        if (payload.deep_link_value) openContent(payload.deep_link_value, payload.deep_link_sub1)
+    }
+    ```
+  </Step>
+</Steps>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

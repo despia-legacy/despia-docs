@@ -1,0 +1,78 @@
+---
+title: "Share Dialog"
+description: "Enable native social sharing capabilities with customizable message and URL parameters through your Lovable mobile app using the Despia SDK."
+icon: "share-from-square"
+---
+
+<iframe src="https://www.youtube.com/embed/P1pMZvdu89s" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add social sharing functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a social sharing system that uses Despia URLs like: `` despia(`shareapp://message?=${message}&url=${url}`) `` where message contains the text content to share and url contains the link to share, triggering the device's native share dialog with pre-populated content.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and native mobile sharing systems. When users tap a share button, Despia opens the device's native share dialog with pre-populated message content and URL, allowing users to share content through any app installed on their device, including social media platforms, messaging apps, email clients, and other sharing-enabled applications.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Execute Social Share Dialog**
+
+Call the `despia()` function with a Social Share Command:
+
+```javascript
+despia(`shareapp://message?=${message}&url=${url}`);
+```
+
+### **Share Parameters**
+
+Social share URLs must include proper parameters:
+
+- **message:** Text content to include in the share dialog
+- **url:** The URL/link to share alongside the message
+
+### **Platform Support**
+
+Supports all sharing platforms including:
+
+- Social Media (Facebook, Twitter, Instagram, LinkedIn)
+- Messaging Apps (WhatsApp, Telegram, iMessage, SMS)
+- Email Clients (Gmail, Outlook, Apple Mail)
+- Cloud Storage (Google Drive, Dropbox, iCloud)
+- Clipboard and System Share
+- Note-taking Apps (Evernote, OneNote, Apple Notes)
+- And any other sharing-enabled application
+
+## **Resources**
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+### **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native file sharing capabilities into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

@@ -1,0 +1,98 @@
+---
+title: "Versioning"
+description: "Set your app's public version number and raise it in fixed increments before every store submission."
+icon: "code-branch"
+---
+
+Every binary you send to the App Store or Google Play carries a version number that identifies the release to reviewers and to users on their devices. Versioning is where you set that number and raise it, so each submission sits above the one before it. Both stores reject a build whose version matches or falls below a version they have already seen, which makes this the setting most likely to block a release that is otherwise ready.
+
+<Warning>
+  Version numbers only move forward. Once you raise the version, the previous number is permanently spent for that app on both stores, and there is no way to go back to it. Raise it when you are marking a real release, not while you are testing builds.
+</Warning>
+
+---
+
+## The version format
+
+**Current App Version** holds three numeric segments separated by dots, the `x.x.x` pattern required by Apple's and Google's store guidelines. A value like `1.0.0` is valid. Values with fewer or more segments, letters, or suffixes such as `1.2.0-beta` are not.
+
+The number is public. It appears on your store listing, in your release history, and in crash reports, so treat it as something users and reviewers read rather than an internal counter.
+
+---
+
+## Raising the version
+
+**Build Version Update** offers three increments. Each one raises a different segment and resets everything to its right.
+
+| Button | Segment raised | `1.0.0` becomes |
+| :-- | :-- | :-- |
+| Big | First | `2.0.0` |
+| Medium | Second | `1.1.0` |
+| Small | Third | `1.0.1` |
+
+Which one you press is a product decision, not a technical one. Neither store inspects the size of the jump, and neither rewards a large one. Big suits a release users will notice, a redesign or a new core flow. Medium suits added functionality on top of what already shipped. Small suits fixes and copy changes.
+
+The only hard requirement is direction. Any of the three satisfies both stores, as long as the result is higher than the last version they accepted.
+
+---
+
+## Submitting an update
+
+A version bump belongs at the start of a release, before the build runs, because the number is stamped into the binary at build time.
+
+<Steps>
+  <Step title="Check what the store already has">
+    Open App Store Connect or the Play Console and note the version of your most recent submission, including any build sitting in review or rejected.
+  </Step>
+  <Step title="Raise the version">
+    Press Big, Medium, or Small until Current App Version reads higher than that number.
+  </Step>
+  <Step title="Rebuild">
+    Trigger a fresh native build. The new version is written into the binary during this build and nowhere else.
+  </Step>
+  <Step title="Upload and submit">
+    Send the new binary to the store and submit for review.
+  </Step>
+</Steps>
+
+<Warning>
+  Changing the version without rebuilding does nothing. The binary you already have still carries the old number, and uploading it produces a store-side rejection for a duplicate or lowered version even though the Editor shows the new value. Always rebuild after a bump.
+</Warning>
+
+---
+
+## Importing an app that already exists on the stores
+
+When you move an app to Despia that already has a listing, your Despia version has to clear every version the stores have seen for that app, not just the one currently live. A build sitting in review holds its version, and a rejected build holds its version too. Neither number can be reused.
+
+Take the highest of these three and set Current App Version above it:
+
+- the version currently live on the store
+- the version of any build waiting in review
+- the version of any build the store rejected
+
+So if `4.2.0` is live, `4.3.0` is in review, and `4.4.0` was rejected last week, your first Despia submission has to be higher than `4.4.0`. Pressing Medium from `4.4.0` gives you `4.5.0`, which clears all three.
+
+Set the version to match your real release history before your first Despia build rather than after a rejection. A build blocked on version number burns a review cycle and, on iOS, that can cost a day or more of waiting for nothing.
+
+---
+
+## Recovering from a rejection
+
+A rejected build does not release its version number back to you. If Apple or Google rejects `4.5.0`, the fix goes out as `4.5.1` or higher, never as another `4.5.0`.
+
+This applies to rejections of every kind, including ones that had nothing to do with your code, such as a metadata or privacy declaration problem. Raise the version, rebuild, and resubmit.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

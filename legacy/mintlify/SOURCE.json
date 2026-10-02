@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/despia-native/docs",
+  "ref": "origin/main",
+  "commit": "baa4c059cd2d97bb29fc22e79a3499bce9cf3b72",
+  "committedAt": "2026-09-03T15:36:13+04:00",
+  "served": "https://setup.despia.com (Mintlify)",
+  "note": "Read-only snapshot of the v3 docs. scripts/port-legacy.mjs ports it to content/legacy; edit there only to fix a port, never to change v3 facts."
+}

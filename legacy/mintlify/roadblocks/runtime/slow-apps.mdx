@@ -1,0 +1,766 @@
+---
+title: "Slow Apps"
+icon: "wave-pulse"
+description: "Your Despia app feels sluggish. Here's how to fix it."
+---
+
+<Danger>
+  **Important:** Despia runs on WKWebView (iOS) and Android WebView with optimized caching and performance tuning. If your Despia app is slow, your web app is likely slow too. These are deeper web performance issues, not Despia-specific problems.
+</Danger>
+
+## First: Profile your app
+
+Before fixing anything, measure the problem.
+
+**Chrome DevTools (for web version):**
+
+1. Open your app in Chrome
+2. Open DevTools (F12)
+3. Go to Performance tab
+4. Click Record, interact with your app, click Stop
+5. Look for:
+   - Long tasks (yellow bars \> 50ms)
+   - Layout thrashing (purple bars)
+   - Memory spikes (Memory tab)
+
+**React DevTools Profiler:**
+
+If using React:
+
+1. Install React DevTools extension
+2. Go to Profiler tab
+3. Click Record, interact, Stop
+4. Look for components rendering too often
+
+**The app is only as fast as your slowest part.** Find it first.
+
+---
+
+## Memory leaks
+
+The most common cause of slow apps over time.
+
+### Symptoms
+
+- App gets slower the longer it runs
+- Memory usage keeps increasing
+- Crashes after extended use
+- Laggy scrolling that gets worse
+
+### Common causes
+
+**Event listeners not cleaned up:**
+
+```javascript
+// WRONG - leak
+useEffect(() => {
+  window.addEventListener('resize', handleResize);
+  // Missing cleanup!
+}, []);
+
+// RIGHT - cleaned up
+useEffect(() => {
+  window.addEventListener('resize', handleResize);
+  return () => window.removeEventListener('resize', handleResize);
+}, []);
+```
+
+**Timers not cleared:**
+
+```javascript
+// WRONG - leak
+useEffect(() => {
+  const interval = setInterval(() => {
+    updateData();
+  }, 1000);
+  // Missing cleanup!
+}, []);
+
+// RIGHT - cleaned up
+useEffect(() => {
+  const interval = setInterval(() => {
+    updateData();
+  }, 1000);
+  return () => clearInterval(interval);
+}, []);
+```
+
+**Closures holding references:**
+
+```javascript
+// WRONG - holds reference to entire component
+const handleClick = () => {
+  setTimeout(() => {
+    console.log(data); // Holds reference to data
+  }, 10000);
+};
+
+// RIGHT - only hold what you need
+const handleClick = () => {
+  const dataCopy = data.id; // Just the ID
+  setTimeout(() => {
+    console.log(dataCopy);
+  }, 10000);
+};
+```
+
+**DOM nodes not garbage collected:**
+
+```javascript
+// WRONG - holds reference
+const elementRef = useRef(null);
+
+useEffect(() => {
+  const el = document.getElementById('something');
+  elementRef.current = el; // Keeps DOM node in memory
+}, []);
+
+// RIGHT - clean up
+useEffect(() => {
+  const el = document.getElementById('something');
+  // Use it
+  return () => {
+    elementRef.current = null; // Release reference
+  };
+}, []);
+```
+
+### How to find leaks
+
+**Chrome DevTools Memory tab:**
+
+1. Take heap snapshot
+2. Interact with your app
+3. Take another snapshot
+4. Compare snapshots
+5. Look for objects that keep growing
+
+**Check for detached DOM nodes:**
+
+In Memory snapshot, filter for "Detached". If you see hundreds/thousands, you have a leak.
+
+---
+
+## Too many re-renders
+
+React/Vue apps rendering unnecessarily.
+
+### Symptoms
+
+- UI feels laggy during interactions
+- Input fields lag when typing
+- Scrolling stutters
+- DevTools shows many renders
+
+### Common causes
+
+**State in wrong place:**
+
+```javascript
+// WRONG - causes entire list to re-render on scroll
+function List() {
+  const [scrollPos, setScrollPos] = useState(0);
+  
+  return (
+    <div onScroll={(e) => setScrollPos(e.target.scrollTop)}>
+      {items.map(item => <Item key={item.id} item={item} />)}
+    </div>
+  );
+}
+
+// RIGHT - scroll state separate from list
+function List() {
+  return (
+    <div>
+      <ScrollTracker />
+      {items.map(item => <Item key={item.id} item={item} />)}
+    </div>
+  );
+}
+
+function ScrollTracker() {
+  const [scrollPos, setScrollPos] = useState(0);
+  // Only this component re-renders
+}
+```
+
+**Missing React.memo:**
+
+```javascript
+// WRONG - re-renders every time parent renders
+function ListItem({ item }) {
+  return <div>{item.name}</div>;
+}
+
+// RIGHT - only re-renders when item changes
+const ListItem = React.memo(({ item }) => {
+  return <div>{item.name}</div>;
+});
+```
+
+**Not using useMemo for expensive computations:**
+
+```javascript
+// WRONG - recalculates every render
+function Component({ items }) {
+  const sortedItems = items.sort((a, b) => a.value - b.value);
+  return <>{sortedItems.map(...)}</>;
+}
+
+// RIGHT - only recalculates when items change
+function Component({ items }) {
+  const sortedItems = useMemo(
+    () => items.sort((a, b) => a.value - b.value),
+    [items]
+  );
+  return <>{sortedItems.map(...)}</>;
+}
+```
+
+**Creating new objects/functions every render:**
+
+```javascript
+// WRONG - new object every render triggers child re-render
+function Parent() {
+  return <Child config={{ theme: 'dark' }} />;
+}
+
+// RIGHT - stable reference
+const config = { theme: 'dark' };
+function Parent() {
+  return <Child config={config} />;
+}
+
+// OR use useMemo
+function Parent() {
+  const config = useMemo(() => ({ theme: 'dark' }), []);
+  return <Child config={config} />;
+}
+```
+
+### How to find
+
+React DevTools Profiler shows which components render and why.
+
+---
+
+## Large bundle sizes
+
+App takes forever to load initially.
+
+### Symptoms
+
+- First load takes 5+ seconds
+- Large network transfer in DevTools
+- Slow on 3G/4G connections
+
+### Solutions
+
+**Code splitting:**
+
+```javascript
+// WRONG - loads everything upfront
+import Dashboard from './Dashboard';
+import Settings from './Settings';
+import Profile from './Profile';
+
+// RIGHT - lazy load routes
+const Dashboard = lazy(() => import('./Dashboard'));
+const Settings = lazy(() => import('./Settings'));
+const Profile = lazy(() => import('./Profile'));
+
+function App() {
+  return (
+    <Suspense fallback={<Loading />}>
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Profile />} />
+      </Routes>
+    </Suspense>
+  );
+}
+```
+
+**Tree shaking imports:**
+
+```javascript
+// WRONG - imports entire library
+import _ from 'lodash';
+import moment from 'moment';
+
+// RIGHT - import only what you need
+import debounce from 'lodash/debounce';
+import { format } from 'date-fns'; // Smaller than moment
+```
+
+**Check bundle size:**
+
+```
+# Vite
+npm run build
+# Check dist/ size
+
+# Webpack Bundle Analyzer
+npm install --save-dev webpack-bundle-analyzer
+```
+
+Look for:
+
+- Duplicate dependencies
+- Huge libraries you barely use
+- Unoptimized images in bundle
+
+---
+
+## Unoptimized images
+
+Images killing your app performance.
+
+### Symptoms
+
+- Slow scrolling in image-heavy lists
+- High memory usage
+- Long initial load times
+
+### Solutions
+
+**Lazy load images:**
+
+```tsx
+// Use native lazy loading
+<img src="photo.jpg" loading="lazy" alt="Photo" />
+
+// Or intersection observer for more control
+function LazyImage({ src, alt }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const imgRef = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setIsVisible(true);
+        observer.disconnect();
+      }
+    });
+
+    if (imgRef.current) {
+      observer.observe(imgRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <img
+      ref={imgRef}
+      src={isVisible ? src : placeholder}
+      alt={alt}
+    />
+  );
+}
+```
+
+**Optimize image sizes:**
+
+```tsx
+// WRONG - serving 4K image for thumbnail
+<img src="/photo-4k.jpg" style={{ width: 100, height: 100 }} />
+
+// RIGHT - serve appropriately sized image
+<img src="/photo-thumb-200.jpg" width={100} height={100} />
+
+// Even better - use srcset for responsive
+<img 
+  src="/photo-800.jpg"
+  srcSet="/photo-400.jpg 400w, /photo-800.jpg 800w, /photo-1200.jpg 1200w"
+  sizes="(max-width: 600px) 400px, (max-width: 1200px) 800px, 1200px"
+/>
+```
+
+**Use modern formats:**
+
+- WebP instead of JPEG/PNG (smaller file size)
+- AVIF if browser support allows (even smaller)
+
+---
+
+## Too many DOM nodes
+
+Rendering huge lists kills performance.
+
+### Symptoms
+
+- Scrolling through long lists is laggy
+- Initial render of list takes seconds
+- Memory usage spikes with large lists
+
+### Solution: Virtualization
+
+**Only render visible items:**
+
+```tsx
+// WRONG - renders all 10,000 items
+function List({ items }) {
+  return (
+    <div>
+      {items.map(item => <Item key={item.id} item={item} />)}
+    </div>
+  );
+}
+
+// RIGHT - only renders ~20 visible items
+import { FixedSizeList } from 'react-window';
+
+function List({ items }) {
+  return (
+    <FixedSizeList
+      height={600}
+      itemCount={items.length}
+      itemSize={80}
+      width="100%"
+    >
+      {({ index, style }) => (
+        <div style={style}>
+          <Item item={items[index]} />
+        </div>
+      )}
+    </FixedSizeList>
+  );
+}
+```
+
+**Libraries:**
+
+- `react-window` - Simple, lightweight
+- `react-virtualized` - More features, heavier
+- `@tanstack/virtual` - Framework agnostic
+
+---
+
+## Main thread blocking
+
+Heavy computations freezing the UI.
+
+### Symptoms
+
+- UI freezes during operations
+- Buttons don't respond immediately
+- Animations stutter during processing
+
+### Solutions
+
+**Debounce expensive operations:**
+
+```tsx
+// WRONG - runs on every keystroke
+function Search() {
+  const [query, setQuery] = useState('');
+  
+  const handleChange = (e) => {
+    setQuery(e.target.value);
+    searchAPI(e.target.value); // Expensive!
+  };
+  
+  return <input onChange={handleChange} />;
+}
+
+// RIGHT - debounced
+import debounce from 'lodash/debounce';
+
+function Search() {
+  const [query, setQuery] = useState('');
+  
+  const debouncedSearch = useMemo(
+    () => debounce((value) => searchAPI(value), 300),
+    []
+  );
+  
+  const handleChange = (e) => {
+    setQuery(e.target.value);
+    debouncedSearch(e.target.value);
+  };
+  
+  useEffect(() => {
+    return () => debouncedSearch.cancel();
+  }, []);
+  
+  return <input value={query} onChange={handleChange} />;
+}
+```
+
+**Use Web Workers for heavy processing:**
+
+```tsx
+// WRONG - blocks main thread
+function processData(data) {
+  const result = expensiveComputation(data); // Takes 2 seconds
+  setResult(result);
+}
+
+// RIGHT - use web worker
+// worker.js
+self.addEventListener('message', (e) => {
+  const result = expensiveComputation(e.data);
+  self.postMessage(result);
+});
+
+// Component
+const worker = new Worker('worker.js');
+
+function processData(data) {
+  worker.postMessage(data);
+}
+
+worker.addEventListener('message', (e) => {
+  setResult(e.data);
+});
+```
+
+**Break up long tasks:**
+
+```javascript
+// WRONG - processes all 10,000 items at once
+function processList(items) {
+  items.forEach(item => {
+    processItem(item); // UI frozen for seconds
+  });
+}
+
+// RIGHT - batch processing with yields
+async function processList(items) {
+  const batchSize = 100;
+  
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    batch.forEach(item => processItem(item));
+    
+    // Yield to browser
+    await new Promise(resolve => setTimeout(resolve, 0));
+  }
+}
+```
+
+---
+
+## CSS performance
+
+CSS causing reflows and repaints.
+
+### Symptoms
+
+- Scrolling feels janky
+- Animations stutter
+- Layout shifts during interactions
+
+### Common issues
+
+**Animating expensive properties:**
+
+```css
+/* WRONG - causes reflow */
+.box {
+  transition: width 0.3s, height 0.3s, top 0.3s, left 0.3s;
+}
+
+/* RIGHT - only transform and opacity (GPU accelerated) */
+.box {
+  transition: transform 0.3s, opacity 0.3s;
+}
+```
+
+**Forcing layout thrashing:**
+
+```javascript
+// WRONG - read, write, read, write (causes multiple reflows)
+function updateElements(elements) {
+  elements.forEach(el => {
+    const height = el.offsetHeight; // Read (reflow)
+    el.style.height = height + 10 + 'px'; // Write
+  });
+}
+
+// RIGHT - batch reads, then batch writes
+function updateElements(elements) {
+  // Batch reads
+  const heights = elements.map(el => el.offsetHeight);
+  
+  // Batch writes
+  elements.forEach((el, i) => {
+    el.style.height = heights[i] + 10 + 'px';
+  });
+}
+```
+
+**Complex selectors:**
+
+```css
+/* SLOW - deeply nested */
+.container .sidebar .menu ul li a span {
+  color: blue;
+}
+
+/* FAST - simple class */
+.menu-link-text {
+  color: blue;
+}
+```
+
+---
+
+## Network performance
+
+Too many requests or slow API calls.
+
+### Symptoms
+
+- Data takes forever to load
+- Multiple loading spinners
+- Network tab shows waterfall of requests
+
+### Solutions
+
+**Batch API requests:**
+
+```javascript
+// WRONG - sequential requests
+async function loadData() {
+  const user = await fetch('/api/user');
+  const posts = await fetch('/api/posts');
+  const comments = await fetch('/api/comments');
+}
+
+// RIGHT - parallel requests
+async function loadData() {
+  const [user, posts, comments] = await Promise.all([
+    fetch('/api/user'),
+    fetch('/api/posts'),
+    fetch('/api/comments')
+  ]);
+}
+```
+
+**Cache API responses:**
+
+```javascript
+// Simple cache
+const cache = new Map();
+
+async function fetchWithCache(url) {
+  if (cache.has(url)) {
+    return cache.get(url);
+  }
+  
+  const data = await fetch(url).then(r => r.json());
+  cache.set(url, data);
+  return data;
+}
+
+// Or use React Query or alternatives for automatic caching
+import { useQuery } from '@tanstack/react-query';
+
+function Component() {
+  const { data } = useQuery({
+    queryKey: ['user'],
+    queryFn: fetchUser,
+    staleTime: 5 * 60 * 1000 // Cache for 5 minutes
+  });
+}
+```
+
+**Prefetch critical data:**
+
+```tsx
+// Prefetch on hover
+function Link({ href, children }) {
+  const prefetch = () => {
+    fetch(href).then(r => r.json());
+  };
+  
+  return (
+    <a 
+      href={href} 
+      onMouseEnter={prefetch}
+      onTouchStart={prefetch}
+    >
+      {children}
+    </a>
+  );
+}
+```
+
+---
+
+## Production mistakes
+
+Common issues specific to production builds.
+
+**Console.log statements:**
+
+```javascript
+// WRONG - left in production
+console.log('User data:', userData);
+console.log('API response:', response);
+
+// These slow down the app, especially with large objects
+```
+
+Remove all console.log or use a logging library that can be disabled in production.
+
+**Development mode in production:**
+
+Check your build process isn't using development mode:
+
+```
+# Check if React is in dev mode
+# Look for "development" in bundle
+grep -r "development" dist/
+
+# Make sure NODE_ENV is production
+echo $NODE_ENV
+```
+
+**Source maps in production:**
+
+Source maps are huge and slow down loading. Don't ship them to users.
+
+```javascript
+// vite.config.js
+export default {
+  build: {
+    sourcemap: false // Disable for production
+  }
+}
+```
+
+---
+
+## Still slow?
+
+If you've tried everything and the app is still slow:
+
+1. **Profile in production build** - Dev builds are always slower
+2. **Test on real devices** - Desktop Chrome != iPhone
+3. **Check Despia runtime version** - Update to latest
+4. **Simplify the UI** - Maybe you're just trying to do too much
+
+**Get help:**
+
+- Profile your app and share results
+- Contact support: [support@despia.com](mailto:support@despia.com)
+- Include: Device, OS version, Despia runtime version
+
+---
+
+## Remember
+
+**Despia is fast. WebViews are fast. If your app is slow, it's probably:**
+
+1. Memory leaks (most common)
+2. Too many re-renders
+3. Unoptimized images
+4. Large bundle size
+5. Main thread blocking
+6. Poor network strategy
+
+Fix your web app first. Then it'll be fast in Despia too.

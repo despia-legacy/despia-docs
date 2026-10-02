@@ -1,0 +1,99 @@
+---
+title: "Print Documents"
+description: "Enable native printing capabilities in your Lovable mobile app, allowing users to print images and PDFs directly from their device using the device's built-in print system."
+icon: "print"
+---
+
+<iframe src="https://www.youtube.com/embed/EHa5lz6cyP4" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native printing functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a printing system that uses print URLs like: `despia("printitem://?jobName={PRINT-NAME}&printItem={CDN-FILE-URL}")` to open the native print dialog and allow users to print documents and images through their device's built-in printing system.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  **Important:** Served files via HTTPS must have proper content-type headers for optimal printing functionality.
+
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and native mobile printing systems. When users tap a print button, Despia opens the device's native print dialog with the specified document or image, allowing users to select their printer, adjust print settings (copies, page range, orientation), and send the job to any connected or nearby printer. Supports both images and PDF documents.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Execute Print Job
+
+Call the `despia()` function with a Print URL containing the required parameters:
+
+```javascript
+despia("printitem://?jobName=Shipping Label&printItem=https://example.com/cdn/label.pdf");
+```
+
+### URL Parameters
+
+- **jobName** (required): The name of the print job that will appear in the print dialog and printer queue
+- **printItem** (required): The HTTPS URL of the image or PDF file to print
+
+### Example Use Cases
+
+**Printing a PDF document:**
+
+```javascript
+despia("printitem://?jobName=Invoice #12345&printItem=https://cdn.example.com/invoices/12345.pdf");
+```
+
+**Printing an image:**
+
+```javascript
+despia("printitem://?jobName=Product Photo&printItem=https://cdn.example.com/images/product-001.jpg");
+```
+
+**Printing a shipping label:**
+
+```javascript
+despia("printitem://?jobName=Shipping Label&printItem=https://api.example.com/labels/generate?orderId=789");
+```
+
+## File Server Requirements
+
+Files served via HTTPS must have proper headers:
+
+- **Content-Type:** Appropriate MIME type for the file:
+  - PDF: `application/pdf`
+  - JPEG: `image/jpeg`
+  - PNG: `image/png`
+  - GIF: `image/gif`
+  - WebP: `image/webp`
+- **CORS Headers:** Ensure proper CORS configuration if files are hosted on a different domain
+- **HTTPS Required:** All print items must be served over HTTPS for security
+
+## Resources
+
+- [NPM Package](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native printing capabilities into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

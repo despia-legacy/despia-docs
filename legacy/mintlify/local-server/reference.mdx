@@ -1,0 +1,254 @@
+---
+title: "Reference"
+description: "Plugin installation, framework configuration, manifest schema, and troubleshooting for the Despia local server."
+icon: "code"
+---
+
+## Installation
+
+Add the `@despia/local` plugin to your build:
+
+```shellscript
+npm install --save-dev @despia/local
+```
+
+---
+
+## Framework integration
+
+<Tabs>
+  <Tab title="Vite">
+    Covers React, Vue, Svelte, Preact, and Lit projects using Vite.
+
+    ```javascript vite.config.js
+    import { defineConfig } from 'vite';
+    import { despiaLocalPlugin } from '@despia/local/vite';
+    
+    export default defineConfig({
+      plugins: [
+        despiaLocalPlugin({
+          outDir: 'dist',         // optional, default: 'dist'
+          entryHtml: 'index.html' // optional, default: 'index.html'
+        })
+      ]
+    });
+    ```
+  </Tab>
+  <Tab title="Webpack">
+    Covers Create React App, Vue CLI, and Angular projects using Webpack.
+
+    ```javascript webpack.config.js
+    const DespiaLocalPlugin = require('@despia/local/webpack');
+    
+    module.exports = {
+      plugins: [
+        new DespiaLocalPlugin({
+          outDir: 'dist',         // optional, default: 'dist'
+          entryHtml: 'index.html' // optional, default: 'index.html'
+        })
+      ]
+    };
+    ```
+  </Tab>
+  <Tab title="Rollup">
+    ```javascript rollup.config.js
+    import { despiaLocal } from '@despia/local/rollup';
+    
+    export default {
+      plugins: [
+        despiaLocal({
+          outDir: 'dist',
+          entryHtml: 'index.html'
+        })
+      ]
+    };
+    ```
+  </Tab>
+  <Tab title="Nuxt">
+    ```javascript nuxt.config.js
+    export default {
+      modules: ['@despia/local/nuxt'],
+      despiaLocal: {
+        entryHtml: 'index.html'
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="SvelteKit">
+    ```javascript vite.config.js
+    import { sveltekit } from '@sveltejs/kit/vite';
+    import { despiaLocalSvelteKit } from '@despia/local/sveltekit';
+    
+    export default {
+      plugins: [
+        sveltekit(),
+        despiaLocalSvelteKit({ entryHtml: 'index.html' })
+      ]
+    };
+    ```
+  </Tab>
+  <Tab title="Astro">
+    ```javascript astro.config.mjs
+    import { defineConfig } from 'astro/config';
+    import despiaLocal from '@despia/local/astro';
+    
+    export default defineConfig({
+      integrations: [
+        despiaLocal({ entryHtml: 'index.html', outDir: 'dist' })
+      ]
+    });
+    ```
+  </Tab>
+  <Tab title="Remix">
+    ```javascript vite.config.js
+    import { remix } from '@remix-run/dev';
+    import { despiaLocalRemix } from '@despia/local/remix';
+    
+    export default {
+      plugins: [
+        remix(),
+        despiaLocalRemix({ entryHtml: 'index.html', outDir: 'build/client' })
+      ]
+    };
+    ```
+  </Tab>
+  <Tab title="esbuild">
+    ```javascript build.mjs
+    import { build } from 'esbuild';
+    import { despiaLocalEsbuild } from '@despia/local/esbuild';
+    
+    await build({
+      entryPoints: ['src/index.js'],
+      outdir: 'dist',
+      plugins: [
+        despiaLocalEsbuild({ outDir: 'dist', entryHtml: 'index.html' })
+      ]
+    });
+    ```
+  </Tab>
+  <Tab title="Universal">
+    Works with any build system via a `postbuild` npm script or a manual CLI call.
+
+    ```json package.json
+    {
+      "scripts": {
+        "build": "your-build-command",
+        "postbuild": "despia-local"
+      }
+    }
+    ```
+
+    Or run manually:
+
+    ```shellscript
+    npx despia-local [outputDir] [entryHtml]
+    ```
+
+    ```shellscript
+    # Generates manifest at outputDir/despia/local.json
+    npx despia-local dist
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Configuration options
+
+All plugins accept the same options:
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `outDir` | string | `'dist'` | Output directory to scan for assets |
+| `entryHtml` | string | `'index.html'` | Entry HTML filename to include in manifest |
+
+---
+
+## Manifest schema
+
+The plugin hooks into your build tool's completion event, scans the output directory, and generates the manifest at `despia/local.json`.
+
+<Warning>
+  The manifest must always be served at `despia/local.json` relative to your web app's root. Do not change this path. Despia expects it at this exact location to detect and apply updates.
+</Warning>
+
+```json despia/local.json
+{
+  "entry": "/index.html",
+  "deployed_at": "1737225600000",
+  "assets": [
+    "/index.html",
+    "/assets/app.abc123.css",
+    "/assets/app.def456.js",
+    "/assets/logo.xyz789.png"
+  ]
+}
+```
+
+| Field | Description |
+| --- | --- |
+| `entry` | The entry HTML file path. Always required for client-side rendering. |
+| `deployed_at` | Timestamp in milliseconds (as string) when the manifest was generated. Updated on every deployment and used by the OTA cache system to detect new builds. |
+| `assets` | Alphabetically sorted array of all asset paths, including the entry file. |
+
+This manifest enables Despia to discover all assets for complete caching, determine changes via `deployed_at`, guarantee offline operation, and perform atomic updates safely.
+
+---
+
+## Version guards
+
+For apps that need to maintain compatibility across different runtime versions, use `despia-version-guard` to conditionally render features based on the installed native runtime version.
+
+```tsx
+import { VersionGuard } from 'despia-version-guard';
+
+// Only renders this feature if the runtime version is 21.0.3 or higher
+<VersionGuard min_version="21.0.3">
+  <NewFeatureComponent />
+</VersionGuard>
+```
+
+| Use case | Why it helps |
+| --- | --- |
+| Store compliance | Version-gate major UI changes to satisfy review requirements |
+| Prevent broken UI | Ensure features only render when the required runtime capability is available |
+| Smooth rollouts | Gradually introduce new capabilities without forcing immediate updates |
+| Enterprise stability | Maintain consistent behavior across deployments with mixed runtime versions |
+
+`despia-version-guard` supports React, Vue, Angular, Svelte, and Vanilla JS / Web Components.
+
+---
+
+## Troubleshooting
+
+**Manifest not generated**
+
+- Ensure the build completes without errors before checking for the manifest
+- Confirm the output directory exists at the path specified in `outDir`
+- Verify the `outDir` option matches your build tool's configured output directory
+- Check the console for error messages from the plugin
+
+**Missing assets in manifest**
+
+- The plugin scans the entire output directory - confirm assets are copied there during the build step
+- Check that file paths resolve correctly relative to the output root
+
+**Path format issues**
+
+- All paths are automatically normalised to root-relative format
+- Paths starting with `/` are preserved as-is
+- Windows backslashes are converted to forward slashes automatically
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="@despia/local on npm" icon="npm" href="https://www.npmjs.com/package/@despia/local">
+    Full package documentation, version history, and changelog.
+  </Card>
+
+  <Card title="despia-native SDK" icon="mobile" href="https://www.npmjs.com/package/despia-native">
+    Reference for the JavaScript bridge and all 50\+ native API bindings.
+  </Card>
+</CardGroup>

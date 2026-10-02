@@ -1,0 +1,327 @@
+---
+title: "No OTA Updates"
+description: "Your users aren't receiving OTA updates. Changes deployed to production don't appear in the app. Here's how to fix it."
+icon: "wifi-slash"
+---
+
+## The #1 cause: PWA build plugins
+
+<Danger>
+  **The most common cause of OTA update failures is installing a service worker or PWA build plugin.** These plugins use aggressive caching strategies that intercept all network requests and serve stale content indefinitely. This prevents Despia's native update mechanism from fetching the latest web assets.
+</Danger>
+
+**Problem plugins include:**
+
+- `vite-plugin-pwa`
+- `next-pwa`
+- `@angular/service-worker`
+- `workbox-webpack-plugin`
+- `@vue/cli-plugin-pwa`
+
+**Why they break OTA:** You don't know what code these plugins run. Many cache everything aggressively and never invalidate. Despia's native container can't fetch updates because the service worker intercepts all requests and returns cached content.
+
+---
+
+## Common scenario: Watermark still showing after upgrade
+
+This is a very common and frustrating issue. You've been testing with Despia's free tier, decided to upgrade to a commercial license, rebuilt your app on our deployment pipeline, downloaded the new version... and the watermark is still there.
+
+**You've paid. You've rebuilt. But nothing changed!**
+
+**The cause:** Service workers. They cached your old app version including the watermark, and they're still serving that cached version. Our deployment pipeline built a fresh version without the watermark, but the service worker in your app never fetched it.
+
+**The fix:** Remove or properly configure your service worker using the solutions below. Then rebuild and reinstall the app.
+
+---
+
+## Common symptoms
+
+Your application may be affected by service worker caching issues if you observe:
+
+- Changes deployed to production do not appear in the app after closing and reopening
+- Users report seeing old versions of the app despite multiple restarts
+- OTA updates work on some devices but not others
+- The app shows outdated content even with a stable internet connection
+- Force-closing and reopening the app does not load the latest version
+- Browser version shows updates but native app does not
+- Watermark still appears after upgrading to a commercial license
+
+---
+
+## Solution 1: Remove PWA plugins entirely
+
+The simplest fix is to remove all PWA and service worker plugins from your project.
+
+### For Vite Projects
+
+```javascript
+// vite.config.js - Remove the PWA plugin
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [
+    // Remove: VitePWA({ ... })
+  ]
+});
+```
+
+### For Create React App
+
+In your `src/index.js` or `src/index.tsx`:
+
+```javascript
+// BEFORE (causes OTA issues)
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
+serviceWorkerRegistration.register();
+
+// AFTER (fix for Despia)
+serviceWorkerRegistration.unregister();
+```
+
+### For Next.js
+
+```javascript
+// next.config.js - Remove PWA wrapper
+module.exports = {
+  // Your Next.js config
+  // Remove: withPWA({ ... })
+};
+```
+
+### For Angular
+
+```javascript
+# Remove the package
+npm uninstall @angular/service-worker
+
+# In angular.json, set "serviceWorker": false
+```
+
+---
+
+## Solution 2: Build your own service worker
+
+If you need a service worker for web functionality, build your own instead of using a plugin. This gives you full control over caching behavior.
+
+<Danger>
+  **Critical:** Your service worker must listen for a cache clear message and respond appropriately when running in Despia.
+</Danger>
+
+### Add cache clear handler to your service worker
+
+In your service worker file (`sw.js`), add this message handler:
+
+```javascript
+// sw.js
+self.addEventListener('message', function(event) {
+  if (event.data && event.data.type === 'CLEAR_SW_CACHE') {
+    caches.keys().then(function(cacheNames) {
+      return Promise.all(
+        cacheNames.map(function(cacheName) {
+          return caches.delete(cacheName);
+        })
+      );
+    });
+  }
+});
+```
+
+### Clear cache on app load in Despia
+
+In your app's entry point, add this code to clear the service worker cache when running in Despia:
+
+```javascript
+// Add to index.js, main.js, or App.jsx
+if (navigator.userAgent.toLowerCase().includes('despia')) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(reg) {
+        reg.active && reg.active.postMessage({type: 'CLEAR_SW_CACHE'});
+      });
+    });
+  }
+}
+```
+
+This ensures that every time your app loads in Despia, the service worker cache is cleared, allowing OTA updates to work correctly.
+
+---
+
+## Solution 3: Unregister service workers completely
+
+If you don't need service workers at all in Despia, unregister them entirely:
+
+```javascript
+// Add to your app initialization
+if (navigator.userAgent.toLowerCase().includes('despia')) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(reg) {
+        reg.unregister();
+      });
+    });
+  }
+}
+```
+
+---
+
+## Why service workers are unnecessary for Despia
+
+Despia does NOT require service workers for offline functionality. If you need offline support, Despia offers a **Local Server** feature that provides a superior solution.
+
+**Enable it in the Despia editor:**
+
+1. Log in to the Despia editor at https://despia.com
+2. Select your project
+3. Enable the **Local Server** / **Offline Mode** option
+4. Install the `@despia/local` build plugin from: https://www.npmjs.com/package/@despia/local
+4. Save and rebuild your app
+
+No code changes required. Despia handles the rest automatically.
+
+### Comparison: Service workers vs. Despia Local Server
+
+| Feature            | Service Workers                    | Despia Local Server          |
+| :----------------- | :--------------------------------- | :--------------------------- |
+| Offline Support    | Partial, requires careful caching  | Complete, works indefinitely |
+| Update Reliability | Can block updates if misconfigured | Atomic updates, never blocks |
+| Boot Performance   | Depends on cache state             | Instant, zero latency        |
+| Implementation     | High complexity                    | None (enable in editor)      |
+| OTA Compatibility  | Often conflicts                    | Fully integrated             |
+
+---
+
+## Testing OTA updates
+
+To confirm OTA updates are working:
+
+1. Make a visible change to your app (change a button color or text)
+2. Deploy to production
+3. Verify the change is live in a browser
+4. Force close your native app completely (not just background)
+5. Wait 2-3 seconds
+6. Reopen the app
+7. Verify the change appears
+
+<Note>
+  **Tip:** Display a build timestamp or version hash in your UI during testing to easily verify which version is running.
+</Note>
+
+---
+
+## Troubleshooting checklist
+
+### Code verification
+
+- All PWA plugins (`vite-plugin-pwa`, `next-pwa`, etc.) removed
+- No `workbox` references in codebase
+- Service worker cache clear code added (if keeping service worker)
+- Or service worker unregister code added (if removing service worker)
+
+### Build verification
+
+- No unexpected `sw.js` or `service-worker.js` in build output
+- App is built as static export (for SSR frameworks like Next.js)
+
+### Deployment verification
+
+- Latest build deployed to production
+- CDN cache cleared (Cloudflare, Fastly, Vercel, Netlify)
+- Old service worker files removed from hosting
+
+### Device testing
+
+- App fully force-closed (not just backgrounded)
+- Wait 2-3 seconds, then reopen
+- Changes appear immediately
+- Tested on multiple devices
+
+---
+
+## Common mistakes
+
+### Mistake 1: Only removing registration code
+
+Removing registration code prevents new installations, but existing service workers persist. You must also clear caches or unregister existing workers.
+
+### Mistake 2: Conditional registration
+
+```javascript
+// DON'T DO THIS - still causes issues
+if (!navigator.userAgent.includes('despia')) {
+  navigator.serviceWorker.register('/sw.js');
+}
+```
+
+This still leaves service worker infrastructure in your build. Remove it entirely or implement proper cache clearing.
+
+### Mistake 3: Not clearing CDN cache
+
+Old service worker files may be cached by your CDN. Purge your CDN cache after deploying changes.
+
+### Mistake 4: Leaving service worker files on server
+
+Even after removing registration, if `sw.js` files remain on your server, browsers may still have them cached. Delete these files from your hosting.
+
+### Mistake 5: Server-side rendering without static export
+
+If using Next.js or similar frameworks with SSR, you must configure a static export for Despia:
+
+```javascript
+// next.config.js
+module.exports = {
+  output: 'export'  // Required for Despia
+};
+```
+
+---
+
+## Quick reference
+
+**If you have a PWA plugin installed:** Remove it entirely.
+
+**If you need a service worker:** Build your own and add cache clearing:
+
+```javascript
+// In your app entry point
+if (navigator.userAgent.toLowerCase().includes('despia')) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(reg) {
+        reg.active && reg.active.postMessage({type: 'CLEAR_SW_CACHE'});
+      });
+    });
+  }
+}
+```
+
+**If you don't need a service worker:** Unregister it in Despia:
+
+```javascript
+if (navigator.userAgent.toLowerCase().includes('despia')) {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(function(regs) {
+      regs.forEach(function(reg) {
+        reg.unregister();
+      });
+    });
+  }
+}
+```
+
+---
+
+## Remember
+
+**The golden rule:** Don't use PWA build plugins with Despia. You don't know what code they run, and many use aggressive caching that blocks OTA updates.
+
+**If you need offline support:** Enable Despia's Local Server in the editor. No code required, and it works with OTA updates.
+
+**If you need a service worker:** Build your own and implement the `CLEAR_SW_CACHE` message handler so Despia can clear the cache on app load.
+
+**Always test:** Deploy a visible change, force close the app, reopen, and verify the change appears.
+
+---
+
+For support or questions, contact: [support@despia.com](mailto:support@despia.com)

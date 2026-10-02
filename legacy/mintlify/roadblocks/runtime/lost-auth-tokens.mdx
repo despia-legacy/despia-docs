@@ -1,0 +1,970 @@
+---
+title: "Lost Auth Tokens"
+icon: "key"
+description: "Your users close the app and when they reopen it, they're logged out. Here's how to fix it."
+---
+
+## Quick diagnosis
+
+<Danger>
+  **Important for native apps:** `console.log()` won't be visible. For debugging, create a `/debug` page (see "Debugging in native apps" section) or display values on screen.
+</Danger>
+
+**Check where your session is stored:**
+
+```javascript
+// On app load - display these on screen for native debugging
+const debugInfo = {
+  'Cookies': document.cookie,
+  'localStorage token': localStorage.getItem('auth_token'),
+  'URL params': window.location.search
+};
+
+// For web debugging:
+console.log('Debug info:', debugInfo);
+
+// For native debugging: Display debugInfo on screen or create /debug page
+```
+
+**Common causes:**
+
+1. Cookies not set correctly
+2. Cookies don't support `localhost` (Despia local server)
+3. localStorage cleared by system
+4. Session validated server-side but app is offline
+5. Users landing on /auth page without redirect
+
+---
+
+## Solution 1: Redirect logged-in users
+
+**Problem:** User opens app, lands on `/auth` or `/login`, even though they have a valid session.
+
+**Fix:** Check for session on protected routes and redirect.
+
+**Core concept:**
+
+```javascript
+// Check if user has session
+const token = localStorage.getItem('auth_token') || getCookie('auth_token');
+
+if (token) {
+  // User is logged in, redirect to main app
+  window.location.href = '/dashboard';
+}
+```
+
+**React implementation:**
+
+```tsx
+// On /auth or /login page
+function AuthPage() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    
+    if (token) {
+      // User is logged in, redirect to main app
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+  
+  return <LoginForm />;
+}
+```
+
+**Server-side redirect (Next.js):**
+
+```javascript
+export async function getServerSideProps(context) {
+  const token = context.req.cookies.auth_token;
+  
+  if (token) {
+    return {
+      redirect: {
+        destination: '/dashboard',
+        permanent: false
+      }
+    };
+  }
+  
+  return { props: {} };
+}
+```
+
+---
+
+## Solution 2: Fix cookie configuration
+
+**Problem:** Cookies aren't persisting between sessions.
+
+### Set cookies correctly (core concept)
+
+**Wrong:**
+
+```javascript
+// This doesn't persist
+document.cookie = 'auth_token=abc123';
+```
+
+**Right:**
+
+```javascript
+// Set expiration (30 days)
+const expiryDate = new Date();
+expiryDate.setDate(expiryDate.getDate() + 30);
+
+document.cookie = `auth_token=abc123; expires=${expiryDate.toUTCString()}; path=/; SameSite=Strict`;
+```
+
+**Helper function:**
+
+```javascript
+function setAuthCookie(token) {
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 30);
+  
+  document.cookie = `auth_token=${token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+}
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+```
+
+### Check cookie attributes
+
+```javascript
+// Check cookies (display on screen for native debugging)
+const cookies = document.cookie;
+
+// Web debugging:
+console.log('All cookies:', cookies);
+
+// Native debugging: Display on /debug page or in debug overlay
+// Should see: "auth_token=abc123; expires=..."
+```
+
+**If empty:**
+
+- Cookie expired
+- Wrong domain/path
+- Secure flag on HTTP site
+- SameSite blocking it
+
+---
+
+## Solution 3: Support localhost cookies
+
+**Problem:** Using Despia's local server (app served from `http://localhost`), but cookies set for `yourapp.com` don't work.
+
+**The issue:** Cookies from `yourapp.com` don't apply to `localhost`.
+
+**Fix: Set cookies for both domains:**
+
+```javascript
+function setAuthCookie(token) {
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 30);
+  const expires = `expires=${expiryDate.toUTCString()}`;
+  
+  // For production domain
+  document.cookie = `auth_token=${token}; ${expires}; path=/; SameSite=Lax`;
+  
+  // For localhost (Despia local server)
+  if (window.location.hostname === 'localhost') {
+    document.cookie = `auth_token=${token}; ${expires}; path=/; SameSite=Lax`;
+  }
+}
+```
+
+**Check if running on localhost:**
+
+```javascript
+const isLocalhost = window.location.hostname === 'localhost';
+
+// Web debugging:
+console.log('Running on localhost:', isLocalhost);
+
+// Native debugging: Display on screen
+// Create a debug overlay showing: "Localhost: true/false"
+```
+
+**Important:** Don't set `Secure` flag for localhost:
+
+```javascript
+function setAuthCookie(token) {
+  const isLocalhost = window.location.hostname === 'localhost';
+  
+  const cookieString = `auth_token=${token}; ` +
+    `max-age=${30 * 24 * 60 * 60}; ` +
+    `path=/; ` +
+    `SameSite=Lax` +
+    (!isLocalhost ? '; Secure' : ''); // No Secure flag on localhost
+  
+  document.cookie = cookieString;
+}
+```
+
+---
+
+## Solution 4: Use offline-compatible storage
+
+**Problem:** Cookies require server validation. When app is offline, cookies can't be validated, user appears logged out.
+
+**Fix:** Store auth state in offline-compatible storage.
+
+### Option A: localStorage (recommended)
+
+**Core concept - works everywhere:**
+
+```javascript
+// Save auth token
+function saveAuth(token, refreshToken) {
+  localStorage.setItem('auth_token', token);
+  localStorage.setItem('refresh_token', refreshToken);
+  localStorage.setItem('auth_expiry', Date.now() + 30 * 24 * 60 * 60 * 1000);
+}
+
+// Check auth (works offline)
+function checkAuth() {
+  const token = localStorage.getItem('auth_token');
+  const expiry = localStorage.getItem('auth_expiry');
+  
+  if (!token || !expiry) {
+    return false;
+  }
+  
+  if (Date.now() > parseInt(expiry)) {
+    // Token expired
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_expiry');
+    return false;
+  }
+  
+  return token;
+}
+```
+
+**React implementation:**
+
+```tsx
+// Check auth on app load
+function App() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    const expiry = localStorage.getItem('auth_expiry');
+    
+    if (!token || Date.now() > parseInt(expiry)) {
+      navigate('/auth');
+    } else {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+  
+  return <Routes>...</Routes>;
+}
+```
+
+### Option B: Storage Vault (native only)
+
+<Warning>
+  **Requires Despia Runtime V3.5+**\
+  \
+  Storage Vault requires Despia native runtime version 3.5 or higher. For apps on older versions, use localStorage instead.
+</Warning>
+
+**Works for:** Native Despia apps (V3.5+), persistent across uninstall/reinstall
+
+```javascript
+import despia from 'despia-native';
+
+// Check if vault is available
+function isVaultAvailable() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.includes('despia');
+}
+
+// Save auth token (survives uninstall)
+async function saveAuth(token, refreshToken) {
+  // Always save to localStorage as fallback
+  localStorage.setItem('auth_token', token);
+  localStorage.setItem('refresh_token', refreshToken);
+  
+  // Only use vault if running in Despia native app
+  if (isVaultAvailable()) {
+    try {
+      await despia(`setvault://?key=authToken&value=${token}&locked=false`);
+      await despia(`setvault://?key=refreshToken&value=${refreshToken}&locked=false`);
+    } catch (error) {
+      console.log('Vault storage failed, localStorage fallback active');
+    }
+  }
+}
+
+// Check auth on app load
+async function checkAuth() {
+  // Try vault first if running in Despia native app
+  if (isVaultAvailable()) {
+    try {
+      const data = await despia('readvault://?key=authToken', ['authToken']);
+      if (data.authToken) {
+        return data.authToken;
+      }
+    } catch (error) {
+      // Vault failed, fall through to localStorage
+    }
+  }
+  
+  // Fallback to localStorage
+  const token = localStorage.getItem('auth_token');
+  const expiry = localStorage.getItem('auth_expiry');
+  
+  if (!token || !expiry) {
+    return null;
+  }
+  
+  if (Date.now() > parseInt(expiry)) {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_expiry');
+    return null;
+  }
+  
+  return token;
+}
+```
+
+**React implementation:**
+
+```tsx
+function App() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    async function init() {
+      const token = await checkAuth();
+      if (token) {
+        navigate('/dashboard');
+      } else {
+        navigate('/auth');
+      }
+    }
+    init();
+  }, [navigate]);
+  
+  return <Routes>...</Routes>;
+}
+```
+
+**Storage Vault benefits:**
+
+- Persists across uninstall/reinstall
+- Syncs across devices (iCloud/Google)
+- Can require Face ID/Touch ID
+- Most reliable for long-term sessions
+
+**When to use localStorage vs Vault:**
+
+- **localStorage:** Works everywhere, simple, reliable
+- **Vault:** Best for native apps on Despia V3.5+, survives uninstall
+
+---
+
+## Solution 5: Hybrid approach
+
+**Best practice:** Use cookies, localStorage, and optionally vault for maximum reliability.
+
+**Core concept:**
+
+```javascript
+import despia from 'despia-native';
+
+function isVaultAvailable() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  return userAgent.includes('despia');
+}
+
+// Save auth everywhere
+async function saveAuth(token, refreshToken) {
+  // 1. Set cookie (works with server validation)
+  const expiryDate = new Date();
+  expiryDate.setDate(expiryDate.getDate() + 30);
+  document.cookie = `auth_token=${token}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax`;
+  
+  // 2. Save to localStorage (works offline)
+  localStorage.setItem('auth_token', token);
+  localStorage.setItem('refresh_token', refreshToken);
+  localStorage.setItem('auth_expiry', Date.now() + 30 * 24 * 60 * 60 * 1000);
+  
+  // 3. Save to vault if available (most reliable, native only, V3.5+)
+  if (isVaultAvailable()) {
+    try {
+      await despia(`setvault://?key=authToken&value=${token}&locked=false`);
+      await despia(`setvault://?key=refreshToken&value=${refreshToken}&locked=false`);
+    } catch (error) {
+      console.log('Vault storage failed, cookies and localStorage still work');
+    }
+  }
+}
+
+// Check auth everywhere
+async function checkAuth() {
+  // 1. Try vault first if available (most reliable)
+  if (isVaultAvailable()) {
+    try {
+      const data = await despia('readvault://?key=authToken', ['authToken']);
+      if (data.authToken) {
+        return data.authToken;
+      }
+    } catch (error) {
+      // Vault failed, try other methods
+    }
+  }
+  
+  // 2. Check cookie (preferred if online)
+  let token = getCookie('auth_token');
+  
+  // 3. Fallback to localStorage
+  if (!token) {
+    token = localStorage.getItem('auth_token');
+  }
+  
+  return token;
+}
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+}
+```
+
+**React implementation:**
+
+```tsx
+// Use in your login handler
+function LoginPage() {
+  const navigate = useNavigate();
+  
+  const handleLogin = async (credentials) => {
+    // Call your API
+    const response = await fetch('/api/login', {
+      method: 'POST',
+      body: JSON.stringify(credentials)
+    });
+    
+    const { access_token, refresh_token } = await response.json();
+    
+    // Save everywhere
+    await saveAuth(access_token, refresh_token);
+    
+    // Redirect to app
+    navigate('/dashboard');
+  };
+  
+  return <LoginForm onSubmit={handleLogin} />;
+}
+
+// Check auth on app load
+function App() {
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    async function init() {
+      const token = await checkAuth();
+      if (token) {
+        navigate('/dashboard');
+      } else {
+        navigate('/auth');
+      }
+    }
+    init();
+  }, [navigate]);
+  
+  return <Routes>...</Routes>;
+}
+```
+
+**Why hybrid?**
+
+- Cookies work best with server validation (when online)
+- localStorage works offline and is universally supported
+- Vault storage survives uninstall (native Despia V3.5+ only)
+- Redundancy means users rarely get logged out
+
+---
+
+## Solution 6: Session refresh strategy
+
+**Problem:** Token expired, user appears logged out.
+
+**Fix:** Refresh token before expiry.
+
+**Core concept:**
+
+```javascript
+// Check and refresh session
+async function refreshSessionIfNeeded() {
+  const token = localStorage.getItem('auth_token');
+  const refreshToken = localStorage.getItem('refresh_token');
+  const expiry = localStorage.getItem('auth_expiry');
+  
+  if (!token || !refreshToken) {
+    return false;
+  }
+  
+  // Check if token expires soon (within 1 day)
+  const oneDayFromNow = Date.now() + 24 * 60 * 60 * 1000;
+  
+  if (parseInt(expiry) < oneDayFromNow) {
+    // Refresh token
+    try {
+      const response = await fetch('/api/refresh', {
+        method: 'POST',
+        body: JSON.stringify({ refresh_token: refreshToken }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      const { access_token, refresh_token: newRefreshToken } = await response.json();
+      
+      // Save new tokens
+      await saveAuth(access_token, newRefreshToken);
+      
+      return true;
+    } catch (error) {
+      // Refresh failed, session expired
+      return false;
+    }
+  }
+  
+  return true;
+}
+```
+
+**React implementation:**
+
+```tsx
+// Check and refresh on app load
+function App() {
+  const navigate = useNavigate();
+  const [isReady, setIsReady] = useState(false);
+  
+  useEffect(() => {
+    async function init() {
+      const isValid = await refreshSessionIfNeeded();
+      
+      if (isValid) {
+        navigate('/dashboard');
+      } else {
+        navigate('/auth');
+      }
+      
+      setIsReady(true);
+    }
+    init();
+  }, [navigate]);
+  
+  if (!isReady) {
+    return <LoadingSpinner />;
+  }
+  
+  return <Routes>...</Routes>;
+}
+```
+
+---
+
+## Complete app load check
+
+Here's a complete auth check that handles all cases:
+
+**React implementation:**
+
+```tsx
+// Run this on app mount
+function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isReady, setIsReady] = useState(false);
+  
+  useEffect(() => {
+    async function initApp() {
+      // Note: console.log() for web debugging only
+      // For native apps, use on-screen debug display (see "Debugging in native apps")
+      
+      // 1. Check if we're on a public page
+      const publicPages = ['/auth', '/login', '/signup', '/forgot-password'];
+      if (publicPages.includes(location.pathname)) {
+        // Check if user is logged in and redirect
+        const token = await checkAuth();
+        if (token) {
+          navigate('/dashboard');
+        }
+        setIsReady(true);
+        return;
+      }
+      
+      // 2. Protected page - check auth
+      const token = await checkAuth();
+      
+      if (!token) {
+        navigate('/auth');
+        setIsReady(true);
+        return;
+      }
+      
+      // 3. Try to refresh if expiring soon
+      const refreshed = await refreshSessionIfNeeded();
+      
+      if (!refreshed) {
+        navigate('/auth');
+        setIsReady(true);
+        return;
+      }
+      
+      // User authenticated, loading app
+      setIsReady(true);
+    }
+    
+    initApp();
+  }, [navigate, location]);
+  
+  if (!isReady) {
+    return <LoadingSpinner />;
+  }
+  
+  return <Routes>...</Routes>;
+}
+```
+
+**Core logic:**
+
+```javascript
+// Core auth check logic (reusable)
+async function checkAuth() {
+  // Check vault (Despia V3.5+ only), then cookie, then localStorage
+  if (isVaultAvailable()) {
+    try {
+      const data = await despia('readvault://?key=authToken', ['authToken']);
+      if (data.authToken) return data.authToken;
+    } catch {}
+  }
+  
+  let token = getCookie('auth_token');
+  if (!token) token = localStorage.getItem('auth_token');
+  return token;
+}
+
+async function refreshSessionIfNeeded() {
+  const expiry = localStorage.getItem('auth_expiry');
+  const oneDayFromNow = Date.now() + 24 * 60 * 60 * 1000;
+  
+  if (parseInt(expiry) < oneDayFromNow) {
+    // Call refresh endpoint
+    return await refreshTokens();
+  }
+  return true;
+}
+```
+
+---
+
+## Testing checklist
+
+Test these scenarios to ensure users stay logged in:
+
+**Basic persistence:**
+
+- User logs in, closes app, reopens → Still logged in
+- User logs in, force quit app, reopens → Still logged in
+- User logs in, waits 24 hours, reopens → Still logged in
+
+**Localhost (Despia local server):**
+
+- Cookies work on `http://localhost`
+- No `Secure` flag on localhost cookies
+- Auth persists after app restart
+
+**Offline:**
+
+- User logs in online, goes offline, reopens → Still logged in
+- User can navigate app while offline
+- Session doesn't require server validation
+
+**Edge cases:**
+
+- User visits `/auth` when logged in → Redirects to `/dashboard`
+- User visits `/dashboard` when logged out → Redirects to `/auth`
+- Token expires → User redirected to login
+- Refresh token used when token expires soon
+
+---
+
+## Storage comparison
+
+| Storage Type  | Persists Across Restart | Survives Uninstall | Works Offline     | Requires Despia Native |
+| :------------ | :---------------------- | :----------------- | :---------------- | :--------------------- |
+| Cookies       | Yes                     | No                 | No (needs server) | No                     |
+| localStorage  | Yes                     | No                 | Yes               | No                     |
+| Storage Vault | Yes                     | **Yes**            | Yes               | Yes (V3.5+)            |
+
+**Recommendation:**
+
+- **Web app:** Cookies + localStorage
+- **Despia native (V3.5+):** Storage Vault + localStorage + cookies (hybrid)
+- **Despia native (\< V3.5):** localStorage + cookies
+- **Offline-first:** localStorage or Storage Vault (no cookies)
+
+---
+
+## Common mistakes
+
+### Mistake 1: Only using cookies
+
+```javascript
+// WRONG - user logged out when offline
+document.cookie = 'auth_token=abc123';
+```
+
+**Fix:** Also save to localStorage
+
+### Mistake 2: Not redirecting from /auth
+
+```javascript
+// WRONG - logged in users see login page
+// /auth page just shows login form
+```
+
+**Fix:** Check for session and redirect
+
+### Mistake 3: Cookies without expiry
+
+```javascript
+// WRONG - cookie disappears after browser restart
+document.cookie = 'auth_token=abc123';
+```
+
+**Fix:** Set expiration date
+
+### Mistake 4: Secure flag on localhost
+
+```javascript
+// WRONG - doesn't work on localhost
+document.cookie = 'auth_token=abc123; Secure';
+```
+
+**Fix:** Only set Secure on HTTPS
+
+### Mistake 5: Not handling token refresh
+
+```javascript
+// WRONG - token expires, user logged out
+// No refresh logic
+```
+
+**Fix:** Refresh token before expiry
+
+### Mistake 6: Using vault without checking Despia runtime
+
+```javascript
+// WRONG - vault not available on older Despia versions
+await despia('readvault://?key=authToken', ['authToken']);
+```
+
+**Fix:** Check user agent includes 'despia' before using vault
+
+---
+
+## Debugging in native apps
+
+**Important:** Native apps can't see `console.log()`. The best way to debug is using a **text area with values** - it's copyable, selectable, and works everywhere.
+
+**Why text areas work best:**
+
+- Tap once to select all text
+- Long press to copy
+- Shows lots of data in one place
+- Works in every framework
+- No special libraries needed
+
+### Copy-paste debug code (easiest)
+
+Just paste this HTML anywhere on your `/auth` or `/login` page:
+
+```html
+<!-- DEBUG: Remove this after fixing the issue -->
+<div style="padding: 1rem; background: #ffe0e0; border: 2px solid red; margin: 1rem 0;">
+  <div style="color: red; font-weight: bold; margin-bottom: 0.5rem;">
+    ⚠️ DEBUG INFO - REMOVE THIS DIV LATER
+  </div>
+  <textarea 
+    id="auth-debug" 
+    readonly
+    onclick="this.select()"
+    style="
+      width: 100%; 
+      height: 400px; 
+      font-family: monospace; 
+      font-size: 12px; 
+      padding: 0.5rem;
+      border: 1px solid #ccc;
+    "
+  ></textarea>
+  <div style="margin-top: 0.5rem; font-size: 12px; color: #666;">
+    Tap text area to select all, then copy
+  </div>
+</div>
+
+<script>
+  // Populate debug info
+  const expiry = localStorage.getItem('auth_expiry');
+  const expiryDate = expiry ? new Date(parseInt(expiry)) : null;
+  const isExpired = expiryDate ? Date.now() > expiryDate : null;
+  
+  const debugInfo = [
+    '=== AUTH DEBUG ===',
+    '',
+    'Current URL: ' + window.location.href,
+    'Hostname: ' + window.location.hostname,
+    'Is localhost: ' + (window.location.hostname === 'localhost'),
+    '',
+    'Cookies: ' + (document.cookie || 'NONE'),
+    '',
+    'localStorage:',
+    '  auth_token: ' + (localStorage.getItem('auth_token') || 'NONE'),
+    '  refresh_token: ' + (localStorage.getItem('refresh_token') || 'NONE'),
+    '  auth_expiry: ' + (localStorage.getItem('auth_expiry') || 'NONE'),
+    '',
+    'Token expiry:',
+    '  Expires at: ' + (expiryDate ? expiryDate.toLocaleString() : 'N/A'),
+    '  Is expired: ' + (isExpired === null ? 'N/A' : (isExpired ? 'YES ⚠️' : 'NO ✓')),
+    '',
+    'User agent: ' + navigator.userAgent,
+    'Vault available: ' + (navigator.userAgent.toLowerCase().includes('despia') ? 'YES' : 'NO')
+  ].join('\n');
+  
+  document.getElementById('auth-debug').value = debugInfo;
+</script>
+```
+
+**How to use:**
+
+1. Paste this code into your login/auth page where the error occurs
+2. Open app, you'll see a red box with debug info
+3. Tap the text area - it selects all text
+4. Copy the text to check values
+5. **Delete the entire debug div when done**
+
+### React version (quick)
+
+```tsx
+// Add this component to your auth/login page
+function DebugInfo() {
+  const expiry = localStorage.getItem('auth_expiry');
+  const expiryDate = expiry ? new Date(parseInt(expiry)) : null;
+  const isExpired = expiryDate ? Date.now() > expiryDate : null;
+  
+  const debugText = [
+    '=== AUTH DEBUG ===',
+    '',
+    'URL: ' + window.location.href,
+    'Hostname: ' + window.location.hostname,
+    'Is localhost: ' + (window.location.hostname === 'localhost'),
+    '',
+    'Cookies: ' + (document.cookie || 'NONE'),
+    '',
+    'localStorage:',
+    '  auth_token: ' + (localStorage.getItem('auth_token') || 'NONE'),
+    '  refresh_token: ' + (localStorage.getItem('refresh_token') || 'NONE'),
+    '',
+    'Token expiry:',
+    '  Expires: ' + (expiryDate ? expiryDate.toLocaleString() : 'N/A'),
+    '  Is expired: ' + (isExpired === null ? 'N/A' : (isExpired ? 'YES' : 'NO')),
+    '',
+    'User agent: ' + navigator.userAgent,
+    'Vault available: ' + (navigator.userAgent.toLowerCase().includes('despia') ? 'YES' : 'NO')
+  ].join('\n');
+  
+  return (
+    <div style={{ padding: '1rem', background: '#ffe0e0', border: '2px solid red', margin: '1rem 0' }}>
+      <div style={{ color: 'red', fontWeight: 'bold', marginBottom: '0.5rem' }}>
+        ⚠️ DEBUG INFO - REMOVE THIS COMPONENT LATER
+      </div>
+      <textarea
+        value={debugText}
+        readOnly
+        onClick={(e) => e.target.select()}
+        style={{
+          width: '100%',
+          height: '400px',
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          padding: '0.5rem',
+          border: '1px solid #ccc'
+        }}
+      />
+      <div style={{ marginTop: '0.5rem', fontSize: '12px', color: '#666' }}>
+        Tap to select all, then copy
+      </div>
+    </div>
+  );
+}
+
+// Use it on your auth page:
+// <DebugInfo />
+```
+
+### Super minimal version
+
+Just want to see token status? Add this one line:
+
+```html
+<!-- Minimal debug - remove later -->
+<div style="position: fixed; bottom: 0; width: 100%; background: yellow; padding: 0.5rem; font-family: monospace; font-size: 12px; text-align: center; border-top: 2px solid orange;">
+  Token: <strong id="t-status">checking...</strong>
+</div>
+
+<script>
+  const t = localStorage.getItem('auth_token');
+  const e = localStorage.getItem('auth_expiry');
+  const x = e ? Date.now() > parseInt(e) : false;
+  document.getElementById('t-status').textContent = !t ? 'NONE ❌' : (x ? 'EXPIRED ⚠️' : 'EXISTS ✓');
+</script>
+```
+
+**Remember:** Remove all debug code before production!
+
+---
+
+## Remember
+
+**The golden rule:** Store auth in multiple places.
+
+1. **Cookies** - Best for server validation when online
+2. **localStorage** - Works offline, survives app restart, universally supported
+3. **Storage Vault** - Most reliable, survives uninstall (Despia native V3.5+ only)
+
+**Always redirect:**
+
+- Logged in users on `/auth` → `/dashboard`
+- Logged out users on `/dashboard` → `/auth`
+
+**Handle offline:**
+
+- Don't require server calls to check auth
+- Use localStorage (or Vault for Despia V3.5+) for offline-compatible auth
+
+**Check runtime version:**
+
+- Storage Vault requires Despia runtime V3.5+
+- Always check user agent includes 'despia' before using vault
+- Use localStorage as fallback for older versions
+
+---
+
+For support or questions, contact: [support@despia.com](mailto:support@despia.com)

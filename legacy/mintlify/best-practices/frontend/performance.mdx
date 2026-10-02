@@ -1,0 +1,1210 @@
+---
+title: "Performance"
+icon: "person-running-fast"
+description: "Build applications optimized for 60fps performance that degrade gracefully under system constraints. This guide covers proven techniques for JavaScript execution, rendering optimization, memory management, and asset delivery."
+---
+
+## Overview
+
+Despia applications run on our GPU-accelerated native webview engine. With proper optimization, applications can achieve 60fps performance. While the Despia runtime handles core rendering optimizations, application performance depends on code structure, asset management, and efficient rendering strategies.
+
+**Observed Performance:**
+
+- **Normal Operation**: 60fps achievable with optimization
+- **Low Power Mode**: Typically ~30fps (based on extensive testing across devices)
+
+<Info>
+  **Important:** iOS aims to render at display refresh rate. Lower frame rates occur when applications cannot meet frame budgets under system constraints (Low Power Mode, thermal throttling, heavy workload).
+</Info>
+
+This guide provides actionable patterns for building applications optimized for 60fps that degrade gracefully under constrained conditions.
+
+---
+
+## Low Power Mode Considerations
+
+### Understanding Low Power Mode
+
+Low Power Mode reduces background activity and caps ProMotion displays to 60Hz. It does not enforce a specific frame rate, but in practice, rendering performance is often affected.
+
+<Info>
+  **Technical Note:** iOS aims to render at display refresh rate (60Hz on standard displays, up to 120Hz on ProMotion). Low Power Mode does not set a "30fps limit." However, based on extensive testing across devices, apps commonly render at approximately 30fps when Low Power Mode is active due to reduced performance headroom.
+</Info>
+
+**Normal Operation:**
+
+- 60fps achievable performance
+- Full GPU acceleration
+- Smooth animations and interactions
+
+**Low Power Mode (Observed Behavior):**
+
+- Apps typically render at ~30fps under Low Power Mode constraints
+- This occurs because reduced CPU/GPU headroom makes it difficult to meet 16.6ms frame budget
+- Still provides acceptable user experience for standard interactions
+
+**Why Frame Rates Drop:**
+
+iOS always attempts to render at display refresh rate. Under Low Power Mode:
+
+- Reduced CPU/GPU performance allocation
+- Background work throttling
+- Thermal management constraints
+- Apps struggling to meet frame budget drop frames, often settling around 30fps
+
+**Optimization Strategy:**
+
+Build for 60fps in normal operation. When properly optimized, applications maintain acceptable performance even under Low Power Mode constraints. Focus on:
+
+- Efficient JavaScript execution
+- GPU-accelerated animations
+- Minimal layout recalculations
+- Optimized asset loading
+
+### What Requires Optimization
+
+Well-optimized interactions remain smooth even when frame rates drop:
+
+- Page transitions
+- Button taps and feedback
+- Modal animations
+- Content fades
+- List scrolling with momentum
+- Form interactions
+
+**Performance-critical scenarios:**
+
+- Real-time games
+- Continuous drag-and-drop with complex visuals
+- High-speed animations with many elements
+
+<Info>
+  For standard applications (AI wrappers, consumer apps, business apps, community platforms, e-commerce, content apps), proper optimization ensures smooth performance across normal operation and constrained conditions (Low Power Mode, thermal throttling).
+</Info>
+
+---
+
+## JavaScript Performance
+
+### Minimize Main Thread Blocking
+
+Long-running JavaScript blocks the main thread and causes frame drops. Break up heavy computations:
+
+```javascript
+// Incorrect: blocks main thread
+function processLargeDataset(data) {
+  const results = [];
+  for (let i = 0; i < data.length; i++) {
+    results.push(expensiveOperation(data[i]));
+  }
+  return results;
+}
+
+// Correct: chunked processing
+async function processLargeDataset(data) {
+  const results = [];
+  const chunkSize = 100;
+  
+  for (let i = 0; i < data.length; i += chunkSize) {
+    const chunk = data.slice(i, i + chunkSize);
+    
+    await new Promise(resolve => {
+      requestAnimationFrame(() => {
+        chunk.forEach(item => results.push(expensiveOperation(item)));
+        resolve();
+      });
+    });
+  }
+  
+  return results;
+}
+```
+
+### Debounce High-Frequency Events
+
+Scroll, resize, and input events fire rapidly. Limit execution frequency:
+
+```javascript
+function debounce(func, wait) {
+  let timeout;
+  return function executedFunction(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
+// Apply to event handlers
+const handleScroll = debounce(() => {
+  updateScrollPosition();
+}, 16); // ~60fps baseline
+
+window.addEventListener('scroll', handleScroll, { passive: true });
+```
+
+### Use Passive Event Listeners
+
+Mark event listeners as passive when they don't call `preventDefault()`:
+
+```javascript
+// Improves scroll performance
+element.addEventListener('touchstart', handleTouch, { passive: true });
+element.addEventListener('wheel', handleWheel, { passive: true });
+```
+
+### Avoid Memory Leaks
+
+Remove event listeners and clear timers when components unmount:
+
+```javascript
+class Component {
+  constructor() {
+    this.handleResize = this.handleResize.bind(this);
+    this.intervalId = null;
+  }
+  
+  mount() {
+    window.addEventListener('resize', this.handleResize);
+    this.intervalId = setInterval(this.update, 1000);
+  }
+  
+  unmount() {
+    window.removeEventListener('resize', this.handleResize);
+    clearInterval(this.intervalId);
+    this.intervalId = null;
+  }
+}
+```
+
+---
+
+## CSS Performance
+
+### Minimize Layout Thrashing
+
+Batch DOM reads and writes separately:
+
+```javascript
+// Incorrect: causes multiple reflows
+function updateElements(elements) {
+  elements.forEach(el => {
+    const height = el.offsetHeight; // Read
+    el.style.height = height + 10 + 'px'; // Write
+  });
+}
+
+// Correct: batch reads, then writes
+function updateElements(elements) {
+  const heights = elements.map(el => el.offsetHeight); // Batch reads
+  
+  elements.forEach((el, i) => {
+    el.style.height = heights[i] + 10 + 'px'; // Batch writes
+  });
+}
+```
+
+### Use Transform and Opacity for Animations
+
+Transform and opacity properties are GPU-accelerated and don't trigger layout:
+
+```css
+/* Incorrect: triggers layout */
+.animated {
+  transition: width 0.3s, height 0.3s, top 0.3s, left 0.3s;
+}
+
+/* Correct: GPU-accelerated */
+.animated {
+  transition: transform 0.3s, opacity 0.3s;
+  will-change: transform, opacity;
+}
+```
+
+**Note:** GPU-accelerated animations maintain 60fps smoothly. Transform and opacity changes are handled by the GPU, keeping the main thread free for other work.
+
+### Limit will-change Usage
+
+`will-change` creates composite layers. Use sparingly and remove after animation:
+
+```javascript
+element.addEventListener('mouseenter', () => {
+  element.style.willChange = 'transform';
+});
+
+element.addEventListener('mouseleave', () => {
+  element.style.willChange = 'auto';
+});
+```
+
+### Reduce Paint Complexity
+
+Complex box shadows and gradients are expensive. Prefer simple styles:
+
+```css
+/* Expensive */
+.card {
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3),
+              0 5px 20px rgba(0,0,0,0.2),
+              inset 0 1px 0 rgba(255,255,255,0.1);
+  background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+}
+
+/* More efficient */
+.card {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  background: #667eea;
+}
+```
+
+### Use contain Property
+
+CSS containment optimizes rendering by limiting layout/paint scope:
+
+```css
+.card {
+  contain: layout style paint;
+}
+
+.list-item {
+  contain: layout style;
+}
+
+/* Strict containment for isolated components */
+.widget {
+  contain: strict;
+}
+```
+
+---
+
+## Image Optimization
+
+### Use Appropriate Image Formats
+
+- **JPEG**: Photos and complex images
+- **PNG**: Images requiring transparency
+- **WebP**: Modern format with better compression (provide fallbacks)
+- **SVG**: Icons and simple graphics
+
+```html
+<picture>
+  <source srcset="image.webp" type="image/webp">
+  <source srcset="image.jpg" type="image/jpeg">
+  <img src="image.jpg" alt="Description">
+</picture>
+```
+
+### Implement Lazy Loading
+
+Defer offscreen images:
+
+```html
+<img src="placeholder.jpg" 
+     data-src="actual-image.jpg" 
+     loading="lazy" 
+     alt="Description">
+```
+
+```javascript
+// Intersection Observer for custom lazy loading
+const imageObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const img = entry.target;
+      img.src = img.dataset.src;
+      imageObserver.unobserve(img);
+    }
+  });
+});
+
+document.querySelectorAll('img[data-src]').forEach(img => {
+  imageObserver.observe(img);
+});
+```
+
+### Optimize Image Dimensions
+
+Serve images at display size, not larger:
+
+```html
+<!-- Incorrect: 2000x2000px image displayed at 200x200px -->
+<img src="large-image.jpg" width="200" height="200">
+
+<!-- Correct: appropriately sized image -->
+<img src="thumbnail-200.jpg" width="200" height="200">
+```
+
+### Use Responsive Images
+
+Serve different sizes based on viewport:
+
+```html
+<img 
+  srcset="image-320w.jpg 320w,
+          image-640w.jpg 640w,
+          image-1280w.jpg 1280w"
+  sizes="(max-width: 640px) 100vw,
+         (max-width: 1280px) 50vw,
+         33vw"
+  src="image-640w.jpg"
+  alt="Description">
+```
+
+---
+
+## DOM Manipulation
+
+### Minimize DOM Access
+
+Cache DOM queries:
+
+```javascript
+// Incorrect: repeated queries
+function updateList() {
+  document.querySelector('.list').innerHTML = '';
+  for (let i = 0; i < items.length; i++) {
+    document.querySelector('.list').appendChild(createItem(items[i]));
+  }
+}
+
+// Correct: cache reference
+function updateList() {
+  const list = document.querySelector('.list');
+  list.innerHTML = '';
+  items.forEach(item => list.appendChild(createItem(item)));
+}
+```
+
+### Use Document Fragments
+
+Batch DOM insertions:
+
+```javascript
+// Incorrect: multiple reflows
+items.forEach(item => {
+  container.appendChild(createItem(item));
+});
+
+// Correct: single reflow
+const fragment = document.createDocumentFragment();
+items.forEach(item => {
+  fragment.appendChild(createItem(item));
+});
+container.appendChild(fragment);
+```
+
+### Virtual Scrolling for Long Lists
+
+For long lists (100+ items), use virtual scrolling to render only visible items. **TanStack Virtual** is proven to work exceptionally well with Despia.
+
+**Installation:**
+
+```
+npm install @tanstack/react-virtual
+```
+
+**Basic Implementation:**
+
+```tsx
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useRef } from 'react';
+
+function VirtualList({ items }) {
+  const parentRef = useRef(null);
+  
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 50, // Estimated item height
+    overscan: 5 // Render 5 extra items above/below viewport
+  });
+  
+  return (
+    <div 
+      ref={parentRef}
+      style={{ height: '400px', overflow: 'auto' }}
+    >
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative'
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => (
+          <div
+            key={virtualItem.key}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${virtualItem.size}px`,
+              transform: `translateY(${virtualItem.start}px)`
+            }}
+          >
+            {items[virtualItem.index].content}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+**Dynamic Heights:**
+
+```javascript
+const virtualizer = useVirtualizer({
+  count: items.length,
+  getScrollElement: () => parentRef.current,
+  estimateSize: () => 80,
+  // Measure actual heights dynamically
+  measureElement:
+    typeof window !== 'undefined' && navigator.userAgent.indexOf('Firefox') === -1
+      ? (element) => element?.getBoundingClientRect().height
+      : undefined
+});
+```
+
+**Horizontal Scrolling:**
+
+```javascript
+const virtualizer = useVirtualizer({
+  horizontal: true,
+  count: items.length,
+  getScrollElement: () => parentRef.current,
+  estimateSize: () => 200
+});
+```
+
+**Why TanStack Virtual Works Well with Despia:**
+
+- Optimized for high frame rates
+- Efficient DOM updates
+- Minimal re-renders
+- Handles dynamic content heights
+- Works seamlessly with Despia's GPU-accelerated rendering
+- Supports horizontal and grid layouts
+
+**Performance Benefits:**
+
+- Large datasets: Renders only visible items (typically 15-25 items)
+- Reduces memory usage significantly
+- Maintains smooth scrolling performance
+- Handles thousands of items efficiently
+
+---
+
+## Memory Management
+
+### Avoid Global Variables
+
+Global variables persist for the application lifetime:
+
+```javascript
+// Incorrect: global pollution
+var dataCache = [];
+var userInfo = {};
+
+// Correct: scoped to module
+(function() {
+  const dataCache = [];
+  const userInfo = {};
+  
+  // Export only necessary functions
+  window.app = {
+    getData: () => dataCache,
+    clearCache: () => dataCache.length = 0
+  };
+})();
+```
+
+### Clear Large Data Structures
+
+Explicitly null large objects when finished:
+
+```javascript
+let largeDataset = fetchLargeData();
+processData(largeDataset);
+largeDataset = null; // Allow garbage collection
+```
+
+### Use WeakMap for Object Metadata
+
+WeakMaps allow garbage collection of keys:
+
+```javascript
+// Incorrect: prevents garbage collection
+const metadata = new Map();
+metadata.set(domElement, { clicks: 0 });
+
+// Correct: allows garbage collection
+const metadata = new WeakMap();
+metadata.set(domElement, { clicks: 0 });
+// When domElement is removed, metadata entry can be collected
+```
+
+---
+
+## Network Optimization
+
+### Minimize HTTP Requests
+
+Combine resources where possible:
+
+```html
+<!-- Incorrect: multiple requests -->
+<link rel="stylesheet" href="reset.css">
+<link rel="stylesheet" href="typography.css">
+<link rel="stylesheet" href="layout.css">
+<link rel="stylesheet" href="components.css">
+
+<!-- Correct: bundled -->
+<link rel="stylesheet" href="app.css">
+```
+
+### Use Resource Hints
+
+Optimize resource loading:
+
+```html
+<!-- DNS prefetch for external resources -->
+<link rel="dns-prefetch" href="https://api.example.com">
+
+<!-- Preconnect for critical resources -->
+<link rel="preconnect" href="https://cdn.example.com">
+
+<!-- Prefetch for likely navigation -->
+<link rel="prefetch" href="/next-page.html">
+
+<!-- Preload critical assets -->
+<link rel="preload" href="critical.css" as="style">
+<link rel="preload" href="hero-image.jpg" as="image">
+```
+
+### Implement Efficient Caching
+
+Configure cache headers appropriately:
+
+```javascript
+// Service worker caching strategy
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => {
+      if (response) {
+        return response; // Serve from cache
+      }
+      
+      return fetch(event.request).then((response) => {
+        // Cache successful responses
+        if (response.status === 200) {
+          const responseClone = response.clone();
+          caches.open('v1').then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return response;
+      });
+    })
+  );
+});
+```
+
+### Compress Assets
+
+Enable gzip/brotli compression on server. Minify JavaScript and CSS:
+
+```javascript
+// Before minification (5.2kb)
+function calculateTotal(items) {
+  let total = 0;
+  for (let i = 0; i < items.length; i++) {
+    total += items[i].price * items[i].quantity;
+  }
+  return total;
+}
+
+// After minification (1.8kb)
+function calculateTotal(t){let l=0;for(let e=0;e<t.length;e++)l+=t[e].price*t[e].quantity;return l}
+```
+
+---
+
+## Font Loading Optimization
+
+### Use font-display
+
+Control font loading behavior:
+
+```css
+@font-face {
+  font-family: 'CustomFont';
+  src: url('font.woff2') format('woff2');
+  font-display: swap; /* Show fallback immediately, swap when loaded */
+}
+
+/* Alternative strategies */
+font-display: block;    /* Hide text briefly, then show custom font */
+font-display: fallback; /* Very brief hide, then fallback if not loaded */
+font-display: optional; /* Use custom font only if cached */
+```
+
+### Preload Critical Fonts
+
+```css
+<link rel="preload" 
+      href="critical-font.woff2" 
+      as="font" 
+      type="font/woff2" 
+      crossorigin>
+```
+
+### Subset Fonts
+
+Include only required characters:
+
+```css
+/* Full font: 150kb */
+@font-face {
+  font-family: 'Font';
+  src: url('font-full.woff2');
+}
+
+/* Subset font: 25kb (Latin characters only) */
+@font-face {
+  font-family: 'Font';
+  src: url('font-latin.woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153;
+}
+```
+
+---
+
+## Third-Party Scripts
+
+### Load Scripts Asynchronously
+
+Prevent blocking:
+
+```html
+<!-- Blocks rendering -->
+<script src="analytics.js"></script>
+
+<!-- Non-blocking (executes when downloaded) -->
+<script src="analytics.js" async></script>
+
+<!-- Non-blocking (executes after HTML parse) -->
+<script src="analytics.js" defer></script>
+```
+
+### Lazy Load Non-Critical Scripts
+
+Defer loading until needed:
+
+```javascript
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+// Load when user interaction requires it
+button.addEventListener('click', async () => {
+  await loadScript('https://cdn.example.com/library.js');
+  initializeFeature();
+});
+```
+
+### Monitor Third-Party Impact
+
+Use Performance API to measure:
+
+```javascript
+const observer = new PerformanceObserver((list) => {
+  list.getEntries().forEach((entry) => {
+    if (entry.name.includes('third-party.com')) {
+      console.log(`${entry.name}: ${entry.duration}ms`);
+    }
+  });
+});
+
+observer.observe({ entryTypes: ['resource'] });
+```
+
+---
+
+## Bundle Size Optimization
+
+### Code Splitting
+
+Load code only when needed:
+
+```javascript
+// Instead of importing everything
+import { featureA, featureB, featureC } from './features';
+
+// Dynamic imports
+button.addEventListener('click', async () => {
+  const { featureA } = await import('./features/featureA.js');
+  featureA();
+});
+```
+
+### Tree Shaking
+
+Ensure dead code is eliminated:
+
+```javascript
+// Incorrect: imports entire library
+import _ from 'lodash';
+
+// Correct: imports only needed function
+import debounce from 'lodash/debounce';
+```
+
+**Recommended Libraries:**
+
+These libraries are proven to work well with Despia and have minimal bundle impact:
+
+- **TanStack Virtual** (~5kb): Virtual scrolling for lists
+- **date-fns** (tree-shakeable): Date manipulation
+- **zustand** (~1kb): State management
+
+### Analyze Bundle Size
+
+Identify large dependencies:
+
+```javascript
+# Using webpack-bundle-analyzer
+npm install --save-dev webpack-bundle-analyzer
+
+# Add to webpack config
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+module.exports = {
+  plugins: [
+    new BundleAnalyzerPlugin()
+  ]
+};
+```
+
+---
+
+## Performance Monitoring
+
+### Measure Frame Rate
+
+Track rendering performance:
+
+```javascript
+let lastTime = performance.now();
+let frames = 0;
+
+function measureFPS() {
+  frames++;
+  const currentTime = performance.now();
+  
+  if (currentTime >= lastTime + 1000) {
+    const fps = Math.round((frames * 1000) / (currentTime - lastTime));
+    console.log(`FPS: ${fps}`);
+    
+    // Performance evaluation
+    if (fps >= 55) {
+      console.log('Excellent performance (60fps target)');
+    } else if (fps >= 50) {
+      console.log('Good performance');
+    } else if (fps >= 28) {
+      console.log('Constrained performance (Low Power Mode or thermal throttling)');
+    } else {
+      console.warn('Performance optimization needed');
+    }
+    
+    frames = 0;
+    lastTime = currentTime;
+  }
+  
+  requestAnimationFrame(measureFPS);
+}
+
+measureFPS();
+```
+
+**Typical Results:**
+
+- Normal operation: 55-60fps (target)
+- Low Power Mode: ~30fps (observed across devices)
+- Heavy workload/thermal: Variable, often 30-45fps
+- Needs optimization: \< 25fps consistently
+
+### Use Performance API
+
+Measure critical operations:
+
+```javascript
+// Mark start
+performance.mark('data-fetch-start');
+
+// Perform operation
+await fetchData();
+
+// Mark end
+performance.mark('data-fetch-end');
+
+// Measure duration
+performance.measure('data-fetch', 'data-fetch-start', 'data-fetch-end');
+
+// Get measurement
+const measure = performance.getEntriesByName('data-fetch')[0];
+console.log(`Data fetch took ${measure.duration}ms`);
+```
+
+### Long Task Detection
+
+Identify main thread blocking:
+
+```javascript
+const observer = new PerformanceObserver((list) => {
+  list.getEntries().forEach((entry) => {
+    console.warn(`Long task detected: ${entry.duration}ms`);
+  });
+});
+
+observer.observe({ entryTypes: ['longtask'] });
+```
+
+---
+
+## Common Performance Mistakes
+
+### Rendering Large Lists Without Virtualization
+
+```tsx
+// Incorrect: renders all items
+function ItemList({ items }) {
+  return (
+    <div>
+      {items.map(item => <Item key={item.id} data={item} />)}
+    </div>
+  );
+}
+
+// Correct: use TanStack Virtual
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+function ItemList({ items }) {
+  const parentRef = useRef(null);
+  const virtualizer = useVirtualizer({
+    count: items.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 50
+  });
+  
+  return (
+    <div ref={parentRef} style={{ height: '400px', overflow: 'auto' }}>
+      {/* Virtual items only */}
+    </div>
+  );
+}
+```
+
+**Impact:** Large lists without virtualization cause significant frame drops and poor scroll performance. TanStack Virtual maintains smooth scrolling by rendering only visible items.
+
+### Excessive Re-renders
+
+```javascript
+// Incorrect: creates new object every render
+function Component() {
+  return items.map(item => (
+    <Item style={{ color: 'red' }} />
+  ));
+}
+
+// Correct: stable object reference
+const itemStyle = { color: 'red' };
+function Component() {
+  return items.map(item => (
+    <Item style={itemStyle} />
+  ));
+}
+```
+
+### Synchronous localStorage
+
+```javascript
+// Incorrect: blocks main thread
+const data = JSON.parse(localStorage.getItem('data'));
+
+// Correct: defer to next tick
+setTimeout(() => {
+  const data = JSON.parse(localStorage.getItem('data'));
+  processData(data);
+}, 0);
+```
+
+### Inefficient Selectors
+
+```javascript
+// Incorrect: slow selector
+document.querySelectorAll('div.container ul li a.link');
+
+// Correct: specific selector
+document.querySelectorAll('.link');
+```
+
+### Missing Image Dimensions
+
+```html
+<!-- Incorrect: causes layout shift -->
+<img src="image.jpg" alt="Description">
+
+<!-- Correct: reserves space -->
+<img src="image.jpg" width="800" height="600" alt="Description">
+```
+
+---
+
+## Performance Budget
+
+### Define Targets
+
+Set measurable performance goals:
+
+| Metric                   | Target   | Maximum |
+| :----------------------- | :------- | :------ |
+| First Contentful Paint   | \< 1.5s  | 2.0s    |
+| Time to Interactive      | \< 3.0s  | 4.0s    |
+| Total Bundle Size        | \< 200kb | 300kb   |
+| JavaScript Execution     | \< 500ms | 1000ms  |
+| Frame Rate (Normal)      | 60fps    | 55fps   |
+| Frame Rate (Constrained) | 30fps    | 25fps   |
+
+<Note>
+  **Note:** Optimize for 60fps. Proper optimization ensures acceptable performance (~30fps) under system constraints (Low Power Mode, thermal throttling).
+</Note>
+
+### Monitor Continuously
+
+Track metrics in production:
+
+```javascript
+// Send performance data to analytics
+window.addEventListener('load', () => {
+  const perfData = performance.getEntriesByType('navigation')[0];
+  
+  analytics.track('performance', {
+    dns: perfData.domainLookupEnd - perfData.domainLookupStart,
+    tcp: perfData.connectEnd - perfData.connectStart,
+    ttfb: perfData.responseStart - perfData.requestStart,
+    download: perfData.responseEnd - perfData.responseStart,
+    domInteractive: perfData.domInteractive,
+    domComplete: perfData.domComplete,
+    loadComplete: perfData.loadEventEnd
+  });
+});
+```
+
+---
+
+## Platform-Specific Considerations
+
+### iOS (WKWebView)
+
+- Memory limits are stricter (\< 1.5GB typical)
+- JIT compilation available but with limits
+- Aggressive resource cleanup on background
+- IndexedDB has 50MB quota
+
+**Best Practices:**
+
+- Keep memory usage under 1GB
+- Implement state persistence for background handling
+- Use sessionStorage for temporary data
+- Monitor memory with performance.memory (when available)
+
+### Android (WebView)
+
+- Performance varies significantly by device
+- Chromium-based (recent Android versions)
+- Hardware acceleration configurable
+- More generous memory limits on modern devices
+
+**Best Practices:**
+
+- Test on low-end devices (2GB RAM)
+- Enable hardware acceleration
+- Use chrome://inspect for debugging
+- Implement graceful degradation for older Android versions
+
+---
+
+## Despia-Optimized Libraries
+
+These libraries have been tested extensively with Despia and provide excellent performance:
+
+### TanStack Virtual
+
+Virtual scrolling for lists and grids. Handles large datasets efficiently with smooth scrolling performance.
+
+```
+npm install @tanstack/react-virtual
+```
+
+**Use cases:**
+
+- Long lists (100+ items)
+- Infinite scroll feeds
+- Data tables
+- Grid layouts
+
+### TanStack Query
+
+Data fetching and caching. Reduces redundant network requests and improves perceived performance.
+
+```
+npm install @tanstack/react-query
+```
+
+**Benefits:**
+
+- Automatic background refetching
+- Optimistic updates
+- Request deduplication
+- Built-in caching
+
+### Date Libraries
+
+For date manipulation, use tree-shakeable libraries:
+
+```
+npm install date-fns
+# or
+npm install dayjs
+```
+
+Avoid moment.js (large bundle size).
+
+### State Management
+
+Lightweight options that work well:
+
+```
+npm install zustand      # ~1kb
+npm install jotai        # ~3kb
+npm install valtio       # ~3kb
+```
+
+Avoid Redux if unnecessary (larger overhead).
+
+---
+
+## Testing Performance
+
+### Device Testing
+
+Test on representative devices:
+
+**Minimum targets:**
+
+- iOS: iPhone 12 or equivalent
+- Android: Device with 4GB RAM, mid-range processor
+
+**Observed frame rates:**
+
+- Normal operation: 55-60fps (target)
+- Low Power Mode: ~30fps (typical)
+- Thermal throttling: Variable performance
+
+Test for 60fps optimization. Also verify acceptable performance when Low Power Mode is enabled or under thermal constraints.
+
+### Performance Testing Tools
+
+```
+// Lighthouse CI for automated testing
+module.exports = {
+  ci: {
+    collect: {
+      numberOfRuns: 3,
+      settings: {
+        preset: 'desktop'
+      }
+    },
+    assert: {
+      assertions: {
+        'first-contentful-paint': ['error', {maxNumericValue: 2000}],
+        'interactive': ['error', {maxNumericValue: 4000}],
+        'total-blocking-time': ['error', {maxNumericValue: 500}]
+      }
+    }
+  }
+};
+```
+
+### Synthetic Monitoring
+
+Simulate network conditions:
+
+```javascript
+// Chrome DevTools throttling presets
+const networkProfiles = {
+  fast3G: {
+    downloadThroughput: 1.6 * 1024 * 1024 / 8,
+    uploadThroughput: 750 * 1024 / 8,
+    latency: 40
+  },
+  slow3G: {
+    downloadThroughput: 500 * 1024 / 8,
+    uploadThroughput: 500 * 1024 / 8,
+    latency: 400
+  }
+};
+```
+
+---
+
+## Quick Reference
+
+### Critical Rendering Path
+
+1. Minimize critical resources
+2. Minimize critical bytes
+3. Minimize critical path length
+4. Prioritize visible content
+
+### Performance Checklist
+
+- Bundle size \< 300kb gzipped
+- Images optimized and lazy loaded
+- CSS animations use transform/opacity only
+- Event listeners marked passive where applicable
+- Large lists use TanStack Virtual for virtualization
+- Third-party scripts loaded asynchronously
+- Resource hints configured
+- Service worker implemented for caching
+- Font loading optimized
+- No long-running JavaScript on main thread
+- Optimize for 60fps (degrades gracefully under system constraints)
+
+### Performance Metrics
+
+**Load Performance:**
+
+- First Contentful Paint (FCP): \< 1.5s
+- Largest Contentful Paint (LCP): \< 2.5s
+- Time to Interactive (TTI): \< 3.0s
+
+**Runtime Performance:**
+
+- Frame rate (target): 60fps
+- Frame rate (Low Power Mode): ~30fps typical
+- Input latency: \< 100ms
+- Cumulative Layout Shift (CLS): \< 0.1
+
+### Optimization Priorities
+
+1. **Critical:** Reduce bundle size, optimize images, eliminate render-blocking resources
+2. **Important:** Implement caching, lazy loading, code splitting
+3. **Nice to have:** Advanced optimizations like resource hints, service workers, prefetching

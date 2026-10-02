@@ -1,0 +1,131 @@
+---
+title: "Despia for Lovable"
+description: "Ship your Lovable app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
+icon: "code"
+---
+
+You built your app in Lovable. Despia gets it into the App Store and Google Play, with native billing, push notifications, install attribution, and offline support all included, no plugins required.
+
+---
+
+## In-app purchases, built in
+
+This is the most important difference for most apps. Lovable's Capacitor export does not include native billing. If your app sells digital content, subscriptions, premium features, one-time purchases, you cannot use Stripe inside a native app. Apple and Google require their own billing systems and will reject apps that try to route around them.
+
+Despia includes RevenueCat as a first-class built-in. No plugin, no native dependency, no Xcode required.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    // Launch native paywall configured in your RevenueCat dashboard
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+} else {
+    // Web fallback, link the purchase to their account
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`
+}
+```
+
+Check entitlements on every app load, instant and offline-capable, no backend needed:
+
+```javascript
+const data    = await despia('getpurchasehistory://', ['restoredData'])
+const active  = (data.restoredData ?? []).filter(p => p.isActive)
+const premium = active.some(p => p.entitlementId === 'premium')
+
+// Wire the purchase callback to the same check
+window.onRevenueCatPurchase = () => checkEntitlements()
+```
+
+The web fallback links the purchase to the user's account via their ID. When they open the mobile app, the entitlement is already there.
+
+---
+
+## Push notifications, built in
+
+OneSignal is included. Register the device and link it to your user on every app load:
+
+```javascript
+despia(`setonesignalplayerid://?user_id=${userId}`)
+```
+
+Send targeted notifications from your backend using OneSignal's REST API with `include_external_user_ids`.
+
+---
+
+## Install attribution and ad analytics, built in
+
+AppsFlyer ships with every Despia app. Three variables are injected automatically on every page load:
+
+```javascript
+despia.appsFlyerReferrer     // 'tiktok_ad', 'meta_organic', 'organic'
+despia.appsFlyerAttribution  // full attribution object
+despia.appsFlyerUID          // unique AppsFlyer user ID
+```
+
+Log conversion events back to TikTok, Meta, and Google with one call:
+
+```javascript
+despia('appsflyer://log_event?event_name=purchase&event_values={"revenue":9.99}')
+```
+
+Without attribution you cannot know which ad or creator drove each install, optimise spend by channel, or run accurate ROAS reporting. This is essential the moment you start running paid traffic.
+
+---
+
+## Offline support, no `file://`
+
+Lovable's Capacitor export runs offline from the `file://` protocol by default. This breaks Supabase auth, OAuth flows, and most third-party SDKs that require an `http://` or `https://` origin. Sign In with Apple will not load on `file://` at all.
+
+Despia serves your app from `http://localhost` via an on-device HTTP server. Your app behaves identically to `yourapp.lovable.app`. Cookies work, auth works, every SDK loads normally.
+
+Optional: enable the Local Server add-on for full offline support. Your app loads in milliseconds from the local cache with no network dependency after first launch.
+
+---
+
+## One-click deployment, no Xcode
+
+Connecting Lovable's Capacitor export requires Xcode, provisioning profiles, and signing certificates on a Mac. Despia manages all of that from the dashboard. Connect your Lovable app URL and click publish.
+
+OTA updates are included at no cost with no MAU limits. When you redeploy in Lovable, the update reaches users on their next launch, no store review required.
+
+---
+
+## No lock-in
+
+Connect Despia to your **custom domain** rather than your `yourapp.lovable.app` URL directly. If you ever move to self-hosting or a different framework, update your DNS to point the same domain at the new host. The Despia app keeps loading the same URL, and nothing changes in the stores.
+
+Your App Store listing, ratings, RevenueCat entitlements, and AppsFlyer attribution all live in Despia, not in Lovable. They stay intact through any hosting or framework change.
+
+---
+
+## Feature summary
+
+|  | Despia | Capacitor (Lovable built-in) |
+| --- | --- | --- |
+| In-app purchases | Built in via RevenueCat | Requires plugin, not included |
+| Push notifications | Built in via OneSignal | Requires plugin |
+| Install attribution | Built in via AppsFlyer | Not included |
+| Offline support | Full, via localhost server | `file://`, breaks auth and SDKs |
+| OTA updates | Free, no MAU limits | Appflow discontinued (Feb 2025) |
+| Deployment | One click, no Xcode | Xcode and provisioning required |
+
+<CardGroup cols={2}>
+  <Card title="In-App Purchases" icon="credit-card" href="/native-features/revenuecat">
+    RevenueCat built in
+  </Card>
+
+  <Card title="Push Notifications" icon="bell" href="/native-features/onesignal">
+    OneSignal built in
+  </Card>
+
+  <Card title="AppsFlyer" icon="chart-bar" href="/analytics/appsflyer">
+    Attribution built in
+  </Card>
+
+  <Card title="Native Features" icon="mobile" href="/native-features">
+    All despia() capabilities
+  </Card>
+</CardGroup>

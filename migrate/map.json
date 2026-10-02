@@ -1,0 +1,2889 @@
+{
+ "version": 1,
+ "generatedAt": "2026-10-02",
+ "source": "legacy nav (legacy/mintlify/docs.json) mapped to v4 names verified in the framework tree: ClosedSource/DSX/Modules/**/dsx.json (command + actions), ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json, OpenSource/Documentation/guides, and this site's routes. Unknowns are marked, never guessed.",
+ "statuses": {
+  "mapped": "v4 has the same capability",
+  "partial": "v4 covers it differently or only in part",
+  "not-applicable": "process or third-party guidance with no Despia API to move",
+  "unknown": "no v4 equivalent found yet"
+ },
+ "entries": [
+  {
+   "legacyPath": "/introduction",
+   "legacyTitle": "Introduction",
+   "group": "",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Legacy",
+    "api": "despia init --from-v3; window.dsx.module.<command>.<action>()",
+    "docs": "/framework/guides/from-v3"
+   },
+   "note": "v3 despia() calls keep working through the optional Core/Legacy polyfill; new code calls window.dsx.",
+   "evidence": [
+    "OpenSource/Documentation/guides/from-v3.md:16",
+    "ClosedSource/DSX/Modules/Core/Legacy/README.md:3",
+    "OpenSource/Documentation/guides/despia-api.md:3"
+   ]
+  },
+  {
+   "legacyPath": "/mcp-server",
+   "legacyTitle": "MCP Server",
+   "group": "",
+   "status": "mapped",
+   "v4": {
+    "package": null,
+    "api": "https://docs.despia.com/mcp (tools: search, fetch-page, list-sections; each takes space)",
+    "docs": null
+   },
+   "note": "The docs site runs its own MCP server over streamable HTTP; v4, legacy, migration and troubleshooting docs are one server with a space argument.",
+   "evidence": [
+    "worker/index.ts (despia-docs)"
+   ]
+  },
+  {
+   "legacyPath": "/changelog",
+   "legacyTitle": "Changelog",
+   "group": "",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "v3 release notes; no v4 counterpart needed.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/deployment/apple-ios/automatic",
+   "legacyTitle": "Automatic",
+   "group": "Deployment > Apple iOS",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/deploying"
+   },
+   "note": "Store deployment process; v4 deploy flow is documented in the Deploying guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/deployment/apple-ios/manual",
+   "legacyTitle": "Manual",
+   "group": "Deployment > Apple iOS",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/deploying"
+   },
+   "note": "Store deployment process; v4 deploy flow is documented in the Deploying guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/deployment/google-android/automatic",
+   "legacyTitle": "Automatic",
+   "group": "Deployment > Google Android",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/deploying"
+   },
+   "note": "Store deployment process; v4 deploy flow is documented in the Deploying guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/deployment/google-android/manual",
+   "legacyTitle": "Manual",
+   "group": "Deployment > Google Android",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/deploying"
+   },
+   "note": "Store deployment process; v4 deploy flow is documented in the Deploying guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/best-practices/frontend/structure",
+   "legacyTitle": "Structure",
+   "group": "Best Practices > Frontend",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Web frontend best-practice article.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/best-practices/frontend/performance",
+   "legacyTitle": "Performance",
+   "group": "Best Practices > Frontend",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Web frontend best-practice article.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/best-practices/frontend/animations",
+   "legacyTitle": "Animations",
+   "group": "Best Practices > Frontend",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Web frontend best-practice article.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/best-practices/backend/user-session",
+   "legacyTitle": "User Session",
+   "group": "Best Practices > Backend",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Backend session pattern; its setvault/setonesignalplayerid/getpurchasehistory calls map via IdentityVault, OneSignal and RevenueCat rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:71",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:29",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104"
+   ]
+  },
+  {
+   "legacyPath": "/best-practices/backend/revenuecat/user-session",
+   "legacyTitle": "User Session",
+   "group": "Best Practices > Backend > RevenueCat",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Backend session pattern; its setvault/setonesignalplayerid/getpurchasehistory calls map via IdentityVault, OneSignal and RevenueCat rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:71",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:29",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104"
+   ]
+  },
+  {
+   "legacyPath": "/best-practices/backend/revenuecat/webhooks",
+   "legacyTitle": "Webhooks",
+   "group": "Best Practices > Backend > RevenueCat",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Server-side RevenueCat webhooks; no Despia client API involved.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/best-practices/backend/revenuecat/cron-jobs",
+   "legacyTitle": "Cron Jobs",
+   "group": "Best Practices > Backend > RevenueCat",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Server-side cron jobs; no Despia client API involved.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/best-practices/backend/one-signal/user-session",
+   "legacyTitle": "User Session",
+   "group": "Best Practices > Backend > OneSignal",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Backend session pattern; its setvault/setonesignalplayerid/getpurchasehistory calls map via IdentityVault, OneSignal and RevenueCat rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:71",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:29",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104"
+   ]
+  },
+  {
+   "legacyPath": "/best-practices/updates/overview",
+   "legacyTitle": "Overview",
+   "group": "Best Practices > Updates",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/transport-and-ota-integrity"
+   },
+   "note": "OTA-vs-binary update guidance; v4 OTA integrity is its own guide (bundleNumber comes from metadata.version via Legacy).",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:230"
+   ]
+  },
+  {
+   "legacyPath": "/best-practices/updates/interface",
+   "legacyTitle": "Interface",
+   "group": "Best Practices > Updates",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/transport-and-ota-integrity"
+   },
+   "note": "OTA-vs-binary update guidance; v4 OTA integrity is its own guide (bundleNumber comes from metadata.version via Legacy).",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:230"
+   ]
+  },
+  {
+   "legacyPath": "/best-practices/updates/logic",
+   "legacyTitle": "Logic",
+   "group": "Best Practices > Updates",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/transport-and-ota-integrity"
+   },
+   "note": "OTA-vs-binary update guidance; v4 OTA integrity is its own guide (bundleNumber comes from metadata.version via Legacy).",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:230"
+   ]
+  },
+  {
+   "legacyPath": "/best-practices/updates/editor",
+   "legacyTitle": "Editor",
+   "group": "Best Practices > Updates",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/transport-and-ota-integrity"
+   },
+   "note": "OTA-vs-binary update guidance; v4 OTA integrity is its own guide (bundleNumber comes from metadata.version via Legacy).",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:230"
+   ]
+  },
+  {
+   "legacyPath": "/local-server/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Local Ecosystem > Local Server",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Legacy/Modules/ContentServer",
+    "api": "optional ContentServer (dsx.module.legacy.cdn); modern: dsx.module.files.url()",
+    "docs": null
+   },
+   "note": "The v3 on-device HTTP server survives only as an optional Legacy package; modern apps use Core/Files.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ContentServer/README.md:3",
+    "ClosedSource/DSX/Modules/Core/Files/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/local-server/reference",
+   "legacyTitle": "Reference",
+   "group": "Local Ecosystem > Local Server",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Legacy/Modules/ContentServer",
+    "api": "optional ContentServer (dsx.module.legacy.cdn); modern: dsx.module.files.url()",
+    "docs": null
+   },
+   "note": "The v3 on-device HTTP server survives only as an optional Legacy package; modern apps use Core/Files.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ContentServer/README.md:3",
+    "ClosedSource/DSX/Modules/Core/Files/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/local-intelligence/Introduction",
+   "legacyTitle": "Introduction",
+   "group": "Local Ecosystem > Local Intelligence",
+   "status": "partial",
+   "v4": {
+    "package": "Core/LocalAI",
+    "api": "dsx.module.intelligence.completion() / models.download etc.",
+    "docs": null
+   },
+   "note": "v3 Local AI beta was withdrawn; v4 LocalAI is a new API with no Legacy translation.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/LocalAI/dsx.json:223",
+    "ClosedSource/DSX/Modules/Core/LocalAI/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/local-intelligence/reference",
+   "legacyTitle": "Reference",
+   "group": "Local Ecosystem > Local Intelligence",
+   "status": "partial",
+   "v4": {
+    "package": "Core/LocalAI",
+    "api": "dsx.module.intelligence.completion() / models.download etc.",
+    "docs": null
+   },
+   "note": "v3 Local AI beta was withdrawn; v4 LocalAI is a new API with no Legacy translation.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/LocalAI/dsx.json:223",
+    "ClosedSource/DSX/Modules/Core/LocalAI/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/local-database/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Local Ecosystem > Local Database",
+   "status": "partial",
+   "v4": {
+    "package": "@despia-native/sync-client",
+    "api": "dsx.module.sync.records() / mutate() / pull() / push() over local SQLite",
+    "docs": null
+   },
+   "note": "v3 used PowerSync; v4 Despia Sync device client keeps a local SQLite and syncs with pull/push.",
+   "evidence": [
+    "OpenSource/Services/sync-client/README.md:6",
+    "OpenSource/Services/sync-client/dsx.json:3"
+   ]
+  },
+  {
+   "legacyPath": "/local-database/reference",
+   "legacyTitle": "Reference",
+   "group": "Local Ecosystem > Local Database",
+   "status": "partial",
+   "v4": {
+    "package": "@despia-native/sync-client",
+    "api": "dsx.module.sync.records() / mutate() / pull() / push() over local SQLite",
+    "docs": null
+   },
+   "note": "v3 used PowerSync; v4 Despia Sync device client keeps a local SQLite and syncs with pull/push.",
+   "evidence": [
+    "OpenSource/Services/sync-client/README.md:6",
+    "OpenSource/Services/sync-client/dsx.json:3"
+   ]
+  },
+  {
+   "legacyPath": "/local-cdn/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Local Ecosystem > Local CDN",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Legacy/Modules/ContentServer",
+    "api": "dsx.module.legacy.cdn.upload() / url() / list() / remove(); modern: dsx.module.files.download() / url()",
+    "docs": null
+   },
+   "note": "The LocalCDN store lives in the optional ContentServer package; no Legacy row translates localcdn:// verbs.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ContentServer/README.md:16",
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ContentServer/dsx.json:20",
+    "ClosedSource/DSX/Modules/Core/Files/dsx.json:764"
+   ]
+  },
+  {
+   "legacyPath": "/local-cdn/reference",
+   "legacyTitle": "Reference",
+   "group": "Local Ecosystem > Local CDN",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Legacy/Modules/ContentServer",
+    "api": "dsx.module.legacy.cdn.upload() / url() / list() / remove(); modern: dsx.module.files.download() / url()",
+    "docs": null
+   },
+   "note": "The LocalCDN store lives in the optional ContentServer package; no Legacy row translates localcdn:// verbs.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ContentServer/README.md:16",
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ContentServer/dsx.json:20",
+    "ClosedSource/DSX/Modules/Core/Files/dsx.json:764"
+   ]
+  },
+  {
+   "legacyPath": "/authentication/clerk/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Authentication > Clerk",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Clerk",
+    "api": "dsx.module.clerk.configure() / authview() / userprofile() / signout() / token() / status()",
+    "docs": null
+   },
+   "note": "Every clerk:// host has a Legacy row; onClerkEvent and clerkJWT are re-delivered.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:60",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:174",
+    "ClosedSource/DSX/Modules/Core/Clerk/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/authentication/clerk/reference",
+   "legacyTitle": "Reference",
+   "group": "Authentication > Clerk",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Clerk",
+    "api": "dsx.module.clerk.configure() / authview() / userprofile() / signout() / token() / status()",
+    "docs": null
+   },
+   "note": "Every clerk:// host has a Legacy row; onClerkEvent and clerkJWT are re-delivered.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:60",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:174",
+    "ClosedSource/DSX/Modules/Core/Clerk/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/authentication/clerk/auth-methods",
+   "legacyTitle": "Auth Methods",
+   "group": "Authentication > Clerk",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Clerk",
+    "api": "dsx.module.clerk.configure() / authview() / userprofile() / signout() / token() / status()",
+    "docs": null
+   },
+   "note": "Every clerk:// host has a Legacy row; onClerkEvent and clerkJWT are re-delivered.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:60",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:174",
+    "ClosedSource/DSX/Modules/Core/Clerk/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/authentication/clerk/sessions",
+   "legacyTitle": "Session",
+   "group": "Authentication > Clerk",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Clerk",
+    "api": "dsx.module.clerk.configure() / authview() / userprofile() / signout() / token() / status()",
+    "docs": null
+   },
+   "note": "Every clerk:// host has a Legacy row; onClerkEvent and clerkJWT are re-delivered.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:60",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:174",
+    "ClosedSource/DSX/Modules/Core/Clerk/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/authentication/clerk/backend",
+   "legacyTitle": "Backend",
+   "group": "Authentication > Clerk",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Clerk",
+    "api": "dsx.module.clerk.token() (JWT for your backend)",
+    "docs": null
+   },
+   "note": "Backend verification is server-side Clerk; the device side is clerk.token / window.clerkJWT.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:66",
+    "ClosedSource/DSX/Modules/Core/Clerk/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/authentication/clerk/account",
+   "legacyTitle": "Account",
+   "group": "Authentication > Clerk",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Clerk",
+    "api": "dsx.module.clerk.configure() / authview() / userprofile() / signout() / token() / status()",
+    "docs": null
+   },
+   "note": "Every clerk:// host has a Legacy row; onClerkEvent and clerkJWT are re-delivered.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:60",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:174",
+    "ClosedSource/DSX/Modules/Core/Clerk/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/payments/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Payments",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Store",
+    "api": "dsx.module.store.checkout() / paywall() / restore(); RevenueCat and Payments packages",
+    "docs": null
+   },
+   "note": "v4 has a unified Store layer plus Core/RevenueCat and Core/Payments for card payments.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:298",
+    "ClosedSource/DSX/Modules/Core/RevenueCat/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Payments/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/payments/revenuecat/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Payments > RevenueCat",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.purchase() / paywall() / catalog() / customer() / history() / center()",
+    "docs": null
+   },
+   "note": "revenuecat://* and getpurchasehistory:// have Legacy rows; the unified Core/Store layer also exists for new code.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:108",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104",
+    "ClosedSource/DSX/Modules/Core/RevenueCat/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/payments/revenuecat/reference",
+   "legacyTitle": "Reference",
+   "group": "Payments > RevenueCat",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.purchase() / paywall() / catalog() / customer() / history() / center()",
+    "docs": null
+   },
+   "note": "revenuecat://* and getpurchasehistory:// have Legacy rows; the unified Core/Store layer also exists for new code.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:108",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104",
+    "ClosedSource/DSX/Modules/Core/RevenueCat/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/payments/stripe/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Payments > Stripe",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Payments",
+    "api": "dsx.module.payments.payment() / manage() / connectBank() / payAch(); dsx.module.stripe.connectOnboard()",
+    "docs": null
+   },
+   "note": "stripe:// hosts map onto the Payments package (Stripe processor module).",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:86",
+    "ClosedSource/DSX/Modules/Core/Payments/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Payments/Modules/Stripe/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/payments/stripe/payment",
+   "legacyTitle": "Payment",
+   "group": "Payments > Stripe",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Payments",
+    "api": "dsx.module.payments.payment() / manage() / connectBank() / payAch(); dsx.module.stripe.connectOnboard()",
+    "docs": null
+   },
+   "note": "stripe:// hosts map onto the Payments package (Stripe processor module).",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:86",
+    "ClosedSource/DSX/Modules/Core/Payments/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Payments/Modules/Stripe/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/custom-code/extensions",
+   "legacyTitle": "Extensions",
+   "group": "Custom Code",
+   "status": "partial",
+   "v4": {
+    "package": null,
+    "api": "a DSX package (dsx.json + Swift/Kotlin/web lanes) installed with `despia add`",
+    "docs": "/framework/skills/writing-a-module"
+   },
+   "note": "v3 extensions were scheme handlers; in v4 every native capability is a package called through dsx.module.<command>.",
+   "evidence": [
+    "OpenSource/Documentation/guides/despia-api.md:14",
+    "OpenSource/Documentation/guides/from-v3.md:33"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "dsx.module.appsflyer.log_event() / set_user_id() / get_uid() / get_attribution() / set_consent() / log_ad_revenue()",
+    "docs": null
+   },
+   "note": "Every appsflyer:// host has a Legacy row with the same verb names; appsFlyerUID/Attribution/Referrer globals kept.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:143",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:235",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/testing",
+   "legacyTitle": "Testing",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "dsx.module.appsflyer.log_event() / set_user_id() / get_uid() / get_attribution() / set_consent() / log_ad_revenue()",
+    "docs": null
+   },
+   "note": "Every appsflyer:// host has a Legacy row with the same verb names; appsFlyerUID/Attribution/Referrer globals kept.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:143",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:235",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/identity",
+   "legacyTitle": "Identity",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "dsx.module.appsflyer.set_user_id() / set_email() / set_phone() / get_uid()",
+    "docs": null
+   },
+   "note": "Identity hosts map 1:1 onto AppsFlyer actions.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:144",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/attribution",
+   "legacyTitle": "Attribution",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "dsx.module.appsflyer.get_attribution() (window.appsFlyerAttribution)",
+    "docs": null
+   },
+   "note": "get_attribution maps 1:1; attribution/referrer globals seeded by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:149",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/deeplinking",
+   "legacyTitle": "Deep Linking",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "appsflyer deep_link broadcast (window.onAppsFlyerDeepLink)",
+    "docs": null
+   },
+   "note": "The deep_link broadcast is re-delivered to window.onAppsFlyerDeepLink by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:171",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/campaigns",
+   "legacyTitle": "Campaigns",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "dsx.module.appsflyer.get_attribution()",
+    "docs": null
+   },
+   "note": "Campaign data is read through attribution; campaign setup itself is AppsFlyer dashboard work.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:149",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/events",
+   "legacyTitle": "Events",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "dsx.module.appsflyer.log_event({ event_name, ... })",
+    "docs": null
+   },
+   "note": "log_event maps 1:1.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:143",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/ad-revenue",
+   "legacyTitle": "Ad Revenue",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "dsx.module.appsflyer.log_ad_revenue()",
+    "docs": null
+   },
+   "note": "log_ad_revenue maps 1:1.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:148",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/appsflyer/consent",
+   "legacyTitle": "Consent",
+   "group": "Analytics > AppsFlyer",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AppsFlyer",
+    "api": "dsx.module.appsflyer.set_consent()",
+    "docs": null
+   },
+   "note": "set_consent maps 1:1.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:150",
+    "ClosedSource/DSX/Modules/Core/AppsFlyer/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/posthog/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Analytics > PostHog",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Growth",
+    "api": "dsx.module.growth.track() / identify() / reset() with the PostHog destination (posthog.send)",
+    "docs": null
+   },
+   "note": "v4 routes analytics through Growth with PostHog as a destination; no Legacy row for posthog:// verbs (capture, flags, opt_out...).",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Growth/dsx.json:130",
+    "ClosedSource/DSX/Modules/Core/Growth/Modules/PostHog/dsx.json:5",
+    "OpenSource/Documentation/architecture/proposals/legacy-polyfill.md:351"
+   ]
+  },
+  {
+   "legacyPath": "/analytics/posthog/reference",
+   "legacyTitle": "Reference",
+   "group": "Analytics > PostHog",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Growth",
+    "api": "dsx.module.growth.track() / identify() / reset() with the PostHog destination (posthog.send)",
+    "docs": null
+   },
+   "note": "v4 routes analytics through Growth with PostHog as a destination; no Legacy row for posthog:// verbs (capture, flags, opt_out...).",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Growth/dsx.json:130",
+    "ClosedSource/DSX/Modules/Core/Growth/Modules/PostHog/dsx.json:5",
+    "OpenSource/Documentation/architecture/proposals/legacy-polyfill.md:351"
+   ]
+  },
+  {
+   "legacyPath": "/connectivity/websockets",
+   "legacyTitle": "WebSockets",
+   "group": "Connectivity",
+   "status": "mapped",
+   "v4": {
+    "package": "Mandatory/WebSocket",
+    "api": "dsx.module.websocket.connect() / subscribe() / send() / disconnect() / status()",
+    "docs": null
+   },
+   "note": "Same verbs as v3 websocket://; no Legacy row for the old spelling.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Mandatory/WebSocket/dsx.json:81",
+    "ClosedSource/DSX/Modules/Mandatory/WebSocket/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/connectivity/nfc",
+   "legacyTitle": "NFC",
+   "group": "Connectivity",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/NFC",
+    "api": "dsx.module.nfc.read() / write({ text })",
+    "docs": null
+   },
+   "note": "readnfc://, writenfc:// and nfc://read|write map onto Core/NFC.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:151",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:111",
+    "ClosedSource/DSX/Modules/Core/NFC/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/introduction-1",
+   "legacyTitle": "Introduction",
+   "group": "Health > Terra",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Health/Terra",
+    "api": "dsx.module.terra.connect() / sync() / data() / disconnect()",
+    "docs": null
+   },
+   "note": "Same verbs on the Terra package; Legacy seeds window.terra from terra.context.snapshot, terra:// calls have no row.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Health/Terra/dsx.json:142",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:244",
+    "ClosedSource/DSX/Modules/Core/Health/Terra/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/reference",
+   "legacyTitle": "Reference",
+   "group": "Health > Terra",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Health/Terra",
+    "api": "dsx.module.terra.connect() / sync() / data() / disconnect()",
+    "docs": null
+   },
+   "note": "Same verbs on the Terra package; Legacy seeds window.terra from terra.context.snapshot, terra:// calls have no row.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Health/Terra/dsx.json:142",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:244",
+    "ClosedSource/DSX/Modules/Core/Health/Terra/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/machine-learning/vision/ocr",
+   "legacyTitle": "OCR",
+   "group": "Machine Learning > Vision",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Vision",
+    "api": "dsx.module.vision.ocr() / readText(); v3 route: dsx.module.legacy.visionOcr()",
+    "docs": null
+   },
+   "note": "vision://ocr is answered by Legacy's visionOcr; Core/Vision is the modern package.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:93",
+    "ClosedSource/DSX/Modules/Core/Vision/dsx.json:95",
+    "ClosedSource/DSX/Modules/Core/Vision/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/machine-learning/voice/speech-recognition",
+   "legacyTitle": "Speech Recognition",
+   "group": "Machine Learning > Voice",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/WebPlatform/SpeechRecognition",
+    "api": "dsx.module.speechrecognition.start() / stop() / abort()",
+    "docs": null
+   },
+   "note": "speechrecognition://start|stop|abort have Legacy rows and events are re-delivered to onSpeechRecognitionEvent.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:99",
+    "ClosedSource/DSX/Modules/Core/WebPlatform/SpeechRecognition/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/wallet/pkpass",
+   "legacyTitle": "PK Pass",
+   "group": "Wallets",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Wallet",
+    "api": "dsx.module.wallet.pkpass({ ... })",
+    "docs": null
+   },
+   "note": "wallet://pkpass maps to wallet.pkpass.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:94",
+    "ClosedSource/DSX/Modules/Core/Wallet/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/user-agent",
+   "legacyTitle": "User Agent",
+   "group": "Native Features",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Dom",
+    "api": "Dom config useragent_iphone / useragent_ipad / useragent_android; window.dsx.has(name)",
+    "docs": "/framework/guides/despia-api"
+   },
+   "note": "Custom user agent strings are Dom config; feature detection in v4 is window.dsx.has().",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Dom/config.json:93",
+    "OpenSource/Documentation/guides/despia-api.md:76"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/onesignal/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Native Features > OneSignal",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/OneSignal",
+    "api": "dsx.module.onesignal.login({ user_id }) / onesignal.id(); dsx.module.notify.permission.request()",
+    "docs": null
+   },
+   "note": "setonesignalplayerid maps to onesignal.login, registerpush to notify.permission.request; window.onesignalplayerid is still seeded by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:29",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:30",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:28",
+    "ClosedSource/DSX/Modules/Core/OneSignal/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/onesignal/reference",
+   "legacyTitle": "Reference",
+   "group": "Native Features > OneSignal",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/OneSignal",
+    "api": "dsx.module.onesignal.login({ user_id }) / onesignal.id(); dsx.module.notify.permission.request()",
+    "docs": null
+   },
+   "note": "setonesignalplayerid maps to onesignal.login, registerpush to notify.permission.request; window.onesignalplayerid is still seeded by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:29",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:30",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:28",
+    "ClosedSource/DSX/Modules/Core/OneSignal/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/deeplinking",
+   "legacyTitle": "Deeplinking",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Mandatory/App",
+    "api": "App config `domains` / `associated_domains` (+ `app_link_paths`)",
+    "docs": null
+   },
+   "note": "Universal links and Android app links are declared in the App package config, which drives the entitlement and autoVerify filters.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Mandatory/App/config.json:2",
+    "ClosedSource/DSX/Modules/Mandatory/App/config.json:10",
+    "ClosedSource/DSX/Modules/Mandatory/App/config.json:18"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/revenuecat/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Native Features > RevenueCat",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.purchase() / paywall() / catalog() / customer() / history() / center()",
+    "docs": null
+   },
+   "note": "revenuecat://* and getpurchasehistory:// have Legacy rows; the unified Core/Store layer also exists for new code.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:108",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104",
+    "ClosedSource/DSX/Modules/Core/RevenueCat/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/revenuecat/reference",
+   "legacyTitle": "Reference",
+   "group": "Native Features > RevenueCat",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.purchase() / paywall() / catalog() / customer() / history() / center()",
+    "docs": null
+   },
+   "note": "revenuecat://* and getpurchasehistory:// have Legacy rows; the unified Core/Store layer also exists for new code.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:108",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104",
+    "ClosedSource/DSX/Modules/Core/RevenueCat/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/oauth/easy-login-flow",
+   "legacyTitle": "Easy OAuth",
+   "group": "Native Features > OAuth 2.0",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Auth/OAuth",
+    "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/README.md:14",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/swift/OAuth.swift:259"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/oauth/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Native Features > OAuth 2.0 > Legacy",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Auth/OAuth",
+    "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/README.md:14",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/swift/OAuth.swift:259"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/oauth/apple",
+   "legacyTitle": "Apple Auth",
+   "group": "Native Features > OAuth 2.0 > Legacy",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Auth/OAuth",
+    "api": "dsx.module.oauth.start({ url }); native Sign in with Apple: dsx.module.appleauth.signIn()",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "Web OAuth goes through oauth.start; the native Apple sheet is Core/Auth/AppleAuth.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Auth/AppleAuth/dsx.json:9",
+    "ClosedSource/DSX/Modules/Core/Auth/AppleAuth/dsx.json:22"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/oauth/google",
+   "legacyTitle": "Google Auth",
+   "group": "Native Features > OAuth 2.0 > Legacy",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Auth/OAuth",
+    "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/README.md:14",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/swift/OAuth.swift:259"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/oauth/tiktok",
+   "legacyTitle": "TikTok Auth",
+   "group": "Native Features > OAuth 2.0 > Legacy",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Auth/OAuth",
+    "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/README.md:14",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/swift/OAuth.swift:259"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/purchases",
+   "legacyTitle": "Purchases",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.purchase({ ... }) / dsx.module.store.checkout()",
+    "docs": null
+   },
+   "note": "revenuecat://purchase maps to revenuecat.purchase; Core/Store.checkout is the provider-neutral form.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:108",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:298"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/paywalls",
+   "legacyTitle": "Paywalls",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.paywall()",
+    "docs": null
+   },
+   "note": "revenuecat://launchPaywall maps to revenuecat.paywall; Core/Store also has store.paywall.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:105",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:145"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/restore-purchase",
+   "legacyTitle": "Restore Purchase",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.history() (window.restoredData); dsx.module.store.restore()",
+    "docs": null
+   },
+   "note": "getpurchasehistory:// maps to revenuecat.history and Legacy re-seeds window.restoredData on each page.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:207"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/storage-vault",
+   "legacyTitle": "Storage Vault",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/IdentityVault",
+    "api": "dsx.module.identityvault.write() / read()",
+    "docs": null
+   },
+   "note": "setvault:// and readvault:// have Legacy rows onto IdentityVault.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:71",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:72",
+    "ClosedSource/DSX/Modules/Core/IdentityVault/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/service-workers",
+   "legacyTitle": "Service Workers",
+   "group": "Native Features",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Dom",
+    "api": "service worker runs when the build declares WKAppBoundDomains (Dom web host)",
+    "docs": null
+   },
+   "note": "The Dom web host keeps v3 service-worker parity via App-Bound Domains; no dedicated config toggle found.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Dom/swift/DomWebHost.swift:102"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/url-scheme",
+   "legacyTitle": "URL Scheme",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Mandatory/App",
+    "api": "App config `url_schemes`",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "Custom URL schemes are declared in the App package config; HTTPS callbacks are the modern OAuth return path.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Mandatory/App/config.json:26"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/file-picker",
+   "legacyTitle": "File Picker",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Mandatory/FileUpload",
+    "api": "dsx.module.fileupload.nativeOverwrite({ native_overwrite })",
+    "docs": null
+   },
+   "note": "filepicker:// has a Legacy row onto the FileUpload package.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:140",
+    "ClosedSource/DSX/Modules/Mandatory/FileUpload/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/gps-location",
+   "legacyTitle": "GPS Location",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Location",
+    "api": "dsx.module.location.start() / stop() / current(); background.on() / background.off()",
+    "docs": null
+   },
+   "note": "location://, stoplocation:// and backgroundlocationon/off have Legacy rows; Core/Geo is the full modern geo package.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:51",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:25",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:49",
+    "ClosedSource/DSX/Modules/Core/Basics/Location/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Geo/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/gyroscope",
+   "legacyTitle": "Gyroscope",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Gyroscope",
+    "api": "dsx.module.gyroscope.start() / stop()",
+    "docs": null
+   },
+   "note": "gyroscope:// maps to gyroscope.start/stop; onGyroscopeChange and gyroscopeActive are re-delivered by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:42",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:165",
+    "ClosedSource/DSX/Modules/Core/Basics/Gyroscope/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/light-and-dark-mode",
+   "legacyTitle": "Light & Dark Mode",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Appearance",
+    "api": "dsx.module.appearance.get() / context.resolved; dsx.module.systembars.set({ status: { style } })",
+    "docs": "/framework/guides/theming"
+   },
+   "note": "statusbartextcolor:// maps to systembars.set; window.isDarkMode is seeded from appearance.context.resolved.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:15",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:225",
+    "ClosedSource/DSX/Modules/Core/Basics/Appearance/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/SystemBars/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/admob/Iinterstitial",
+   "legacyTitle": "Interstitial Ads",
+   "group": "Native Features > AdMob",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AdMob",
+    "api": "dsx.module.admob.interstitial()",
+    "docs": null
+   },
+   "note": "admob://interstitial maps to admob.interstitial.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:142",
+    "ClosedSource/DSX/Modules/Core/AdMob/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/admob/inline-ads",
+   "legacyTitle": "Inline Ads",
+   "group": "Native Features > AdMob",
+   "status": "partial",
+   "v4": {
+    "package": "Core/AdMob",
+    "api": "dsx.module.admob.banner()",
+    "docs": null
+   },
+   "note": "v3 bridged ad tags into the DOM; v4 AdMob declares a banner action but no Legacy row translates the v3 inline setup.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/AdMob/dsx.json:251",
+    "ClosedSource/DSX/Modules/Core/AdMob/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/admob/rewarded-ads",
+   "legacyTitle": "Rewarded Ads",
+   "group": "Native Features > AdMob",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AdMob",
+    "api": "dsx.module.admob.rewarded() (earned broadcast -> window.updateRewardedStatus)",
+    "docs": null
+   },
+   "note": "displayrewardedad:// maps to admob.rewarded; the earned event is re-delivered as updateRewardedStatus.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:116",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:164",
+    "ClosedSource/DSX/Modules/Core/AdMob/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/external-links",
+   "legacyTitle": "External Links",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Dom",
+    "api": "Dom config external_link_handling / safari_whitelist / always_open_in_inapp_tab; dsx.module.browser.open()",
+    "docs": null
+   },
+   "note": "Link routing rules are Dom package config; browser.open opens a URL explicitly.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Dom/config.json:151",
+    "ClosedSource/DSX/Modules/Core/Dom/config.json:174",
+    "ClosedSource/DSX/Modules/Mandatory/Browser/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/device-indexing",
+   "legacyTitle": "Device Indexing",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/DeviceUUID",
+    "api": "dsx.module.uuid.get() (window.uuid page global)",
+    "docs": null
+   },
+   "note": "get-uuid:// maps to uuid.get and Legacy seeds window.uuid on every page.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:36",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:36",
+    "ClosedSource/DSX/Modules/Core/DeviceUUID/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/haptic-feedback",
+   "legacyTitle": "Haptic Feedback",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Haptics",
+    "api": "dsx.module.haptic.light() / medium() / heavy() / success() / warning() / error()",
+    "docs": null
+   },
+   "note": "Each v3 *haptic:// verb has a Legacy row onto the Haptics package.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:7",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:12",
+    "ClosedSource/DSX/Modules/Core/Basics/Haptics/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/prevent-autoscroll",
+   "legacyTitle": "Prevent Autoscroll",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/PreventDefault",
+    "api": "dsx.module.preventdefault.autoscroll()",
+    "docs": null
+   },
+   "note": "Same verb exists on the PreventDefault package; no Legacy row translates the old preventdefault:// spelling.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Basics/PreventDefault/dsx.json:29",
+    "ClosedSource/DSX/Modules/Core/Basics/PreventDefault/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/contact-access",
+   "legacyTitle": "Contact Access",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Contacts",
+    "api": "dsx.module.contacts.read() / permission.request() / pick()",
+    "docs": null
+   },
+   "note": "readcontacts:// and requestcontactpermission:// have Legacy rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:67",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:69",
+    "ClosedSource/DSX/Modules/Core/Contacts/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/healthkit",
+   "legacyTitle": "HealthKit (Legacy)",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/HealthKit",
+    "api": "dsx.module.healthkit.read() / write() / observe() / workouts()",
+    "docs": null
+   },
+   "note": "readhealthkit://, writehealthkit:// and healthkit://observe|unobserve|workouts have Legacy rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:34",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:35",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:153",
+    "ClosedSource/DSX/Modules/Core/HealthKit/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/health-data/apple-health",
+   "legacyTitle": "Apple Health",
+   "group": "Native Features > Health Data",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/HealthKit",
+    "api": "dsx.module.healthkit.read() / write() / observe() / workouts()",
+    "docs": null
+   },
+   "note": "readhealthkit://, writehealthkit:// and healthkit://observe|unobserve|workouts have Legacy rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:34",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:35",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:153",
+    "ClosedSource/DSX/Modules/Core/HealthKit/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/health-data/google-health",
+   "legacyTitle": "Google Health",
+   "group": "Native Features > Health Data",
+   "status": "partial",
+   "v4": {
+    "package": "Core/HealthKit",
+    "api": "dsx.module.healthkit.read() / write() (Android facet on Health Connect)",
+    "docs": null
+   },
+   "note": "v3 page was a coming-soon stub; v4 HealthKit package maps reads/writes onto Health Connect on Android.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/HealthKit/README.md:3",
+    "ClosedSource/DSX/Modules/Core/HealthKit/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/siri-shortcuts",
+   "legacyTitle": "Siri Shortcuts",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Legacy/Modules/Siri",
+    "api": "dsx.module.legacy.siri.add({ command, payload })",
+    "docs": null
+   },
+   "note": "addtosiri:// is answered by the optional LegacySiri package; modern assistant integration lives in Core/Intents / Core/Assistants.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:139",
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/Siri/README.md:3",
+    "ClosedSource/DSX/Modules/Core/Intents/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/biometrics",
+   "legacyTitle": "Biometrics",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Biometric",
+    "api": "dsx.module.biometric.authenticate({ reason }) / supported()",
+    "docs": null
+   },
+   "note": "bioauth:// maps to biometric.authenticate; onBioAuthSuccess/Failure/Unavailable callbacks kept by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:52",
+    "ClosedSource/DSX/Modules/Core/Legacy/README.md:107",
+    "ClosedSource/DSX/Modules/Core/Biometric/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/speech-recognition",
+   "legacyTitle": "Speech Recognition",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/WebPlatform/SpeechRecognition",
+    "api": "dsx.module.speechrecognition.start() / stop() / abort()",
+    "docs": null
+   },
+   "note": "speechrecognition://start|stop|abort have Legacy rows and events are re-delivered to onSpeechRecognitionEvent.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:99",
+    "ClosedSource/DSX/Modules/Core/WebPlatform/SpeechRecognition/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/app-privacy",
+   "legacyTitle": "App Privacy",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/WebPlatform/AppTracking",
+    "api": "dsx.module.apptracking.permission.status() / permission.request()",
+    "docs": null
+   },
+   "note": "window.trackingDisabled is seeded from apptracking.permission.status by a Legacy page row.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:96",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:98",
+    "ClosedSource/DSX/Modules/Core/WebPlatform/AppTracking/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/safe-areas",
+   "legacyTitle": "Safe Areas",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/SystemBars",
+    "api": "systembars context `insets` + --safe-area-* CSS variables",
+    "docs": null
+   },
+   "note": "SystemBars publishes the --safe-area-* custom properties; Legacy seeds window.safeAreaInsets.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:240",
+    "ClosedSource/DSX/Modules/Core/SystemBars/shared/tests/env-shim-browser.mjs:95",
+    "ClosedSource/DSX/Modules/Core/SystemBars/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/screen-radius",
+   "legacyTitle": "Screen Radius",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Device",
+    "api": "dsx.module.device.screen() (cornerRadius; --screen-radius)",
+    "docs": null
+   },
+   "note": "ScreenRadius folded into Core/Device; Legacy seeds window.screenRadius and --screen-radius.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:232",
+    "ClosedSource/DSX/Modules/Core/Legacy/page/legacy-listener.js:106",
+    "ClosedSource/DSX/Modules/Core/Device/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/in-app-rating",
+   "legacyTitle": "In-App Rating",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/AppRating",
+    "api": "dsx.module.apprating.request()",
+    "docs": null
+   },
+   "note": "rateapp:// maps to apprating.request.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:138",
+    "ClosedSource/DSX/Modules/Core/Basics/AppRating/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/action-sheet",
+   "legacyTitle": "Action Sheet",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/ActionSheet",
+    "api": "dsx.module.actionsheet.show({ title, ... })",
+    "docs": null
+   },
+   "note": "actionsheet:// maps to actionsheet.show; selections re-delivered to onSheetEvent.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:141",
+    "ClosedSource/DSX/Modules/Core/ActionSheet/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/camera-roll",
+   "legacyTitle": "Camera Roll",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/CameraRoll",
+    "api": "dsx.module.gallery.save({ url })",
+    "docs": null
+   },
+   "note": "savethisimage:// maps to gallery.save.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:126",
+    "ClosedSource/DSX/Modules/Core/CameraRoll/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/offline-push",
+   "legacyTitle": "Offline Push",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/LocalPush",
+    "api": "dsx.module.localpush.send() / schedule() / unschedule()",
+    "docs": null
+   },
+   "note": "sendlocalpushmsg:// (and its cancel hosts) map onto LocalPush.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:77",
+    "ClosedSource/DSX/Modules/Core/LocalPush/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/app-settings",
+   "legacyTitle": "App Settings",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/AppSettings",
+    "api": "dsx.module.settings.notifications() (also location, bluetooth, wifi...)",
+    "docs": null
+   },
+   "note": "settingsapp://notifications has a Legacy row; per-feature permission.openSettings also exists.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:125",
+    "ClosedSource/DSX/Modules/Core/Basics/AppSettings/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/file-viewer",
+   "legacyTitle": "File Viewer",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/FileViewer",
+    "api": "dsx.module.fileviewer.preview({ ... })",
+    "docs": null
+   },
+   "note": "Same capability on the FileViewer package; no Legacy row translates fileviewer:// spellings.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/FileViewer/dsx.json:51",
+    "ClosedSource/DSX/Modules/Core/FileViewer/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/home-widgets",
+   "legacyTitle": "Home Widgets",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Legacy/Modules/ImageWidget",
+    "api": "dsx.module.legacy.imagewidget.receive() (v3 widget://); modern: dsx.module.widget.update()",
+    "docs": "/framework/skills/live-activities-and-widgets"
+   },
+   "note": "widget:// is answered by the optional LegacyWidgets package; new widgets are authored in DSX via Core/Widgets.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:26",
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ImageWidget/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Widgets/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/file-sharing",
+   "legacyTitle": "File Sharing",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/FileSharing",
+    "api": "dsx.module.filesharing.share({ url, filename })",
+    "docs": null
+   },
+   "note": "sharefile:// and download:// map to filesharing.share; no Legacy row found for the bare https:// spelling.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:136",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:137",
+    "ClosedSource/DSX/Modules/Core/FileSharing/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/focus-events",
+   "legacyTitle": "Focus Events",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Focus",
+    "api": "focus context `focused`; dsx.on(\"focus\", ...) (window.focusin/focusout via Legacy)",
+    "docs": null
+   },
+   "note": "Focus broadcasts are re-delivered to window.focusin()/focusout() by Legacy push rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:160",
+    "ClosedSource/DSX/Modules/Core/Basics/Focus/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/screen-brightness",
+   "legacyTitle": "Screen Brightness",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/ScreenBrightness",
+    "api": "dsx.module.brightness.enable() / disable() / auto() / set()",
+    "docs": null
+   },
+   "note": "scanningmode://on|off|auto map to brightness.enable/disable/auto.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:122",
+    "ClosedSource/DSX/Modules/Core/ScreenBrightness/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/share-dialog",
+   "legacyTitle": "Share Dialog",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/SocialShare",
+    "api": "dsx.module.share.url({ message, url })",
+    "docs": null
+   },
+   "note": "shareapp:// maps to share.url.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:115",
+    "ClosedSource/DSX/Modules/Core/SocialShare/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/clipboard",
+   "legacyTitle": "Clipboard",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Clipboard",
+    "api": "dsx.module.clipboard.read() / write()",
+    "docs": null
+   },
+   "note": "getclipboard:// maps to clipboard.read.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:40",
+    "ClosedSource/DSX/Modules/Core/Clipboard/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/store-location",
+   "legacyTitle": "Store Location",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Store",
+    "api": "dsx.module.store.storefront() (window.storeLocation)",
+    "docs": null
+   },
+   "note": "Legacy seeds window.storeLocation from store.storefront on every page; getstorelocation:// also mapped.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:38",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:38",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/share-extension",
+   "legacyTitle": "Share Extension",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Extensions/ShareExtension",
+    "api": "dsx.module.sharetarget.take(); dsx.on(\"sharetarget\", ...)",
+    "docs": null
+   },
+   "note": "sharetarget received broadcasts are re-delivered to window.onSharedDataReceived by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:217",
+    "ClosedSource/DSX/Modules/Core/Extensions/ShareExtension/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/quick-actions",
+   "legacyTitle": "Quick Actions",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/QuickActions",
+    "api": "dsx.module.quickactions.set({ items }); quickactions tap broadcast",
+    "docs": null
+   },
+   "note": "v3 Shortcuts.json is seeded via quickactions.set and taps are replayed the old way by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/README.md:135",
+    "ClosedSource/DSX/Modules/Core/QuickActions/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/simple-storage",
+   "legacyTitle": "Simple Storage",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/ValueStore",
+    "api": "dsx.module.storage.get() / set()",
+    "docs": "/framework/guides/files-and-storage"
+   },
+   "note": "writevalue:// and readvalue:// map to storage.set/get under key appSettings.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:4",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:5",
+    "ClosedSource/DSX/Modules/Core/Basics/ValueStore/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/print-documents",
+   "legacyTitle": "Print Documents",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/PrintDocuments",
+    "api": "dsx.module.print.document({ url, jobName })",
+    "docs": null
+   },
+   "note": "printitem:// maps to print.document.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:128",
+    "ClosedSource/DSX/Modules/Core/PrintDocuments/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/screenshot",
+   "legacyTitle": "Screenshot",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Screenshot",
+    "api": "dsx.module.screenshot.save(); v3 route: dsx.module.legacy.takeScreenshot()",
+    "docs": null
+   },
+   "note": "takescreenshot:// is answered by Legacy's takeScreenshot; Core/Basics/Screenshot is the modern package.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:135",
+    "ClosedSource/DSX/Modules/Core/Basics/Screenshot/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/notification-sounds",
+   "legacyTitle": "Notification Sounds",
+   "group": "Native Features",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Sounds",
+    "api": "ship .wav files under iOS/Packages/Sounds/ios_sounds/",
+    "docs": null
+   },
+   "note": "Sounds package owns custom notification sounds; the v3 converter still lists ios_sounds as a file to move by hand.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Sounds/dsx.json:14",
+    "OpenSource/Documentation/guides/from-v3.md:70"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/audio-player",
+   "legacyTitle": "Audio",
+   "group": "Native Features",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Audio",
+    "api": "dsx.module.audio.play() / pause() / seek() / set(); <Audio> component",
+    "docs": "/components/audio"
+   },
+   "note": "v4 Audio is a redesigned engine; only the audio event broadcast has a Legacy row, the v3 audio:// config/queue verbs do not.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Audio/dsx.json:464",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:220",
+    "ClosedSource/DSX/Modules/Core/Audio/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/bluetooth",
+   "legacyTitle": "Bluetooth",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Bluetooth",
+    "api": "dsx.module.bluetooth.scan() / connect() / discover() / read() / write() / subscribe()",
+    "docs": null
+   },
+   "note": "Same verbs as v3 bluetooth:// on the Bluetooth package; only window.bluetoothActive has a Legacy row.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Bluetooth/dsx.json:118",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:242",
+    "ClosedSource/DSX/Modules/Core/Bluetooth/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/age-assurance",
+   "legacyTitle": "Age Assurance",
+   "group": "Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AgeAssurance",
+    "api": "dsx.module.ageassurance.check() / resolve() / last() / forget()",
+    "docs": null
+   },
+   "note": "Same verbs as v3 ageassurance://; no Legacy row for the old spelling.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/AgeAssurance/dsx.json:15",
+    "ClosedSource/DSX/Modules/Core/AgeAssurance/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/native-features/sandbox",
+   "legacyTitle": "Sandbox",
+   "group": "Native Features",
+   "status": "partial",
+   "v4": {
+    "package": "Core/DevSettings",
+    "api": "dsx.module.dev.set() / reset() (shake-to-open dev panel)",
+    "docs": "/framework/guides/staging-and-testing"
+   },
+   "note": "DevSettings switches a test install to a staging origin and back; no Legacy row for sandbox://set|clear or window.isSandbox.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/DevSettings/README.md:3",
+    "ClosedSource/DSX/Modules/Core/DevSettings/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/editor/versioning",
+   "legacyTitle": "Versioning",
+   "group": "Editor",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/deploying"
+   },
+   "note": "v3 editor versioning process; v4 releases go through despia deploy.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/editor/publishing-an-update",
+   "legacyTitle": "Publishing an Update",
+   "group": "Editor",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/deploying"
+   },
+   "note": "v3 editor publish process; v4 releases go through despia deploy.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/deployment/apple-ios/health-kit",
+   "legacyTitle": "HealthKit",
+   "group": "Roadblocks > Deployment > Apple iOS",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store HealthKit entitlement/review advice.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/deployment/apple-ios/att-and-tracking",
+   "legacyTitle": "ATT & Tracking",
+   "group": "Roadblocks > Deployment > Apple iOS",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "ATT review advice; the v4 call is apptracking.permission.request and Legacy has show_att_at_start.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:98",
+    "ClosedSource/DSX/Modules/Core/Legacy/README.md:196"
+   ]
+  },
+  {
+   "legacyPath": "/roadblocks/deployment/update-bundle-id",
+   "legacyTitle": "Update Bundle IDs",
+   "group": "Roadblocks > Deployment > General",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/provisioning"
+   },
+   "note": "Bundle id troubleshooting.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/revenue-cat/missing-item",
+   "legacyTitle": "Missing Item",
+   "group": "Roadblocks > RevenueCat",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "RevenueCat/App Store product configuration troubleshooting.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/runtime/no-ota-updates",
+   "legacyTitle": "No OTA Updates",
+   "group": "Roadblocks > Runtime",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/transport-and-ota-integrity"
+   },
+   "note": "OTA troubleshooting for v3.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/runtime/lost-auth-tokens",
+   "legacyTitle": "Lost Auth Tokens",
+   "group": "Roadblocks > Runtime",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Troubleshooting article; its fix (setvault/readvault) maps to IdentityVault.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:71"
+   ]
+  },
+  {
+   "legacyPath": "/roadblocks/runtime/o-auth-failures",
+   "legacyTitle": "OAuth Failures",
+   "group": "Roadblocks > Runtime",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "OAuth troubleshooting; v4 uses oauth.start with HTTPS callbacks.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/runtime/slow-apps",
+   "legacyTitle": "Slow Apps",
+   "group": "Roadblocks > Runtime",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Web performance troubleshooting.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/runtime/empty-pages",
+   "legacyTitle": "Empty Pages",
+   "group": "Roadblocks > Runtime",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Web routing/hosting troubleshooting.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/runtime/wrong-framework",
+   "legacyTitle": "Wrong Framework",
+   "group": "Roadblocks > Runtime",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Framework selection troubleshooting.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/runtime/watermark-bug",
+   "legacyTitle": "Watermark Bug",
+   "group": "Roadblocks > Runtime",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "v3 licence watermark build issue.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/roadblocks/runtime/legacy-setups",
+   "legacyTitle": "Legacy Setups",
+   "group": "Roadblocks > Runtime",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Legacy",
+    "api": "Core/Legacy polyfill answers window.despia; new code uses window.dsx",
+    "docs": "/framework/guides/from-v3"
+   },
+   "note": "The window.despia setups this page warns about are what the optional Legacy package polyfills.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/README.md:15",
+    "OpenSource/Documentation/guides/from-v3.md:75"
+   ]
+  },
+  {
+   "legacyPath": "/store-rejections/introduction",
+   "legacyTitle": "Introduction",
+   "group": "Store Rejections",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/minimum-functionality",
+   "legacyTitle": "Minimum Functionality",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/non-mobile-design",
+   "legacyTitle": "Non-Mobile Design",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/in-app-purchases",
+   "legacyTitle": "In-App Purchases",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/deceptive-paywalls",
+   "legacyTitle": "Deceptive Paywalls",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/privacy-policy",
+   "legacyTitle": "Privacy Policy",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/tracking-transparency",
+   "legacyTitle": "Tracking Transparency",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/ai-processing",
+   "legacyTitle": "AI Processing",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/spam-and-copies",
+   "legacyTitle": "Spam and Copies",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/social-login-options",
+   "legacyTitle": "Social Login Options",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/user-specific-data",
+   "legacyTitle": "User-Specific Data",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/store-rejections/common-rejection/blank-screen-redirects",
+   "legacyTitle": "Blank Screen Redirects",
+   "group": "Store Rejections > Common Rejection",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "App Store / Play review guidance, not an API.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/platform-support/lovable",
+   "legacyTitle": "Despia for Lovable",
+   "group": "Platform Support",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/building-with-agents"
+   },
+   "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/platform-support/base44",
+   "legacyTitle": "Despia for Base44",
+   "group": "Platform Support",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/building-with-agents"
+   },
+   "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/platform-support/replit",
+   "legacyTitle": "Despia for Replit",
+   "group": "Platform Support",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/building-with-agents"
+   },
+   "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/platform-support/claude-code",
+   "legacyTitle": "Despia for Claude Code",
+   "group": "Platform Support",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/building-with-agents"
+   },
+   "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/platform-support/cursor",
+   "legacyTitle": "Despia for Cursor",
+   "group": "Platform Support",
+   "status": "not-applicable",
+   "v4": {
+    "package": null,
+    "api": null,
+    "docs": "/framework/guides/building-with-agents"
+   },
+   "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/lovable/how-it-works",
+   "legacyTitle": "How it Works",
+   "group": "Lovable",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Legacy",
+    "api": "window.dsx.module.<command>.<action>(); Legacy answers old despia() calls",
+    "docs": "/framework/guides/despia-api"
+   },
+   "note": "The despia-native URL-scheme model becomes window.dsx module calls; Legacy keeps old calls working.",
+   "evidence": [
+    "OpenSource/Documentation/guides/despia-api.md:14",
+    "ClosedSource/DSX/Modules/Core/Legacy/README.md:3"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/user-agent",
+   "legacyTitle": "User Agent",
+   "group": "Lovable > Native Features",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Dom",
+    "api": "Dom config useragent_iphone / useragent_ipad / useragent_android; window.dsx.has(name)",
+    "docs": "/framework/guides/despia-api"
+   },
+   "note": "Custom user agent strings are Dom config; feature detection in v4 is window.dsx.has().",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Dom/config.json:93",
+    "OpenSource/Documentation/guides/despia-api.md:76"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/onesignal",
+   "legacyTitle": "OneSignal",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/OneSignal",
+    "api": "dsx.module.onesignal.login({ user_id }) / onesignal.id(); dsx.module.notify.permission.request()",
+    "docs": null
+   },
+   "note": "setonesignalplayerid maps to onesignal.login, registerpush to notify.permission.request; window.onesignalplayerid is still seeded by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:29",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:30",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:28",
+    "ClosedSource/DSX/Modules/Core/OneSignal/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/deeplinking",
+   "legacyTitle": "Deeplinking",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Mandatory/App",
+    "api": "App config `domains` / `associated_domains` (+ `app_link_paths`)",
+    "docs": null
+   },
+   "note": "Universal links and Android app links are declared in the App package config, which drives the entitlement and autoVerify filters.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Mandatory/App/config.json:2",
+    "ClosedSource/DSX/Modules/Mandatory/App/config.json:10",
+    "ClosedSource/DSX/Modules/Mandatory/App/config.json:18"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/o-auth-2-0/apple-auth",
+   "legacyTitle": "Apple Auth",
+   "group": "Lovable > Native Features > OAuth 2.0",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Auth/OAuth",
+    "api": "dsx.module.oauth.start({ url }); native Sign in with Apple: dsx.module.appleauth.signIn()",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "Web OAuth goes through oauth.start; the native Apple sheet is Core/Auth/AppleAuth.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Auth/AppleAuth/dsx.json:9",
+    "ClosedSource/DSX/Modules/Core/Auth/AppleAuth/dsx.json:22"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/oauth/google",
+   "legacyTitle": "Google Auth",
+   "group": "Lovable > Native Features > OAuth 2.0",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Auth/OAuth",
+    "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/README.md:14",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/swift/OAuth.swift:259"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/oauth/tiktok",
+   "legacyTitle": "TikTok Auth",
+   "group": "Lovable > Native Features > OAuth 2.0",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Auth/OAuth",
+    "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
+    "docs": "/framework/guides/oauth-https-callback"
+   },
+   "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/README.md:14",
+    "ClosedSource/DSX/Modules/Core/Auth/OAuth/swift/OAuth.swift:259"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/paywalls",
+   "legacyTitle": "Paywalls",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.paywall()",
+    "docs": null
+   },
+   "note": "revenuecat://launchPaywall maps to revenuecat.paywall; Core/Store also has store.paywall.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:105",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:145"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/restore-purchase",
+   "legacyTitle": "Restore Purchase",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/RevenueCat",
+    "api": "dsx.module.revenuecat.history() (window.restoredData); dsx.module.store.restore()",
+    "docs": null
+   },
+   "note": "getpurchasehistory:// maps to revenuecat.history and Legacy re-seeds window.restoredData on each page.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:104",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:207"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/storage-vault",
+   "legacyTitle": "Storage Vault",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/IdentityVault",
+    "api": "dsx.module.identityvault.write() / read()",
+    "docs": null
+   },
+   "note": "setvault:// and readvault:// have Legacy rows onto IdentityVault.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:71",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:72",
+    "ClosedSource/DSX/Modules/Core/IdentityVault/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/gps-location-1",
+   "legacyTitle": "GPS Location",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Location",
+    "api": "dsx.module.location.start() / stop() / current(); background.on() / background.off()",
+    "docs": null
+   },
+   "note": "location://, stoplocation:// and backgroundlocationon/off have Legacy rows; Core/Geo is the full modern geo package.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:51",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:25",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:49",
+    "ClosedSource/DSX/Modules/Core/Basics/Location/dsx.json:5",
+    "ClosedSource/DSX/Modules/Core/Geo/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/rewarded-ads",
+   "legacyTitle": "Rewarded Ads",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/AdMob",
+    "api": "dsx.module.admob.rewarded() (earned broadcast -> window.updateRewardedStatus)",
+    "docs": null
+   },
+   "note": "displayrewardedad:// maps to admob.rewarded; the earned event is re-delivered as updateRewardedStatus.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:116",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:164",
+    "ClosedSource/DSX/Modules/Core/AdMob/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/external-links",
+   "legacyTitle": "External Links",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Dom",
+    "api": "Dom config external_link_handling / safari_whitelist / always_open_in_inapp_tab; dsx.module.browser.open()",
+    "docs": null
+   },
+   "note": "Link routing rules are Dom package config; browser.open opens a URL explicitly.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Dom/config.json:151",
+    "ClosedSource/DSX/Modules/Core/Dom/config.json:174",
+    "ClosedSource/DSX/Modules/Mandatory/Browser/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/device-indexing",
+   "legacyTitle": "Device Indexing",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/DeviceUUID",
+    "api": "dsx.module.uuid.get() (window.uuid page global)",
+    "docs": null
+   },
+   "note": "get-uuid:// maps to uuid.get and Legacy seeds window.uuid on every page.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:36",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:36",
+    "ClosedSource/DSX/Modules/Core/DeviceUUID/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/haptic-feedback",
+   "legacyTitle": "Haptic Feedback",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Haptics",
+    "api": "dsx.module.haptic.light() / medium() / heavy() / success() / warning() / error()",
+    "docs": null
+   },
+   "note": "Each v3 *haptic:// verb has a Legacy row onto the Haptics package.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:7",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:12",
+    "ClosedSource/DSX/Modules/Core/Basics/Haptics/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/contact-access",
+   "legacyTitle": "Contact Access",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Contacts",
+    "api": "dsx.module.contacts.read() / permission.request() / pick()",
+    "docs": null
+   },
+   "note": "readcontacts:// and requestcontactpermission:// have Legacy rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:67",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:69",
+    "ClosedSource/DSX/Modules/Core/Contacts/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/health-kit",
+   "legacyTitle": "HealthKit",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/HealthKit",
+    "api": "dsx.module.healthkit.read() / write() / observe() / workouts()",
+    "docs": null
+   },
+   "note": "readhealthkit://, writehealthkit:// and healthkit://observe|unobserve|workouts have Legacy rows.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:34",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:35",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:153",
+    "ClosedSource/DSX/Modules/Core/HealthKit/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/siri-shortcuts",
+   "legacyTitle": "Siri Shortcuts",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Legacy/Modules/Siri",
+    "api": "dsx.module.legacy.siri.add({ command, payload })",
+    "docs": null
+   },
+   "note": "addtosiri:// is answered by the optional LegacySiri package; modern assistant integration lives in Core/Intents / Core/Assistants.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:139",
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/Siri/README.md:3",
+    "ClosedSource/DSX/Modules/Core/Intents/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/biometrics",
+   "legacyTitle": "Biometrics",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Biometric",
+    "api": "dsx.module.biometric.authenticate({ reason }) / supported()",
+    "docs": null
+   },
+   "note": "bioauth:// maps to biometric.authenticate; onBioAuthSuccess/Failure/Unavailable callbacks kept by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:52",
+    "ClosedSource/DSX/Modules/Core/Legacy/README.md:107",
+    "ClosedSource/DSX/Modules/Core/Biometric/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/app-privacy",
+   "legacyTitle": "App Privacy",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/WebPlatform/AppTracking",
+    "api": "dsx.module.apptracking.permission.status() / permission.request()",
+    "docs": null
+   },
+   "note": "window.trackingDisabled is seeded from apptracking.permission.status by a Legacy page row.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:96",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:98",
+    "ClosedSource/DSX/Modules/Core/WebPlatform/AppTracking/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/safe-areas",
+   "legacyTitle": "Safe Areas",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/SystemBars",
+    "api": "systembars context `insets` + --safe-area-* CSS variables",
+    "docs": null
+   },
+   "note": "SystemBars publishes the --safe-area-* custom properties; Legacy seeds window.safeAreaInsets.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:240",
+    "ClosedSource/DSX/Modules/Core/SystemBars/shared/tests/env-shim-browser.mjs:95",
+    "ClosedSource/DSX/Modules/Core/SystemBars/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/camera-roll",
+   "legacyTitle": "Camera Roll",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/CameraRoll",
+    "api": "dsx.module.gallery.save({ url })",
+    "docs": null
+   },
+   "note": "savethisimage:// maps to gallery.save.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:126",
+    "ClosedSource/DSX/Modules/Core/CameraRoll/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/offline-push",
+   "legacyTitle": "Offline Push",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/LocalPush",
+    "api": "dsx.module.localpush.send() / schedule() / unschedule()",
+    "docs": null
+   },
+   "note": "sendlocalpushmsg:// (and its cancel hosts) map onto LocalPush.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:77",
+    "ClosedSource/DSX/Modules/Core/LocalPush/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/app-settings",
+   "legacyTitle": "App Settings",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/AppSettings",
+    "api": "dsx.module.settings.notifications() (also location, bluetooth, wifi...)",
+    "docs": null
+   },
+   "note": "settingsapp://notifications has a Legacy row; per-feature permission.openSettings also exists.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:125",
+    "ClosedSource/DSX/Modules/Core/Basics/AppSettings/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/home-widgets",
+   "legacyTitle": "Home Widgets",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Legacy/Modules/ImageWidget",
+    "api": "dsx.module.legacy.imagewidget.receive() (v3 widget://); modern: dsx.module.widget.update()",
+    "docs": "/framework/skills/live-activities-and-widgets"
+   },
+   "note": "widget:// is answered by the optional LegacyWidgets package; new widgets are authored in DSX via Core/Widgets.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:26",
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ImageWidget/dsx.json:6",
+    "ClosedSource/DSX/Modules/Core/Widgets/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/file-sharing",
+   "legacyTitle": "File Sharing",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/FileSharing",
+    "api": "dsx.module.filesharing.share({ url, filename })",
+    "docs": null
+   },
+   "note": "sharefile:// and download:// map to filesharing.share; no Legacy row found for the bare https:// spelling.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:136",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:137",
+    "ClosedSource/DSX/Modules/Core/FileSharing/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/screen-brightness",
+   "legacyTitle": "Screen Brightness",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/ScreenBrightness",
+    "api": "dsx.module.brightness.enable() / disable() / auto() / set()",
+    "docs": null
+   },
+   "note": "scanningmode://on|off|auto map to brightness.enable/disable/auto.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:122",
+    "ClosedSource/DSX/Modules/Core/ScreenBrightness/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/share-dialog",
+   "legacyTitle": "Share Dialog",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/SocialShare",
+    "api": "dsx.module.share.url({ message, url })",
+    "docs": null
+   },
+   "note": "shareapp:// maps to share.url.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:115",
+    "ClosedSource/DSX/Modules/Core/SocialShare/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/clipboard",
+   "legacyTitle": "Clipboard",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Clipboard",
+    "api": "dsx.module.clipboard.read() / write()",
+    "docs": null
+   },
+   "note": "getclipboard:// maps to clipboard.read.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:40",
+    "ClosedSource/DSX/Modules/Core/Clipboard/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/store-location",
+   "legacyTitle": "Store Location",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Store",
+    "api": "dsx.module.store.storefront() (window.storeLocation)",
+    "docs": null
+   },
+   "note": "Legacy seeds window.storeLocation from store.storefront on every page; getstorelocation:// also mapped.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:38",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:38",
+    "ClosedSource/DSX/Modules/Core/Store/dsx.json:6"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/share-extension",
+   "legacyTitle": "Share Extension",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Extensions/ShareExtension",
+    "api": "dsx.module.sharetarget.take(); dsx.on(\"sharetarget\", ...)",
+    "docs": null
+   },
+   "note": "sharetarget received broadcasts are re-delivered to window.onSharedDataReceived by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:217",
+    "ClosedSource/DSX/Modules/Core/Extensions/ShareExtension/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/quick-actions",
+   "legacyTitle": "Quick Actions",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/QuickActions",
+    "api": "dsx.module.quickactions.set({ items }); quickactions tap broadcast",
+    "docs": null
+   },
+   "note": "v3 Shortcuts.json is seeded via quickactions.set and taps are replayed the old way by Legacy.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/README.md:135",
+    "ClosedSource/DSX/Modules/Core/QuickActions/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/simple-storage",
+   "legacyTitle": "Simple Storage",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/ValueStore",
+    "api": "dsx.module.storage.get() / set()",
+    "docs": "/framework/guides/files-and-storage"
+   },
+   "note": "writevalue:// and readvalue:// map to storage.set/get under key appSettings.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:4",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:5",
+    "ClosedSource/DSX/Modules/Core/Basics/ValueStore/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/print-documents",
+   "legacyTitle": "Print Documents",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/PrintDocuments",
+    "api": "dsx.module.print.document({ url, jobName })",
+    "docs": null
+   },
+   "note": "printitem:// maps to print.document.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:128",
+    "ClosedSource/DSX/Modules/Core/PrintDocuments/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/screenshot",
+   "legacyTitle": "Screenshot",
+   "group": "Lovable > Native Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Screenshot",
+    "api": "dsx.module.screenshot.save(); v3 route: dsx.module.legacy.takeScreenshot()",
+    "docs": null
+   },
+   "note": "takescreenshot:// is answered by Legacy's takeScreenshot; Core/Basics/Screenshot is the modern package.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:135",
+    "ClosedSource/DSX/Modules/Core/Basics/Screenshot/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/legacy-features/one-signal-v1",
+   "legacyTitle": "OneSignal V1",
+   "group": "Lovable > Legacy Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/OneSignal",
+    "api": "dsx.module.onesignal.id() (window.onesignalplayerid page global)",
+    "docs": null
+   },
+   "note": "Legacy page row seeds window.onesignalplayerid from onesignal.id(); getonesignalplayerid:// also mapped.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:28",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:28",
+    "ClosedSource/DSX/Modules/Core/OneSignal/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/lovable/native-features/gps-location",
+   "legacyTitle": "GPS Location",
+   "group": "Lovable > Legacy Features",
+   "status": "mapped",
+   "v4": {
+    "package": "Core/Basics/Location",
+    "api": "dsx.module.location.background.on() / background.off()",
+    "docs": null
+   },
+   "note": "backgroundlocationon:// and backgroundlocationoff:// map to location.background.on/off.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:49",
+    "ClosedSource/DSX/Modules/Core/Legacy/legacy-map.json:50",
+    "ClosedSource/DSX/Modules/Core/Basics/Location/dsx.json:5"
+   ]
+  },
+  {
+   "legacyPath": "/extensions/introduction",
+   "legacyTitle": "Introduction",
+   "group": "(orphan) Extensions",
+   "status": "partial",
+   "v4": {
+    "package": null,
+    "api": "a DSX package (dsx.json + Swift/Kotlin/web lanes) installed with `despia add`",
+    "docs": "/framework/skills/writing-a-module"
+   },
+   "note": "v3 extensions were scheme handlers; in v4 every native capability is a package called through dsx.module.<command>.",
+   "evidence": [
+    "OpenSource/Documentation/guides/despia-api.md:14",
+    "OpenSource/Documentation/guides/from-v3.md:33"
+   ]
+  },
+  {
+   "legacyPath": "/authentication/payments/test",
+   "legacyTitle": "Test",
+   "group": "(orphan)",
+   "status": "not-applicable",
+   "v4": null,
+   "note": "Placeholder test page with no content.",
+   "evidence": []
+  },
+  {
+   "legacyPath": "/refernce",
+   "legacyTitle": "Reference",
+   "group": "(orphan) Local CDN",
+   "status": "partial",
+   "v4": {
+    "package": "Core/Legacy/Modules/ContentServer",
+    "api": "dsx.module.legacy.cdn.upload() / url() / list() / remove(); modern: dsx.module.files.download() / url()",
+    "docs": null
+   },
+   "note": "The LocalCDN store lives in the optional ContentServer package; no Legacy row translates localcdn:// verbs.",
+   "evidence": [
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ContentServer/README.md:16",
+    "ClosedSource/DSX/Modules/Core/Legacy/Modules/ContentServer/dsx.json:20",
+    "ClosedSource/DSX/Modules/Core/Files/dsx.json:764"
+   ]
+  }
+ ]
+}

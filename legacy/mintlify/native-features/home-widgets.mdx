@@ -1,0 +1,245 @@
+---
+title: "Home Widgets"
+description: "Render dynamic SVG content from your backend into iOS home screen widgets, refreshed in the background at the interval you specify."
+icon: "border-all"
+---
+
+<iframe src="https://www.youtube.com/embed/oAUh41pgFOA" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only things that matter are the SDK call, the public SVG URL, and the refresh interval.
+</Note>
+
+`widget://` registers a remote SVG endpoint as the source for an iOS home screen widget. The OS fetches the SVG at the interval you set, swaps the rendered widget contents, and shows the new state on the home screen even when your app is closed. Your backend personalizes the SVG per user by reading the request, looking up the data, and substituting tokens like `{NAME}` and `{SCORE}` before responding.
+
+<Info>
+  Home Widgets is currently iOS-only. The Android equivalent uses a different rendering pipeline (RemoteViews) that does not accept SVG content. Plan widget UX around iOS first, and gate the SDK call behind `isDespiaIOS` so Android users do not see a broken affordance.
+</Info>
+
+---
+
+## Apple Developer and Despia setup
+
+Home Widgets on iOS runs as a separate Widget Extension target with its own bundle identifier. The widget and your core app communicate through an App Group, which is what lets the widget reach into shared storage when it builds the SVG payload. You configure the bundle ID and App Group in Apple Developer, then enable the target in the Despia Editor and rebuild.
+
+<Steps>
+  <Step title="Sign in to Apple Developer">
+    Go to [developer.apple.com](https://developer.apple.com) and sign in with the Apple Developer account that owns your app's primary bundle ID. Navigate to **Certificates, Identifiers & Profiles \> Identifiers**.
+  </Step>
+  <Step title="Create the App Group">
+    Click the **\+** button next to Identifiers, choose **App Groups**, and click **Continue**. Use a description like `MyApp Widget Group` and the identifier `group.com.despia.myapp.widgetsharing`. Click **Continue**, then **Register**. The `widgetsharing` suffix is the official Despia naming, do not invent your own.
+  </Step>
+  <Step title="Add the App Group to your core app bundle ID">
+    Back in **Identifiers**, find your core app (e.g. `com.despia.myapp`), click into it, and check **App Groups**. Click **Edit**, select the `group.com.despia.myapp.widgetsharing` group you just created, then **Continue** and **Save**.
+  </Step>
+  <Step title="Create the Widget Extension bundle ID">
+    Click **\+** under Identifiers again, choose **App IDs**, then **App**. Use a description like `MyApp Image Widget` and the bundle ID `com.despia.myapp.ImageWidget` (your core bundle ID with `.ImageWidget` appended). This exact naming is what Despia provisions during the build, do not change it.
+  </Step>
+  <Step title="Add the App Group to the Widget Extension bundle ID">
+    Scroll down to **Capabilities**, check **App Groups**, click **Edit**, and select the same `group.com.despia.myapp.widgetsharing` group. Click **Continue** and **Save**. Both bundles now share storage, which is how the widget reads user-specific data the core app wrote.
+  </Step>
+  <Step title="Enable Home Widgets in the Despia Editor">
+    Open the Despia Editor and go to **App \> Targets \> Home Widget**. Toggle the integration on.
+  </Step>
+  <Step title="Rebuild your app">
+    Trigger a fresh build from the Despia Editor. The widget target has to be compiled into your app binary and signed with the matching provisioning profile, so this cannot be applied over-the-air. After the build finishes, the widget becomes available for users to add to their home screen, and your `widget://` SDK call sets the SVG source.
+  </Step>
+</Steps>
+
+<Warning>
+  Bundle IDs and App Group identifiers in the Despia Editor must match exactly what you registered in Apple Developer. A typo in either place causes the widget extension to fail provisioning silently, and the widget either does not appear in the picker at all or shows a placeholder image instead of your SVG. Copy and paste, do not retype.
+</Warning>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Pass a publicly accessible HTTPS URL to a server endpoint that returns SVG, plus a refresh interval in minutes. The OS picks up the URL on the next widget refresh cycle and treats it as the new source.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+if (isDespiaIOS) {
+    despia('widget://https://myapp.com/widgets/user/abc123?refresh=10')
+}
+```
+
+<Warning>
+  The URL must be a publicly fetchable HTTPS endpoint that returns `Content-Type: image/svg+xml`. Data URLs (`data:image/svg+xml;...`), blob URLs, and file paths are rejected. The OS fetches the SVG from the network on each refresh, so the bytes have to live on a real server or CDN.
+</Warning>
+
+---
+
+## Scheme parameters
+
+| Position | Value | Notes |
+| :-- | :-- | :-- |
+| URL | A full HTTPS URL to your SVG endpoint | Must respond with `Content-Type: image/svg+xml`. Use a path that includes the user ID so each user gets their own widget |
+| `refresh` | Minutes between refreshes | Whole minutes only. Common values: `1`, `2`, `3`, `5`, `10`, `15`, `30`, `60`. iOS may extend the interval under battery pressure, so treat your value as a minimum, not a guarantee |
+
+```javascript
+const userId  = currentUser.id
+const minutes = 10
+
+if (isDespiaIOS) {
+    despia(`widget://https://myapp.com/widgets/user/${userId}?refresh=${minutes}`)
+}
+```
+
+---
+
+## Register the widget after login
+
+The natural place to register or update the widget is right after authentication, since that is when you have the user ID needed to personalize the URL. Re-call on every authenticated app load to handle users who switch accounts.
+
+```jsx
+import { useEffect } from 'react'
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+function WidgetSync({ user }) {
+    useEffect(() => {
+        if (!user || !isDespiaIOS) return
+
+        const url = `https://myapp.com/widgets/user/${user.id}`
+        despia(`widget://${url}?refresh=10`)
+    }, [user])
+
+    return null
+}
+```
+
+To change the refresh rate later (for example, slowing it down for inactive users), call again with a new `refresh` value. The OS replaces the previous registration with the new one.
+
+---
+
+## Backend SVG endpoint
+
+The endpoint receives the request, loads the user's data, substitutes the tokens, and returns the SVG with the correct content type. Keep the SVG simple, the home screen renders it at a fixed size and ignores most CSS animations.
+
+```javascript
+// /widgets/user/:userId
+export default async function handler(req, res) {
+    const { userId } = req.query
+
+    const user = await db.users.findUnique({ where: { id: userId } })
+    if (!user) return res.status(404).end()
+
+    const svg = `
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="169" viewBox="0 0 360 169">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%"   stop-color="#2c2c2e"/>
+      <stop offset="100%" stop-color="#1c1c1e"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="360" height="169" fill="url(#bg)"/>
+  <text x="28" y="51"  font-size="24" font-weight="700" fill="#ffffff">Hey ${escapeXml(user.name)}</text>
+  <text x="30" y="100" font-size="16" font-weight="600" fill="#ffffff">Current Score: ${user.score}</text>
+</svg>`.trim()
+
+    res.setHeader('Content-Type', 'image/svg+xml')
+    res.setHeader('Cache-Control', 'no-store')
+    res.send(svg)
+}
+
+function escapeXml(s) {
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&apos;')
+}
+```
+
+Two practical notes:
+
+- **Always escape user input.** A user with a name like `Bob & "Friends"` will break the SVG without escaping, and a malicious user could inject markup that breaks rendering for everyone. The `escapeXml` helper above covers the five XML-significant characters.
+- **Send `Cache-Control: no-store`** so iOS does not cache an older version of the SVG between refreshes. The widget will only ever look as fresh as the most recently cached response.
+
+---
+
+## Refresh interval guidance
+
+iOS does not honor your refresh interval literally. The OS schedules widget updates in batches and may stretch your interval based on battery state, network quality, and how often the user is actually looking at the home screen. Use these intervals as rough targets:
+
+| Interval | Practical use |
+| :-- | :-- |
+| `1` to `2` minutes | Live scores, active timers, real-time tracking. iOS may still throttle to 5 minutes under battery pressure |
+| `5` to `15` minutes | Stocks during market hours, weather, recently active app data |
+| `30` to `60` minutes | Daily summaries, dashboards, content that updates a few times a day |
+| `60` plus | Static or near-static content where freshness barely matters |
+
+Aim for the longest interval that feels acceptable. Shorter intervals do not always deliver, and they drain the user's battery more visibly than longer ones. A widget that updates every 15 minutes consistently is a better experience than one that _might_ update every minute but sometimes goes 30 minutes between refreshes.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

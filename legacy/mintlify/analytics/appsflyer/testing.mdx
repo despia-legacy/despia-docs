@@ -1,0 +1,215 @@
+---
+title: "Testing"
+description: "Confirm your AppsFlyer setup is working before you launch. No coding tools required."
+icon: "flask"
+---
+
+Before you go live, confirm that when someone installs your app AppsFlyer sees it, and that in-app actions like a purchase or a signup get recorded. This page walks you through verifying installs, events, attribution, and user IDs from your phone and the AppsFlyer dashboard.
+
+<Info>
+  Enable AppsFlyer in your Despia app settings and turn on debug mode before testing. Turn debug mode off again before you submit to the App Store or Google Play, otherwise every install is marked as a test install and your real attribution data is not recorded.
+</Info>
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+When your app is running, Despia passes data to AppsFlyer natively. To check that it is working, you register your test phone with AppsFlyer, install the app on that phone, and watch a live feed in the AppsFlyer dashboard to confirm the data comes through. Gate any test code behind the canonical user agent check so it only runs inside the app.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    // send a test purchase to confirm AppsFlyer is receiving data
+    const purchase = { af_revenue: 9.99, af_currency: "USD" }
+    despia("appsflyer://log_event?event_name=af_purchase&event_values=" + encodeURIComponent(JSON.stringify(purchase)))
+}
+```
+
+---
+
+## Register your test device
+
+AppsFlyer ignores data from unknown devices during testing to keep your real data clean, so you register your phone first. The easiest way is the free **My Device ID** app by AppsFlyer: open it, tap register, log in with your AppsFlyer account, and your phone is added automatically.
+
+<CardGroup cols={2}>
+  <Card title="My Device ID, iPhone" icon="apple" href="https://apps.apple.com/us/app/my-device-id-by-appsflyer/id1192323960">
+    Download on the App Store
+  </Card>
+
+  <Card title="My Device ID, Android" icon="google-play" href="https://play.google.com/store/apps/details?id=com.appsflyer.android.deviceid">
+    Download on Google Play
+  </Card>
+</CardGroup>
+
+You can also add your phone manually in the AppsFlyer dashboard under **Settings \> Test Devices \> Add device**.
+
+---
+
+## Install your app
+
+You do not need a Mac, Xcode, or Android Studio. Install the app the normal way for each platform.
+
+<Tabs>
+  <Tab title="iPhone">
+    After you deploy in Despia, the build is uploaded to **TestFlight** automatically. Open TestFlight on your iPhone and install the latest build. Before installing, delete any existing version of the app so AppsFlyer registers a fresh install.
+  </Tab>
+  <Tab title="Android">
+    In Despia, go to **Build History \> Quick Test** and download the APK directly to your Android phone. Delete any existing version first. If your phone asks to allow installation from unknown sources, tap allow.
+  </Tab>
+</Tabs>
+
+---
+
+## Watch installs in real time
+
+AppsFlyer has a live feed that shows installs and events as they happen on your test phone.
+
+<Steps>
+  <Step title="Open the Live Event Viewer">
+    In the AppsFlyer dashboard, go to **Settings \> SDK Integration Tests**, click **Live Events**, pick your app, pick your test phone, and click **Continue**.
+  </Step>
+  <Step title="Open the app on your phone">
+    The install should appear on the dashboard within a few seconds.
+  </Step>
+</Steps>
+
+To confirm the attribution arriving in your app is correct, add this and open the app. A popup shows exactly what AppsFlyer knows about where the install came from.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    alert("Where did this user come from: " + despia.appsFlyerReferrer)
+    alert("AppsFlyer user ID: " + despia.appsFlyerUID)
+    alert("Full attribution data: " + JSON.stringify(despia.appsFlyerAttribution, null, 2))
+}
+```
+
+---
+
+## Check that events are recorded
+
+With the Live Event Viewer still open, trigger some actions and watch them appear. Each event shows up with its name and a status of **200 OK**, which means AppsFlyer received it.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    // a purchase
+    despia("appsflyer://log_event?event_name=af_purchase&event_values=" + encodeURIComponent(JSON.stringify({ af_revenue: 9.99, af_currency: "USD" })))
+
+    // a login
+    despia("appsflyer://log_event?event_name=af_login&event_values=" + encodeURIComponent("{}"))
+
+    // finishing onboarding
+    despia("appsflyer://log_event?event_name=complete_onboarding&event_values=" + encodeURIComponent("{}"))
+}
+```
+
+---
+
+## Check that your user ID is sent
+
+When a user logs in, you want AppsFlyer to know who they are so you can match events to real users. Add this after your login flow and confirm the event shows up in the Live Event Viewer with the customer user ID attached.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    const userId = "test_user_123"
+    despia("appsflyer://set_user_id?customer_user_id=" + encodeURIComponent(userId))
+
+    // send an event right after so you can see the ID is attached
+    despia("appsflyer://log_event?event_name=af_login&event_values=" + encodeURIComponent("{}"))
+}
+```
+
+---
+
+## Test deep links
+
+Deep links resolve natively and arrive through `window.onAppsFlyerDeepLink`, so verify them by watching the callback, not the page URL. Register the handler early and log what it receives, then open your app from a OneLink or install fresh after clicking one.
+
+```javascript
+window.onAppsFlyerDeepLink = function (payload) {
+    alert("Deep link payload: " + JSON.stringify(payload, null, 2))
+}
+```
+
+On a fresh install, the deferred deep link arrives on first launch, and on iOS after the App Tracking Transparency prompt is answered. See [Deep Linking](/analytics/appsflyer/deeplinking) for the full routing contract.
+
+---
+
+## Before you go live
+
+<Steps>
+  <Step title="Turn off debug mode">
+    Turn off debug mode in your Despia AppsFlyer settings. Debug mode is only for testing. If you leave it on, all installs are marked as test installs and your real attribution data is not recorded.
+  </Step>
+  <Step title="Rebuild and submit">
+    Rebuild the app in Despia for both iOS and Android and submit the new builds. The change does not take effect until users install the new version.
+  </Step>
+  <Step title="Remove test alerts">
+    Remove any `alert()` calls you added during testing so they do not appear for real users.
+  </Step>
+</Steps>
+
+<Warning>
+  Turning off debug mode requires a fresh native build. If you skip the rebuild, the app users install still runs in debug mode and marks every install as a test install, so no real attribution data is recorded.
+</Warning>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

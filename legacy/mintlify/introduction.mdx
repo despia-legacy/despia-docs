@@ -1,0 +1,602 @@
+---
+title: "Introduction"
+icon: "hand-horns"
+mode: "default"
+description: "Despia lets your web app call native device features and ship to iOS and Android - no Swift, no Java, no terminal."
+---
+
+**Build with any web framework, access 50\+ native capabilities through a single JavaScript function, and publish to both stores from a browser.** The runtime runs on the WKWebView (iOS) and the Chromium-based WebView (Android) with hardware acceleration, automatic DOM optimization, smart caching and JIT compilation enabled. Native capabilities are implemented in Swift and Java and exposed to JavaScript through a typed SDK.
+
+<Note>
+  Despia is built for builders who want the flexibility of the web with the power of native development - and ship to iOS and Android without a CLI, terminal, or complex build setup. App Store and Google Play submission is handled entirely from a browser.
+</Note>
+
+<CardGroup cols={3}>
+  <Card title="50+ Native Capabilities" icon="bolt">
+    Biometrics, background GPS, push notifications, in-app purchases, home widgets, HealthKit, and more. Implemented in Swift and Java, called from JavaScript.
+  </Card>
+
+  <Card title="One-Click Publishing" icon="rocket">
+    App Store and Google Play submission from a browser. Code signing and provisioning are handled automatically.
+  </Card>
+
+  <Card title="Full Native Export" icon="code-branch">
+    Export complete Xcode and Android Studio projects. Add native SDKs, modify the runtime, or build independently.
+  </Card>
+</CardGroup>
+
+---
+
+## Quickstart
+
+Install the SDK and call your first native capability.
+
+<Tabs>
+  <Tab title="Developer Experience">
+    Install the [npm package](https://www.npmjs.com/package/despia-native) and import the default export. No initialization or setup required.
+
+    <Tabs>
+      <Tab title="Bundle">
+        <CodeGroup>
+
+        ```bash npm
+        npm install despia-native
+        ```
+
+        ```bash pnpm
+        pnpm add despia-native
+        ```
+
+        ```bash yarn
+        yarn add despia-native
+        ```
+
+        </CodeGroup>
+
+        ```javascript
+        import despia from 'despia-native';
+        ```
+      </Tab>
+      <Tab title="CDN">
+        <CodeGroup>
+
+        ```html UMD
+        <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+        ```
+
+        ```html ESM
+        <script type="module">
+            import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+        </script>
+        ```
+
+        </CodeGroup>
+      </Tab>
+    </Tabs>
+  </Tab>
+  <Tab title="Behind the Scenes">
+    The `despia-native` SDK exposes a single async function. Calling it sets `window.despia` to the scheme string, which the runtime maps to `window.location.href`. On iOS, the navigation is intercepted in `WebViewController.swift` via `decidePolicyFor navigationAction`. On Android, it is intercepted in `MainActivity.java` via `shouldOverrideUrlLoading`. Results are written back to the WebView context as named window variables.
+
+    ```javascript
+    // despia('get-uuid://', ['uuid'])
+    // 1. window.despia = 'get-uuid://'        set by SDK
+    // 2. window.location.href = 'get-uuid://' intercepted by native layer
+    // 3. window.uuid = '<device-uuid>'        written back to WebView
+    const device = await despia('get-uuid://', ['uuid']);
+    console.log(device.uuid);
+    ```
+
+    The SDK handles TypeScript definitions, command queuing, promise-based variable watching with a 30-second timeout, and error handling.
+  </Tab>
+</Tabs>
+
+```javascript
+import despia from 'despia-native';
+
+despia('successhaptic://');                                  // haptic feedback
+const device = await despia('get-uuid://', ['uuid']);        // native device ID
+console.log(device.uuid);
+```
+
+That is it. No initialization. No setup. Open your app in the Despia runtime and it works.
+
+---
+
+## Core concepts
+
+Environment detection, deployment models, and the fundamentals every Despia app relies on before adding native features.
+
+### Environment detection
+
+Gate native calls on a runtime check. The `despia` string is present in the user agent when running inside the Despia runtime.
+
+```javascript
+const isDespia    = navigator.userAgent.toLowerCase().includes('despia')
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+const isDespiaAndroid = isDespia && navigator.userAgent.toLowerCase().includes('android')
+```
+
+### Deployment models
+
+<Tabs>
+  <Tab title="Remote hydration">
+    The default. The binary ships without embedded web assets. On each launch, the runtime fetches the current build from your configured hosting URL. Web content updates do not require App Store resubmission.
+  </Tab>
+  <Tab title="Local Server">
+    For offline-first apps. Install `@despia/local` to generate a `despia/local.json` asset manifest. The runtime caches the full asset graph on-device and serves it from `http://localhost`. After initial hydration, the app launches without a network request. Updates apply atomically on next launch.
+
+    [Local Server documentation](https://setup.despia.com/local-server/introduction)
+  </Tab>
+  <Tab title="OTA version gating">
+    ```bash
+    npm install despia-version-guard
+    ```
+
+    ```javascript
+    import { VersionGuard } from 'despia-version-guard';
+    
+    const MyApp = () => (
+      <div>
+        <StableFeature />
+        <VersionGuard min_version="21.0.3">
+          <NewFeature />
+        </VersionGuard>
+      </div>
+    );
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Capabilities
+
+Despia exposes native device features through a single JavaScript function. Each capability is self-contained - no native SDK setup, no platform-specific code.
+
+### Identity Vault
+
+Encrypted key-value storage backed by iCloud KV Storage on iOS and Android App Backup on Android. Persists across uninstall and reinstall. Biometric authentication is configured per key.
+
+```javascript
+await despia('setvault://?key=userId&value=user123&locked=false')
+const data = await despia('readvault://?key=userId', ['userId'])
+```
+
+Setting `locked=true` requires Face ID or Touch ID before the value is returned.
+
+```javascript
+await despia('setvault://?key=sessionToken&value=abc123&locked=true')
+const token = await despia('readvault://?key=sessionToken', ['sessionToken'])
+```
+
+### GPS location
+
+Real-time location tracking with configurable intervals, distance thresholds, live frontend callbacks, and optional server delivery. Background tracking is supported on both platforms including Samsung, Huawei, Xiaomi, and OnePlus.
+
+```javascript
+window.onLocationChange = function(data) {
+    if (!data.active) { finalizeRoute(); return }
+    drawPointOnMap(data.latitude, data.longitude)
+    if (data.speed > 0) {
+        updatePaceDisplay((1000 / data.speed / 60).toFixed(2) + ' min/km')
+    }
+    if (data.horizontalAccuracy > 10) return
+}
+
+despia('location://?buffer=60&movement=100')
+```
+
+```javascript
+const data      = await despia('stoplocation://', ['locationSession'])
+const drain     = data.locationSession[0]?.battery - data.locationSession.at(-1)?.battery
+```
+
+[GPS location reference](https://setup.despia.com/native-features/gps-location)
+
+### Haptic feedback
+
+Five haptic types mapped to native UIFeedbackGenerator on iOS and HapticFeedbackConstants on Android.
+
+```javascript
+despia('lighthaptic://');
+despia('heavyhaptic://');
+despia('successhaptic://');
+despia('warninghaptic://');
+despia('errorhaptic://');
+```
+
+### UI controls
+
+Show and hide the loading spinner, status bar, and configure status bar color at runtime.
+
+```javascript
+despia('spinneron://');
+despia('spinneroff://');
+despia('hidebars://on');
+despia('statusbarcolor://{255, 255, 255}');
+```
+
+### Device identity
+
+Read the app version, build number, and a persistent device UUID that survives reinstalls.
+
+```javascript
+const appInfo  = await despia('getappversion://', ['versionNumber', 'bundleNumber']);
+const deviceId = await despia('get-uuid://', ['uuid']);
+```
+
+### Contacts and clipboard
+
+Request contact access, read the address book, and read the current clipboard contents.
+
+```javascript
+despia('requestcontactpermission://');
+const contacts  = await despia('readcontacts://', ['contacts']);
+const clipboard = await despia('getclipboard://', ['clipboarddata']);
+```
+
+### Media and sharing
+
+Take a screenshot, save an image from a URL to the camera roll, and trigger the native share sheet.
+
+```javascript
+despia('takescreenshot://');
+despia('savethisimage://?url=https://example.com/image.jpg');
+despia('shareapp://message?=Check out this app&url=https://myapp.com');
+```
+
+### Push notifications
+
+Register the device for push and map it to your OneSignal external user ID on every app load.
+
+```javascript
+despia(`setonesignalplayerid://?user_id=${userId}`);
+```
+
+### Native safe area
+
+CSS variables for top and bottom device insets, injected automatically by the runtime.
+
+```css
+.header { padding-top:    var(--safe-area-top);    }
+.footer { padding-bottom: var(--safe-area-bottom); }
+```
+
+---
+
+## Integrations
+
+Third-party SDK bridges built into the runtime. RevenueCat for billing, AppsFlyer for attribution, and Local CDN for offline media caching.
+
+### Monetization
+
+Native App Store and Google Play billing through RevenueCat. No billing SDK configuration required on the web layer.
+
+<Info>
+  RevenueCat must be enabled in **Despia \> App \> Settings \> Integrations \> RevenueCat** and your API key configured before purchases will work.
+</Info>
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+} else {
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`
+}
+```
+
+```javascript
+async function checkEntitlements() {
+    const data   = await despia('getpurchasehistory://', ['restoredData'])
+    const active = (data.restoredData ?? []).filter(p => p.isActive)
+    if (active.some(p => p.entitlementId === 'premium')) unlockPremium()
+}
+
+checkEntitlements()
+window.onRevenueCatPurchase = checkEntitlements
+```
+
+[RevenueCat reference](https://setup.despia.com/native-features/revenuecat/reference)
+
+### Analytics and attribution
+
+AppsFlyer attribution, deep linking, and event tracking. Attribution data is recorded at install time and injected into the web layer on every page load.
+
+<Info>
+  AppsFlyer must be enabled in **Despia \> App \> Settings \> Integrations \> AppsFlyer** and your AppsFlyer dev key configured. Currently available on iOS, with Android coming soon.
+</Info>
+
+```javascript
+const referrer = despia.appsFlyerReferrer     // e.g. "tiktok_ad", "organic"
+const uid      = despia.appsFlyerUID
+```
+
+```javascript
+despia("appsflyer://set_user_id?customer_user_id=" + encodeURIComponent(userId))
+despia("appsflyer://set_email?email=" + encodeURIComponent(email))
+```
+
+[AppsFlyer reference](https://setup.despia.com/analytics/appsflyer/introduction)
+
+### Offline media caching
+
+Since PhoneGap launched in 2009, every hybrid framework has struggled with offline media. Files pass through JavaScript - Base64 encoding, Blob URL conversions, memory usage that scales with file size. A 500MB video in Capacitor peaks at approximately 1.6GB of JS heap.
+
+After 7,500 apps built on Despia's predecessor runtime, this pattern was consistent enough to justify solving properly. Local CDN bypasses JavaScript entirely for file operations. Downloads go directly to the native file system via NSURLSession (iOS) and WorkManager (Android). Files stream back through the on-device HTTP server at `http://localhost` to the hardware decoder. Memory usage is O(1) regardless of file size.
+
+Downloads continue when the app is backgrounded or closed. On iOS, native download progress appears in the system download activity. On Android, it shows in the native download manager. Both platforms handle retry on network failure automatically. On completion, an optional push notification fires. When the app reopens, `window.contentServerChange(item)` is called for each download that completed while the app was not running.
+
+```javascript
+window.contentServerChange = (item) => {
+    videoElement.src = item.local_cdn
+}
+
+despia(`localcdn://write?url=${remoteUrl}&filename=videos/course.mp4&index=course_ep1&push=true&pushmessage="Episode 1 ready"`)
+```
+
+```javascript
+const data = await despia(
+    `localcdn://read?index=${encodeURIComponent(JSON.stringify(['course_ep1']))}`,
+    ['cdnItems']
+)
+videoElement.src = data.cdnItems[0].local_cdn
+```
+
+|  | Capacitor | Despia Local CDN |
+| --- | --- | --- |
+| Peak JS memory (500 MB file) | ~1,666 MB | ~100 bytes |
+| Storage limit | 50-100 MB | Full device capacity |
+| Background downloads | No | Yes |
+| Playback | Software decoded | Hardware accelerated |
+
+[Local CDN reference](https://setup.despia.com/local-cdn/introduction)
+
+---
+
+## Advanced
+
+Distribution, rendering, extending the runtime, tool compatibility, and MCP server setup.
+
+### Publishing
+
+Despia handles the full submission pipeline from a browser with no CLI, no local toolchain, and no manual credential management. Toggle capabilities, configure runtime settings, manage iOS targets (App Clips, Share Extensions, Home Widgets), and submit. Code signing, provisioning profiles, and store submission are automated through the built-in CI/CD pipeline.
+
+For teams that want full control, native projects can be exported at any time as complete Xcode and Android Studio projects including all Swift and Java source. The Despia editor and the self-managed path are not mutually exclusive.
+
+Web content changes do not require a new binary. Only changes to native configuration or runtime behavior trigger a new build.
+
+### Rendering
+
+Despia uses WKWebView on iOS and the Chromium-based WebView on Android - the same engines that power Safari and Chrome. Both use hardware-accelerated compositing, JIT-compiled JavaScript, and GPU-accelerated WebGL and Canvas 2D. CSS animations run on the compositor thread independently of JavaScript.
+
+For requirements that cannot be met by the web platform - highly custom gesture recognizers, frame-by-frame game loops - the native export and custom bridge paths are available.
+
+### Extending the runtime
+
+The bridge pattern is consistent across both platforms. Intercept a new scheme in `WebViewController.swift` (iOS) or `MainActivity.java` (Android), execute native code, and write the result back. The SDK resolves custom bridges identically to built-in capabilities.
+
+<Steps>
+  <Step title="Add the native handler" icon="code">
+    <CodeGroup>
+
+    ```swift iOS - WebViewController.swift
+    if requestURL.absoluteString.hasPrefix("mycustom://") {
+        let result = runMyNativeCode()
+        webView.evaluateJavaScript("window.myResult = '\(result)';")
+        decisionHandler(.cancel)
+        return
+    }
+    ```
+
+    ```java Android - MainActivity.java
+    if (url.startsWith("mycustom://")) {
+        String result = runMyNativeCode();
+        webView.evaluateJavascript("window.myResult = '" + result + "';", null);
+        return true;
+    }
+    ```
+
+    </CodeGroup>
+  </Step>
+  <Step title="Call it from your web app" icon="globe">
+    ```javascript
+    import despia from 'despia-native';
+    
+    const data = await despia('mycustom://', ['myResult'])
+    console.log(data.myResult)
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+  A low-code plugin editor for defining custom capabilities from the Despia editor without a native project export is planned for mid/late 2026.
+</Tip>
+
+### Works with any tool
+
+Despia has no opinion on how your UI is built, what state management you use, or which tools generated your code.
+
+<CardGroup cols={2}>
+  <Card title="Web frameworks" icon="code">
+    React, Vue, Angular, Svelte, Next.js, Nuxt, SvelteKit, Astro, Remix, vanilla JavaScript
+  </Card>
+
+  <Card title="AI coding tools" icon="cpu-chip">
+    Cursor, Claude Code, Lovable, v0, Base44, or any tool that generates web code
+  </Card>
+</CardGroup>
+
+AI coding tools generate `despia()` calls reliably because the API is a flat string command - no nested configuration objects, no provider wrappers, no initialization sequences.
+
+### MCP server
+
+Despia provides an MCP server that gives AI coding assistants full knowledge of the `despia-native` API without requiring you to paste documentation into the chat.
+
+**MCP URL:** `https://setup.despia.com/mcp`
+
+<Tabs>
+  <Tab title="Cursor">
+    Add to `~/.cursor/mcp.json` and restart Cursor.
+
+    ```json
+    {
+      "mcpServers": {
+        "despia": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="VS Code">
+    Add to `.vscode/mcp.json`.
+
+    ```json
+    {
+      "servers": {
+        "despia": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Claude Desktop">
+    Add to `claude_desktop_config.json`.
+
+    - Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
+    - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+    ```json
+    {
+      "mcpServers": {
+        "despia": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Windsurf">
+    Settings \> Plugins \> Add MCP Server.
+
+    ```json
+    {
+      "mcpServers": {
+        "despia": {
+          "command": "npx",
+          "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Web builders">
+    Paste the MCP URL directly into your builder's MCP settings field.
+
+    ```text
+    https://setup.despia.com/mcp
+    ```
+
+    Supported by Lovable, v0, Base44, and other web-based AI builders. If your tool does not support MCP, copy the relevant feature pages from [setup.despia.com](https://setup.despia.com) into the chat directly.
+  </Tab>
+</Tabs>
+
+<Note>
+  Requires Node.js v18\+ for local tools.
+</Note>
+
+---
+
+## Internals
+
+How the bridge works under the hood, why scheme:// was chosen over JSON, and how localhost acts as a secure origin.
+
+<AccordionGroup>
+  <Accordion title="Why scheme://" icon="circle-question">
+    `scheme://` interception was the standard pattern for hybrid app native bridges over a decade ago, when Despia's runtime was first built. It remains in use intentionally.
+
+    - **Simple.** A command in, a result out.
+    - **Predictable.** Consistent behavior across iOS and Android.
+    - **Readable.** Commands are understandable and debuggable without tooling.
+    - **Searchable.** Trivial to locate across large codebases, including by AI coding tools.
+
+    The runtime is fully modernized. Native capabilities are implemented in current Swift and Java. Data-heavy operations route through the on-device HTTP server at `http://localhost` where appropriate.
+  </Accordion>
+
+  <Accordion title="Why not JSON-based bridges" icon="circle-question">
+    Structured JSON messaging was evaluated. In practice, `scheme://` performed better - particularly with AI-assisted development. AI generates flat command strings more reliably than nested JSON payloads, with fewer malformed structures and more predictable output. Commands are also easier to trace and reason about across a codebase.
+  </Accordion>
+
+  <Accordion title="localhost as a secure origin" icon="circle-question">
+    For operations that do not fit the scheme pattern - file uploads, streaming, standard HTTP requests - Despia routes through an on-device HTTP server at `http://localhost`. Because `http://localhost` is a real secure origin in both WKWebView and Chromium, Service Workers, IndexedDB, Web Crypto, and standard URL routing work without modification. No Blob URL workarounds, no Base64 encoding, no arbitrary storage quotas.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Capability reference
+
+A full index of everything built into Despia - core runtime features, integrated SDK bridges, infrastructure, and native web interception.
+
+<Steps>
+  <Step title="Core runtime" icon="bolt">
+    Hardware-backed Identity Vault, native biometrics (Face ID, Touch ID, fingerprint), background GPS including Samsung Low Power Mode, contacts, clipboard, haptics (5 types), native media and file system access, image saving, background audio, local push notifications, status bar controls, safe area CSS variables, device orientation per device class, prevent zoom, prevent sleep, fullscreen mode, splash screen, iOS Home Widgets, Siri Shortcuts, native share dialog, AirPrint, screen shield, PkPass for iOS and Android mobile wallets.
+  </Step>
+  <Step title="Integrated SDK bridges" icon="plug">
+    RevenueCat - purchases, subscriptions, restore, paywalls. OneSignal - remote push with external user ID mapping. AppsFlyer - attribution, deep linking, event tracking. AdMob - advertising. HealthKit - all major health identifiers.
+  </Step>
+  <Step title="Infrastructure and compliance" icon="shield-check">
+    ATT compliance, vendor ID tracking, developer-level device ID tracking via iCloud KV and Android App Backup, store location access, jailbreak detection with configurable blocking, NoCode iOS target management for App Clips, Share Extensions, and Home Widgets.
+  </Step>
+  <Step title="Native web interception" icon="arrow-right-arrow-left">
+    `<input type="file">` routes to the native file picker. The `capture` attribute opens the native camera. `accept="image/*"` or `accept="video/*"` opens the native media gallery. Deeplinks and HTTPS deeplinks are handled natively.
+  </Step>
+</Steps>
+
+---
+
+## Open source
+
+The JavaScript SDK, offline asset bundler, and version gating package are all MIT licensed. Native implementations are included in full on project export.
+
+| Package | Description | License |
+| --- | --- | --- |
+| [despia-native](https://www.npmjs.com/package/despia-native) | JavaScript SDK | MIT |
+| [@despia/local](https://www.npmjs.com/package/@despia/local) | Offline asset bundler | MIT |
+| [despia-version-guard](https://www.npmjs.com/package/despia-version-guard) | Version gating | MIT |
+
+Native capability implementations are written in Swift and Java and included in full on project export.
+
+## Our History
+
+**Despia's runtime has been in production since 2011**, when co-founder John built Advanced WebView for his agency's client apps. Over the following decade it was adopted by over 7,500 apps before becoming Despia in 2023 - a native-first runtime with a modern configuration editor and a full CI/CD pipeline built on top of that proven foundation.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="MCP Server" icon="sparkles" href="https://setup.despia.com/mcp-server">
+    AI coding assistant integration
+  </Card>
+
+  <Card title="Local Server" icon="server" href="https://setup.despia.com/local-server/introduction">
+    Offline and instant-launch support
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

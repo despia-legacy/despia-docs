@@ -1,0 +1,153 @@
+---
+title: "Backend"
+icon: "database"
+description: "Zero-config server-side authentication for Next.js, TanStack, and any framework via cookies and an optional header."
+---
+
+A native session bridge into your page's server middleware. The bridge writes the session into the WebView's cookie store (and optionally injects a request header) so Next.js, TanStack, or any framework's middleware sees an authenticated user on the very first request, no Clerk web SDK on the page required. On by default with sensible scoping, most apps never need to tune it.
+
+---
+
+## Parameters
+
+| Param | Default | Notes |
+| --- | --- | --- |
+| `enabled` | `true` | `false` purges every SSR cookie |
+| `header` | none | Header name to inject on main-frame navigations. `Authorization` gets a `Bearer` prefix, any other name gets the raw JWT |
+| `domains` | app host \+ `localhost` \+ `127.0.0.1` | Comma-separated override of the cookie/host scope |
+
+```javascript
+// Default, already on
+despia('clerk://ssr')
+
+// Inject Authorization on main-frame nav
+despia('clerk://ssr?header=Authorization')
+
+// Custom domain scope (separate API host)
+despia('clerk://ssr?domains=app.example.com,api.example.com')
+
+// Opt out and purge
+despia('clerk://ssr?enabled=false')
+```
+
+Emits:
+
+```json
+{
+    "ok": true,
+    "event": "ssr",
+    "status": "enabled",
+    "domains": ["app.example.com", "localhost", "127.0.0.1"],
+    "header": "X-Clerk-JWT"
+}
+```
+
+---
+
+## Cookies
+
+Three cookies, scoped per configured domain, refreshed every 50 seconds.
+
+| Cookie | Value | Used by |
+| --- | --- | --- |
+| `__session` | Session JWT | Clerk's `clerkMiddleware()` |
+| `__client_uat` | Unix-seconds signed in, `0` signed out | Clerk's middleware signed-in/out signal |
+| `clerk_token` | Session JWT | Manual `@clerk/backend` verification or client-side reads |
+
+Cookies are not `HttpOnly` (so client code on `localhost` can read `clerk_token`), `Secure` on real hosts, and not `Secure` on `localhost` / `127.0.0.1` so they work over `http://localhost:port`.
+
+---
+
+## Header transport
+
+With `header=`, the bridge intercepts main-frame GETs to configured domains and attaches the header.
+
+```javascript
+despia('clerk://ssr?header=Authorization')
+// Every page load now arrives with: Authorization: Bearer <jwt>
+```
+
+`Authorization` gets a `Bearer` prefix. Any other header (`X-Clerk-JWT`, `X-Auth`) gets the raw JWT.
+
+---
+
+## Next.js
+
+`clerkMiddleware()` reads `__session` and `__client_uat` from request cookies, so the standard middleware just works.
+
+```typescript
+// middleware.ts
+import { clerkMiddleware } from '@clerk/nextjs/server'
+export default clerkMiddleware()
+```
+
+```tsx
+// app/dashboard/page.tsx
+import { auth } from '@clerk/nextjs/server'
+
+export default async function Page() {
+    const { userId } = await auth()
+    return <Dashboard userId={userId} />
+}
+```
+
+No `<ClerkProvider>`, no `useAuth()` hook, no web SDK. The native bridge writes the cookies and the middleware does the rest.
+
+---
+
+## Manual verification
+
+For any other backend, read the JWT and verify it with `@clerk/backend`.
+
+```typescript
+import { verifyToken } from '@clerk/backend'
+
+const jwt = req.cookies['clerk_token']  // or req.headers['x-clerk-jwt']
+
+const { sub: userId } = await verifyToken(jwt, {
+    secretKey: process.env.CLERK_SECRET_KEY,
+})
+```
+
+Trust only the verified `sub`. Never accept a client-reported `userId`.
+
+---
+
+## Handshake invariant
+
+Clerk's middleware treats "a live `__client_uat` next to a missing/expired `__session`" as a redirect to Clerk's FAPI for a handshake, which a native WebView with no Clerk web SDK cannot satisfy. The bridge guarantees the cookie pair is only ever in one of two states middleware accepts without a handshake:
+
+- **Signed-in:** fresh JWT in `__session` plus `__client_uat > 0`
+- **Signed-out:** no `__session` plus `__client_uat = 0`
+
+Enforced structurally with a TTL ladder: the 50-second refresher runs under the 55-second cookie TTL, which runs under the 60-second JWT TTL. An un-refreshed cookie self-expires before its JWT does, so the browser can never present the handshake-triggering combination. Degradation is always toward signed-out, never toward broken handshake.
+
+A navigation gate adds a second layer. On a main-frame GET to a configured domain with a live session, if the cookie is stale (\>45s) or the opt-in header is missing, the navigation is cancelled, a fresh JWT is minted, the cookie write is awaited, the header is attached, and the request is re-issued. Self-terminating, cannot loop.
+
+---
+
+## Cold launch
+
+The first page load of a cold launch is anonymous, Clerk is not configured until your page's JS has run and called [`clerk://configure`](/authentication/clerk/introduction#configure). That first load lands in the safe signed-out state, never a handshake. Every navigation after configure is authenticated.
+
+If you need authenticated SSR on the very first byte, configure earlier in your boot or render a brief loading shell that calls configure and then navigates to the real route once `window.clerkJWT` is populated.
+
+---
+
+## Offline
+
+A failed refresh leaves the existing cookies in place. Once they hit their 55-second TTL the browser presents the signed-out state to middleware rather than the handshake combination. The user effectively becomes signed-out for new server-rendered requests until the device comes back online.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

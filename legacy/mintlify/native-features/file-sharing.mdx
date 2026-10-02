@@ -1,0 +1,181 @@
+---
+title: "File Sharing"
+description: "Open the device's native share sheet with a file from a CDN URL, letting users send it to any installed app, contact, or cloud service."
+icon: "file-arrow-up"
+---
+
+<iframe src="https://www.youtube.com/embed/bnc59WIsDCQ" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is passing the file's HTTPS URL into the SDK call and serving the file with the right headers.
+</Note>
+
+Pass an HTTPS URL into `despia()` and the runtime fetches the file, then opens the native share sheet with the bytes already attached. The user picks a destination (Messages, Mail, AirDrop, WhatsApp, Drive, Files, anything that registered a share extension) and the OS handles the rest. Works for any file type the OS recognizes, including PDFs, images, video, audio, archives, and Office formats.
+
+<Warning>
+  The URL must be a publicly fetchable HTTPS endpoint that returns the file with the right `Content-Type` and `Content-Disposition` headers. Data URLs (`data:application/pdf;base64,...`), blob URLs (`blob:...`), and `file://` paths are not accepted. The runtime needs to fetch the file from the network, so upload the bytes to a CDN, S3 bucket, or similar storage first and pass the resulting public URL into the call.
+</Warning>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Pass the file URL directly into `despia()`. There is no scheme prefix, the runtime detects an HTTPS URL and routes it through the share-sheet handler.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('https://cdn.example.com/documents/report.pdf')
+}
+```
+
+The share sheet shows the file's preview, name, and source app, then lets the user pick a destination. The user can also cancel, in which case nothing happens and your app keeps running normally.
+
+---
+
+## Server requirements
+
+The endpoint serving the file has to send two response headers correctly. The OS uses these to decide how to render the preview, what filename to suggest, and which apps to show as share targets.
+
+| Header | Required value | What it does |
+| :-- | :-- | :-- |
+| `Content-Type` | The accurate MIME type for the file, e.g. `application/pdf`, `image/jpeg`, `video/mp4`, `application/zip` | Determines the file's icon, preview behavior, and the apps the share sheet offers. Wrong type produces a generic icon and limited share targets |
+| `Content-Disposition` | `attachment; filename="report.pdf"` | Tells the OS what filename to use in the share sheet and in the receiving app |
+
+```javascript
+// Example endpoint serving a generated PDF
+export default async function handler(req, res) {
+    const buffer = await generatePdf(req.query.id)
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', 'attachment; filename="report.pdf"')
+    res.setHeader('Content-Length', buffer.length)
+    res.send(buffer)
+}
+```
+
+If you are serving from S3, Cloudflare R2, or another object store, set these headers on the object metadata when you upload. Most stores let you specify them per object, and they get returned automatically on every fetch.
+
+---
+
+## Share a file from a button
+
+The natural pattern is a "Share" button next to a file or piece of content. Tap, share sheet opens, user picks a destination, done.
+
+```jsx
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function ShareButton({ fileUrl, label = 'Share' }) {
+    function share() {
+        if (isDespia) {
+            despia(fileUrl)
+        }
+    }
+
+    return <button onClick={share}>{label}</button>
+}
+```
+
+For files that do not yet exist as URLs (a generated invoice, an exported chart, a captured screen), upload first, then share the resulting URL.
+
+```javascript
+async function generateAndShare() {
+    if (!isDespia) return
+
+    // 1. Generate or capture the file as a Blob
+    const blob = await generateInvoice()
+
+    // 2. Upload to your CDN or storage backend
+    const formData = new FormData()
+    formData.append('file', blob, 'invoice.pdf')
+
+    const res  = await fetch('/api/uploads', { method: 'POST', body: formData })
+    const data = await res.json()
+
+    // 3. Share the resulting public URL
+    despia(data.url)
+}
+```
+
+The upload step is your code, not Despia's. Use whatever storage you already have (S3 with a presigned URL, Cloudflare R2, Bunny CDN, Supabase Storage, etc). The output must be a publicly fetchable HTTPS URL with the correct headers.
+
+---
+
+## File types
+
+Any file type the OS recognizes will share. The OS infers behavior from the `Content-Type` header, so as long as that is correct, the right share targets show up automatically.
+
+| Category | Common types |
+| :-- | :-- |
+| Documents | PDF, DOC, DOCX, TXT, RTF, MD |
+| Images | JPG, PNG, GIF, WEBP, HEIC, SVG |
+| Video | MP4, MOV, M4V, AVI, MKV |
+| Audio | MP3, M4A, WAV, FLAC, AAC |
+| Archives | ZIP, RAR, 7Z, TAR.GZ |
+| Spreadsheets | XLS, XLSX, CSV, NUMBERS |
+| Presentations | PPT, PPTX, KEY |
+| Code | JSON, XML, HTML, JS, TS |
+
+For unusual types, set `Content-Type` to `application/octet-stream` as a fallback. The share sheet still works, the user just gets a generic file icon and a smaller set of compatible destinations.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

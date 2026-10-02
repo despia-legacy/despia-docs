@@ -1,0 +1,190 @@
+host	path	kind	title	lastmod
+setup.despia.com	/analytics/appsflyer/ad-revenue	docs	Ad Revenue - Despia Documentation	2026-07-09T12:54:18.866Z
+setup.despia.com	/analytics/appsflyer/attribution	docs	Attribution - Despia Documentation	2026-07-09T20:26:48.607Z
+setup.despia.com	/analytics/appsflyer/campaigns	docs	Campaigns - Despia Documentation	2026-07-09T12:54:18.867Z
+setup.despia.com	/analytics/appsflyer/consent	docs	Consent - Despia Documentation	2026-07-09T12:54:18.870Z
+setup.despia.com	/analytics/appsflyer/deeplinking	docs	Deep Linking - Despia Documentation	2026-07-09T20:26:48.609Z
+setup.despia.com	/analytics/appsflyer/events	docs	Events - Despia Documentation	2026-07-09T12:54:18.873Z
+setup.despia.com	/analytics/appsflyer/identity	docs	Identity - Despia Documentation	2026-07-09T12:54:18.869Z
+setup.despia.com	/analytics/appsflyer/introduction	docs	Introduction - Despia Documentation	2026-07-09T20:26:48.608Z
+setup.despia.com	/analytics/appsflyer/testing	docs	Testing - Despia Documentation	2026-07-09T12:54:18.867Z
+setup.despia.com	/analytics/posthog/introduction	docs	Introduction - Despia Documentation	2026-05-19T11:46:04.714Z
+setup.despia.com	/analytics/posthog/reference	docs	Reference - Despia Documentation	2026-05-19T11:46:04.715Z
+setup.despia.com	/authentication/clerk/account	docs	Account - Despia Documentation	2026-05-19T11:46:04.720Z
+setup.despia.com	/authentication/clerk/auth-methods	docs	Auth Methods - Despia Documentation	2026-05-19T11:46:04.719Z
+setup.despia.com	/authentication/clerk/backend	docs	Backend - Despia Documentation	2026-05-19T11:46:04.718Z
+setup.despia.com	/authentication/clerk/introduction	docs	Introduction - Despia Documentation	2026-05-18T13:27:44.473Z
+setup.despia.com	/authentication/clerk/reference	docs	Reference - Despia Documentation	2026-05-19T11:46:04.717Z
+setup.despia.com	/authentication/clerk/sessions	docs	Session - Despia Documentation	2026-05-19T11:46:04.721Z
+setup.despia.com	/authentication/payments/test	docs	Test - Despia Documentation	2026-09-03T10:06:27.699Z
+setup.despia.com	/best-practices/backend/one-signal/user-session	docs	User Session - Despia Documentation	2026-01-26T06:39:16.334Z
+setup.despia.com	/best-practices/backend/revenuecat/cron-jobs	docs	Cron Jobs - Despia Documentation	2026-03-30T22:06:38.828Z
+setup.despia.com	/best-practices/backend/revenuecat/user-session	docs	User Session - Despia Documentation	2026-03-30T22:06:38.829Z
+setup.despia.com	/best-practices/backend/revenuecat/webhooks	docs	Webhooks - Despia Documentation	2026-03-30T22:06:38.830Z
+setup.despia.com	/best-practices/backend/user-session	docs	User Session - Despia Documentation	2026-03-30T22:06:38.832Z
+setup.despia.com	/best-practices/frontend/animations	docs	Animations - Despia Documentation	2026-03-02T20:58:28.587Z
+setup.despia.com	/best-practices/frontend/performance	docs	Performance - Despia Documentation	2026-01-26T06:39:16.342Z
+setup.despia.com	/best-practices/frontend/structure	docs	Structure - Despia Documentation	2026-01-26T06:39:16.339Z
+setup.despia.com	/best-practices/updates/editor	docs	Editor - Despia Documentation	2026-03-06T07:05:15.685Z
+setup.despia.com	/best-practices/updates/interface	docs	Interface - Despia Documentation	2026-03-06T07:05:15.677Z
+setup.despia.com	/best-practices/updates/logic	docs	Logic - Despia Documentation	2026-03-06T07:05:15.717Z
+setup.despia.com	/best-practices/updates/overview	docs	Overview - Despia Documentation	2026-03-06T07:05:15.719Z
+setup.despia.com	/changelog	docs	Changelog - Despia Documentation	2026-09-13T15:28:54.612Z
+setup.despia.com	/connectivity/nfc	docs	NFC - Despia Documentation	2026-05-18T22:00:22.537Z
+setup.despia.com	/connectivity/websockets	docs	WebSockets - Despia Documentation	2026-05-18T07:24:24.369Z
+setup.despia.com	/custom-code/extensions	docs	Extensions - Despia Documentation	2026-04-29T13:08:34.930Z
+setup.despia.com	/deployment/apple-ios/automatic	docs	Automatic - Despia Documentation	2026-09-25T06:55:03.547Z
+setup.despia.com	/deployment/apple-ios/manual	docs	Manual - Despia Documentation	2026-01-26T06:39:16.341Z
+setup.despia.com	/deployment/google-android/automatic	docs	Automatic - Despia Documentation	2026-04-14T15:02:40.096Z
+setup.despia.com	/deployment/google-android/manual	docs	Manual - Despia Documentation	2026-01-26T06:39:16.362Z
+setup.despia.com	/editor/publishing-an-update	docs	Publishing an Update - Despia Documentation	2026-08-03T08:00:48.699Z
+setup.despia.com	/editor/versioning	docs	Versioning - Despia Documentation	2026-08-03T07:10:23.421Z
+setup.despia.com	/extensions/introduction	docs	Introduction - Despia Documentation	2026-04-01T15:19:05.742Z
+setup.despia.com	/health-data/apple-health	docs	Apple Health - Despia Documentation	2026-06-03T11:36:07.844Z
+setup.despia.com	/health-data/google-health	docs	Google Health - Despia Documentation	2026-04-14T15:02:40.101Z
+setup.despia.com	/introduction	docs	Introduction - Despia Documentation	2026-04-30T12:05:30.774Z
+setup.despia.com	/introduction-1	docs	Introduction - Despia Documentation	2026-05-24T06:14:12.043Z
+setup.despia.com	/local-cdn/introduction	docs	Introduction - Despia Documentation	2026-04-05T15:52:15.935Z
+setup.despia.com	/local-cdn/reference	docs	Reference - Despia Documentation	2026-04-21T10:03:02.776Z
+setup.despia.com	/local-database/introduction	docs	Introduction - Despia Documentation	2026-05-22T07:14:21.767Z
+setup.despia.com	/local-database/reference	docs	Reference - Despia Documentation	2026-05-22T07:15:14.864Z
+setup.despia.com	/local-intelligence/Introduction	docs	Introduction - Despia Documentation	2026-07-29T07:09:10.455Z
+setup.despia.com	/local-intelligence/reference	docs	Reference - Despia Documentation	2026-07-29T07:09:10.456Z
+setup.despia.com	/local-server/introduction	docs	Introduction - Despia Documentation	2026-05-31T05:24:04.351Z
+setup.despia.com	/local-server/reference	docs	Reference - Despia Documentation	2026-04-05T15:52:15.931Z
+setup.despia.com	/lovable/how-it-works	docs	How it Works - Despia Documentation	2026-03-30T22:06:38.828Z
+setup.despia.com	/lovable/legacy-features/one-signal-v1	docs	OneSignal V1 - Despia Documentation	2026-01-26T06:39:16.366Z
+setup.despia.com	/lovable/native-features/app-privacy	docs	App Privacy - Despia Documentation	2026-01-26T06:39:16.364Z
+setup.despia.com	/lovable/native-features/app-settings	docs	App Settings - Despia Documentation	2026-01-26T06:39:16.370Z
+setup.despia.com	/lovable/native-features/biometrics	docs	Biometrics - Despia Documentation	2026-01-26T06:39:16.369Z
+setup.despia.com	/lovable/native-features/camera-roll	docs	Camera Roll - Despia Documentation	2026-01-26T06:39:16.397Z
+setup.despia.com	/lovable/native-features/clipboard	docs	Clipboard - Despia Documentation	2026-01-26T06:39:16.393Z
+setup.despia.com	/lovable/native-features/contact-access	docs	Contact Access - Despia Documentation	2026-01-26T06:39:16.395Z
+setup.despia.com	/lovable/native-features/deeplinking	docs	Deeplinking - Despia Documentation	2026-01-26T06:39:16.399Z
+setup.despia.com	/lovable/native-features/device-indexing	docs	Device Indexing - Despia Documentation	2026-01-26T06:39:16.404Z
+setup.despia.com	/lovable/native-features/external-links	docs	External Links - Despia Documentation	2026-01-26T06:39:16.402Z
+setup.despia.com	/lovable/native-features/file-sharing	docs	File Sharing - Despia Documentation	2026-01-26T06:39:16.400Z
+setup.despia.com	/lovable/native-features/gps-location	docs	GPS Location - Despia Documentation	2026-01-26T06:39:16.405Z
+setup.despia.com	/lovable/native-features/gps-location-1	docs	GPS Location - Despia Documentation	2026-01-26T06:39:16.407Z
+setup.despia.com	/lovable/native-features/haptic-feedback	docs	Haptic Feedback - Despia Documentation	2026-01-26T06:39:16.406Z
+setup.despia.com	/lovable/native-features/health-kit	docs	HealthKit - Despia Documentation	2026-01-26T06:39:16.432Z
+setup.despia.com	/lovable/native-features/home-widgets	docs	Home Widgets - Despia Documentation	2026-01-26T06:39:16.424Z
+setup.despia.com	/lovable/native-features/o-auth-2-0/apple-auth	docs	Apple Auth - Despia Documentation	2026-09-03T10:06:27.672Z
+setup.despia.com	/lovable/native-features/oauth/google	docs	Google Auth - Despia Documentation	2026-01-26T06:39:16.423Z
+setup.despia.com	/lovable/native-features/oauth/tiktok	docs	TikTok Auth - Despia Documentation	2026-01-26T06:39:16.429Z
+setup.despia.com	/lovable/native-features/offline-push	docs	Offline Push - Despia Documentation	2026-01-26T06:39:16.427Z
+setup.despia.com	/lovable/native-features/onesignal	docs	OneSignal - Despia Documentation	2026-01-26T06:39:16.426Z
+setup.despia.com	/lovable/native-features/paywalls	docs	Paywalls - Despia Documentation	2026-01-26T06:39:16.431Z
+setup.despia.com	/lovable/native-features/print-documents	docs	Print Documents - Despia Documentation	2026-01-26T06:39:16.435Z
+setup.despia.com	/lovable/native-features/quick-actions	docs	Quick Actions - Despia Documentation	2026-01-26T06:39:16.433Z
+setup.despia.com	/lovable/native-features/restore-purchase	docs	Restore Purchase - Despia Documentation	2026-01-26T06:39:16.456Z
+setup.despia.com	/lovable/native-features/rewarded-ads	docs	Rewarded Ads - Despia Documentation	2026-01-26T06:39:16.454Z
+setup.despia.com	/lovable/native-features/safe-areas	docs	Safe Areas - Despia Documentation	2026-01-26T06:39:16.457Z
+setup.despia.com	/lovable/native-features/screen-brightness	docs	Screen Brightness - Despia Documentation	2026-01-26T06:39:16.459Z
+setup.despia.com	/lovable/native-features/screenshot	docs	Screenshot - Despia Documentation	2026-01-26T06:39:16.461Z
+setup.despia.com	/lovable/native-features/share-dialog	docs	Share Dialog - Despia Documentation	2026-01-26T06:39:16.460Z
+setup.despia.com	/lovable/native-features/share-extension	docs	Share Extension - Despia Documentation	2026-01-26T06:39:16.464Z
+setup.despia.com	/lovable/native-features/simple-storage	docs	Simple Storage - Despia Documentation	2026-01-26T06:39:16.458Z
+setup.despia.com	/lovable/native-features/siri-shortcuts	docs	Siri Shortcuts - Despia Documentation	2026-01-26T06:39:16.463Z
+setup.despia.com	/lovable/native-features/storage-vault	docs	Storage Vault - Despia Documentation	2026-01-26T06:39:16.462Z
+setup.despia.com	/lovable/native-features/store-location	docs	Store Location - Despia Documentation	2026-01-26T06:39:16.485Z
+setup.despia.com	/lovable/native-features/user-agent	docs	User Agent - Despia Documentation	2026-01-26T06:39:16.487Z
+setup.despia.com	/machine-learning/vision/ocr	docs	OCR - Despia Documentation	2026-05-20T13:24:40.697Z
+setup.despia.com	/machine-learning/voice/speech-recognition	docs	Speech Recognition - Despia Documentation	2026-05-24T06:14:13.157Z
+setup.despia.com	/mcp-server	docs	MCP Server - Despia Documentation	2026-01-26T06:39:16.486Z
+setup.despia.com	/native-features/action-sheet	docs	Action Sheet - Despia Documentation	2026-05-18T22:28:22.885Z
+setup.despia.com	/native-features/admob/Iinterstitial	docs	Interstitial Ads - Despia Documentation	2026-05-04T13:21:40.415Z
+setup.despia.com	/native-features/admob/inline-ads	docs	Inline Ads - Despia Documentation	2026-05-04T13:21:40.424Z
+setup.despia.com	/native-features/admob/rewarded-ads	docs	Rewarded Ads - Despia Documentation	2026-05-04T13:21:40.410Z
+setup.despia.com	/native-features/age-assurance	docs	Age Assurance - Despia Documentation	2026-09-03T10:06:26.454Z
+setup.despia.com	/native-features/app-privacy	docs	App Privacy - Despia Documentation	2026-05-04T13:21:40.408Z
+setup.despia.com	/native-features/app-settings	docs	App Settings - Despia Documentation	2026-05-04T13:21:40.409Z
+setup.despia.com	/native-features/audio-player	docs	Audio - Despia Documentation	2026-07-05T21:09:27.713Z
+setup.despia.com	/native-features/biometrics	docs	Biometrics - Despia Documentation	2026-05-04T13:21:40.411Z
+setup.despia.com	/native-features/bluetooth	docs	Bluetooth - Despia Documentation	2026-09-03T10:06:26.453Z
+setup.despia.com	/native-features/camera-roll	docs	Camera Roll - Despia Documentation	2026-05-04T13:21:40.405Z
+setup.despia.com	/native-features/clipboard	docs	Clipboard - Despia Documentation	2026-05-04T13:21:40.404Z
+setup.despia.com	/native-features/contact-access	docs	Contact Access - Despia Documentation	2026-05-04T13:21:40.406Z
+setup.despia.com	/native-features/deeplinking	docs	Deeplinking - Despia Documentation	2026-05-04T13:21:40.407Z
+setup.despia.com	/native-features/device-indexing	docs	Device Indexing - Despia Documentation	2026-05-04T13:21:44.406Z
+setup.despia.com	/native-features/external-links	docs	External Links - Despia Documentation	2026-05-04T13:21:44.400Z
+setup.despia.com	/native-features/file-picker	docs	File Picker - Despia Documentation	2026-07-31T15:01:03.764Z
+setup.despia.com	/native-features/file-sharing	docs	File Sharing - Despia Documentation	2026-05-04T13:21:44.407Z
+setup.despia.com	/native-features/file-viewer	docs	File Viewer - Despia Documentation	2026-05-18T16:44:09.145Z
+setup.despia.com	/native-features/focus-events	docs	Focus Events - Despia Documentation	2026-04-29T13:08:44.288Z
+setup.despia.com	/native-features/gps-location	docs	GPS Location - Despia Documentation	2026-06-30T17:44:34.724Z
+setup.despia.com	/native-features/gyroscope	docs	Gyroscope - Despia Documentation	2026-05-08T11:29:38.127Z
+setup.despia.com	/native-features/haptic-feedback	docs	Haptic Feedback - Despia Documentation	2026-05-04T13:21:44.401Z
+setup.despia.com	/native-features/healthkit	docs	HealthKit (Legacy) - Despia Documentation	2026-04-14T15:02:40.098Z
+setup.despia.com	/native-features/home-widgets	docs	Home Widgets - Despia Documentation	2026-05-25T11:31:12.801Z
+setup.despia.com	/native-features/in-app-rating	docs	In-App Rating - Despia Documentation	2026-08-06T09:10:49.361Z
+setup.despia.com	/native-features/light-and-dark-mode	docs	Light & Dark Mode - Despia Documentation	2026-05-05T07:33:26.110Z
+setup.despia.com	/native-features/notification-sounds	docs	Notification Sounds - Despia Documentation	2026-09-03T10:06:26.426Z
+setup.despia.com	/native-features/oauth/apple	docs	Apple Auth - Despia Documentation	2026-05-05T07:33:26.111Z
+setup.despia.com	/native-features/oauth/easy-login-flow	docs	Easy OAuth - Despia Documentation	2026-09-03T11:36:32.624Z
+setup.despia.com	/native-features/oauth/google	docs	Google Auth - Despia Documentation	2026-05-05T07:33:26.107Z
+setup.despia.com	/native-features/oauth/introduction	docs	Introduction - Despia Documentation	2026-03-30T16:32:16.920Z
+setup.despia.com	/native-features/oauth/tiktok	docs	TikTok Auth - Despia Documentation	2026-05-05T07:33:26.108Z
+setup.despia.com	/native-features/offline-push	docs	Offline Push - Despia Documentation	2026-05-04T13:21:44.403Z
+setup.despia.com	/native-features/onesignal/introduction	docs	Introduction - Despia Documentation	2026-05-22T06:58:39.193Z
+setup.despia.com	/native-features/onesignal/reference	docs	Reference - Despia Documentation	2026-05-22T07:14:21.766Z
+setup.despia.com	/native-features/paywalls	docs	Paywalls - Despia Documentation	2026-03-19T06:21:53.251Z
+setup.despia.com	/native-features/prevent-autoscroll	docs	Prevent Autoscroll - Despia Documentation	2026-05-02T16:30:25.461Z
+setup.despia.com	/native-features/print-documents	docs	Print Documents - Despia Documentation	2026-05-04T13:21:44.402Z
+setup.despia.com	/native-features/purchases	docs	Purchases - Despia Documentation	2026-03-19T06:27:03.180Z
+setup.despia.com	/native-features/quick-actions	docs	Quick Actions - Despia Documentation	2026-05-04T13:21:45.559Z
+setup.despia.com	/native-features/restore-purchase	docs	Restore Purchase - Despia Documentation	2026-01-26T06:39:16.549Z
+setup.despia.com	/native-features/revenuecat/introduction	docs	Introduction - Despia Documentation	2026-05-07T09:12:21.913Z
+setup.despia.com	/native-features/revenuecat/reference	docs	Reference - Despia Documentation	2026-05-07T09:12:21.915Z
+setup.despia.com	/native-features/safe-areas	docs	Safe Areas - Despia Documentation	2026-05-04T13:21:45.557Z
+setup.despia.com	/native-features/sandbox	docs	Sandbox - Despia Documentation	2026-07-07T05:10:59.042Z
+setup.despia.com	/native-features/screen-brightness	docs	Screen Brightness - Despia Documentation	2026-05-04T13:21:45.551Z
+setup.despia.com	/native-features/screen-radius	docs	Screen Radius - Despia Documentation	2026-05-07T12:25:32.394Z
+setup.despia.com	/native-features/screenshot	docs	Screenshot - Despia Documentation	2026-05-04T13:21:45.537Z
+setup.despia.com	/native-features/service-workers	docs	Service Workers - Despia Documentation	2026-07-28T05:24:17.287Z
+setup.despia.com	/native-features/share-dialog	docs	Share Dialog - Despia Documentation	2026-05-04T13:21:45.554Z
+setup.despia.com	/native-features/share-extension	docs	Share Extension - Despia Documentation	2026-05-04T13:21:45.553Z
+setup.despia.com	/native-features/simple-storage	docs	Simple Storage - Despia Documentation	2026-05-04T13:21:45.553Z
+setup.despia.com	/native-features/siri-shortcuts	docs	Siri Shortcuts - Despia Documentation	2026-05-04T13:21:45.552Z
+setup.despia.com	/native-features/speech-recognition	docs	Speech Recognition - Despia Documentation	2026-05-15T16:12:57.021Z
+setup.despia.com	/native-features/storage-vault	docs	Storage Vault - Despia Documentation	2026-04-01T15:19:05.747Z
+setup.despia.com	/native-features/store-location	docs	Store Location - Despia Documentation	2026-05-04T13:21:45.549Z
+setup.despia.com	/native-features/url-scheme	docs	URL Scheme - Despia Documentation	2026-07-31T14:59:38.499Z
+setup.despia.com	/native-features/user-agent	docs	User Agent - Despia Documentation	2026-05-04T13:21:46.636Z
+setup.despia.com	/payments/introduction	docs	Introduction - Despia Documentation	2026-05-16T22:10:58.876Z
+setup.despia.com	/payments/revenuecat/introduction	docs	Introduction - Despia Documentation	2026-05-19T11:46:04.722Z
+setup.despia.com	/payments/revenuecat/reference	docs	Reference - Despia Documentation	2026-05-16T22:08:55.318Z
+setup.despia.com	/payments/stripe/introduction	docs	Introduction - Despia Documentation	2026-05-16T22:08:55.319Z
+setup.despia.com	/payments/stripe/payment	docs	Payment - Despia Documentation	2026-05-16T20:59:54.112Z
+setup.despia.com	/platform-support/base44	docs	Despia for Base44 - Despia Documentation	2026-03-30T22:06:38.849Z
+setup.despia.com	/platform-support/claude-code	docs	Despia for Claude Code - Despia Documentation	2026-03-30T22:06:38.855Z
+setup.despia.com	/platform-support/cursor	docs	Despia for Cursor - Despia Documentation	2026-03-30T22:06:38.854Z
+setup.despia.com	/platform-support/lovable	docs	Despia for Lovable - Despia Documentation	2026-03-30T22:06:38.853Z
+setup.despia.com	/platform-support/replit	docs	Despia for Replit - Despia Documentation	2026-03-30T22:06:38.853Z
+setup.despia.com	/reference	docs	Reference - Despia Documentation	2026-05-24T06:14:14.627Z
+setup.despia.com	/refernce	docs	Reference - Despia Documentation	2026-03-16T10:01:29.205Z
+setup.despia.com	/roadblocks/deployment/apple-ios/att-and-tracking	docs	ATT & Tracking - Despia Documentation	2026-07-01T09:55:41.109Z
+setup.despia.com	/roadblocks/deployment/apple-ios/health-kit	docs	HealthKit - Despia Documentation	2026-07-01T09:52:26.518Z
+setup.despia.com	/roadblocks/deployment/update-bundle-id	docs	Update Bundle IDs - Despia Documentation	2026-09-03T10:06:26.394Z
+setup.despia.com	/roadblocks/revenue-cat/missing-item	docs	Missing Item - Despia Documentation	2026-01-26T06:39:16.572Z
+setup.despia.com	/roadblocks/runtime/empty-pages	docs	Empty Pages - Despia Documentation	2026-01-26T06:39:16.596Z
+setup.despia.com	/roadblocks/runtime/legacy-setups	docs	Legacy Setups - Despia Documentation	2026-06-21T22:15:22.932Z
+setup.despia.com	/roadblocks/runtime/lost-auth-tokens	docs	Lost Auth Tokens - Despia Documentation	2026-01-26T06:39:16.597Z
+setup.despia.com	/roadblocks/runtime/no-ota-updates	docs	No OTA Updates - Despia Documentation	2026-02-01T08:25:13.369Z
+setup.despia.com	/roadblocks/runtime/o-auth-failures	docs	OAuth Failures - Despia Documentation	2026-06-21T22:15:22.933Z
+setup.despia.com	/roadblocks/runtime/slow-apps	docs	Slow Apps - Despia Documentation	2026-01-26T06:39:16.598Z
+setup.despia.com	/roadblocks/runtime/watermark-bug	docs	Watermark Bug - Despia Documentation	2026-05-13T19:43:59.560Z
+setup.despia.com	/roadblocks/runtime/wrong-framework	docs	Wrong Framework - Despia Documentation	2026-03-20T21:35:41.707Z
+setup.despia.com	/store-rejections/common-rejection/ai-processing	docs	AI Processing - Despia Documentation	2026-01-26T06:39:16.599Z
+setup.despia.com	/store-rejections/common-rejection/blank-screen-redirects	docs	Blank Screen Redirects - Despia Documentation	2026-01-26T06:39:16.597Z
+setup.despia.com	/store-rejections/common-rejection/deceptive-paywalls	docs	Deceptive Paywalls - Despia Documentation	2026-01-26T06:39:16.601Z
+setup.despia.com	/store-rejections/common-rejection/in-app-purchases	docs	In-App Purchases - Despia Documentation	2026-01-26T06:39:16.603Z
+setup.despia.com	/store-rejections/common-rejection/minimum-functionality	docs	Minimum Functionality - Despia Documentation	2026-01-26T06:39:16.600Z
+setup.despia.com	/store-rejections/common-rejection/non-mobile-design	docs	Non-Mobile Design - Despia Documentation	2026-01-26T06:39:16.602Z
+setup.despia.com	/store-rejections/common-rejection/privacy-policy	docs	Privacy Policy - Despia Documentation	2026-01-26T06:39:16.623Z
+setup.despia.com	/store-rejections/common-rejection/social-login-options	docs	Social Login Options - Despia Documentation	2026-01-26T06:39:16.625Z
+setup.despia.com	/store-rejections/common-rejection/spam-and-copies	docs	Spam and Copies - Despia Documentation	2026-01-26T06:39:16.624Z
+setup.despia.com	/store-rejections/common-rejection/tracking-transparency	docs	Tracking Transparency - Despia Documentation	2026-01-26T06:39:16.620Z
+setup.despia.com	/store-rejections/common-rejection/user-specific-data	docs	User-Specific Data - Despia Documentation	2026-01-26T06:39:16.625Z
+setup.despia.com	/store-rejections/introduction	docs	Introduction - Despia Documentation	2026-01-26T06:39:16.622Z
+setup.despia.com	/wallet/pkpass	docs	PK Pass - Despia Documentation	2026-05-18T19:23:18.500Z

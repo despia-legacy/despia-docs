@@ -1,0 +1,167 @@
+---
+title: "Despia for Cursor"
+description: "Ship your Cursor-built web app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
+icon: "code"
+---
+
+You are building a web app in Cursor. Despia wraps it for iOS and Android, with native billing, push notifications, install attribution, and offline support included. No React Native, no Xcode, no separate mobile codebase.
+
+---
+
+## How it works
+
+Despia loads your web app inside a native Swift and Kotlin shell. Your existing JavaScript, React, Vue, or any other framework runs as-is. Native capabilities are exposed via `despia()` calls from your existing code.
+
+```javascript
+import despia from 'despia-native'
+
+// Your web app is already running
+// Add native features on top
+```
+
+Point Despia at your deployed web app URL, Vercel, Netlify, your own server, anything, and click publish. Despia manages signing, provisioning, and submission to both stores.
+
+---
+
+## In-app purchases, built in
+
+Apple and Google require their own billing systems for digital content. Implementing this yourself means integrating StoreKit (Swift) for iOS and Google Play Billing (Kotlin) for Android, plus keeping them in sync. Despia includes RevenueCat as a built-in, accessible from your web layer with a single call.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+} else {
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`
+}
+```
+
+Check entitlements on every app load:
+
+```javascript
+const data    = await despia('getpurchasehistory://', ['restoredData'])
+const active  = (data.restoredData ?? []).filter(p => p.isActive)
+const premium = active.some(p => p.entitlementId === 'premium')
+
+window.onRevenueCatPurchase = () => checkEntitlements()
+```
+
+Configure entitlements in your RevenueCat dashboard, attach your iOS and Android products to a single entitlement identifier, and both platforms return the same `entitlementId`. No platform-specific code.
+
+---
+
+## Push notifications, built in
+
+OneSignal is included. No APNs certificate management, no Firebase configuration, no native SDK setup:
+
+```javascript
+despia(`setonesignalplayerid://?user_id=${userId}`)
+```
+
+Call this on every app load after the user is authenticated. Send targeted notifications from your backend using OneSignal's REST API with `include_external_user_ids`.
+
+---
+
+## Install attribution and ad analytics, built in
+
+AppsFlyer ships with every Despia app. Three variables are injected automatically on every page load, no setup, no SDK initialisation:
+
+```javascript
+despia.appsFlyerReferrer     // 'tiktok_ad', 'meta_organic', 'organic'
+despia.appsFlyerAttribution  // full attribution object
+despia.appsFlyerUID          // unique AppsFlyer user ID
+```
+
+Log conversion events:
+
+```javascript
+despia('appsflyer://log_event?event_name=purchase&event_values={"revenue":9.99,"currency":"USD"}')
+```
+
+Without this you cannot attribute installs to ad campaigns, pay creators based on attributed conversions, or run ROAS reporting against your ad spend.
+
+---
+
+## Offline support
+
+Add the `@despia/local` build plugin to serve your app from `http://localhost` on the device. Your app loads in milliseconds after first launch and works fully offline. No service worker complexity, no `file://` protocol issues.
+
+```bash
+npm install --save-dev @despia/local
+```
+
+```javascript
+// vite.config.js
+import { despiaLocalPlugin } from '@despia/local/vite'
+
+export default {
+    plugins: [react(), despiaLocalPlugin({ outDir: 'dist' })]
+}
+```
+
+OTA updates are included. When you redeploy, the update reaches users on their next launch, no App Store review.
+
+---
+
+## No separate mobile codebase
+
+Your web app is the source of truth. iOS and Android run the same code. Any change you deploy goes to web, iOS, and Android simultaneously via OTA.
+
+This is the opposite of React Native, where you maintain a parallel codebase with its own component library, navigation system, and platform-specific logic.
+
+---
+
+## Getting started
+
+```bash
+npm install despia-native
+```
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+const isDespiaIOS = isDespia && /iphone|ipad/i.test(navigator.userAgent)
+const isDespiaAndroid = isDespia && /android/i.test(navigator.userAgent)
+
+// In-app purchases
+if (isDespia) {
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+}
+
+// Push notifications (call on every authenticated load)
+if (isDespia) {
+    despia(`setonesignalplayerid://?user_id=${userId}`)
+}
+
+// Entitlement check
+async function checkEntitlements() {
+    const data   = await despia('getpurchasehistory://', ['restoredData'])
+    const active = (data.restoredData ?? []).filter(p => p.isActive)
+    if (active.some(p => p.entitlementId === 'premium')) unlockPremium()
+}
+
+checkEntitlements()
+window.onRevenueCatPurchase = checkEntitlements
+```
+
+<CardGroup cols={2}>
+  <Card title="In-App Purchases" icon="credit-card" href="/native-features/revenuecat">
+    RevenueCat built in
+  </Card>
+
+  <Card title="Push Notifications" icon="bell" href="/native-features/onesignal">
+    OneSignal built in
+  </Card>
+
+  <Card title="AppsFlyer" icon="chart-bar" href="/analytics/appsflyer">
+    Attribution built in
+  </Card>
+
+  <Card title="Native Features" icon="mobile" href="/native-features">
+    All despia() capabilities
+  </Card>
+</CardGroup>

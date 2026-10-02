@@ -10,7 +10,10 @@
   "assets": {
     "directory": "dist",
     "binding": "ASSETS",
-    "run_worker_first": true
+    "run_worker_first": true,
+    // /x serves /x/index.html in place (200, no redirect) and /x/ 307s to /x: every old URL's
+    // one 301 lands on a 200 (scripts/setup-parity.mjs holds that for all 189 v3 pages)
+    "html_handling": "drop-trailing-slash"
   },
   "observability": { "enabled": true }
 }

@@ -1,0 +1,217 @@
+---
+title: "Store Location"
+description: "Read the user's App Store or Play Store country code through despia.storeLocation to gate regional features and route payments correctly."
+icon: "globe"
+---
+
+<iframe src="https://www.youtube.com/embed/jRK3xfWqi0w" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is reading `despia.storeLocation` and combining the country code with the platform check before deciding what to show.
+</Note>
+
+`despia.storeLocation` returns the country code of the App Store or Play Store account the user is signed into. The value is available on both iOS and Android. The most important use is the web payments gate, which depends on _both_ the country code and the platform: only iOS users in the US App Store qualify for external web payment under the Epic v. Apple ruling. Every other combination falls back to in-app purchase.
+
+<Info>
+  Store location is the country of the user's store account, not their physical location. A user in Spain signed into a US App Store account returns `US`. This is usually what you want, since it matches the store's billing rules. If you need physical location, use [GPS Location](/native-features/gps-location) instead.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Read `despia.storeLocation` directly. The value is injected by the native runtime before your JavaScript executes, so it is available on first render with no loading state. It returns a two-letter ISO country code like `US`, `DE`, `JP`, or `BR`.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+const storeLocation = isDespia ? despia.storeLocation : null
+```
+
+The value works on both iOS and Android. The platform check is what determines what you can _do_ with the country code, not whether you can read it.
+
+---
+
+## Gate web payments to iOS US users only
+
+This is the primary use of the feature. Apple's policy following Epic v. Apple permits linking out to external web payment for digital goods, but only for users of the US App Store. No other App Store region qualifies under that ruling, and Google Play has separate rules that do not include the same carve-out. The correct gate is the conjunction of three checks: Despia runtime, iOS platform, and US store country.
+
+```jsx
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+const isDespiaAndroid = isDespia &&
+    navigator.userAgent.toLowerCase().includes('android')
+
+const storeLocation = isDespia ? despia.storeLocation : null
+
+// The only combination that qualifies for external web payment
+const allowsWebPayment = isDespiaIOS && storeLocation === 'US'
+
+function CheckoutButton() {
+    if (allowsWebPayment) {
+        return <button onClick={handleStripe}>Checkout with Stripe</button>
+    }
+
+    return <button onClick={handleIAP}>Subscribe</button>
+}
+```
+
+Every other combination falls into in-app purchase, including: iOS users in non-US App Stores (the EU, UK, Japan, etc, none of which are covered by the same ruling), Android users in any region, and anyone running the app outside Despia.
+
+<Warning>
+  Do not show external web payment to non-US iOS users or to any Android user. Apple and Google reject builds that route digital-goods transactions through external web pages outside the explicit carve-outs each platform has approved. The US-only iOS gate is currently the safest carve-out, other regional rulings (DMA in the EU, court orders in Korea) have their own additional compliance requirements. Treat the country list as a flag you flip from a config server, not a hard-coded array, so you can update it without shipping a new build.
+</Warning>
+
+---
+
+## Localize content and currency
+
+Outside the payment gate, the country code on its own is useful for matching content, currency, and copy to the user's store account. This works the same way on iOS and Android, since both expose the same two-letter codes.
+
+```jsx
+function PriceDisplay({ priceUsd }) {
+    const currency = storeCurrency(storeLocation)
+    const converted = convertCurrency(priceUsd, currency)
+    return <p>{formatCurrency(converted, currency)}</p>
+}
+
+function storeCurrency(country) {
+    const map = {
+        US: 'USD', CA: 'CAD', GB: 'GBP', AU: 'AUD',
+        DE: 'EUR', FR: 'EUR', IT: 'EUR', ES: 'EUR',
+        JP: 'JPY', KR: 'KRW', IN: 'INR', BR: 'BRL',
+    }
+    return map[country] || 'USD'
+}
+```
+
+For prices that match what the App Store or Play Store will actually charge for in-app purchases, source the prices from the store's localized SKU metadata rather than calculating from a base USD price. The store's price tiers are not a clean conversion, they are deliberate price points per market.
+
+---
+
+## Sync to your backend
+
+For server-side personalization (regional inventory, tax calculation, content licensing), post the store location alongside the user ID at login. Include the platform too, since the same country code from iOS and from Android can mean different things for payment routing.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+const isDespiaAndroid = isDespia &&
+    navigator.userAgent.toLowerCase().includes('android')
+
+async function syncStoreLocation(user) {
+    if (!isDespia || !despia.storeLocation) return
+
+    const platform = isDespiaIOS ? 'ios' : isDespiaAndroid ? 'android' : 'unknown'
+
+    await fetch('/api/store-location', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            userId:        user.id,
+            storeLocation: despia.storeLocation,
+            platform,
+            timestamp:     new Date().toISOString(),
+        }),
+    })
+}
+```
+
+```javascript
+// /api/store-location
+export default async function handler(req, res) {
+    const { userId, storeLocation, platform, timestamp } = req.body
+
+    if (!userId || !storeLocation) {
+        return res.status(400).json({ error: 'Missing userId or storeLocation' })
+    }
+
+    try {
+        await db.collection('user_locations').doc(userId).set({
+            userId,
+            storeLocation,
+            platform,
+            lastChecked: timestamp,
+            createdAt:   timestamp,
+        }, { merge: true })
+
+        res.status(200).json({ success: true })
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to sync store location' })
+    }
+}
+```
+
+Storing `platform` next to `storeLocation` is what lets your backend reproduce the web-payment gate server-side. A row with `storeLocation: 'US'` and `platform: 'ios'` is the only combination that allows external web payment, anything else routes to in-app purchase. `merge: true` preserves the original `createdAt` while updating the location fields, giving you an audit trail of when the user first signed in and when their store country was last verified.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

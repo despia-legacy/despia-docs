@@ -1,0 +1,79 @@
+---
+title: "Siri Shortcuts"
+icon: "circle-waveform-lines"
+description: "Enable Siri voice shortcuts with custom natural language commands that trigger JavaScript functions in your Lovable mobile app using the Despia SDK."
+---
+
+<Note>
+  **THIS FEATURE IS STILL A BETA FEATURE!**
+</Note>
+
+<iframe src="https://www.youtube.com/embed/yMerBouzAh4" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add Siri shortcut functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a Siri shortcut system that uses Despia URLs like: `despia("addtosiri://?command={NATURAL-LANGUAGE-COMMAND}&jsFunction=siriFunction()")` where command contains the natural language phrase users will speak to Siri and jsFunction specifies the globally-defined JavaScript function to execute when the command is triggered.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and Siri voice shortcuts. When users register a Siri shortcut with a natural language command like "Order Coffee", they can later speak that command to Siri. When triggered, your app opens and automatically executes the specified globally-defined JavaScript function, enabling hands-free voice-activated workflows and app interactions.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Execute Add to Siri
+
+Call the `despia()` function with an Add to Siri Command:
+
+```javascript
+despia("addtosiri://?command=Order Coffee&jsFunction=orderCoffee()");
+```
+
+## Shortcut Parameters
+
+Siri shortcut URLs must include proper parameters:
+
+- **command**: The natural language phrase users will speak to Siri to trigger the shortcut
+- **jsFunction**: The globally-defined JavaScript function name to execute when Siri triggers the command (the function must be globally accessible in your app)
+
+## Platform Support
+
+Supports iOS devices with Siri:
+
+- iPhone, iPad, iPod touch
+- Apple Watch (when paired with iPhone)
+- HomePod (when linked to user account)
+- CarPlay (for supported voice commands)
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native Siri voice shortcuts into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

@@ -1,0 +1,742 @@
+---
+title: "Automatic"
+icon: "code-branch"
+description: "Complete guide for building and publishing iOS applications using Despia"
+---
+
+<iframe src="https://www.youtube.com/embed/rqX6qF9BRf0" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+## Table of Contents
+
+ 1. [Prerequisites](#prerequisites)
+ 2. [Initial Setup in Despia](#initial-setup-in-despia)
+ 3. [Creating App Icons](#creating-app-icons)
+ 4. [Creating Splash Screens](#creating-splash-screens)
+ 5. [Bundle ID Configuration](#bundle-id-configuration)
+ 6. [Publishing Your App](#publishing-your-app)
+ 7. [Testing & TestFlight](#testing--testflight)
+ 8. [App Store Submission](#app-store-submission)
+ 9. [Over-the-Air Updates](#over-the-air-updates)
+10. [Troubleshooting](#troubleshooting)
+
+---
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+- An active **Apple Developer Account** (\$99/year)
+- A **deployed web application** with HTTPS enabled
+- Access to the **Despia platform**
+- **Design software** (Canva recommended for icon/splash creation)
+- Basic understanding of iOS app submission process
+
+---
+
+## Initial Setup in Despia
+
+### 1. Configure Your Web App Source
+
+Navigate to your Despia project dashboard and locate the **Dynamic App Store Source** section.
+
+**Critical Requirements:**
+
+- Your URL **must** use HTTPS (HTTP will not work)
+- Verify the URL is correct and accessible
+
+**Verification Steps:**
+
+1. Copy your web app URL from Despia
+2. Open a new browser tab
+3. Paste and load the URL
+4. Confirm your application loads correctly
+
+> **Common Error:** Typos in the URL will cause build failures. Always test your URL before proceeding.
+
+---
+
+## Creating App Icons
+
+### Requirements
+
+- **Dimensions:** 1024 x 1024 pixels (exactly)
+- **Format:** PNG
+- **Background:** No transparency allowed
+- **Safe Area:** Leave adequate padding around logo elements
+
+### Step-by-Step Process
+
+#### Using Canva
+
+1. **Create New Design**
+   - Set custom dimensions: 1024 x 1024 px
+   - Choose a background color (no transparency)
+2. **Design Your Icon**
+   - Upload your logo
+   - Center and size appropriately
+   - Leave safe margins (Apple will apply corner radius)
+   - Avoid placing critical elements at edges
+3. **Export Settings**
+   - File type: **PNG**
+   - Quality: **High**
+   - **Disable "Transparent Background"** (critical!)
+4. **Upload to Despia**
+   - Navigate to iOS Icon section
+   - Click "Upload Icon"
+   - Drag and drop your PNG file
+   - Wait for upload confirmation
+
+### Common Icon Mistakes
+
+| Issue                            | Result           |
+| :------------------------------- | :--------------- |
+| Wrong dimensions (not 1024x1024) | Build failure    |
+| Transparent background           | Apple rejection  |
+| JPEG format                      | Build failure    |
+| Logo too close to edges          | Elements cut off |
+
+---
+
+## Creating Splash Screens
+
+### Requirements
+
+- **Dimensions:** 1024 x 1024 pixels
+- **Format:** GIF (can be static or animated)
+- **Design:** Logo should fill most of the frame
+
+### Creating the Splash Screen
+
+1. **Design in Canva**
+   - Use 1024 x 1024 dimensions
+   - Design with your logo centered
+   - Add animations (optional):
+     - Blur in
+     - Fade in
+     - Swipe
+     - Party effects
+     - Custom transitions
+2. **Export as GIF**
+   - Select "Download" → "GIF"
+   - Choose animation settings if applicable
+   - Download to your computer
+3. **Upload to Despia**
+   - Scroll to "Splash Screen Layout" section
+   - Click upload
+   - Select your GIF file
+   - Confirm upload
+
+> **Tip:** Animated splash screens can make your app feel more polished, but keep animations under 2-3 seconds.
+
+---
+
+## Bundle ID Configuration
+
+### Overview
+
+Your app uses multiple bundle identifiers for different modules and extensions. Each serves a specific purpose.
+
+### Bundle ID Structure
+
+Below is the complete bundle ID hierarchy for `com.despia.myapp`:
+
+#### 1. Core Bundle ID
+
+| Property              | Value              |
+| :-------------------- | :----------------- |
+| **Name**              | Core Bundle ID     |
+| **Bundle Identifier** | `com.despia.myapp` |
+
+**Purpose:** Main application identifier - this is your primary app bundle ID.
+
+**Linked App Groups:**
+
+- `group.com.despia.myapp.onesignal`
+- `group.com.despia.myapp.Clip`
+- `group.com.despia.myapp.sharetarget`
+- `group.com.despia.myapp.widgetsharing`
+
+**Enabled Capabilities:**
+
+- App Attest
+- App Groups
+- Associated Domains
+- iCloud (Include CloudKit Support)
+- Push Notifications (Broadcast Capability)
+
+---
+
+#### 2. OneSignal Module
+
+| Property              | Value                                                    |
+| :-------------------- | :------------------------------------------------------- |
+| **Name**              | OneSignal Module                                         |
+| **Bundle Identifier** | `com.despia.myapp.OneSignalNotificationServiceExtension` |
+
+**Purpose:** Handles rich push notifications with images, media, and action buttons.
+
+**Linked App Groups:**
+
+- `group.com.despia.myapp.onesignal`
+
+**Enabled Capabilities:**
+
+- App Groups
+- Associated Domains
+- Push Notifications (Broadcast Capability)
+
+---
+
+#### 3. App Clip Module
+
+| Property              | Value                   |
+| :-------------------- | :---------------------- |
+| **Name**              | AppClip Module          |
+| **Bundle Identifier** | `com.despia.myapp.Clip` |
+
+**Purpose:** Provides a lightweight app experience that allows users to access core features without full installation.
+
+**Linked App Groups:**
+
+- `group.com.despia.myapp.Clip`
+
+**Enabled Capabilities:**
+
+- App Groups
+- Associated Domains
+- Push Notifications
+
+---
+
+#### 4. Share Extension Module
+
+| Property              | Value                                   |
+| :-------------------- | :-------------------------------------- |
+| **Name**              | Share Extension Module                  |
+| **Bundle Identifier** | `com.despia.myapp.ShareExtensionTarget` |
+
+**Purpose:** Enables system-level sharing integration so users can share content from other apps into your app.
+
+**Linked App Groups:**
+
+- `group.com.despia.myapp.sharetarget`
+
+**Enabled Capabilities:**
+
+- App Groups
+
+---
+
+#### 5. Home Widget Module
+
+| Property              | Value                          |
+| :-------------------- | :----------------------------- |
+| **Name**              | Home Widget Module             |
+| **Bundle Identifier** | `com.despia.myapp.ImageWidget` |
+
+**Purpose:** Displays app content on the user's home screen through iOS widgets.
+
+**Linked App Groups:**
+
+- `group.com.despia.myapp.widgetsharing`
+
+**Enabled Capabilities:**
+
+- App Groups
+
+---
+
+### App Groups Explained
+
+App Groups allow data sharing between your main app and extensions:
+
+| App Group                              | Purpose                     |
+| :------------------------------------- | :-------------------------- |
+| `group.com.despia.myapp.onesignal`     | OneSignal notification data |
+| `group.com.despia.myapp.Clip`          | App Clip shared data        |
+| `group.com.despia.myapp.sharetarget`   | Share extension data        |
+| `group.com.despia.myapp.widgetsharing` | Widget data synchronization |
+
+---
+
+## Publishing Your App
+
+### Building Your Application
+
+1. **Navigate to Build Section**
+   - Go to your Despia dashboard
+   - Locate the "Publish App" or "Build" button
+2. **Initiate Build**
+   - Click "Publish App"
+   - Despia will begin building your iOS application
+   - Build time: typically 15-30 minutes
+3. **Monitor Build Status**
+   - Check build logs for any errors
+   - Common issues:
+     - Missing splash screen
+     - Invalid icon dimensions
+     - Incorrect URL configuration
+
+### Build Output
+
+After successful build, you'll receive:
+
+- `.ipa` file (iOS app package)
+- Build number
+- Version information
+- Upload instructions for App Store Connect
+
+---
+
+## Testing & TestFlight
+
+### Uploading to TestFlight
+
+1. **App Store Connect**
+   - Log into [App Store Connect](https://appstoreconnect.apple.com/)
+   - Select your app
+   - Navigate to TestFlight section
+2. **Upload Build**
+   - Despia automatically uploads to App Store Connect
+   - Wait for processing (10-30 minutes)
+   - Build will appear in TestFlight tab
+3. **Processing Status**
+   - Initial upload: Processing
+   - Ready for testing: Available
+   - Issues found: Review errors tab
+
+### Internal Testing
+
+1. **Add Testers**
+   - TestFlight → Internal Testing
+   - Add Apple Developer team members
+   - Limit: 100 internal testers
+2. **Distribute Build**
+   - Select your processed build
+   - Click "Provide Export Compliance Information"
+   - Answer encryption questions (usually "No")
+   - Build becomes available immediately
+
+### External Testing
+
+1. **Create Test Group**
+   - TestFlight → External Testing
+   - Create new group
+   - Add up to 10,000 testers
+2. **Submit for Beta Review**
+   - Required before external testing
+   - Review time: 24-48 hours
+   - Provide test information
+3. **Send Invitations**
+   - Share TestFlight public link, or
+   - Invite via email addresses
+
+### Testing Best Practices
+
+- Test on multiple device sizes
+- Verify all native features work
+- Check push notifications
+- Test in-app purchases (if applicable)
+- Verify deep linking
+- Test offline behavior
+
+---
+
+## App Store Submission
+
+### Pre-Submission Checklist
+
+- App tested thoroughly via TestFlight
+- All required metadata prepared
+- Screenshots for all required device sizes
+- App description written
+- Keywords selected
+- Privacy policy URL available
+- Support URL active
+- App category selected
+- Age rating completed
+
+### Required Metadata
+
+#### App Information
+
+**Name & Description:**
+
+- App name (30 characters max)
+- Subtitle (30 characters max)
+- Description (4000 characters max)
+- Keywords (100 characters, comma-separated)
+- Support URL
+- Marketing URL (optional)
+
+**Pricing:**
+
+- Base price or free
+- In-app purchases (if applicable)
+
+**Categories:**
+
+- Primary category (required)
+- Secondary category (optional)
+
+#### Screenshots
+
+Required for:
+
+- iPhone 6.7" (iPhone 15 Pro Max)
+- iPhone 6.5" (iPhone 14 Plus)
+- iPhone 5.5" (iPhone 8 Plus)
+- iPad Pro 12.9" (6th gen)
+- iPad Pro 12.9" (2nd gen)
+
+**Specifications:**
+
+- Format: JPEG or PNG
+- Color space: RGB
+- No transparency
+- Min 72 DPI
+
+### App Privacy
+
+Navigate to **App Privacy** section:
+
+1. **Data Collection Declaration**
+   - What data do you collect?
+   - How is data used?
+   - Is data linked to user identity?
+   - Is data used for tracking?
+2. **Common Categories:**
+   - Contact Info (email, name)
+   - Identifiers (user ID, device ID)
+   - Usage Data (app interactions)
+   - Diagnostics (crash logs)
+
+### Submitting for Review
+
+1. **Select Build**
+   - Version Information → Build
+   - Click "+" to add build
+   - Select your TestFlight build
+   - Confirm app icon appears
+2. **Export Compliance**
+   - Does your app use encryption? (Usually No for web-based apps)
+   - If Yes, file for export compliance
+3. **Content Rights**
+   - Confirm you have rights to all content
+   - Third-party content acknowledgments
+4. **Advertising Identifier**
+   - Does your app use IDFA?
+   - Purpose of usage
+5. **Version Release**
+   - Automatic release after approval, or
+   - Manual release
+6. **Submit for Review**
+   - Click "Submit for Review"
+   - Review time: 24 hours - 7 days (typically 1-2 days)
+
+### Review Guidelines Compliance
+
+Common rejection reasons:
+
+- App crashes or bugs
+- Incomplete functionality
+- Misleading description or screenshots
+- Missing privacy policy
+- Insufficient app functionality
+- Broken links
+
+Best practices:
+
+- App should work without account creation (if possible)
+- All features mentioned should be functional
+- Clear value proposition
+- Professional UI/UX
+- Accurate metadata
+
+---
+
+## Over-the-Air Updates
+
+### Understanding OTA Updates
+
+Despia apps support **over-the-air (OTA) updates**, meaning:
+
+- Update web app and mobile app updates automatically
+- No App Store review needed for web changes
+- No rebuild required
+- Instant deployment
+- No cloud credits consumed
+
+### When OTA Works
+
+Changes that update automatically:
+
+- UI/UX modifications
+- Content updates
+- Bug fixes in web code
+- Feature additions (web-based)
+- Style changes
+- Business logic updates
+
+### When Rebuild Required
+
+You only need to rebuild when changing:
+
+- Bundle IDs
+- App capabilities
+- Native configurations
+- iOS icon
+- Splash screen
+- Push notification certificates
+- Associated domains
+- App Groups
+
+**Rebuild Frequency:** Typically once or twice per year
+
+### Testing OTA Updates
+
+1. **Make Change in Web App**
+   - Update your web application
+   - Deploy to production
+2. **Close Native App**
+   - Force close the iOS app
+   - Wait 2-3 seconds
+3. **Reopen App**
+   - Launch app again
+   - Changes appear immediately
+
+**Example:** Add a button to your web app → Close iOS app → Reopen → Button appears
+
+> **Pro Tip:** Critical bug fixes can be deployed in minutes instead of waiting days for App Store review.
+
+---
+
+## Troubleshooting
+
+### Build Failures
+
+#### Invalid Icon Dimensions
+
+**Error:** "Icon size must be 1024x1024" **Solution:**
+
+- Verify icon is exactly 1024x1024 pixels
+- Check export settings in design tool
+- Re-export and upload
+
+#### Transparent Background
+
+**Error:** "Icon contains alpha channel" **Solution:**
+
+- Export with solid background color
+- Disable transparency in export settings
+- Use PNG with RGB (not RGBA)
+
+#### Missing Splash Screen
+
+**Error:** "Splash screen required" **Solution:**
+
+- Upload splash screen GIF (1024x1024)
+- Verify file uploaded successfully
+- Check Despia dashboard confirms upload
+
+#### Invalid URL
+
+**Error:** "Failed to load web app" **Solution:**
+
+- Verify HTTPS (not HTTP)
+- Test URL in browser
+- Check for typos
+- Ensure web app is live
+
+### TestFlight Issues
+
+#### Build Not Appearing
+
+**Symptom:** Build doesn't show in TestFlight **Solution:**
+
+- Wait 10-30 minutes for processing
+- Check App Store Connect for processing status
+- Verify build uploaded successfully
+- Check email for processing issues
+
+#### Export Compliance
+
+**Issue:** Build stuck in processing **Solution:**
+
+- Provide export compliance information
+- Answer encryption questions
+- Usually select "No" for web-based apps
+
+#### Testers Can't Install
+
+**Issue:** TestFlight shows "Unable to Install" **Solution:**
+
+- Verify tester accepted invitation
+- Check device compatibility
+- Ensure iOS version meets minimum requirement
+- Remove and re-add tester
+
+### App Store Rejection
+
+#### Minimum Functionality
+
+**Rejection:** "Your app does not provide sufficient functionality" **Solution:**
+
+- Enhance core features using Despia NPM package
+- Add native capabilities:
+  - Push notifications
+  - In-app purchases (Revenue Cat)
+  - Face ID/Touch ID
+  - Camera access
+  - Location services
+- Demonstrate clear value proposition
+
+#### Broken Links
+
+**Rejection:** "Links in app do not work" **Solution:**
+
+- Test all links before submission
+- Verify external URLs are accessible
+- Check deep linking functionality
+- Update any broken endpoints
+
+#### Misleading Content
+
+**Rejection:** "Screenshots do not match app functionality" **Solution:**
+
+- Update screenshots to reflect actual app
+- Ensure all depicted features work
+- Remove any mockup or "coming soon" imagery
+
+### Native Features Not Working
+
+#### Push Notifications
+
+**Issue:** Notifications not received **Debug:**
+
+1. Verify OneSignal configuration
+2. Check bundle ID matches OneSignal app
+3. Confirm certificates uploaded
+4. Test with OneSignal dashboard
+
+#### App Groups
+
+**Issue:** Data not shared between extensions **Debug:**
+
+1. Verify App Group IDs match across all targets
+2. Check App Group capability enabled in App Store Connect
+3. Rebuild app if changed
+
+#### Deep Linking
+
+**Issue:** Associated domains not working **Debug:**
+
+1. Verify domain in Associated Domains capability
+2. Upload apple-app-site-association file to domain
+3. Ensure HTTPS enabled on domain
+4. Check file accessible at: `https://yourdomain.com/.well-known/apple-app-site-association`
+
+---
+
+## Additional Resources
+
+### Despia Resources
+
+- **NPM Package Documentation:** Add native features programmatically
+- **Customer Support:** Available via Intercom in Despia dashboard
+- **Website:** [despia.com](https://despia.com/)
+- **Email Support:** [hey@despia.com](mailto:hey@despia.com)
+
+### Apple Resources
+
+- [App Store Review Guidelines](https://developer.apple.com/app-store/review/guidelines/)
+- [App Store Connect Help](https://developer.apple.com/help/app-store-connect/)
+- [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)
+- [TestFlight Documentation](https://developer.apple.com/testflight/)
+
+### Design Resources
+
+- **Canva:** Icon and splash screen creation
+- **Icon Size Reference:** 1024x1024px for App Store
+- **Screenshot Tools:** Previewed, Screenshot Creator
+
+---
+
+## Quick Reference
+
+### Browser-Based Tests
+
+#### Verify Web App Accessibility
+
+1. Open a new browser tab
+2. Paste your web app URL
+3. Press Enter
+4. Your app should load without errors
+5. Check browser address bar shows lock icon (HTTPS)
+6. If you see "Not Secure" or HTTP, update to HTTPS
+
+#### Check Icon Dimensions
+
+**Method 1: Online Tool**
+
+1. Visit: https://www.imageresizer.com/image-size-checker
+2. Upload your icon PNG
+3. Verify shows: **1024 x 1024 pixels**
+
+**Method 2: Browser Developer Tools**
+
+1. Drag your icon into a browser tab
+2. Right-click the image → "Inspect" or "Inspect Element"
+3. Look for dimensions in the Elements panel
+4. Should show: `1024 × 1024`
+
+**Method 3: File Properties**
+
+1. Right-click icon file → "Get Info" (Mac) or "Properties" (Windows)
+2. Check "Dimensions" or "Size"
+3. Should read: 1024 x 1024 pixels
+
+### Build Timeline
+
+| Stage                        | Duration           |
+| :--------------------------- | :----------------- |
+| Despia Build                 | 15-30 minutes      |
+| App Store Connect Processing | 10-30 minutes      |
+| TestFlight Review (External) | 24-48 hours        |
+| App Store Review             | 1-7 days (avg 1-2) |
+| **Total Time to Launch**     | **2-10 days**      |
+
+### Cost Breakdown
+
+| Item                    | Cost   | Frequency |
+| :---------------------- | :----- | :-------- |
+| Apple Developer Account | \$99   | Annual    |
+| Despia Build Credits    | Varies | Per build |
+| OTA Updates             | \$0    | Unlimited |
+
+---
+
+## Conclusion
+
+You now have a complete guide to deploying your Despia iOS application to the Apple App Store. The process involves:
+
+1. Setting up your web app URL in Despia
+2. Creating properly sized icons and splash screens
+3. Configuring bundle IDs and capabilities
+4. Building and testing via TestFlight
+5. Submitting to App Store
+6. Leveraging OTA updates for continuous deployment
+
+**Key Advantages:**
+
+- Ship native iOS app from web application
+- Over-the-air updates without rebuilds
+- Add native features via NPM package
+- Save on repeated build costs
+- Fix critical bugs instantly
+
+**Need Help?**
+
+- Open customer support in Despia dashboard
+- Email: [hey@despia.com](mailto:hey@despia.com)
+- Check video tutorials for visual guides

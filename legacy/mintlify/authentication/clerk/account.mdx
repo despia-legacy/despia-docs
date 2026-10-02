@@ -1,0 +1,143 @@
+---
+title: "Account"
+icon: "user"
+description: "User Profile sheet, sign-out, attribution sync, and multi-tenant switching."
+---
+
+Post sign-in routes: open the prebuilt profile sheet, sign out, sync the user ID into analytics SDKs, switch tenants.
+
+---
+
+## User Profile
+
+Clerk's prebuilt account-management sheet. The user can edit their profile, manage emails, phones, external accounts, passkeys, sessions, MFA, and delete their account.
+
+| Param | Values | Default |
+| --- | --- | --- |
+| `dismissable` | `true`, `false`, `1`, `0`, `yes`, `no` | `true` |
+
+```javascript
+despia('clerk://userprofile?dismissable=true')
+```
+
+Requires the user to be signed in. Emits `userprofile` with `status: "closed"` when the sheet dismisses, so you can refresh the UI for any profile edits the user just made.
+
+```javascript
+window.onClerkEvent = (r) => {
+    if (r.ok && r.event === 'userprofile' && r.status === 'closed') {
+        // User dismissed the profile sheet, re-read state to pick up any edits
+        despia('clerk://state')
+    }
+}
+```
+
+Errors emit with `event: "userprofile"`: `not_configured`, `unsupported_os`, `sdk_not_linked`.
+
+---
+
+## Sign Out
+
+Revokes the current session server-side, stops the JWT refresher, clears `window.clerkJWT`, clears attribution IDs, and writes the signed-out cookie state.
+
+```javascript
+despia('clerk://signout')
+```
+
+```json
+{
+    "ok": true,
+    "event": "signOut",
+    "status": "complete"
+}
+```
+
+Pair with your SPA router:
+
+```javascript
+window.onClerkEvent = (r) => {
+    if (r.ok && r.event === 'signOut') {
+        navigate('/')
+    }
+}
+```
+
+`navigate` is your SPA router's navigation function.
+
+Errors emit with `event: "signOut"`: `not_configured`, `signout_failed`, `unsupported_os`, `sdk_not_linked`.
+
+---
+
+## Multi-Tenant
+
+Call `clerk://configure` again with a different publishable key. The bridge wipes the secure session store, signs the user out, clears attribution IDs, clears SSR cookies, and re-emits `ready` with `status: "reconfigured"`.
+
+```javascript
+async function switchTenant(newKey) {
+    return new Promise((resolve) => {
+        const prev = window.onClerkEvent
+
+        window.onClerkEvent = (r) => {
+            prev?.(r)
+            if (r.event === 'ready' && r.publishableKey === newKey) {
+                resolve(r)
+            }
+        }
+
+        despia('clerk://configure?key=' + newKey)
+    })
+}
+```
+
+A second reconfigure while one is in flight returns `reconfigure_in_progress`. Wait for the first `ready` before issuing another.
+
+---
+
+## Attribution Sync
+
+Auto-syncs the Clerk userId into OneSignal and AppsFlyer. On by default. Every successful sign-in or sign-up pushes the userId to both SDKs, sign-out or tenant switch clears them.
+
+| Param | Values | Default |
+| --- | --- | --- |
+| `enabled` | `true`, `false` | `true` |
+
+```javascript
+// Default, already on
+despia('clerk://attribution')
+
+// Disable and clear any auto-set IDs
+despia('clerk://attribution?enabled=false')
+```
+
+```json
+{
+    "ok": true,
+    "event": "attribution",
+    "status": "enabled"
+}
+```
+
+OneSignal sync only fires when Push Notifications is enabled in the Despia Editor. AppsFlyer sync only fires when AppsFlyer is enabled.
+
+To key analytics on your own internal user ID instead of Clerk's, override after sign-in. Last write wins.
+
+```javascript
+// Override OneSignal user ID
+despia('setonesignalplayerid://?user_id=internal_user_123')
+
+// Override AppsFlyer customer user ID
+despia('appsflyer://set_user_id?customer_user_id=internal_user_123')
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

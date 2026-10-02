@@ -1,0 +1,183 @@
+---
+title: "URL Scheme"
+description: "Set the custom protocol your app registers with iOS and Android so native authentication sessions can hand tokens back to your app."
+icon: "link"
+---
+
+Every Despia app registers a private protocol with the operating system at build time. Native social login runs in an isolated browser session that cannot reach your WebView, and this protocol is the only way back: the session fires a link using it, the runtime closes the session and navigates your app to the path it carries. The value is generated from your app name on the first build, and you can override it with any compliant string from the Despia Editor.
+
+<Info>
+  Changing the value on a live app breaks every login flow built on the old one. Redirect URIs registered with your OAuth providers and any callback page holding a hardcoded fallback stop resolving until both sides are updated.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+The scheme is compiled into the native binary, so the operating system can route to your app before your web layer has loaded. Your callback page runs inside the authentication session, not in your app, and fires a link using your scheme once it holds the tokens.
+
+```javascript
+// runs on /native-callback, inside the authentication session
+window.location.href = 'myapp://oauth/auth?access_token=xxx'
+```
+
+The runtime intercepts the link, closes the session, and navigates the WebView to `/auth?access_token=xxx`. Everything after `oauth/` becomes the destination path and the query string is preserved untouched. Without the `oauth/` prefix the session stays open and the user is stranded on the provider screen.
+
+```javascript
+const params = new URLSearchParams(window.location.search)
+const token  = params.get('access_token')
+```
+
+---
+
+## Choosing a compliant scheme
+
+The default is derived from your app name, which is fine for most apps and a problem for the rest. App names containing spaces, punctuation, accented characters, or a leading digit produce a value the operating system will not register, and App Store Connect flags the malformed entry at submission rather than at build time.
+
+| Rule | Detail |
+| :-- | :-- |
+| Starts with a letter | A leading digit is invalid. An app named `4Fit` cannot use `4fit` |
+| Letters and digits only | Skip spaces, underscores, slashes, and accented characters |
+| Lowercase | Uppercase is normalised by the operating system, so treat the value as case-insensitive |
+| Reasonably unique | Avoid `app`, `mobile`, `auth`, and your framework's name. Two apps claiming the same value on one device produce undefined routing |
+| Never a reserved protocol | `http`, `https`, `mailto`, `tel`, `sms`, and `file` belong to the system |
+
+<Warning>
+  Do not reuse a scheme belonging to a well-known app. When two installed apps claim the same value, iOS resolves the conflict in favour of whichever was installed first and Android shows a disambiguation dialog. Neither is recoverable from your web layer, and the symptom is a login that returns the user to the wrong app.
+</Warning>
+
+---
+
+## Setting a custom scheme
+
+<Steps>
+  <Step title="Open the app settings" icon="gear">
+    In the Despia Editor, go to **Despia \> App \> Settings \> Dynamic App Source**.
+  </Step>
+  <Step title="Edit the URL Scheme field" icon="pen">
+    Enter the value on its own, with no `://` suffix and no path. Entering `myapp` registers `myapp://`.
+  </Step>
+  <Step title="Update your OAuth configuration" icon="key">
+    Redirect URIs in every provider dashboard, and the `deeplink_scheme` fallback your callback page uses when `state` carries nothing.
+  </Step>
+  <Step title="Rebuild and install" icon="hammer">
+    Trigger a new native build and install it on a device before testing any login.
+  </Step>
+</Steps>
+
+<Warning>
+  A scheme change is native configuration, so it takes effect only in a fresh build. Testing a new value against an installed older build fails silently: the return link does nothing, the operating system reports no error, and the user is left staring at an open authentication sheet with no way back into the app.
+</Warning>
+
+---
+
+## Opening the authentication session
+
+Social login opens the provider in ASWebAuthenticationSession on iOS and Chrome Custom Tabs on Android. Both are isolated from your WebView by design, which is what makes the return link necessary in the first place.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia(`oauth://?url=${encodeURIComponent(loginUrl)}`)
+}
+```
+
+---
+
+## Carrying the scheme through state
+
+Hardcoding the scheme in a callback page is the most common reason a working login breaks after a rename. The callback has no access to the Despia context that opened it, so pass the value through the OAuth `state` parameter, which providers echo back unchanged.
+
+```javascript
+const state = `${crypto.randomUUID()}|myapp`  // csrf token, scheme
+```
+
+```javascript
+// runs on /native-callback
+const state  = new URLSearchParams(window.location.search).get('state')
+const scheme = state.includes('|') ? state.split('|')[1] : 'myapp'
+
+window.location.href = `${scheme}://oauth/auth?access_token=${encodeURIComponent(token)}`
+```
+
+The fallback after the `:` is the only place the scheme is still written literally, so it is the one line to update when you change the value.
+
+---
+
+## Changing the scheme on a live app
+
+A build registers one scheme, so old and new cannot both resolve during a rollout. Users on the previous binary keep answering to the old value until they update, which means every provider has to accept both while adoption catches up.
+
+| What to check | Why |
+| :-- | :-- |
+| Redirect URIs | Register the new value alongside the old one in every provider dashboard before shipping, and remove the old one once adoption is high |
+| Callback page fallback | Installs on the old binary send the old scheme through `state`, so the callback has to keep honouring whatever it receives |
+| Version gating | Users who never update stay on the old scheme permanently, so a forced-update prompt is usually cheaper than maintaining both |
+
+The cheapest time to fix a malformed scheme is before the first submission. If your app is already live, treat the change as a coordinated release rather than a settings tweak.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="OAuth Introduction" icon="key" href="/native-features/oauth/introduction">
+    The full native authentication flow end to end
+  </Card>
+
+  <Card title="Deeplinking" icon="link" href="/native-features/deeplinking">
+    Universal links and app links for HTTPS URLs from your own domain
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

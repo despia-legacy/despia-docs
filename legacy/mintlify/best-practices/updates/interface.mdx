@@ -1,0 +1,69 @@
+---
+title: "Interface"
+description: "UI changes are the safest and most common use of OTA. They ship instantly, require no binary, and reach every user on the next app open."
+icon: "pen-nib"
+---
+
+## Ship UI changes via OTA without hesitation
+
+Any change to how your app looks, including layout, typography, colour, spacing, copy, and component structure, is a web layer change. Deploy it. Users get it silently on next launch. No review, no rebuild.
+
+This is the primary update path for the vast majority of work you will do on your app.
+
+## Despia's defaults give you room to move
+
+Despia declares a broad set of permissions in every binary by default, including camera, microphone, contacts, and location. If your new UI uses any of those capabilities, the permission is already declared. You do not need a new binary just because you are adding a screen that accesses the camera or shows a contact picker. Ship it via OTA.
+
+The cases that require a new binary are new native SDK integrations, not new screens that use already-declared capabilities.
+
+## Never include "coming soon" in a submission
+
+<Warning>
+  Do not ship placeholder sections, locked features with an unlock date, or any UI that implies something will appear later. Reviewers are looking for exactly this. A "coming soon" block is direct evidence that a feature was withheld from the submission and planned for OTA delivery, the precise behaviour Guideline 3.3.2 targets.
+</Warning>
+
+If it is not ready, do not show it. Ship it fully when it is.
+
+## Use VersionGuard to show coming soon safely
+
+If you need a teaser state, gate both the placeholder and the real feature behind a version check. The placeholder shows to users below the required binary version. The real feature shows to everyone who meets it.
+
+```jsx
+import { VersionGuard } from 'despia-version-guard';
+
+<VersionGuard min_version="2.1.0" fallback={<ComingSoonPlaceholder />}>
+  <RealFeature />
+</VersionGuard>
+```
+
+<Note>
+  Reviewers always run the latest binary. They see the live feature. The placeholder is invisible to them. Nothing in the submission signals a workaround.
+</Note>
+
+## Gate new UI on the binary version when it uses a new native API
+
+If you are shipping UI that calls a native capability added in a recent binary, wrap it in `<VersionGuard>`. Users on older binaries see nothing or a fallback instead of a broken experience.
+
+```jsx
+<VersionGuard min_version="3.0.0">
+  <BiometricSettingsScreen />
+</VersionGuard>
+```
+
+<Warning>
+  Always ship and approve the new binary before deploying the web layer that depends on it.
+</Warning>
+
+## Be conservative with major UI overhauls
+
+Incremental updates, like new screens, adjusted layouts, and refreshed components, are fine and expected. A complete redesign that makes the app look and feel like a different product can attract review questions even when it is technically within the rules.
+
+If a change substantially alters what a user experiences, consider shipping it as a binary update. It gives users a clear update moment and removes any ambiguity about intent.
+
+## Test on device before deploying
+
+Deploy a visible change, force close the app, wait a few seconds, reopen. Confirm the change appears. This takes two minutes and catches caching issues before they reach users.
+
+<Tip>
+  Display a build timestamp or version number somewhere accessible during development. It removes all guesswork about which version is running in the native container.
+</Tip>

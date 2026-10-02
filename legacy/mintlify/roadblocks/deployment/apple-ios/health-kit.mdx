@@ -1,0 +1,84 @@
+---
+title: "HealthKit"
+description: "Your build failed after enabling HealthKit in the Despia editor. Here's why and how to fix it."
+icon: "chart-pyramid"
+---
+
+## The Error
+
+After enabling HealthKit in your Despia editor and triggering a rebuild, Xcode fails with a code signing or capability error.
+
+**Common error messages:**
+
+```text
+Provisioning profile doesn't include the HealthKit entitlement
+```
+
+```text
+Code signing error: The entitlements in your app bundle signature do not match
+```
+
+---
+
+## Why This Happens
+
+**Enabling HealthKit in Despia is only half the setup.**
+
+When you toggle HealthKit on in the Despia editor, it adds the HealthKit entitlement to your app's code. But Apple also requires that your App ID (bundle identifier) has HealthKit enabled in the Apple Developer portal.
+
+If your bundle ID doesn't have HealthKit capabilities enabled at the Apple Developer level, the build will fail because:
+
+1. Your provisioning profile doesn't include HealthKit permissions
+2. There's a mismatch between what your app claims it can do and what Apple has authorized
+
+---
+
+## The Solution
+
+**Enable HealthKit capabilities in Apple Developer for your bundle ID.**
+
+### Step 1: Go to Apple Developer
+
+1. Open [Apple Developer](https://developer.apple.com/account)
+2. Navigate to **Certificates, Identifiers & Profiles**
+3. Click **Identifiers** in the sidebar
+4. Find and click on your app's **bundle identifier**
+
+### Step 2: Enable HealthKit Capabilities
+
+1. Scroll down to the **Capabilities** section
+2. Check the box for **HealthKit**
+3. **Important:** Also check **HealthKit (Recalibrate Estimates)**
+4. Click **Save** at the top right
+
+### Step 3: Rebuild Your App
+
+1. Go back to your Despia editor
+2. Trigger a new build
+3. The build should now succeed
+
+---
+
+## Quick Checklist
+
+Before rebuilding after enabling HealthKit:
+
+- HealthKit enabled in Despia editor
+- HealthKit enabled in Apple Developer portal for your bundle ID
+- HealthKit Recalibrate Estimates enabled (if using workout/activity features)
+- Saved changes in Apple Developer portal
+
+---
+
+## Still Having Issues?
+
+If you're still seeing capability errors after following these steps:
+
+1. **Clear old provisioning profiles** - Sometimes Apple needs a fresh profile to pick up the new capabilities (if old ones are deleted Despia will issue new ones automatically)
+2. **Check your bundle ID** - Make sure the bundle ID in Despia matches exactly with Apple Developer
+3. **Wait a few minutes** - Apple's systems can take a moment to propagate changes
+
+Contact support: [support@despia.com](mailto:support@despia.com) with:
+
+- Your build error logs
+- Screenshot of your HealthKit settings in both Despia and Apple Developer

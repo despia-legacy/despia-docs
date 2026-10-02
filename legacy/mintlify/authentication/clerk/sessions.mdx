@@ -1,0 +1,202 @@
+---
+title: "Session"
+icon: "cookie-bite"
+description: "Check who's signed in, read the auto-refreshed JWT, and authenticate API calls."
+---
+
+After [sign-in](/authentication/clerk/auth-methods), the bridge keeps `window.clerkJWT` populated and maintains an in-memory user snapshot you can read offline.
+
+---
+
+## Session State
+
+A full snapshot of the signed-in user and active session, read from the in-memory cache hydrated from the secure session store. No network round-trip, works fully offline. Calling it on a signed-in user also restarts the JWT refresher.
+
+```javascript
+despia('clerk://state')
+```
+
+Emits when signed in:
+
+```json
+{
+    "ok": true,
+    "event": "state",
+    "isConfigured": true,
+    "isSignedIn": true,
+    "publishableKey": "pk_test_abc123",
+
+    "userId": "user_2abcDEF",
+    "emailAddress": "jane@example.com",
+    "firstName": "Jane",
+    "lastName": "Doe",
+    "username": "jdoe",
+    "imageUrl": "https://img.clerk.com/abc.png",
+
+    "user": {
+        "id": "user_2abcDEF",
+        "imageUrl": "https://img.clerk.com/abc.png",
+        "hasImage": true,
+        "passwordEnabled": true,
+        "twoFactorEnabled": false,
+        "totpEnabled": false,
+        "backupCodeEnabled": false,
+        "hasVerifiedEmailAddress": true,
+        "hasVerifiedPhoneNumber": false,
+        "createdAt": "2025-11-12T08:14:33.221Z",
+        "updatedAt": "2026-05-14T19:02:11.118Z",
+        "firstName": "Jane",
+        "lastName": "Doe",
+        "username": "jdoe",
+        "lastSignInAt": "2026-05-14T19:02:11.118Z",
+        "primaryEmailAddressId": "idn_2eml",
+        "primaryPhoneNumberId": "idn_2phn",
+        "primaryEmailAddress": "jane@example.com",
+        "primaryPhoneNumber": "+15551234567",
+        "emailAddresses": [
+            { "id": "idn_2eml", "emailAddress": "jane@example.com", "verified": true, "verificationStatus": "verified" }
+        ],
+        "phoneNumbers": [
+            { "id": "idn_2phn", "phoneNumber": "+15551234567", "verified": true, "verificationStatus": "verified", "defaultSecondFactor": false, "reservedForSecondFactor": false }
+        ],
+        "externalAccounts": [
+            { "id": "idn_2ext", "provider": "oauth_google", "providerUserId": "108422", "emailAddress": "jane@example.com", "approvedScopes": "email profile openid", "firstName": "Jane", "lastName": "Doe", "imageUrl": "https://lh3.googleusercontent.com/x", "username": "jane", "label": null, "verificationStatus": "verified" }
+        ],
+        "publicMetadata": { "plan": "pro" },
+        "unsafeMetadata": { "onboarded": true }
+    },
+
+    "session": {
+        "id": "sess_2xyz",
+        "status": "active",
+        "expireAt": "2026-05-21T19:02:11.118Z",
+        "abandonAt": "2026-06-13T19:02:11.118Z",
+        "lastActiveAt": "2026-05-14T19:02:11.118Z",
+        "createdAt": "2026-05-14T19:02:11.118Z",
+        "updatedAt": "2026-05-14T19:02:11.118Z"
+    }
+}
+```
+
+Optional fields are omitted when absent. Timestamps are ISO-8601 with fractional seconds.
+
+When signed out:
+
+```json
+{
+    "ok": true,
+    "event": "state",
+    "isConfigured": true,
+    "isSignedIn": false,
+    "publishableKey": "pk_test_abc123"
+}
+```
+
+When not configured:
+
+```json
+{
+    "ok": true,
+    "event": "state",
+    "isConfigured": false,
+    "isSignedIn": false
+}
+```
+
+---
+
+## The JWT
+
+`window.clerkJWT` holds the current session token, auto-refreshed every 50 seconds (under Clerk's 60-second TTL). Attach it as a Bearer token.
+
+```javascript
+async function api(path, opts = {}) {
+    return fetch(path, {
+        ...opts,
+        headers: { ...opts.headers, Authorization: 'Bearer ' + window.clerkJWT },
+    })
+}
+```
+
+The refresher de-duplicates writes, so watchers on `window.clerkJWT` don't see spurious churn. Failed refreshes (offline) leave the last good value in place rather than nulling it.
+
+Refresher starts on configure, reconfigure, `clerk://state` while signed in, and any sign-in flow reaching `complete`. Stops on sign-out and reconfigure. When the app returns from the background, the bridge automatically refreshes the JWT (and re-syncs SSR cookies) before your code runs again, so a backgrounded app comes back with a fresh token.
+
+---
+
+## Force a refresh
+
+An on-demand JWT refresh, same source as the background refresher. Use this only when you need a guaranteed-fresh token right now.
+
+```javascript
+despia('clerk://token')
+```
+
+```json
+{
+    "ok": true,
+    "event": "token",
+    "jwt": "eyJhbGciOiJSUzI1Ni..."
+}
+```
+
+`jwt` is `null` when there is no session. Errors emit with `event: "token"`: `not_configured`, `token_fetch_failed` (window.clerkJWT keeps last value), `unsupported_os`, `sdk_not_linked`.
+
+---
+
+## Handling 401
+
+Force a refresh and retry once.
+
+```javascript
+async function api(path) {
+    let res = await fetch(path, { headers: { Authorization: 'Bearer ' + window.clerkJWT } })
+
+    if (res.status === 401) {
+        despia('clerk://token')
+        await new Promise((r) => setTimeout(r, 200))
+        res = await fetch(path, { headers: { Authorization: 'Bearer ' + window.clerkJWT } })
+    }
+
+    return res
+}
+```
+
+On the server, verify the JWT with `@clerk/backend` and trust only the verified `sub` claim. Never trust a client-reported `userId`.
+
+For middleware-based auth on Next.js, TanStack, and other frameworks, see [Server-Side Auth](/authentication/clerk/backend).
+
+---
+
+## Offline
+
+Routes that work offline: `clerk://state` (in-memory cache) and `window.clerkJWT` reads (cached, refreshed in the background).
+
+Routes that need network: `clerk://token`, all sign-in flows, OAuth, `clerk://signout`.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    window.onClerkEvent = (r) => {
+        if (r.event === 'ready') despia('clerk://state')
+        if (r.event === 'state' && r.isSignedIn) renderApp(r.user)
+    }
+
+    despia('clerk://configure?key=pk_test_abc123')
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

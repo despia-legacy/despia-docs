@@ -1,0 +1,18 @@
+<stack class="doc-field" role="group">
+  <head>
+    <!-- One documented field of a returned value (the v3 API pages' ResponseField). -->
+    <attribute as="name" default="''"/>
+    <attribute as="type" default="''"/>
+    <attribute as="default" default="''"/>
+    <attribute as="required" default="'false'"/>
+  </head>
+  <hstack class="doc-field-head">
+    <text value="{{ dsx.attribute.name }}" class="doc-field-name"/>
+    <text value="{{ dsx.attribute.type }}" class="doc-field-type" visible-if="dsx.attribute.type !== ''"/>
+    <text value="required" class="doc-field-required" visible-if="dsx.attribute.required === 'true'"/>
+    <text value="{{ 'default: ' + dsx.attribute.default }}" class="doc-field-default" visible-if="dsx.attribute.default !== ''"/>
+  </hstack>
+  <stack class="doc-field-body">
+    <slot/>
+  </stack>
+</stack>

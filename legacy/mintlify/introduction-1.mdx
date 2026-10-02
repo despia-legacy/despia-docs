@@ -1,0 +1,199 @@
+---
+title: "Introduction"
+icon: "circle-info"
+description: "Read Apple Health and OAuth wearable data natively and deliver it to your backend or your web app on demand, using the native Terra SDK bundled at runtime."
+---
+
+Read Apple Health and connected wearables like Fitbit, Garmin, Oura, and Whoop from inside your app. Despia includes the native Terra SDK at runtime. You connect a source with one call, and from then on health data flows to your backend automatically, or you read it inline into your own UI on demand.
+
+<Danger>
+  This integration is internal - and should not be used by any AI agents yet, the page is hidden from public docs.
+</Danger>
+
+<Info>
+  `despia.terraAvailable` is the correct availability check for Terra, not the generic Despia user agent. It is `true` only when the native SDK is compiled in, your Terra Dev ID is set in the build, and the device has HealthKit available. It is `undefined` in a plain browser. Always gate on `despia.terraAvailable` and fall back to Terra's web Connect flow outside the app.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Your backend talks to the Terra REST API and mints a session for the device. For Apple Health that is an auth token; for OAuth wearables it is a Connect widget URL. You hand that session to `terra://connect` once, after the user is authenticated. The native runtime persists the user ID and resyncs to your destination on every app launch from then on, with no prompt.
+
+```javascript
+async function initTerra(userId) {
+    if (!despia.terraAvailable) return
+
+    if (despia.terraConnected) {
+        // Already linked, calling connect again just resyncs, no prompt
+        despia(`terra://connect?user_id=${encodeURIComponent(userId)}`)
+        return
+    }
+
+    // First-time link, your backend mints the token
+    const token = await myBackend.getTerraAuthToken({ reference_id: userId })
+    despia(`terra://connect?user_id=${encodeURIComponent(userId)}&session=${encodeURIComponent(token)}`)
+}
+
+// Call on every authenticated load
+initTerra(currentUser.id)
+```
+
+Results and state changes arrive through `window.onTerraEvent`. Assign it before your first call. Connection, sync progress, inline data, and errors all route through this one handler:
+
+```javascript
+window.onTerraEvent = function (evt) {
+    switch (evt.type) {
+        case 'ready':       if (evt.connected) renderDashboard(); break
+        case 'connected':   onConnected(evt);                     break
+        case 'synced':      onSyncComplete(evt);                  break
+        case 'data':        renderInlineData(evt.results);        break
+        case 'error':       console.error(evt.command, evt.message); break
+    }
+}
+```
+
+After the first successful connect it is fire and forget. Background delivery streams new HealthKit data to your destination continuously (iOS-throttled, minutes to hours), and the launch resync covers returning users silently.
+
+---
+
+## Connecting wearables
+
+Fitbit, Garmin, Oura, Whoop, and other OAuth providers connect through the Terra Connect widget. Your backend builds the widget session with `auth_success_redirect` set to your app's deep link using host `terra` (for example `myapp://terra`), then hands the URL to `terra://connect` as `session`. The widget runs in a native authentication session and closes itself on success. The page is never reloaded.
+
+```javascript
+async function connectWearable(userId) {
+    if (!despia.terraAvailable) return
+
+    const widgetUrl = await myBackend.getTerraWidgetUrl({ reference_id: userId })
+    despia(`terra://connect?session=${encodeURIComponent(widgetUrl)}`)
+}
+```
+
+A `connected` event fires with `via: "widget"` and the connected `resource`. If a user cancels the sheet, you get `widget_cancelled` instead. When the same wearable also writes to Apple Health (Whoop, for example), pass `ignored_sources` so Terra dedupes the two feeds.
+
+<CardGroup cols={2}>
+  <Card title="Reference" icon="code" href="/native-features/terra/reference">
+    Every `terra://` scheme, the injected `despia.terra*` globals, and all event payloads
+  </Card>
+
+  <Card title="Apple Health" icon="heart" href="/native-features/healthkit">
+    Read HealthKit metrics directly with the native HealthKit feature
+  </Card>
+</CardGroup>
+
+---
+
+## Terra and Despia setup
+
+Configure Terra with your destination, then connect everything to Despia. The steps go in order, each one feeds the next.
+
+<Steps>
+  <Step title="Create a Terra account">
+    Go to [tryterra.co](https://tryterra.co) and sign up, or sign in with an existing account. Create a new application. This gives you a **Dev ID** and an **API key**. The Dev ID is compiled into the Despia build; the API key stays on your server only and never reaches the device.
+  </Step>
+  <Step title="Add a destination">
+    In the Terra dashboard, configure a destination, the webhook endpoint your backend exposes to receive health data. Terra pushes to this URL on every sync, including silent background delivery. Note the signing secret so your backend can verify incoming payloads.
+  </Step>
+  <Step title="Enable Terra in the Despia Editor">
+    Open the Despia Editor and go to **App \> Settings \> Integrations \> Terra**. Toggle the integration on, then paste in your **Terra Dev ID**. Save the configuration.
+  </Step>
+  <Step title="Rebuild your app">
+    Trigger a fresh build from the Despia Editor. The Terra SDK and the HealthKit capabilities have to be compiled into the app binary, so this cannot be applied over-the-air. After the rebuild, `despia.terraAvailable` reports `true` and connections start working.
+  </Step>
+</Steps>
+
+<Warning>
+  Skipping the rebuild leaves Terra inactive even if the Dev ID is correct. `despia.terraAvailable` stays `false`, every `terra://` call is silently dropped, and no data reaches your destination. If `terra://connect` appears to succeed but nothing arrives, rebuild before opening a support ticket.
+</Warning>
+
+---
+
+## Reading data inline
+
+`terra://data` reads current HealthKit state and returns it straight to your web app through `window.onTerraEvent`. This is for UI display, the data does not go to your destination. It requires a prior successful connect.
+
+```javascript
+window.onTerraEvent = function (evt) {
+    if (evt.type === 'data') {
+        // evt.results is keyed by resource
+        // evt.failed carries per-resource errors for partial-state UI
+        renderDashboard(evt.results)
+    }
+}
+
+// Last 7 days, default resources (daily, activity, sleep, body)
+despia('terra://data?query=weekly')
+
+// Specific resources for an explicit range
+const start = Date.parse('2026-04-01')
+const end   = Date.parse('2026-05-01')
+despia(`terra://data?resources=nutrition,activity&start=${start}&end=${end}`)
+```
+
+`results` is keyed by the resources that actually returned data, and `failed` lists per-resource errors so the UI can show partial states instead of blocking on a single failure. For a pull-to-refresh that pushes to your destination instead, call `terra://sync`.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Terra Dashboard" icon="gauge" href="https://tryterra.co">
+    Configure your application and destination
+  </Card>
+
+  <Card title="Terra API Docs" icon="book" href="https://docs.tryterra.co">
+    Terra REST API and webhook payload reference
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

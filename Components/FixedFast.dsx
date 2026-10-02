@@ -1,0 +1,25 @@
+<pressable href="{{ dsx.attribute.href }}" class="doc-fixed">
+  <head>
+    <!--
+      The "Fixed fast" card: a user-reported issue, when it was reported and when the fix was
+      released, and the time between. The times are computed at build time from the article's
+      front matter (reportedAt, fixedAt, releasedAt) by scripts/compile.mjs, so every reader
+      sees the same UTC values; nothing here is estimated.
+    -->
+    <attribute as="title" default="''"/>
+    <attribute as="href" default="''"/>
+    <attribute as="reported" default="''"/>
+    <attribute as="released" default="''"/>
+    <attribute as="duration" default="''"/>
+    <attribute as="platform" default="''"/>
+  </head>
+  <hstack class="doc-fixed-top">
+    <text value="{{ dsx.attribute.duration }}" class="doc-fixed-duration"/>
+    <text value="{{ dsx.attribute.platform }}" class="doc-ts-chip doc-ts-chip-{{ dsx.attribute.platform }}" visible-if="dsx.attribute.platform !== ''"/>
+  </hstack>
+  <text value="{{ dsx.attribute.title }}" class="doc-fixed-title"/>
+  <hstack class="doc-fixed-times">
+    <text value="{{ 'Reported ' + dsx.attribute.reported }}" class="doc-fixed-time"/>
+    <text value="{{ 'Fixed and released ' + dsx.attribute.released }}" class="doc-fixed-time"/>
+  </hstack>
+</pressable>

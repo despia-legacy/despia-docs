@@ -1,0 +1,116 @@
+---
+title: "Despia for Replit"
+description: "Ship your Replit web app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
+icon: "code"
+---
+
+You built your app in Replit. Despia gets it into the App Store and Google Play, with native billing, push notifications, install attribution, and offline support all included, without a separate React Native project.
+
+---
+
+## In-app purchases, built in
+
+Replit's React Native mobile output requires installing and configuring a third-party purchase plugin (`react-native-purchases` or similar) and maintaining that native dependency. It is also a separate codebase from your Replit web app.
+
+Despia wraps your existing Replit web app and includes RevenueCat as a built-in. No plugin, no React Native, no separate codebase.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    // Launch native paywall configured in your RevenueCat dashboard
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+} else {
+    // Web fallback, link the purchase to their account
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`
+}
+```
+
+Check entitlements on every app load, instant and offline-capable:
+
+```javascript
+const data    = await despia('getpurchasehistory://', ['restoredData'])
+const active  = (data.restoredData ?? []).filter(p => p.isActive)
+const premium = active.some(p => p.entitlementId === 'premium')
+
+window.onRevenueCatPurchase = () => checkEntitlements()
+```
+
+The web fallback links the purchase to the user's account via their ID. When they open the mobile app, the entitlement is already there.
+
+---
+
+## Push notifications, built in
+
+OneSignal is included. No Expo push configuration, no separate plugin:
+
+```javascript
+despia(`setonesignalplayerid://?user_id=${userId}`)
+```
+
+---
+
+## Install attribution and ad analytics, built in
+
+AppsFlyer ships with every Despia app. Three variables are injected automatically:
+
+```javascript
+despia.appsFlyerReferrer     // 'tiktok_ad', 'meta_organic', 'organic'
+despia.appsFlyerAttribution  // full attribution object
+despia.appsFlyerUID          // unique AppsFlyer user ID
+
+despia('appsflyer://log_event?event_name=purchase&event_values={"revenue":9.99}')
+```
+
+Replit's React Native path requires `react-native-appsflyer`, a separate plugin with its own native dependency and maintenance overhead.
+
+---
+
+## One codebase, not two
+
+Replit's React Native output is a parallel implementation of your app, different navigation, different components, different platform-specific code paths. Any change to your web app needs to be replicated.
+
+Despia wraps your Replit web app directly. One codebase. iOS and Android run the same code.
+
+---
+
+## CI/CD and deployment
+
+Replit uses Expo's managed pipeline which prompts for your iCloud credentials for App Store submission. Despia uses Apple's official App Store Connect API with `.p8` key-based authentication throughout.
+
+OTA updates are included at no cost with no MAU limits. Expo's equivalent, EAS Updates, is a paid service with MAU-based pricing.
+
+---
+
+## Using Replit and Despia together
+
+Keep building your web app in Replit. Point Despia at your Replit app URL, add native features by installing `despia-native` and using the AI prompts on each feature page, and publish from the Despia dashboard.
+
+|  | Despia | Replit (React Native \+ Expo) |
+| --- | --- | --- |
+| In-app purchases | Built in via RevenueCat | Requires `react-native-purchases` plugin |
+| Push notifications | Built in via OneSignal | Requires Expo push configuration |
+| Install attribution | Built in via AppsFlyer | Requires `react-native-appsflyer` plugin |
+| Codebase | One, your web app | Two, web app plus React Native app |
+| OTA updates | Free, no MAU limits | EAS Updates (paid, MAU-limited) |
+| CI/CD auth | Official App Store Connect API | iCloud credentials via Expo Launch |
+
+<CardGroup cols={2}>
+  <Card title="In-App Purchases" icon="credit-card" href="/native-features/revenuecat">
+    RevenueCat built in
+  </Card>
+
+  <Card title="Push Notifications" icon="bell" href="/native-features/onesignal">
+    OneSignal built in
+  </Card>
+
+  <Card title="AppsFlyer" icon="chart-bar" href="/analytics/appsflyer">
+    Attribution built in
+  </Card>
+
+  <Card title="Native Features" icon="mobile" href="/native-features">
+    All despia() capabilities
+  </Card>
+</CardGroup>

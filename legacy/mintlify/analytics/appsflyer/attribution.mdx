@@ -1,0 +1,261 @@
+---
+title: "Attribution"
+description: "Read where every user came from across TikTok, Meta, Google, affiliate, or organic using data injected by Despia on every page load."
+icon: "bullseye-arrow"
+---
+
+Despia resolves attribution natively through the AppsFlyer SDK, caches it on the device, and injects it into your web layer on every page load. It is also re-injected the moment attribution resolves or updates (first install conversion, re-engagement, deep link click), so the values stay current without any polling.
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Attribution Variables
+
+Three variables are injected automatically:
+
+```javascript
+despia.appsFlyerAttribution  // full attribution object, or null
+despia.appsFlyerReferrer     // short human-readable source string
+despia.appsFlyerUID          // AppsFlyer device ID
+```
+
+<Info>
+  On the very first launch of a fresh install, `appsFlyerAttribution` is `null` until AppsFlyer responds (typically within a few seconds, and on iOS after the App Tracking Transparency prompt is answered, which the SDK waits up to 60 seconds for). Once resolved, the data is persisted natively and is available immediately on every future cold start, even offline.
+</Info>
+
+---
+
+## appsFlyerReferrer
+
+The fastest way to branch on acquisition source. A single lowercase string resolved in this order:
+
+1. `deep_link_value` from the attributed link, if present
+2. `deep_link_sub1`, if present
+3. A known ad network with an organic or paid suffix, one of:
+
+| Value | Meaning |
+| --- | --- |
+| `tiktok_ad` / `tiktok_organic` | TikTok or Pangle, paid or organic |
+| `facebook_ad` / `facebook_organic` | Meta, paid or organic |
+| `google_ad` / `google_organic` | Google Ads or AdMob, paid or organic |
+
+4. `utm_source`, if present
+5. The raw `media_source`, if present
+6. `"organic"`, the default when nothing else matched
+
+```javascript
+switch (despia.appsFlyerReferrer) {
+    case "tiktok_ad":
+        showCreatorWelcome()
+        break
+    case "facebook_ad":
+        showMetaOfferScreen()
+        break
+    default:
+        showDefaultOnboarding()
+}
+```
+
+---
+
+## appsFlyerAttribution
+
+The full attribution object. All fields are optional strings unless noted.
+
+<ResponseField name="media_source" type="string">
+  The attributed network, e.g. `"tiktok"`, `"facebook"`, `"google"`.
+</ResponseField>
+
+<ResponseField name="campaign" type="string">
+  Campaign name. Also mirrored to `c` for affiliate-style reads.
+</ResponseField>
+
+<ResponseField name="campaign_id / ad_set / ad_set_id / ad / ad_id" type="string">
+  Full campaign hierarchy for granular reporting.
+</ResponseField>
+
+<ResponseField name="channel / click_id / site_id / partner_name" type="string">
+  Additional network metadata when the partner provides it.
+</ResponseField>
+
+<ResponseField name="affiliate_code" type="string">
+  Mapped from `af_sub1`. Use for affiliate and creator payout tracking.
+</ResponseField>
+
+<ResponseField name="utm_source / utm_medium / utm_campaign / utm_content / utm_term" type="string">
+  UTM parameters from the link. When absent, they fall back to `af_sub1` through `af_sub5` respectively.
+</ResponseField>
+
+<ResponseField name="pid / c" type="string">
+  Affiliate-style aliases: `pid` falls back to `media_source`, `c` falls back to `campaign`.
+</ResponseField>
+
+<ResponseField name="deep_link_value / deep_link_sub1 ... deep_link_sub10" type="string">
+  Deep link routing values from the OneLink. `deep_link_value` plus `deep_link_sub1` through `deep_link_sub10` are the fields AppsFlyer guarantees on a deferred first-launch resolution. See [Deep Linking](/analytics/appsflyer/deeplinking).
+</ResponseField>
+
+<ResponseField name="page_id" type="string">
+  Normalized to a top-level field on both platforms. `page_id` is the one custom OneLink param Despia lifts out of the raw payload for you. Any other custom key lives only under `raw`.
+</ResponseField>
+
+<ResponseField name="is_organic" type="boolean">
+  `true` when AppsFlyer classified the install as organic (`af_status`).
+</ResponseField>
+
+<ResponseField name="install_type" type="string">
+  `"install"`, `"re-engagement"`, or `"re-attribution"`.
+</ResponseField>
+
+<ResponseField name="is_first_launch" type="boolean">
+  `true` only on the very first launch after install.
+</ResponseField>
+
+<ResponseField name="apps_flyer_uid" type="string">
+  Same value as `despia.appsFlyerUID`.
+</ResponseField>
+
+<ResponseField name="cost_model / cost_value / cost_currency" type="string">
+  Campaign cost data when available (`cost_value` falls back to `af_cost_value`, `cost_currency` to `af_cost_currency`).
+</ResponseField>
+
+<ResponseField name="click_time / install_time" type="string">
+  Timestamps of the attributed click and the install.
+</ResponseField>
+
+<ResponseField name="raw" type="object">
+  Every raw key and value AppsFlyer returned, as strings. Custom parameters you add to a OneLink (e.g. `creator_code`, `episode_id`) appear here. `page_id` appears here too but is also normalized to a top-level field.
+</ResponseField>
+
+<Warning>
+  Read defensively. Field availability varies by network, link type, and platform. On Android the object currently mirrors the raw AppsFlyer payload (e.g. `af_status` instead of `is_organic`), so prefer keys that exist in the raw payload (`media_source`, `campaign`, `deep_link_value`, your custom params) when you need guaranteed cross-platform reads, and fall back through both shapes for the rest.
+</Warning>
+
+<Accordion title="Example object">
+  ```json
+  {
+      "media_source": "tiktokads_int",
+      "campaign": "summer_2025",
+      "campaign_id": "1234567890",
+      "ad_set": "summer_collection_adset",
+      "ad_set_id": "9876543210",
+      "channel": "tiktok",
+      "utm_source": "tiktok",
+      "utm_medium": "paid",
+      "utm_campaign": "summer_2025",
+      "deep_link_value": "product",
+      "deep_link_sub1": "alex123",
+      "page_id": "sneaker_42",
+      "is_organic": false,
+      "install_type": "install",
+      "is_first_launch": true,
+      "apps_flyer_uid": "1a2b3c4d5e6f7g8h",
+      "click_time": "2025-03-15 14:22:00",
+      "install_time": "2025-03-15 14:23:45",
+      "raw": {
+          "page_id": "sneaker_42",
+          "creator_code": "alex123"
+      }
+  }
+  ```
+</Accordion>
+
+---
+
+## appsFlyerUID
+
+The AppsFlyer device identifier. Send it to your backend to run server-to-server events or to join AppsFlyer raw-data exports with your own database.
+
+```javascript
+await fetch("/api/link-attribution", {
+    method: "POST",
+    body: JSON.stringify({ afUid: despia.appsFlyerUID })
+})
+```
+
+---
+
+## Request Attribution On Demand
+
+The injected variables are refreshed automatically, but you can also request them explicitly and await the result:
+
+```javascript
+const data = await despia("appsflyer://get_attribution", ["appsFlyerAttribution"])
+console.log(data.appsFlyerAttribution)
+
+const uid = await despia("appsflyer://get_uid", ["appsFlyerUID"])
+console.log(uid.appsFlyerUID)
+```
+
+---
+
+## Personalize Onboarding by Source
+
+Branch on the referrer for a quick check, and drop into the full attribution object when you need campaign or deep link detail.
+
+```javascript
+function pickOnboarding() {
+    const attr = despia.appsFlyerAttribution
+
+    if (attr?.deep_link_value === "offer") {
+        return startOfferFlow(attr.page_id ?? attr.raw?.page_id)
+    }
+    if (despia.appsFlyerReferrer.startsWith("tiktok")) {
+        return startVideoFirstOnboarding()
+    }
+    return startDefaultOnboarding()
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

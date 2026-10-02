@@ -1,0 +1,125 @@
+---
+title: "Despia for Base44"
+description: "Ship your Base44 app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
+icon: "code"
+---
+
+You built your app in Base44. Despia gets it into the App Store and Google Play, with native billing, push notifications, install attribution, and offline support all included, no plugins required.
+
+---
+
+## In-app purchases, built in
+
+Base44's own documentation is direct on this:
+
+> "Digital goods: Do not use Stripe for payments inside your mobile app. Apple and Google require their own billing systems for digital content. If your app uses Stripe for digital content, your app is rejected."
+
+Base44 is actively working on a native billing integration. Until it ships, Base44 apps that sell digital content cannot be submitted to the stores.
+
+Despia includes RevenueCat today, working on both iOS and Android.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    // Launch native paywall configured in your RevenueCat dashboard
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+} else {
+    // Web fallback, link the purchase to their account
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`
+}
+```
+
+Check entitlements on every app load, instant and offline-capable:
+
+```javascript
+const data    = await despia('getpurchasehistory://', ['restoredData'])
+const active  = (data.restoredData ?? []).filter(p => p.isActive)
+const premium = active.some(p => p.entitlementId === 'premium')
+
+window.onRevenueCatPurchase = () => checkEntitlements()
+```
+
+The web fallback links the purchase to the user's account via their ID. When they open the mobile app, the entitlement is already there.
+
+---
+
+## Push notifications, built in
+
+OneSignal is included. Register the device and link it to your user on every app load:
+
+```javascript
+despia(`setonesignalplayerid://?user_id=${userId}`)
+```
+
+---
+
+## Install attribution and ad analytics, built in
+
+AppsFlyer ships with every Despia app:
+
+```javascript
+despia.appsFlyerReferrer     // 'tiktok_ad', 'meta_organic', 'organic'
+despia.appsFlyerAttribution  // full attribution object
+despia.appsFlyerUID          // unique AppsFlyer user ID
+
+// Log conversion events to TikTok, Meta, Google
+despia('appsflyer://log_event?event_name=purchase&event_values={"revenue":9.99}')
+```
+
+---
+
+## App Store Guideline 4.2
+
+Apple requires apps to have native functionality beyond what a website provides. Base44's current wrapper is a lightweight WebView shell that does not include push notifications, offline capability, biometrics, or haptics. These are the features reviewers look for, and without them submissions run a high risk of rejection.
+
+Despia adds all of them via `despia()` calls from your existing Base44 web code.
+
+```javascript
+// Biometrics via Storage Vault
+await despia('setvault://?key=confirmAction&value=yes&locked=true')
+const result = await despia('readvault://?key=confirmAction', ['confirmAction'])
+
+// Haptics
+despia('successhaptic://')
+
+// GPS
+despia('location://?server=https://api.yourapp.com/track&buffer=10')
+```
+
+---
+
+## Using Base44 with Despia
+
+Your Base44 app is a web app with a URL. Point Despia at it, add native features using the AI prompts on each feature page, and publish from the Despia dashboard.
+
+|  | Despia | Base44 mobile |
+| --- | --- | --- |
+| In-app purchases | Built in via RevenueCat | Not supported (Stripe rejected) |
+| Push notifications | Built in via OneSignal | Not supported |
+| Install attribution | Built in via AppsFlyer | Not supported |
+| Offline support | Full, via localhost server | Not supported |
+| Biometrics / Face ID | Built in | Not supported |
+| Haptics | Built in | Not supported |
+| OTA updates | Free, no MAU limits | Web layer only |
+| Deployment | One click | Generates IPA/AAB, manual upload |
+
+<CardGroup cols={2}>
+  <Card title="In-App Purchases" icon="credit-card" href="/native-features/revenuecat">
+    RevenueCat built in
+  </Card>
+
+  <Card title="Push Notifications" icon="bell" href="/native-features/onesignal">
+    OneSignal built in
+  </Card>
+
+  <Card title="AppsFlyer" icon="chart-bar" href="/analytics/appsflyer">
+    Attribution built in
+  </Card>
+
+  <Card title="Native Features" icon="mobile" href="/native-features">
+    All despia() capabilities
+  </Card>
+</CardGroup>

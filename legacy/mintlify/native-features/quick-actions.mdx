@@ -1,0 +1,177 @@
+---
+title: "Quick Actions"
+description: "Add native long-press shortcuts to your app icon that invoke a global JavaScript function when tapped, letting users jump straight into a specific workflow."
+icon: "align-left"
+---
+
+<iframe src="https://www.youtube.com/embed/UDbmAj5yWso" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only things that matter are the global JavaScript function you define and the shortcut configuration in the Despia Editor that calls it.
+</Note>
+
+When the user long-presses your app icon, the OS shows a list of shortcuts you configured in the Despia Editor. Tapping one launches your app and the Despia runtime calls the global JavaScript function you bound to that shortcut. There is no SDK call from your code, the runtime invokes the function directly by name.
+
+---
+
+## Installation
+
+Quick Actions does not require installing the `despia-native` package. The runtime invokes your global function directly when the shortcut fires, no SDK calls or imports needed on your side. Install `despia-native` only if your page also uses other Despia schemes.
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Two pieces have to line up. First, attach the function you want the shortcut to trigger as a global on `window`. Second, configure a Quick Action in the Despia Editor that calls that function. The runtime picks up the configuration during the build and wires the shortcut to invoke your function on tap.
+
+```javascript
+window.dontLeave = function () {
+    // your workflow here, runs when the user taps the shortcut
+}
+```
+
+The function must be globally accessible because the native runtime invokes it by name. Defining it inside a closure or module scope will not work, the runtime cannot reach it.
+
+---
+
+## Despia Editor setup
+
+Configure the shortcut in the Despia Editor under **Add-ons \> Hard Coded \> Quick Actions**. Each shortcut has a label, an icon, an optional Quick Link, and a JavaScript snippet that the runtime executes on tap.
+
+<Steps>
+  <Step title="Open Quick Actions">
+    In the Despia Editor, navigate to **Add-ons \> Hard Coded \> Quick Actions** and click **Add New**.
+  </Step>
+  <Step title="Name the shortcut">
+    Give it a short, action-oriented label like `Don't Leave`, `Track Macros`, or `Scan Invoice`. This is the text the user sees in the long-press menu.
+  </Step>
+  <Step title="Select an icon">
+    Choose an icon from the picker that visually matches the action. The icon shows next to the label in the long-press menu.
+  </Step>
+  <Step title="Leave Quick Link empty">
+    Skip the Quick Link field. It is only for shortcuts that should navigate to a specific URL on tap, which is not what you are doing here. Your function call will handle the action.
+  </Step>
+  <Step title="Add the JavaScript">
+    In the JavaScript editor, call your global function inside the commented section:
+
+    ```javascript
+    window.dontLeave()
+    ```
+
+    Replace `dontLeave` with whatever name you used for your global function in the web app. The function name has to match exactly.
+  </Step>
+  <Step title="Save and rebuild">
+    Save the shortcut, then trigger a fresh build from the Despia Editor. Quick Actions are native components compiled into the binary, so this cannot be applied over-the-air. After the rebuild, the shortcut appears in the long-press menu on the user's home screen.
+  </Step>
+</Steps>
+
+To add more shortcuts, repeat the flow with a different label, icon, and function call. Each shortcut is independent.
+
+<Warning>
+  The function name in the Despia Editor JavaScript field must match the global function name in your web app exactly. A typo on either side means the shortcut taps into a `function is not defined` error and nothing happens. Copy the name, do not retype.
+</Warning>
+
+---
+
+## Define the global function
+
+The function attaches to `window` directly. In a vanilla HTML page you can write `window.dontLeave = function() { ... }` at any point before the user could possibly tap the shortcut. In a React or other framework app, attach inside a top-level `useEffect` so the function lands on `window` once the app mounts and stays there for the rest of the session.
+
+```jsx
+import { useEffect } from 'react'
+
+function App() {
+    useEffect(() => {
+        window.dontLeave = () => {
+            showFeedbackModal()
+        }
+
+        window.trackMacros = () => {
+            navigateTo('/macros/new')
+        }
+
+        window.scanInvoice = () => {
+            startCameraScan()
+        }
+    }, [])
+
+    return <YourApp />
+}
+```
+
+Re-bind on every mount of your top-level component so the function survives navigation and component swaps. The native runtime fires the call whenever the user taps the shortcut, including on cold app launches, so the function has to be on `window` before any user interaction is possible.
+
+---
+
+## Pass arguments via the function body
+
+The Despia Editor JavaScript field executes the snippet you put there as a literal expression, so you can pass hardcoded arguments to your function if one shortcut should always do one specific thing. This unlocks "one function, many shortcut variations" without defining a new global per shortcut.
+
+```javascript
+window.openCategory = function (category) {
+    navigateTo(`/categories/${category}`)
+}
+```
+
+In the Despia Editor JavaScript field for each shortcut:
+
+```javascript
+window.openCategory('food')      // Shortcut 1: "Browse Food"
+window.openCategory('drinks')    // Shortcut 2: "Browse Drinks"
+window.openCategory('desserts')  // Shortcut 3: "Browse Desserts"
+```
+
+Three shortcuts, one function. Each shortcut shows up separately in the long-press menu.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

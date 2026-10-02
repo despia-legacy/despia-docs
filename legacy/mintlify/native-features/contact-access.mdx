@@ -1,0 +1,209 @@
+---
+title: "Contact Access"
+icon: "user-large"
+description: "Read the user's device contacts through Despia after requesting native permission, returned as a JSON object keyed by contact name."
+---
+
+<iframe src="https://www.youtube.com/embed/ZvLjcAqitW8" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Note>
+
+Two SDK calls power the entire flow. `requestcontactpermission://` triggers the native permission prompt on iOS and Android, and `readcontacts://` returns the contacts as a JSON object with display names as keys and phone number arrays as values. Both are async, both must be awaited.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Request permission first, then read. The permission call shows the native prompt the first time it runs and is a silent no-op on subsequent calls. The read call returns the contacts inside a `contacts` key on the returned object.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+async function loadContacts() {
+    if (!isDespia) return null
+
+    await despia('requestcontactpermission://')
+    const data = await despia('readcontacts://', ['contacts'])
+    return data.contacts
+}
+```
+
+The shape of `data.contacts` is a flat object: keys are contact display names, values are arrays of phone numbers in international format.
+
+```json
+{
+    "John Appleseed": ["+12345678910"],
+    "Ann Wilson":     ["+12345678910", "+19876543210"]
+}
+```
+
+---
+
+## Render the contact list
+
+Convert the returned object into an array of entries before rendering, since most UI frameworks iterate arrays more cleanly than objects with arbitrary string keys.
+
+```jsx
+import { useEffect, useState } from 'react'
+import despia from 'despia-native'
+
+function ContactList() {
+    const [contacts, setContacts] = useState([])
+    const [error, setError]       = useState(null)
+
+    useEffect(() => {
+        const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+        if (!isDespia) return
+
+        async function load() {
+            try {
+                await despia('requestcontactpermission://')
+                const data = await despia('readcontacts://', ['contacts'])
+                setContacts(Object.entries(data.contacts))
+            } catch (e) {
+                setError(e)
+            }
+        }
+
+        load()
+    }, [])
+
+    if (error) return <p>Permission denied or contacts unavailable.</p>
+
+    return (
+        <ul>
+            {contacts.map(([name, numbers]) => (
+                <li key={name}>
+                    <strong>{name}</strong>
+                    <ul>
+                        {numbers.map(n => <li key={n}>{n}</li>)}
+                    </ul>
+                </li>
+            ))}
+        </ul>
+    )
+}
+```
+
+`Object.entries` converts `{ "John Appleseed": [...] }` into `[["John Appleseed", [...]], ...]`, which maps cleanly in JSX. Use the name as the React key, since contact names within a single device are practically unique enough for stable rendering.
+
+---
+
+## Handle the permission denied case
+
+If the user denies the permission prompt, `readcontacts://` rejects rather than returning an empty object. Wrap the read in `try/catch` and fall back to a manual entry path so the feature stays usable.
+
+```javascript
+async function loadContactsWithFallback() {
+    if (!isDespia) return { contacts: null, denied: false, browser: true }
+
+    try {
+        await despia('requestcontactpermission://')
+        const data = await despia('readcontacts://', ['contacts'])
+        return { contacts: data.contacts, denied: false, browser: false }
+    } catch {
+        return { contacts: null, denied: true, browser: false }
+    }
+}
+```
+
+Once the user denies the prompt, the OS will not show it again on subsequent app launches. The user has to grant the permission manually in Settings, App Permissions, Contacts on Android or in Settings, Privacy & Security, Contacts on iOS. Surface this in your UI rather than letting the user retap a button that does nothing.
+
+---
+
+## Privacy and search and send patterns
+
+Contacts are sensitive data. Two patterns keep your implementation defensible during App Store and Play Store review.
+
+Read once, use immediately, do not persist server-side without explicit consent. If you need to invite a contact via SMS or email, send the action through the user's own device handler (`sms:` or `mailto:` links) rather than uploading the entire address book to your backend. This sidesteps the entire class of compliance work around contact data retention.
+
+If you do need server-side processing (matching contacts against existing users, building a friend graph), hash phone numbers client-side before sending. The server never needs to know the raw numbers, only whether two users share a hash.
+
+```javascript
+async function findContactsOnPlatform() {
+    if (!isDespia) return []
+
+    await despia('requestcontactpermission://')
+    const data = await despia('readcontacts://', ['contacts'])
+
+    const numbers = Object.values(data.contacts).flat()
+    const hashed  = await Promise.all(numbers.map(hashNumber))
+
+    const res = await fetch('/api/match-contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ hashes: hashed }),
+    })
+
+    return res.json()
+}
+
+async function hashNumber(number) {
+    const buf  = new TextEncoder().encode(number)
+    const hash = await crypto.subtle.digest('SHA-256', buf)
+    return Array.from(new Uint8Array(hash))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('')
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

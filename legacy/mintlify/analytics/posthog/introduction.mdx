@@ -1,0 +1,232 @@
+---
+title: "Introduction"
+description: "GDPR-compliant product analytics, feature flags, and user identification bridged to your web layer via the Despia PostHog integration."
+icon: "circle-info"
+---
+
+GDPR-compliant product analytics, feature flags, and user identification fully bridged to your web layer. Track events, identify users, run experiments, and manage consent from your web app using `despia()`, with no native code and no native SDK to configure.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## PostHog and Despia setup
+
+Create a PostHog project, then connect it to Despia. The steps go in order, each one feeds the next.
+
+<Steps>
+  <Step title="Create a PostHog account">
+    Go to [app.posthog.com](https://app.posthog.com) and sign up, or sign in with an existing account. PostHog is free up to 1 million events per month, so account creation does not block early development.
+  </Step>
+  <Step title="Get your API key">
+    In PostHog, go to **Project Settings \> Project API keys** and copy the project API key. It starts with `phc_`. This is the only credential Despia needs.
+  </Step>
+  <Step title="Enable PostHog in the Despia Editor">
+    Open the Despia Editor and go to **App \> Settings \> Integrations \> PostHog**. Toggle the integration on, then paste in:
+
+    - **API Key** - the `phc_...` key from the previous step
+    - **Host** - leave blank to use `https://app.posthog.com`, or set a custom host for self-hosted PostHog instances
+  </Step>
+  <Step title="Rebuild your app">
+    Trigger a fresh build from the Despia Editor. The PostHog SDK has to be compiled into the app binary, so this cannot be applied over-the-air. After the build finishes, all `posthog://` scheme calls and injected globals will function in production.
+  </Step>
+</Steps>
+
+<Warning>
+  Skipping the rebuild leaves PostHog inactive even if the toggle reads enabled. Events will appear to fire with no errors but nothing will arrive in PostHog. If data stops flowing after editing credentials, rebuild before investigating further.
+</Warning>
+
+---
+
+## How it works
+
+Despia initializes the native PostHog SDK at app start using your API key. Your web app does not load `posthog-js` - the native layer owns the SDK entirely. You interact through three things.
+
+**`posthog://` commands** (JS → native): fire events, identify users, manage consent using `despia("posthog://...")`.
+
+**`despia.postHog*` globals** (native → JS): four variables injected before your code runs and kept live by the native layer. Read them synchronously at any point - no scheme call, no callback, no await.
+
+```javascript
+despia.postHogDistinctId  // string  - current PostHog distinct_id
+despia.postHogSessionId   // string  - current session ID ("" until first event opens a session)
+despia.postHogOptedOut    // boolean - true if the user has opted out of tracking
+despia.postHogFlags       // object  - all evaluated feature flag values, keyed by flag name
+```
+
+**`window.onPostHogEvent(evt)`** (native → JS, optional): lifecycle pushes when identity, flags, or opt-out status changes. Define it to react to these changes without polling the globals.
+
+<CardGroup cols={2}>
+  <Card title="Reference" icon="book" href="/analytics/posthog/scheme-reference">
+    All schemes, parameters, globals, callback payloads, and encoding rules.
+  </Card>
+
+  <Card title="PostHog Dashboard" icon="link" href="https://app.posthog.com">
+    Configure feature flags, funnels, and session recordings.
+  </Card>
+</CardGroup>
+
+---
+
+## Platform gating
+
+The `posthog://` schemes and the `despia.postHog*` globals only exist inside the Despia runtime. Gate every call and every global read.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia("posthog://capture?event=" + encodeURIComponent("Checkout"))
+}
+
+if (isDespia && despia.postHogFlags["new_checkout"]) {
+    // show new checkout UI
+}
+```
+
+---
+
+## Capture an event
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    const props = { plan: "pro", revenue: 29.99, currency: "USD" }
+    despia("posthog://capture?event=" + encodeURIComponent("Checkout") + "&properties=" + encodeURIComponent(JSON.stringify(props)))
+}
+```
+
+The native layer automatically appends `$current_url` and `$pathname` from the WebView's current route to every `capture` and `screen` call. Your own properties win on any key conflict.
+
+---
+
+## Identify a user
+
+Call `posthog://identify` as soon as a user logs in. All subsequent events link to their identity until `posthog://reset` is called on logout. After `identify` fires, `despia.postHogDistinctId` and `despia.postHogSessionId` update in place and `window.onPostHogEvent` fires with `{ type: "identity", distinctId, sessionId }`.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    const person = { email: "user@example.com", plan: "pro" }
+    despia("posthog://identify?distinct_id=" + encodeURIComponent(user.id) + "&properties=" + encodeURIComponent(JSON.stringify(person)))
+}
+```
+
+---
+
+## Feature flags
+
+All evaluated flag values are available synchronously in `despia.postHogFlags`. No scheme call needed.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    const enabled = despia.postHogFlags["new_checkout"]      // boolean flag
+    const variant = despia.postHogFlags["checkout_variant"]  // e.g. "control" or "test_v2"
+
+    // A flag not yet loaded is absent from the object
+    if ("new_checkout" in despia.postHogFlags) {
+        // flag has a value
+    }
+}
+```
+
+---
+
+## GDPR consent
+
+PostHog tracking requires explicit user consent under GDPR. Call `posthog://opt_out` when the user declines and `posthog://opt_in` when they accept. PostHog enforces the cutoff at the SDK level - events fired after `opt_out` are dropped before they reach PostHog servers. `despia.postHogOptedOut` updates in place when either scheme fires.
+
+<CodeGroup>
+
+```javascript User declines
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia("posthog://opt_out")
+}
+```
+
+```javascript User accepts
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia("posthog://opt_in")
+}
+```
+
+</CodeGroup>
+
+```javascript
+// Drive your consent UI from the live global
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia && despia.postHogOptedOut) {
+    // show opt-in prompt
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="PostHog Dashboard" icon="link" href="https://app.posthog.com">
+    Configure feature flags, funnels, and session recordings
+  </Card>
+
+  <Card title="PostHog Docs" icon="book" href="https://posthog.com/docs">
+    Feature flags, person properties, and group analytics
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

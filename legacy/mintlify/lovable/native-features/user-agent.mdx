@@ -1,0 +1,139 @@
+---
+title: "User Agent"
+icon: "lightbulb"
+description: "Detect whether your app is running in the Despia native runtime and identify the platform (iOS or Android) by checking the user agent string."
+---
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Detect the Despia native runtime environment using JavaScript user agent string checks to conditionally show platform-specific features in your application.
+
+  1. Check if `navigator.userAgent` includes "despia" to detect the native runtime
+  2. Check for "iphone" or "ipad" in the user agent for iOS detection
+  3. Check for "android" in the user agent for Android detection
+  4. Use conditional rendering to show appropriate UI elements
+  5. Show native features (in-app purchases) when in Despia, or web features (Stripe) when not
+
+  <Danger>
+    **This feature works in any web application - no npm package installation required!**
+  </Danger>
+  Please follow the implementation instructions closely. The user agent string is automatically set by the Despia Native runtime environment.
+</Card>
+
+**How it works:** When your Lovable-generated web application runs inside the Despia native runtime on iOS or Android, the user agent string automatically includes "despia" along with platform identifiers like "iphone", "ipad", or "android". Your JavaScript code can check `navigator.userAgent` to detect this and conditionally render platform-specific features, such as showing RevenueCat in-app purchase buttons when running natively in Despia, or Stripe checkout buttons when running in a standard web browser.
+
+## **Installation**
+
+No installation required! The user agent string is automatically set by the browser/runtime environment.
+
+## **Usage**
+
+### **1. Basic Platform Detection**
+
+```javascript
+// Detect if running in Despia
+const isDespia = navigator.userAgent.toLowerCase().includes('despia');
+
+// Detect iOS in Despia
+const isDespiaIOS = isDespia && 
+  (navigator.userAgent.toLowerCase().includes('iphone') || 
+   navigator.userAgent.toLowerCase().includes('ipad'));
+
+// Detect Android in Despia
+const isDespiaAndroid = isDespia && 
+  navigator.userAgent.toLowerCase().includes('android');
+```
+
+### **2. Conditional Feature Rendering**
+
+```tsx
+import { useState, useEffect } from 'react';
+
+function CheckoutButton() {
+  const [platform, setPlatform] = useState({
+    isDespia: false,
+    isIOS: false,
+    isAndroid: false
+  });
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isDespia = userAgent.includes('despia');
+    
+    setPlatform({
+      isDespia: isDespia,
+      isIOS: isDespia && (userAgent.includes('iphone') || userAgent.includes('ipad')),
+      isAndroid: isDespia && userAgent.includes('android')
+    });
+  }, []);
+
+  // Show Stripe checkout for web, RevenueCat for native
+  if (!platform.isDespia) {
+    return (
+      <button 
+        className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+        onClick={() => {
+          // Stripe checkout logic
+          window.location.href = 'https://checkout.stripe.com/...';
+        }}
+      >
+        Purchase with Stripe
+      </button>
+    );
+  }
+
+  // Show in-app purchase for Despia (iOS or Android)
+  return (
+    <button 
+      className="bg-green-600 text-white px-6 py-3 rounded-lg"
+      onClick={() => {
+        // RevenueCat in-app purchase logic
+        console.log('Trigger in-app purchase');
+      }}
+    >
+      Purchase in App
+    </button>
+  );
+}
+```
+
+### **3. Platform-Specific UI**
+
+```tsx
+function App() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isDespia = userAgent.includes('despia');
+  const isDespiaIOS = isDespia && 
+    (userAgent.includes('iphone') || userAgent.includes('ipad'));
+  const isDespiaAndroid = isDespia && userAgent.includes('android');
+
+  return (
+    <div className="p-4">
+      <h1 className="text-2xl font-bold mb-4">My App</h1>
+      
+      {/* Platform indicator */}
+      {isDespia && (
+        <div className="mb-4 p-3 bg-blue-100 rounded">
+          Running in Despia on {isDespiaIOS ? 'iOS' : 'Android'}
+        </div>
+      )}
+      
+      {/* Conditional payment button */}
+      <CheckoutButton />
+    </div>
+  );
+}
+```
+
+## **Resources**
+
+- **User Agent Check**: `navigator.userAgent.toLowerCase().includes('despia')`
+- **iOS Detection**: Check for "iphone" or "ipad" in user agent
+- **Android Detection**: Check for "android" in user agent
+- Automatically available in all JavaScript environments
+- No external packages or configuration needed
+
+## **Lovable Integration**
+
+Platform detection is automatically available in all Despia-powered Lovable applications through the standard JavaScript `navigator.userAgent` API, enabling conditional rendering based on the runtime environment.
+
+For additional support or questions about platform detection, please contact our support team at [support@despia.com](mailto:support@despia.com)

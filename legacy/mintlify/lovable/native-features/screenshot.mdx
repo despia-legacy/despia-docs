@@ -1,0 +1,83 @@
+---
+title: "Screenshot"
+description: "Capture full page screenshots and save them directly to the device's photo gallery through your Lovable mobile app using the Despia SDK."
+icon: "border-top-left"
+---
+
+<Danger>
+  **This SDK is currently not optimized yet for React apps.**
+</Danger>
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add screenshot capture functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a screenshot capture system that uses Despia URLs like: `despia("takescreenshot://")` which captures the entire visible app page and automatically saves it to the device's camera roll.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and native screenshot capture systems. When users trigger the screenshot command, Despia captures the full page content including all visible elements, renders it as a high-quality image, and automatically saves it to the device's photo gallery with proper permissions handling, making it instantly accessible in the camera roll for sharing or editing.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Execute Screenshot Capture
+
+Call the `despia()` function with a Screenshot Command:
+
+```javascript
+despia("takescreenshot://");
+```
+
+### Screenshot Features
+
+The screenshot capture automatically includes:
+
+- **Full Page Capture:** Captures entire visible app content
+- **Auto-Save:** Automatically saves to device camera roll
+- **High Quality:** Maintains original resolution and clarity
+- **Instant Access:** Image immediately available in photo gallery
+
+### Platform Support
+
+Compatible with all mobile platforms:
+
+- iOS Photo Library (iPhone, iPad)
+- Android Gallery (All Android devices)
+- Camera Roll Integration (Native photo apps)
+- Photo Stream Support (iCloud Photos, Google Photos)
+- Third-party Gallery Apps
+- Share Sheet Access (Direct sharing after capture)
+- Photo Editing Apps (Edit captured screenshots)
+- Cloud Backup Services (Auto-sync to cloud storage)
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native screenshot capture capabilities into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

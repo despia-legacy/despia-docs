@@ -1,0 +1,368 @@
+---
+title: "Social Login Options"
+description: "Your app was rejected because it offers social login without including the platform's native option. Here's how to fix it."
+icon: "align-left"
+---
+
+## What are social login rejections?
+
+**If you offer third-party login on iOS, you must include Sign in with Apple**
+
+Apple requires that any app offering third-party social login (Google, Facebook, Twitter, etc.) must also offer Sign in with Apple. This is non-negotiable.
+
+Common rejection messages:
+
+- "Your app uses third-party login but does not offer Sign in with Apple"
+- "Apps that use a third-party login service must also offer Sign in with Apple"
+- "Guideline 4.8 - Sign in with Apple is required"
+
+Google recommends the reverse: if your Android app offers Apple login, also offer Google login. While not as strictly enforced, it's best practice.
+
+---
+
+## Why this happens
+
+**Apple's Guideline 4.8 is explicit**
+
+Since September 2019, Apple requires Sign in with Apple for any app that offers third-party authentication. There are no exceptions for apps with Google, Facebook, or other social login options.
+
+The rule is simple:
+
+- Third-party login present → Sign in with Apple required
+- No third-party login → Sign in with Apple not required
+- Email/password only → Sign in with Apple not required
+
+---
+
+## How to fix it
+
+### Option 1: Add Sign in with Apple
+
+**The standard solution**
+
+If you have Google login, add Apple login. Despia supports both with platform-specific implementations.
+
+**Apple Sign In uses different approaches per platform:**
+
+| Platform | Method              | Experience                      |
+| :------- | :------------------ | :------------------------------ |
+| iOS      | Apple JS SDK        | Native Face ID dialog (instant) |
+| Android  | `oauth://` protocol | ASWebAuthenticationSession      |
+| Web      | Apple JS SDK        | Native browser dialog (instant) |
+
+**Google Sign In uses:**
+
+| Platform    | Method              | Experience                                      |
+| :---------- | :------------------ | :---------------------------------------------- |
+| iOS/Android | `oauth://` protocol | ASWebAuthenticationSession / Chrome Custom Tabs |
+| Web         | Standard OAuth      | Popup or redirect flow                          |
+
+**Implementation example:**
+
+```javascript
+import despia from 'despia-native';
+
+// Detect platform
+const ua = navigator.userAgent.toLowerCase();
+const isNative = ua.includes('despia');
+const isIOS = ua.includes('despia-iphone') || ua.includes('despia-ipad');
+const isAndroid = ua.includes('despia-android');
+
+// Google Sign-In (native)
+async function signInWithGoogle() {
+  if (isNative) {
+    // Get OAuth URL from your backend
+    const response = await fetch('/api/auth/google/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deeplink_scheme: 'yourappdeeplink' })
+    });
+    const { url } = await response.json();
+    
+    // Open in secure browser session
+    despia(`oauth://?url=${encodeURIComponent(url)}`);
+  } else {
+    // Web: Redirect to your backend OAuth endpoint
+    window.location.href = '/api/auth/google';
+  }
+}
+
+// Apple Sign-In
+async function signInWithApple() {
+  if (isAndroid) {
+    // Android: Use oauth:// protocol (no native Apple support)
+    const response = await fetch('/api/auth/apple/start', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deeplink_scheme: 'yourappdeeplink' })
+    });
+    const { url } = await response.json();
+
+    // Open in secure browser session
+    despia(`oauth://?url=${encodeURIComponent(url)}`);
+  } else {
+    // iOS/Web: Use Apple JS SDK for instant native dialog
+    const response = await window.AppleID.auth.signIn();
+    // Send to your backend for verification
+    await fetch('/api/auth/apple/callback', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token: response.authorization.id_token })
+    });
+  }
+}
+```
+
+See: [Google Auth](https://setup.despia.com/lovable/native-features/oauth/google)
+
+**Apple Sign In is more complex** due to different platform requirements. It requires:
+
+- Apple Developer Console setup (App ID, Service ID, Sign In Key)
+- Backend endpoint for token verification
+- Different code paths for iOS, Android, and Web
+
+Full implementation guide available in Despia documentation. Contact [support@despia.com](mailto:support@despia.com) for the Apple Sign In setup guide.
+
+**Login screen should show both:**
+
+```
+[Sign in with Apple]
+[Sign in with Google]
+
+   ─── or ───
+
+[Continue with Email]
+```
+
+---
+
+### Option 2: Remove social login entirely
+
+**If you can't implement Apple login, remove all social login**
+
+If adding Sign in with Apple isn't feasible, remove Google/Facebook login from the iOS app. Use alternative authentication instead.
+
+**Alternatives to social login:**
+
+- Email and password
+- Email magic link (passwordless)
+- SMS verification
+- No login (using Storage Vault for device identification)
+
+Apple only requires Sign in with Apple if you have other social options. No social login = no requirement.
+
+---
+
+### Option 3: No login with Storage Vault
+
+**For apps that don't need user accounts**
+
+If your app doesn't require user accounts, use the Storage Vault to identify devices without any login.
+
+```javascript
+import despia from 'despia-native';
+
+// Check for existing device identity
+async function initializeUser() {
+  try {
+    const data = await despia('readvault://?key=deviceUser', ['deviceUser']);
+    
+    if (data.deviceUser) {
+      // Returning user
+      return JSON.parse(data.deviceUser);
+    }
+  } catch (error) {
+    // First time user
+  }
+  
+  // Create new device-based identity
+  const newUser = {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString()
+  };
+  
+  await despia(`setvault://?key=deviceUser&value=${JSON.stringify(newUser)}&locked=false`);
+  
+  return newUser;
+}
+```
+
+This approach:
+
+- No login screen needed
+- Identity persists across sessions and reinstalls
+- No social login = no Apple login requirement
+- Works for apps where accounts aren't essential
+
+See: [Storage Vault](https://setup.despia.com/lovable/native-features/storage-vault)
+
+---
+
+### Platform-specific login
+
+**Different login options per platform**
+
+You can show different options on iOS vs Android, but be careful:
+
+**iOS app must have:**
+
+- Sign in with Apple (if any social login is present)
+- Any other social logins you want
+
+**Android app should have:**
+
+- Google Sign-In (recommended if you have Apple login)
+- Any other social logins you want
+
+**User agent detection:**
+
+```javascript
+import despia from 'despia-native';
+
+function getAvailableLogins() {
+  const ua = navigator.userAgent.toLowerCase();
+  
+  if (ua.includes('despia-iphone') || ua.includes('despia-ipad')) {
+    // iOS: Must include Apple if offering social login
+    return ['apple', 'google', 'email'];
+  }
+  
+  if (ua.includes('despia-android')) {
+    // Android: Google recommended
+    return ['google', 'apple', 'email'];
+  }
+  
+  // Web: Your choice
+  return ['google', 'email'];
+}
+
+function LoginScreen() {
+  const logins = getAvailableLogins();
+  
+  return (
+    <div>
+      {logins.includes('apple') && (
+        <button onClick={signInWithApple}>Sign in with Apple</button>
+      )}
+      {logins.includes('google') && (
+        <button onClick={signInWithGoogle}>Sign in with Google</button>
+      )}
+      {logins.includes('email') && (
+        <button onClick={showEmailLogin}>Continue with Email</button>
+      )}
+    </div>
+  );
+}
+```
+
+**Native OAuth flow:**
+
+All social logins on native use the `oauth://` protocol to open a secure browser session:
+
+1. Your app calls `despia('oauth://?url=...')` with the OAuth URL
+2. iOS opens ASWebAuthenticationSession, Android opens Chrome Custom Tabs
+3. User authenticates in the secure browser
+4. OAuth redirects to your callback page (still in browser session)
+5. Callback page redirects to `yourappdeeplink://oauth/auth?tokens`
+6. The `oauth/` prefix tells Despia to close the browser and return to app
+7. App navigates to `/auth?tokens` and sets the session
+
+See: [User Agent Detection](https://setup.despia.com/lovable/native-features/user-agent)
+
+---
+
+## What counts as third-party login
+
+**These trigger the Apple login requirement:**
+
+- Google Sign-In
+- Facebook Login
+- Twitter/X Login
+- TikTok Login
+- GitHub Login
+- Any OAuth-based social login
+
+**These do NOT trigger the requirement:**
+
+- Email and password
+- Email magic links
+- SMS verification
+- Phone number login
+- No login at all
+- Enterprise SSO (in some cases)
+
+If you only use email/password or SMS, you don't need Sign in with Apple.
+
+See: [TikTok Auth](https://setup.despia.com/lovable/native-features/oauth/tiktok) for TikTok implementation.
+
+---
+
+## Common mistakes
+
+**Mistake 1: Google login without Apple login on iOS**
+
+Every iOS app with Google login needs Apple login too. No exceptions.
+
+**Mistake 2: Hiding Apple login**
+
+Apple login must be equally prominent. Don't show Google first and hide Apple in "more options."
+
+**Mistake 3: Different account systems**
+
+If Google and Apple logins create separate accounts for the same email, users get confused. Handle account linking properly.
+
+**Mistake 4: Web-only social login**
+
+If your web app has Google login and your native app loads that web content, the native app still needs Apple login.
+
+**Mistake 5: Wrong deeplink format for native OAuth**
+
+When closing the secure browser session, use `yourappdeeplink://oauth/auth?tokens` format. The `oauth/` prefix is required to close ASWebAuthenticationSession / Chrome Custom Tabs. Without it, users get stuck in the browser.
+
+---
+
+## Quick checklist
+
+**If you have social login:**
+
+1. Sign in with Apple implemented on iOS
+2. Apple login equally prominent as other options
+3. Google login recommended on Android
+4. Account linking handles same email from different providers
+
+**If you can't add Apple login:**
+
+5. Remove ALL social login from iOS app
+6. Use email/password, SMS, or magic link instead
+7. Or use Storage Vault for no-login approach
+
+**Both platforms:**
+
+ 8. Login options appropriate for each platform
+ 9. User agent detection shows correct options
+10. Privacy policy mentions all authentication methods
+
+---
+
+## Common rejection reasons
+
+| Rejection                           | Fix                                                |
+| :---------------------------------- | :------------------------------------------------- |
+| "No Sign in with Apple"             | Add Apple login or remove all social login         |
+| "Apple login not prominent"         | Make Apple button same size/position as Google     |
+| "Third-party login in WebView"      | Native app still needs Apple login                 |
+| "Social login on some screens only" | Apple login required wherever social login appears |
+
+---
+
+## Still stuck?
+
+If you keep getting rejected for login issues:
+
+1. Check every screen where login appears - Apple must be on all of them
+2. Verify Apple login button is equally visible (not hidden in "more options")
+3. Test the complete Apple login flow works end-to-end
+4. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Your rejection notice in full
+   - Screenshot of your login screen
+   - List of authentication methods your app uses

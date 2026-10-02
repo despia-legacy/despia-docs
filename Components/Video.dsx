@@ -1,0 +1,9 @@
+<stack class="doc-video">
+  <head>
+    <!-- An embedded video (the v3 pages' YouTube iframes): the bare WebView primitive in a
+         16:9 hairline frame. No bridge by construction (web-surface-policy.md layer 0). -->
+    <attribute as="src" default="''"/>
+    <attribute as="title" default="'Video'"/>
+  </head>
+  <WebView src="{{ dsx.attribute.src }}" name="video" class="doc-video-frame" a11yLabel="{{ dsx.attribute.title }}"/>
+</stack>

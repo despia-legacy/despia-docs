@@ -31,7 +31,7 @@
       { id: 'A-1040', customer: 'Beacon Labs', total: '$2,410.00', status: 'Pending' },
       { id: 'A-1039', customer: 'Cardan GmbH', total: '$96.00', status: 'Refunded' }
     ]</variable>
-    <formula as="pct" v="dsx.variable.brightness">return Math.round(v * 100) + '%'</formula>
+    <formula as="pct" input:v="dsx.variable.brightness">return Math.round(v * 100) + '%'</formula>
   </head>
 
   <DocShell title="System" label="Design system" route="/system" section="Start"
@@ -66,7 +66,7 @@
 
     <SystemSection title="Fields"
                    note="Focus draws the ring. A required field left empty raises its error once touched; message= overrides the validator text.">
-      <form as="gallery" spacing="14">
+      <form style="gap: 14px" as="gallery">
         <field name="name" label="Name" placeholder="Ada Lovelace"/>
         <field name="email" type="email" label="Email" placeholder="you@example.com" validate="required,email"/>
         <field name="passphrase" type="secure" label="Passphrase" validate="required,minLength:8"
@@ -117,10 +117,10 @@
       <list bind="dsx.variable.rows" key="id">
         <row>
           <hstack style="gap: 0.75rem; align-items: center" a11yGroup="true">
-            <image style="color: var(--dsx-accent)" icon="{{ item.icon }}" iconSize="18"/>
-            <text bind="item.title"/>
+            <image style="color: var(--dsx-accent)" icon="{{ dsx.this.icon }}" iconSize="18"/>
+            <text bind="dsx.this.title"/>
             <spacer/>
-            <text bind="item.detail" style="color: var(--dsx-secondary-label)"/>
+            <text bind="dsx.this.detail" style="color: var(--dsx-secondary-label)"/>
             <image style="color: var(--dsx-tertiary-label)" icon="chevron.right" iconSize="13"/>
           </hstack>
         </row>
@@ -224,13 +224,13 @@
 
     <SystemSection title="Dashboard"
                    note="The desktop idiom set from the same grammar: stat tiles in a grid whose columns follow dsx.screen.width, delta chips on token fills, and a bound Table that scrolls inside its own frame. One document, phone to desktop.">
-      <grid bind="dsx.variable.metrics" key="id" columns="{{ dsx.screen.width >= 700 ? 3 : 1 }}" spacing="12" scroll="false" style="width: 100%">
+      <grid bind="dsx.variable.metrics" key="id" columns="{{ dsx.screen.width >= 700 ? 3 : 1 }}" scroll="false" style="gap: 12px; width: 100%">
         <stack style="gap: 0.4rem; padding: 0.9rem 1rem; border-radius: var(--dsx-radius-lg); background: var(--dsx-secondary-grouped-background); border: 1px solid var(--dsx-separator); width: 100%">
-          <text bind="item.label" style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; color: var(--dsx-tertiary-label)"/>
-          <text bind="item.value" style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em"/>
+          <text bind="dsx.this.label" style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; color: var(--dsx-tertiary-label)"/>
+          <text bind="dsx.this.value" style="font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em"/>
           <hstack style="align-items: center; gap: 0.375rem">
             <stack style="border-radius: 999px; background: var(--dsx-fill); padding: 0.125rem 0.5rem">
-              <text bind="item.delta" style="font-size: 0.72rem; font-weight: 600; color: {{ item.up ? 'var(--dsx-accent)' : 'var(--dsx-destructive)' }}"/>
+              <text bind="dsx.this.delta" style="font-size: 0.72rem; font-weight: 600; color: {{ dsx.this.up ? 'var(--dsx-accent)' : 'var(--dsx-destructive)' }}"/>
             </stack>
             <text value="vs last week" style="color: var(--dsx-tertiary-label); font-size: 0.72rem"/>
           </hstack>

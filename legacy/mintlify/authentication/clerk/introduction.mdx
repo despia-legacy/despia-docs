@@ -1,0 +1,170 @@
+---
+title: "Introduction"
+description: "Drop-in authentication for your Despia app with email, OAuth, passkeys, and MFA handled by Clerk's native iOS SDK."
+icon: "circle-info"
+sidebarTitle: "Introduction"
+---
+
+Native Clerk authentication for iOS and Android. The host app embeds Clerk's native SDK, your web app drives it from JavaScript through `despia()` calls and two global hooks. Optional, for apps that need Keychain or Keystore backed sessions, native Sign in with Apple, offline cold-launch, or zero-config server-side auth. Web auth providers like Supabase, Firebase, NextAuth, Auth0, or Clerk's own web SDK work in Despia out of the box without this.
+
+<Info>
+  Requires iOS 17 or Android API 24, and a publishable key from your [Clerk Dashboard](https://dashboard.clerk.com).
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+The bridge exposes two globals on `window`. You define `window.onClerkEvent` to receive every event, the bridge writes `window.clerkJWT` with the current session token and auto-refreshes it every 50 seconds.
+
+| Global | Type | Lifecycle |
+| --- | --- | --- |
+| `window.onClerkEvent` | `(payload) => void` | You define. Receives every event. |
+| `window.clerkJWT` | `string | null` | Bridge writes. Auto-refreshed every 50s. `null` when signed out. |
+
+Wire the listener first, then configure the bridge. Events are not buffered, a handler attached after a command was issued will miss the result.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    window.onClerkEvent = (r) => {
+        if (!r.ok) {
+            console.error(r.event, r.error.code, r.error.message)
+            return
+        }
+
+        if (r.event === 'ready') {
+            despia('clerk://state')
+        }
+
+        if (r.event === 'state') {
+            if (r.isSignedIn) {
+                renderApp(r.user)
+            } else {
+                despia('clerk://authview')
+            }
+        }
+    }
+
+    despia('clerk://configure?key=pk_test_abc123')
+}
+```
+
+Every event has the same envelope:
+
+```typescript
+{
+    ok: boolean,                                // false means error present
+    event: string,                              // 'ready', 'state', 'signIn', etc.
+    status?: string,                            // success detail
+    error?: { code: string, message: string },  // when ok === false
+    // plus route-specific fields
+}
+```
+
+---
+
+## Configure
+
+Initialize the bridge with your Clerk publishable key on every page load. Same-key calls re-emit `ready` as a no-op. Different keys switch tenant and clear the secure session store.
+
+```javascript
+despia('clerk://configure?key=pk_test_abc123')
+```
+
+Emits:
+
+```json
+{
+    "ok": true,
+    "event": "ready",
+    "status": "configured",
+    "publishableKey": "pk_test_abc123"
+}
+```
+
+`status` is `configured`, `already_configured`, or `reconfigured`. Errors emit with `event: "configure"`: `invalid_key`, `reconfigure_in_progress`, `reconfigure_failed`, `unsupported_os`, `sdk_not_linked`.
+
+---
+
+## Next
+
+<CardGroup cols={2}>
+  <Card title="Auth Methods" icon="right-to-bracket" href="/authentication/clerk/auth-methods">
+    Auth Sheet, password, OAuth, Apple, email code, phone code, passkeys, MFA, SSO.
+  </Card>
+
+  <Card title="Sessions" icon="id-card" href="/authentication/clerk/sessions">
+    Read who's signed in and the auto-refreshed JWT.
+  </Card>
+
+  <Card title="Backend" icon="server" href="/authentication/clerk/backend">
+    Next.js and TanStack authenticated on first paint.
+  </Card>
+
+  <Card title="Account" icon="user-gear" href="/authentication/clerk/account">
+    User Profile, sign-out, attribution, multi-tenant.
+  </Card>
+
+  <Card title="Reference" icon="book-open" href="/authentication/clerk/reference">
+    Events, status values, error codes, quirks.
+  </Card>
+</CardGroup>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

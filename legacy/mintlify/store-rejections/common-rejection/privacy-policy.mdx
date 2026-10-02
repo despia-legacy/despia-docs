@@ -1,0 +1,306 @@
+---
+title: "Privacy Policy"
+description: "Your app was rejected because of a missing or inadequate privacy policy. Here's what's required and how to fix it."
+icon: "align-left"
+---
+
+## What are privacy policy rejections?
+
+**Every app that collects data needs a privacy policy**
+
+Apple and Google require a privacy policy for any app that collects, transmits, or shares user data. This includes most apps, even simple ones.
+
+Common rejection messages:
+
+- "Your app does not include a privacy policy"
+- "The privacy policy URL is not valid or accessible"
+- "The privacy policy does not adequately describe data collection practices"
+- "Your app collects user data but the privacy policy does not disclose this"
+
+No privacy policy means no approval.
+
+---
+
+## Why this happens
+
+**Privacy policies are legally required in most regions**
+
+GDPR, CCPA, and other regulations require disclosure of data practices. App stores enforce this for all apps distributed globally.
+
+Common mistakes:
+
+- No privacy policy at all
+- Privacy policy URL returns 404
+- Privacy policy hosted on localhost or staging
+- Generic template that doesn't match your app
+- Missing disclosures for specific data types (location, contacts, health)
+- Privacy policy doesn't mention third-party SDKs
+- Different privacy policy in app vs App Store listing
+
+---
+
+## How to fix it
+
+### Create a privacy policy
+
+**Every app needs one, even if you think you don't collect data**
+
+If your app uses analytics, crash reporting, push notifications, or any third-party SDK, you're collecting data. You need a privacy policy.
+
+**What must be included:**
+
+- What data you collect
+- How you collect it
+- Why you collect it
+- How you use it
+- Who you share it with
+- How users can delete their data
+- How to contact you
+
+**Data types to disclose:**
+
+| Data Type      | Examples                                      |
+| :------------- | :-------------------------------------------- |
+| Personal info  | Name, email, phone number                     |
+| Device info    | Device ID, IP address, OS version             |
+| Location       | GPS, IP-based location                        |
+| Usage data     | Pages viewed, features used, session duration |
+| Contacts       | Address book access                           |
+| Health data    | HealthKit, fitness data                       |
+| Financial data | Payment info, purchase history                |
+| User content   | Photos, files, messages                       |
+
+If your app accesses any of these, your privacy policy must mention it.
+
+---
+
+### Disclose third-party SDKs
+
+**You're responsible for data collected by SDKs you include**
+
+Most apps include SDKs that collect data. Your privacy policy must disclose these.
+
+**Common SDKs that collect data:**
+
+- **Analytics:** Google Analytics, Mixpanel, Amplitude, Firebase Analytics
+- **Crash reporting:** Crashlytics, Sentry, Bugsnag
+- **Push notifications:** OneSignal, Firebase Cloud Messaging
+- **Payments:** RevenueCat, Stripe
+- **Advertising:** AdMob, Facebook Ads, AppLovin
+- **Authentication:** Google Sign-In, Facebook Login, Auth0
+
+**For each SDK, disclose:**
+
+- What data it collects
+- Link to the SDK's privacy policy
+- Why you use it
+
+**Example disclosure:**
+
+> "We use OneSignal for push notifications. OneSignal collects device identifiers and push tokens to deliver notifications. See OneSignal's privacy policy at https://onesignal.com/privacy_policy"
+
+---
+
+### Host your privacy policy properly
+
+**The URL must be accessible and stable**
+
+Reviewers will check that your privacy policy URL works.
+
+**Requirements:**
+
+- Publicly accessible (no login required)
+- Loads over HTTPS
+- Returns a real page (not 404 or redirect loop)
+- Available 24/7 (not localhost or staging server)
+- Same URL used in app and App Store listing
+
+**Good hosting options:**
+
+- Your company website (`https://yourapp.com/privacy`)
+- Notion public page
+- GitHub Pages
+- Google Docs (published to web)
+- Dedicated legal page services
+
+**What causes rejection:**
+
+- URL returns 404 or error
+- URL requires login to view
+- URL redirects to homepage
+- URL is localhost or internal IP
+- Different URLs in app vs store listing
+
+---
+
+### Add privacy policy to your app
+
+**Users must be able to access it from within the app**
+
+The privacy policy can't only be on the App Store. Users need to find it in your app too.
+
+**Where to place it:**
+
+- Settings screen (most common)
+- Account or profile screen
+- Onboarding flow
+- Login/signup screen
+- App footer or menu
+
+**Implementation:**
+
+```javascript
+// Link to privacy policy
+const openPrivacyPolicy = () => {
+  window.open('https://yourapp.com/privacy', '_blank');
+};
+```
+
+Make sure the link opens in a browser, not in the WebView where it might fail.
+
+---
+
+### Match App Store privacy labels
+
+**Your privacy policy must match your App Store declarations**
+
+Apple requires privacy nutrition labels. Google requires a data safety section. These must match your privacy policy.
+
+**If your App Store listing says you collect:**
+
+- Location data → Privacy policy must mention location collection
+- Contact info → Privacy policy must mention contact collection
+- Usage data → Privacy policy must mention analytics
+
+**Mismatches cause rejection:**
+
+- App Store says "no data collected" but you use analytics
+- Privacy policy mentions email collection but App Store doesn't list it
+- App accesses contacts but neither discloses it
+
+Review your App Store privacy labels and privacy policy together. They must tell the same story.
+
+See: [App Privacy Details](https://setup.despia.com/lovable/native-features/app-privacy)
+
+---
+
+### Include account deletion instructions
+
+**Required by Apple since 2022**
+
+If your app supports account creation, users must be able to delete their account and data.
+
+**Requirements:**
+
+- Clear instructions for account deletion in privacy policy
+- Working deletion mechanism in app or via request
+- Data actually gets deleted (not just deactivated)
+- Deletion available without contacting support (preferred)
+
+**What to include in privacy policy:**
+
+> "You can delete your account and all associated data at any time from Settings \> Account \> Delete Account. Alternatively, email [privacy@yourapp.com](mailto:privacy@yourapp.com) to request deletion. We will process deletion requests within 30 days."
+
+If you don't offer account creation, you don't need this. But if you do, account deletion is mandatory.
+
+---
+
+### Use a proper template
+
+**Don't write from scratch unless you're a lawyer**
+
+Privacy policy generators and templates help you cover required elements.
+
+**Free generators:**
+
+- Termly (https://termly.io)
+- FreePrivacyPolicy (https://freeprivacypolicy.com)
+- PrivacyPolicies.com (https://privacypolicies.com)
+
+**What to customize:**
+
+- Your company/app name
+- Contact information
+- Specific data types you collect
+- Third-party SDKs you use
+- Account deletion process
+- Data retention periods
+
+Don't use a template without customizing it. Reviewers can tell when the privacy policy doesn't match the app.
+
+---
+
+### Update when you add features
+
+**Privacy policy must reflect current app behavior**
+
+When you add new features that collect data, update your privacy policy.
+
+**Triggers for update:**
+
+- Adding analytics SDK
+- Adding push notifications
+- Adding location features
+- Adding contacts access
+- Adding health/fitness features
+- Adding camera/photo access
+- Adding payment processing
+- Adding social login
+
+Update the privacy policy before submitting the app update. Reviewers check that disclosures match current functionality.
+
+---
+
+## Quick checklist
+
+**Privacy policy content:**
+
+1. Lists all data types collected
+2. Explains how data is used
+3. Discloses third-party SDKs
+4. Includes contact information
+5. Explains account deletion process
+6. States data retention period
+
+**Accessibility:**
+
+ 7. Hosted at public HTTPS URL
+ 8. URL works (not 404)
+ 9. No login required to view
+10. Link included in app (Settings screen)
+11. Same URL in app and App Store listing
+
+**Consistency:**
+
+12. Matches App Store privacy labels
+13. Matches Google Play data safety section
+14. Reflects current app functionality
+15. Updated when features change
+
+---
+
+## Common rejection reasons
+
+| Rejection                | Fix                                                       |
+| :----------------------- | :-------------------------------------------------------- |
+| "No privacy policy"      | Create one and add URL to app and store listing           |
+| "URL not accessible"     | Fix hosting, ensure HTTPS, test from outside your network |
+| "Doesn't match app"      | Update policy to reflect actual data collection           |
+| "Missing SDK disclosure" | Add section for each third-party SDK                      |
+| "No account deletion"    | Add deletion instructions and mechanism                   |
+| "Doesn't match labels"   | Align App Store privacy labels with policy                |
+
+---
+
+## Still stuck?
+
+If you keep getting rejected for privacy policy issues:
+
+1. Open your privacy policy URL in an incognito browser window
+2. Compare your privacy policy to your App Store privacy labels line by line
+3. List every SDK in your app and verify each is mentioned
+4. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Your privacy policy URL
+   - Your rejection notice in full
+   - List of SDKs your app uses
+   - Screenshot of your App Store privacy labels

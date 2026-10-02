@@ -1,0 +1,105 @@
+---
+title: "Deeplinking"
+icon: "link"
+description: "Configure universal links (iOS) and app links (Android) to enable direct app opening from web URLs in your Lovable mobile app."
+---
+
+<iframe src="https://www.youtube.com/embed/TKByfF6dM_Q" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+## **Prerequisites**
+
+Before implementing deep linking, enable **Web App Synchronization** in the Despia Editor:
+
+1. Navigate to **Add-ons** → **Hardcoded**
+2. Enable **Web App Synchronization** for your platform (iOS/Android)
+
+## **iOS Configuration**
+
+### **Host the Apple App Site Association File**
+
+Create and host the AASA file at:
+
+```
+/.well-known/apple-app-site-association
+```
+
+### **File Structure**
+
+```json
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": [
+          "TEAMID.BUNDLEID"
+        ],
+        "components": [
+          {
+            "/": "/*",
+            "comment": "Matches any URL path"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### **Required Values**
+
+- **Bundle ID**: Found in Despia Publishing Panel
+- **Team ID**: Found in Apple Developer account
+
+## **Android Configuration**
+
+### **Host the Digital Asset Links File**
+
+Create and host the assetlinks file at:
+
+```
+/.well-known/assetlinks.json
+```
+
+### **File Structure**
+
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "PACKAGE_NAME",
+      "sha256_cert_fingerprints": [
+        "SHA256_FINGERPRINT"
+      ]
+    }
+  }
+]
+```
+
+### **Required Values**
+
+- **Package Name**: Found in Despia Publishing Panel
+- **SHA256 Fingerprint**: Found in Google Play Console under **Release** → **Setup** → **App Integrity**
+
+## **Important Notes for Both Platforms**
+
+- Files must be served over HTTPS
+- Files must be accessible without redirects
+- Content-Type must be `application/json`
+- No file extensions for iOS file (`apple-app-site-association` not `.json`)
+- Test thoroughly before production deployment
+
+## **Verification**
+
+### **iOS**
+
+- Use Apple's App Search API Validation Tool
+- Check Safari developer tools for AASA file loading
+
+### **Android**
+
+- Use Google's Digital Asset Links debugging tool
+- Test with Android App Links Assistant in Android Studio
+
+For additional support or questions, please contact our support team at [support@despia.com](mailto:support@despia.com)

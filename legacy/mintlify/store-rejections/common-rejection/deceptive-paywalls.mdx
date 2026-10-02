@@ -1,0 +1,337 @@
+---
+title: "Deceptive Paywalls"
+description: "Your app was rejected because the paywall is misleading or uses dark patterns. Here's what reviewers flagged and how to fix it."
+icon: "align-left"
+---
+
+## What are deceptive paywall rejections?
+
+**App stores protect users from manipulative purchase flows**
+
+Apple and Google reject apps that trick users into purchases, hide important pricing information, or make it difficult to understand what they're buying.
+
+Common rejection messages:
+
+- "The app uses deceptive or manipulative subscription practices"
+- "Subscription terms are not clearly displayed"
+- "The app does not clearly identify the price and terms of the subscription"
+- "Users may not understand what they are purchasing"
+- "The free trial terms are not sufficiently clear"
+
+These rejections require paywall redesign before resubmission.
+
+---
+
+## Why this happens
+
+**Dark patterns trigger automatic rejection**
+
+Reviewers are trained to spot manipulative purchase flows. Even unintentional design choices can look deceptive.
+
+Common mistakes:
+
+- Hiding the price or showing it in tiny text
+- Pre-selecting the most expensive option
+- Making the close button hard to find
+- Unclear free trial terms (when it ends, what it costs after)
+- "Continue" buttons that actually purchase
+- No way to dismiss the paywall
+- Subscription auto-renewing without clear disclosure
+- Fake urgency ("Sale ends in 5 minutes!")
+- Fake social proof ("10,000 users subscribed today!")
+
+Apple specifically calls out "bait and switch" tactics where users think they're getting one thing but are charged for another.
+
+---
+
+## How to fix it
+
+### Make pricing impossible to miss
+
+**Price must be prominent and clear**
+
+The price should be one of the most visible elements on your paywall. Users should never have to search for it.
+
+**What causes rejection:**
+
+- Price in tiny text at the bottom
+- Price hidden behind "See details" link
+- Price only visible after scrolling
+- "Continue" button with no price visible
+- Price shown without currency symbol
+
+**What passes review:**
+
+- Price displayed prominently near the purchase button
+- Full price with currency symbol (\$9.99, not just 9.99)
+- Billing frequency stated clearly (per month, per year)
+- Auto-renewal disclosed near the price
+- Readable font size (minimum 14pt)
+
+**Example of clear pricing text:**
+
+> "\$9.99/month, auto-renews monthly. Cancel anytime."
+
+This single line covers price, frequency, renewal, and cancellation. Put it where users can't miss it.
+
+---
+
+### Make the close button obvious
+
+**Users must be able to dismiss the paywall easily**
+
+A hidden or delayed close button is an instant rejection. Users should never feel trapped.
+
+**What reviewers look for:**
+
+- Close button visible immediately (no delay)
+- Close button in expected location (top-left or top-right)
+- Close button large enough to tap easily (44x44pt minimum)
+- Close button has sufficient contrast to be visible
+
+**Bad patterns that cause rejection:**
+
+- Close button appears after 3 seconds
+- Close button is a tiny "X" in low contrast
+- Close button hidden behind other elements
+- "Skip" text that looks like body copy
+- No close button at all
+
+**Good implementation:**
+
+```html
+<div class="paywall">
+  <button class="close-button" onclick="dismissPaywall()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M18 6L6 18M6 6l12 12"/>
+    </svg>
+  </button>
+  
+  <!-- Paywall content -->
+</div>
+```
+
+```css
+.close-button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border: none;
+}
+```
+
+---
+
+### Be transparent about free trials
+
+**Trial terms must be crystal clear**
+
+Free trial rejections are extremely common. Users must understand exactly when they'll be charged and how much.
+
+**Required disclosures for trials:**
+
+- Trial duration ("7-day free trial")
+- What happens when trial ends ("Then \$9.99/month")
+- When the first charge occurs ("You won't be charged until January 28, 2025")
+- How to cancel ("Cancel anytime in Settings")
+
+**What causes rejection:**
+
+- "Start Free Trial" button with no other information
+- Trial length buried in terms of service
+- Post-trial price not mentioned
+- No indication of when charges begin
+- Implying the trial is free forever
+
+**What passes review:**
+
+- All four disclosures visible on the same screen as the button
+- Specific date when trial ends and billing begins
+- Clear statement that no charge happens today
+- Cancellation instructions visible
+
+**Example of clear trial text:**
+
+> "7-day free trial, then \$9.99/month. You won't be charged until January 28, 2025. Cancel anytime in your device settings."
+
+---
+
+### Don't pre-select expensive options
+
+**Let users choose their plan**
+
+Pre-selecting the annual plan (or any paid option) feels manipulative to reviewers, especially if it's not the cheapest option.
+
+**Acceptable approaches:**
+
+- No option pre-selected (user must tap to choose)
+- Cheapest option pre-selected
+- Most popular option highlighted but not pre-selected
+
+**Rejection triggers:**
+
+- Most expensive option pre-selected
+- Only option visible is the expensive one
+- Cheaper options hidden in "See all plans"
+
+---
+
+### Use honest button labels
+
+**Button text must match the action**
+
+The button should clearly indicate what happens when tapped.
+
+**Wrong:**
+
+- "Continue" (then charges immediately)
+- "Next" (then starts subscription)
+- "Get Started" (ambiguous)
+- "Unlock" (unclear if paid)
+
+**Right:**
+
+- "Subscribe for \$9.99/month"
+- "Start Free Trial"
+- "Purchase for \$29.99"
+- "Subscribe" (with price clearly shown nearby)
+
+---
+
+### Avoid fake urgency and scarcity
+
+**No countdown timers or false claims**
+
+Reviewers reject obvious manipulation tactics.
+
+**Instant rejection triggers:**
+
+- "Sale ends in 04:59" (fake countdown)
+- "Only 3 spots left!" (fake scarcity)
+- "50% off today only!" (always-on "sale")
+- "10,000 users upgraded this hour" (unverifiable)
+- "Last chance!" (repeating message)
+
+**What's acceptable:**
+
+- Legitimate limited-time promotions (with real end dates)
+- Actual user counts if verifiable
+- Seasonal sales that actually end
+
+If your "sale" has been running for six months, it's not a sale. Reviewers will notice.
+
+---
+
+### Use RevenueCat paywalls
+
+**Pre-built paywalls are designed for compliance**
+
+RevenueCat's native paywalls are built to meet App Store and Google Play guidelines. They handle pricing display, trial terms, and required disclosures automatically.
+
+```javascript
+import despia from 'despia-native';
+
+// Launch compliant native paywall
+despia('revenuecat://launchPaywall?external_id=user_123&offering=default');
+```
+
+The paywall pulls product information directly from the stores, ensuring prices and terms are always accurate and properly formatted.
+
+See: [RevenueCat Paywalls](https://setup.despia.com/lovable/native-features/paywalls)
+
+**Benefits of native paywalls:**
+
+- Pricing pulled from App Store / Play Store
+- Localized currency and formatting
+- Trial terms displayed correctly
+- Compliant by design
+- Close button included
+
+If you're building custom paywalls, follow the guidelines above carefully. RevenueCat paywalls eliminate most compliance risks.
+
+---
+
+## Quick checklist
+
+**Pricing clarity:**
+
+1. Price is prominent (not tiny or hidden)
+2. Billing frequency is stated (monthly, yearly)
+3. Auto-renewal is disclosed
+4. Currency is shown
+
+**Trial transparency:**
+
+5. Trial length is stated
+6. Post-trial price is shown
+7. First charge date is clear
+8. Cancellation method is mentioned
+
+**User control:**
+
+ 9. Close button is visible immediately
+10. Close button is easy to tap (44x44pt minimum)
+11. No option is pre-selected (or cheapest is)
+12. Button labels match the action
+
+**No dark patterns:**
+
+13. No fake countdown timers
+14. No fake scarcity claims
+15. No unverifiable social proof
+16. No "bait and switch" tactics
+
+---
+
+## Common rejection reasons
+
+| Rejection                     | Fix                                                  |
+| :---------------------------- | :--------------------------------------------------- |
+| "Price not clearly displayed" | Make price prominent, minimum 14pt font              |
+| "Subscription terms unclear"  | Add billing frequency and auto-renewal disclosure    |
+| "Trial terms not clear"       | Show trial length, post-trial price, and charge date |
+| "No way to dismiss"           | Add visible close button, no delay                   |
+| "Deceptive button label"      | Use "Subscribe for \$X" instead of "Continue"        |
+| "Manipulative tactics"        | Remove fake timers, scarcity, and urgency            |
+
+---
+
+## Apple's specific requirements
+
+Apple's App Store Review Guidelines (section 3.1.2) require:
+
+- Clearly displayed subscription price and duration
+- Description of what the subscription provides
+- Clear explanation of free trial terms
+- Easy access to subscription management
+- No automatic upgrades without consent
+
+Apple also provides specific UI requirements for subscriptions. Your paywall must include:
+
+- The price of the subscription
+- The duration of the subscription
+- A description of the content or services
+- Clear cancellation terms
+
+See: [Apple's Subscription Guidelines](https://developer.apple.com/app-store/subscriptions/)
+
+---
+
+## Still stuck?
+
+If you keep getting rejected for deceptive paywall:
+
+1. Screenshot your paywall and ask: "Is everything a user needs to know visible at a glance?"
+2. Have someone unfamiliar with your app try to understand the pricing in 5 seconds
+3. Compare your paywall to apps like Spotify, Netflix, or Headspace
+4. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Screenshot of your paywall
+   - Your rejection notice in full
+   - Whether you're using custom or RevenueCat paywall

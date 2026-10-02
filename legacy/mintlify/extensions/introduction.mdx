@@ -1,0 +1,450 @@
+---
+title: "Introduction"
+description: "A native extension system for advanced developers solving problems Despia cannot anticipate. Wrap any iOS and Android SDK into a plugin, declarative, open source, callable from your web layer."
+icon: "circle-info"
+---
+
+Despia ships native features continuously. RevenueCat, OneSignal, AppsFlyer, GPS, HealthKit, Storage Vault, biometrics, local media, widgets — the platform covers the capabilities most production apps need.
+
+But some problems are narrower than that. A fitness app integrating with a Chinese OEM watch via an SDK used by a few hundred developers worldwide. A medical device company wrapping a proprietary Bluetooth protocol into a patient-facing app. A logistics platform connecting to hardware scanners with a vendor SDK that ships as a closed Swift Package. These are real technical problems. Despia cannot anticipate all of them, and it does not try to.
+
+The plugin ecosystem exists for exactly these cases. It is the same architecture Despia uses for every built-in feature, a URL scheme intercepted by Swift and Kotlin handlers, results written back to the web layer, opened up so advanced developers can wrap any SDK into the platform themselves.
+
+When a native developer publishes an extension, the integration becomes available to every Despia app through the same single call pattern used for every other feature on the platform.
+
+```javascript
+// Built-in Despia feature
+const purchaseData   = await despia(`revenuecat://purchase?external_id=${userId}&product=premium`, ['revenuecatPurchaseResult'])
+const purchaseResult = purchaseData.revenuecatPurchaseResult
+
+// Third-party extension — OEM fitness watch, niche SDK, same pattern
+const watchData   = await despia(`oemwatch://heartrate?deviceId=${deviceId}`, ['oemwatchHeartrateResult'])
+const heartrate   = watchData.oemwatchHeartrateResult
+```
+
+No new API to learn per integration. No context switching between SDK documentation systems. The platform is the API.
+
+<Info>
+  The plugin ecosystem is in active development. If you want early access or want to publish an extension, reach out at [extensions@despia.com](mailto:extensions@despia.com).
+</Info>
+
+---
+
+## How it works
+
+An extension is a Swift Package containing two files you write and one JSON spec you declare. Everything else, URL routing, param validation, config forms in the dashboard, Package.swift generation, thread safety, is handled by the Despia runtime.
+
+```json
+// despia-extension.json, the entire surface area of a plugin
+{
+  "scheme": "yoursdkname",
+  "platforms": ["ios", "android"],
+  "vars": [
+    { "name": "apiKey", "type": "String", "required": true, "sensitive": true }
+  ],
+  "hosts": [
+    {
+      "name": "doSomething",
+      "handler": "native",
+      "params": [{ "name": "userId", "type": "String", "required": true }],
+      "returns": { "windowVar": "yoursdknameResult" }
+    }
+  ]
+}
+```
+
+Your Swift file contains only the native SDK call:
+
+```swift
+import DespiaExtensionCore
+import YourNativeSDK
+
+@objc public final class YourExtension: NSObject, DespiaExtensionProtocol {
+    public static var scheme: String { "yoursdkname" }
+
+    public func handle(_ call: DespiaExtensionCall) async {
+        switch call.method {
+        case "doSomething":
+            let userId = call.string("userId")!
+            let apiKey = call.config("apiKey")
+            // your SDK call
+            call.resolve(["success": true])
+        default:
+            call.reject("Unknown method")
+        }
+    }
+}
+```
+
+Your Java file mirrors it exactly:
+
+```java
+public final class YourExtension implements DespiaExtensionInterface {
+
+    @Override public String getScheme() { return "yoursdkname"; }
+
+    @Override public void init(Context context) {
+        // one-time SDK setup
+    }
+
+    @Override public void handle(DespiaExtensionCall call) {
+        switch (call.getMethod()) {
+            case "doSomething": handleDoSomething(call); break;
+            default: call.reject("Unknown method");
+        }
+    }
+
+    private void handleDoSomething(DespiaExtensionCall call) {
+        String userId = call.string("userId");   // validated by runtime before this runs
+        String apiKey = call.config("apiKey");   // from Despia dashboard config
+        // your SDK call
+        call.resolve(Map.of("success", true));
+    }
+}
+```
+
+Your web layer calls it the same way it calls every other Despia feature:
+
+```javascript
+await despia('yoursdkname://doSomething?userId=user123', ['yoursdknameResult'])
+console.log(window.yoursdknameResult)
+```
+
+---
+
+## The Swift and Java interface
+
+Both platforms share the same call interface. `DespiaExtensionCall` is the only type you interact with, it gives you typed param accessors, dashboard config values, and the two ways to send data back to your web layer.
+
+**Reading params and config:**
+
+```swift
+// Swift
+call.string("productId")   // String?, URL-decoded, percent-encoding handled
+call.int("quantity")        // Int?
+call.bool("sandbox")        // Bool?, handles "true"/"1"/"yes"
+call.json("metadata")       // [String: Any]?, full JSON object from URL param
+call.config("apiKey")       // String, value set by developer in Despia dashboard
+```
+
+```java
+// Java, identical surface area
+call.string("productId")    // String
+call.integer("quantity")    // Integer
+call.bool("sandbox")        // Boolean
+call.json("metadata")       // JSONObject
+call.config("apiKey")       // String
+```
+
+**Sending results back:**
+
+```swift
+// Pattern A, write to window.yourVar (awaitable from JS)
+call.resolve(["success": true, "transactionId": "txn_abc"])
+
+// Pattern B, fire a callback (for ongoing events, background updates)
+call.emit("onStatusChanged", ["status": "active"])
+
+// On failure, logs and writes error to window.yourVar, never crashes
+call.reject("Product not found")
+```
+
+The Java side is identical, `call.resolve()`, `call.emit()`, `call.reject()`, with the same semantics on both platforms. Write your SDK logic once per platform. Everything else is handled.
+
+<Warning>
+  The DespiaExtension API is in active QA and subject to change over the coming weeks and possibly months. Method names, param shapes, and registration patterns may be revised before the public release. If you are building an extension in early access, expect to update your code as the spec stabilises.
+</Warning>
+
+---
+
+## Third-party Swift packages and Android libraries
+
+Declare your native SDK dependencies in `despia-extension.json`. Despia generates `Package.swift` and `build.gradle` from them, you never write either file.
+
+```json
+"dependencies": {
+    "ios": [
+        {
+            "package": "https://github.com/RevenueCat/purchases-ios.git",
+            "version": "4.0.0",
+            "products": ["RevenueCat", "RevenueCatUI"]
+        }
+    ],
+    "android": [
+        { "artifact": "com.revenuecat.purchases:purchases:6.0.0" }
+    ]
+}
+```
+
+Despia generates the full SPM manifest and Gradle dependency block from this. When a developer imports your extension from the dashboard, those packages are pulled in automatically. They install an extension, not a build system.
+
+---
+
+## Real example: OEM Bluetooth device integration
+
+BLE is one of the hardest things to get right on both iOS and Android. With DespiaExtension you declare the scheme, write the CoreBluetooth and Android BLE calls, and your web app talks to the hardware with a single `despia()` call.
+
+```json
+{
+  "scheme": "mydevice",
+  "platforms": ["ios", "android"],
+  "vars": [
+    { "name": "serviceUUID", "type": "String", "required": true, "description": "BLE service UUID for your OEM device" }
+  ],
+  "hosts": [
+    {
+      "name": "scan",
+      "handler": "native",
+      "params": [{ "name": "timeout", "type": "Int", "required": false, "default": "10" }],
+      "returns": { "windowVar": "mydeviceScanResult" }
+    },
+    {
+      "name": "connect",
+      "handler": "native",
+      "params": [{ "name": "deviceId", "type": "String", "required": true }],
+      "returns": { "windowVar": "mydeviceConnectResult" }
+    },
+    {
+      "name": "read",
+      "handler": "native",
+      "params": [{ "name": "characteristicUUID", "type": "String", "required": true }],
+      "returns": { "windowVar": "mydeviceReadResult" }
+    }
+  ],
+  "events": [
+    {
+      "name": "onDeviceFound",
+      "windowCallback": "mydevice_onDeviceFound",
+      "payload": [
+        { "name": "deviceId", "type": "String" },
+        { "name": "name",     "type": "String" },
+        { "name": "rssi",     "type": "Int" }
+      ]
+    },
+    {
+      "name": "onValueChanged",
+      "windowCallback": "mydevice_onValueChanged",
+      "payload": [
+        { "name": "characteristicUUID", "type": "String" },
+        { "name": "value",              "type": "String" }
+      ]
+    }
+  ]
+}
+```
+
+```swift
+import DespiaExtensionCore
+import CoreBluetooth
+
+@objc public final class MyDeviceExtension: NSObject, DespiaExtensionProtocol,
+                                             CBCentralManagerDelegate, CBPeripheralDelegate {
+    public static var scheme: String { "mydevice" }
+
+    private var central: CBCentralManager!
+    private var activeCalls: [String: DespiaExtensionCall] = [:]
+
+    public override init() {
+        super.init()
+        central = CBCentralManager(delegate: self, queue: .global(qos: .userInitiated))
+    }
+
+    public func handle(_ call: DespiaExtensionCall) async {
+        switch call.method {
+        case "scan":
+            let timeout = call.int("timeout") ?? 10
+            activeCalls["scan"] = call
+            central.scanForPeripherals(
+                withServices: [CBUUID(string: call.config("serviceUUID"))], options: nil)
+            try? await Task.sleep(nanoseconds: UInt64(timeout) * 1_000_000_000)
+            central.stopScan()
+            call.resolve(["success": true])
+        case "connect":
+            activeCalls["connect"] = call
+            // retrieve peripheral by UUID and connect
+        case "read":
+            let uuid = call.string("characteristicUUID")!
+            activeCalls["read:\(uuid)"] = call
+            // read characteristic from connected peripheral
+        default:
+            call.reject("Unknown method: \(call.method)")
+        }
+    }
+
+    // CoreBluetooth delegates fire call.emit() back to the web layer
+    public func centralManager(_ central: CBCentralManager,
+                               didDiscover peripheral: CBPeripheral,
+                               advertisementData: [String: Any], rssi: NSNumber) {
+        activeCalls["scan"]?.emit("onDeviceFound", [
+            "deviceId": peripheral.identifier.uuidString,
+            "name":     peripheral.name ?? "",
+            "rssi":     rssi.intValue
+        ])
+    }
+
+    public func peripheral(_ peripheral: CBPeripheral,
+                           didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        guard let data = characteristic.value else { return }
+        let b64 = data.base64EncodedString()
+        activeCalls["read:\(characteristic.uuid.uuidString)"]?.resolve([
+            "value": b64, "success": true
+        ])
+        activeCalls["scan"]?.emit("onValueChanged", [
+            "characteristicUUID": characteristic.uuid.uuidString,
+            "value": b64
+        ])
+    }
+
+    public func centralManagerDidUpdateState(_ central: CBCentralManager) {}
+}
+```
+
+```java
+public final class MyDeviceExtension implements DespiaExtensionInterface {
+
+    private Context context;
+    private BluetoothAdapter adapter;
+    private BluetoothGatt gatt;
+    private DespiaExtensionCall scanCall;
+
+    @Override public String getScheme() { return "mydevice"; }
+
+    @Override public void init(Context context) {
+        this.context = context;
+        BluetoothManager bm = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+        this.adapter = bm.getAdapter();
+    }
+
+    @Override public void handle(DespiaExtensionCall call) {
+        switch (call.getMethod()) {
+            case "scan":    handleScan(call);    break;
+            case "connect": handleConnect(call); break;
+            case "read":    handleRead(call);    break;
+            default: call.reject("Unknown method: " + call.getMethod());
+        }
+    }
+
+    private void handleScan(DespiaExtensionCall call) {
+        this.scanCall = call;
+        int timeout = call.integer("timeout") != null ? call.integer("timeout") : 10;
+        ScanFilter filter = new ScanFilter.Builder()
+            .setServiceUuid(ParcelUuid.fromString(call.config("serviceUUID"))).build();
+
+        adapter.getBluetoothLeScanner().startScan(
+            Collections.singletonList(filter),
+            new ScanSettings.Builder().build(),
+            new ScanCallback() {
+                @Override public void onScanResult(int callbackType, ScanResult result) {
+                    Map<String, Object> payload = new HashMap<>();
+                    payload.put("deviceId", result.getDevice().getAddress());
+                    payload.put("name",     result.getDevice().getName() != null
+                                            ? result.getDevice().getName() : "");
+                    payload.put("rssi",     result.getRssi());
+                    call.emit("onDeviceFound", payload);
+                }
+            }
+        );
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            adapter.getBluetoothLeScanner().stopScan(new ScanCallback() {});
+            call.resolve(Map.of("success", true));
+        }, timeout * 1000L);
+    }
+
+    private void handleConnect(DespiaExtensionCall call) {
+        BluetoothDevice device = adapter.getRemoteDevice(call.string("deviceId"));
+        gatt = device.connectGatt(context, false, new BluetoothGattCallback() {
+            @Override public void onConnectionStateChange(BluetoothGatt g, int status, int state) {
+                if (state == BluetoothProfile.STATE_CONNECTED) {
+                    call.resolve(Map.of("success", true));
+                    g.discoverServices();
+                } else {
+                    call.resolveError("Connection failed");
+                }
+            }
+            @Override public void onCharacteristicChanged(BluetoothGatt g,
+                                                          BluetoothGattCharacteristic c) {
+                if (scanCall == null) return;
+                Map<String, Object> payload = new HashMap<>();
+                payload.put("characteristicUUID", c.getUuid().toString());
+                payload.put("value", android.util.Base64.encodeToString(
+                    c.getValue(), android.util.Base64.NO_WRAP));
+                scanCall.emit("onValueChanged", payload);
+            }
+        });
+    }
+
+    private void handleRead(DespiaExtensionCall call) {
+        // find characteristic by UUID and call gatt.readCharacteristic()
+        // resolve via onCharacteristicRead callback above
+    }
+}
+```
+
+From the web layer, the hardware is just a function call:
+
+```javascript
+// Discover nearby OEM devices
+mydevice_onDeviceFound = ({ name, deviceId, rssi }) => {
+    console.log(name, deviceId, rssi)
+}
+const scanData   = await despia('mydevice://scan?timeout=10', ['mydeviceScanResult'])
+const scanResult = scanData.mydeviceScanResult
+
+// Connect
+const connectData   = await despia(`mydevice://connect?deviceId=${deviceId}`, ['mydeviceConnectResult'])
+const connectResult = connectData.mydeviceConnectResult
+
+// Read a characteristic
+const readData   = await despia(`mydevice://read?characteristicUUID=2A37`, ['mydeviceReadResult'])
+const readResult = readData.mydeviceReadResult
+
+// Stream live values
+mydevice_onValueChanged = ({ characteristicUUID, value }) => {
+    updateUI(characteristicUUID, atob(value))
+}
+```
+
+CoreBluetooth and Android BLE are among the most platform-specific APIs in mobile. Both require native delegates, background threading, and careful state management. An extension author writes that once. Every web developer using Despia gets hardware access with a few lines of JavaScript.
+
+---
+
+## What the runtime eliminates
+
+Native SDK integration has a fixed cost: URL routing, param decoding, thread management, config forms, package manifests, scheme conflict detection. The same boilerplate, rewritten for every integration, on every platform. DespiaExtension handles all of it. You write the SDK call. The rest is the runtime's job.
+
+| What you write | What the runtime handles |
+| --- | --- |
+| `despia-extension.json` | URL interception and routing |
+| Swift native SDK calls | Param validation before your code runs |
+| Java native SDK calls | Config form UI in the Despia dashboard |
+|  | `Package.swift` and `build.gradle` generation |
+|  | Thread safety on both platforms |
+|  | `window.x` injection on every page load |
+|  | Static host responses from JSON alone |
+|  | Scheme conflict detection |
+
+---
+
+## What ships at launch
+
+The extension system exposes the same architecture used by every built-in Despia feature. First-party extensions in development include camera and media picker, QuickLook document preview, and native contacts access. Third-party extensions are importable directly from the Despia dashboard by URL, no build tooling, no Xcode, no Android Studio required on the app developer's end.
+
+---
+
+## For developers solving hard problems
+
+Despia continues to ship built-in native features. The extension system is not a replacement for that. It is the answer to the long tail of technical problems the platform cannot anticipate.
+
+If you are building something that requires a proprietary hardware SDK, a niche vendor integration, or a platform capability that simply does not exist in any general-purpose mobile tool, this is the right foundation. Write the native code once in Swift and Java. Every developer using Despia gets access through the same `await despia()` call they already know.
+
+If you are evaluating Despia for a production project and want to understand how a specific integration would work, reach out directly.
+
+<CardGroup cols={2}>
+  <Card title="Early Access" icon="envelope" href="mailto:extensions@despia.com">
+    [extensions@despia.com](mailto:extensions@despia.com)
+  </Card>
+
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+</CardGroup>

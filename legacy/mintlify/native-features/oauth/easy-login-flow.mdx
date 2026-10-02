@@ -1,0 +1,306 @@
+---
+title: "Easy OAuth"
+description: "Finish social sign-in on your own domain, with the provider's redirect landing directly in your app and no callback page to build."
+icon: "key"
+---
+
+Social sign-in runs inside a secure browser session that is isolated from your app by design, and something has to carry the result back across that isolation. This feature ends the session the moment the provider redirects to your own domain, then loads that exact URL in your app, so the session cookie is written by your app on the first real request. There is no intermediate callback page, no custom URL scheme, and no path to configure: any redirect to your host finishes the login.
+
+<Info>
+  Your domain needs two verification files before this works, one for iOS and one for Android, and the native capability has to be turned on and shipped in a store build. All of it is covered under Verifying your domain below. On iOS the flow only runs on a physical device, never the Simulator.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Add `type=https` and the runtime watches your entire domain for the provider's redirect. When that redirect lands, the secure session closes and your app loads the callback URL exactly as the provider sent it, query string and hash included.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    const authUrl = 'https://accounts.provider.com/authorize'
+        + '?client_id=YOUR_CLIENT_ID'
+        + '&response_type=code'
+        + '&redirect_uri=' + encodeURIComponent('https://yourapp.com/welcome')
+
+    despia(`oauth://?url=${encodeURIComponent(authUrl)}&type=https`)
+}
+```
+
+Register `https://yourapp.com/welcome` as the redirect URI in your provider dashboard. Any URL on your host works, because the runtime watches the whole domain rather than one path. The redirect is never fetched inside the secure session: it is recognised at navigation time and handed to your app, which then makes the only real request to it.
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `url` | Yes | The provider authorization URL to open. Wrap with `encodeURIComponent(...)` exactly once. |
+| `type` | No | Set to `https` to finish on your own domain. Leave it out to run the legacy custom scheme flow. Any other value is treated as absent. |
+
+Wrap `url` once and only once. The runtime decodes it a single time, so a second `encodeURIComponent` reaches the provider still escaped, and hand-decoding before the call corrupts the request the other way: a `state` of `xY%2Bz` becomes `xY+z`, which a provider reads back as `xY z`, and a `%26` becomes a real `&` that splits one parameter into two.
+
+---
+
+## Passing the provider's URL, not your own endpoint
+
+The session watches your whole domain, so the URL you open has to live somewhere else. If `url` points at your own host, the session's very first navigation already matches and it closes before the provider is ever shown. The runtime detects that, declines the HTTPS callback, logs a line naming the fix, and runs the legacy custom scheme flow instead.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    // Declined: this is on your own host, so the session would close immediately
+    despia(`oauth://?url=${encodeURIComponent('https://yourapp.com/api/auth/signin/google')}&type=https`)
+
+    // Correct: the provider's own authorize URL
+    despia(`oauth://?url=${encodeURIComponent(authUrl)}&type=https`)
+}
+```
+
+Server-side auth libraries hand you an own-host entry point by default, a route on your domain that redirects onward to the provider. Build the provider's authorize URL yourself for the native call, and keep your own endpoint as the `redirect_uri` it comes back to. The symptom of getting this wrong is a login that works but runs the legacy flow, which is easy to miss until someone reads the URL.
+
+---
+
+## Reading the result
+
+The callback URL arrives verbatim, so your page reads its token exactly as it would on the open web. Nothing is stripped and the fragment survives, so implicit flow providers that return tokens in the hash work without changes.
+
+```javascript
+const params  = new URLSearchParams(window.location.search)
+const token   = params.get('token')
+
+const hash    = new URLSearchParams(window.location.hash.slice(1))
+const idToken = hash.get('id_token')
+```
+
+Because your app performs the request itself, any `Set-Cookie` header on that response is written into the app's own cookie store, and the user stays signed in on the next launch.
+
+---
+
+## Checking device support before you build the authorize URL
+
+Your app picks its redirect URI before the flow starts, and that choice cannot be changed once the authorize URL is built. Read `despia.httpsAuthCallback` to find out whether the current device can finish on your domain, and fall back to your custom scheme redirect URI when it cannot.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    if (despia.httpsAuthCallback) {
+        const authUrl = buildAuthUrl('https://yourapp.com/welcome')
+        despia(`oauth://?url=${encodeURIComponent(authUrl)}&type=https`)
+    } else {
+        const authUrl = buildAuthUrl('myapp://oauth/auth')
+        despia(`oauth://?url=${encodeURIComponent(authUrl)}`)
+    }
+}
+```
+
+| Device | Value |
+| --- | --- |
+| iOS 17.4 and later, domain configured | `true`, a prediction. The association itself is only checkable once a session starts, so a broken verification file still reports `true` and surfaces through `window.onAuthCallbackError`. |
+| Android with a supporting browser (Chrome 137 and later) | `true`, a promise. The browser verifies your domain itself and returns the redirect directly. |
+| Android 12 and later without a supporting browser | `true` only when the system has verified your domain against `assetlinks.json` and link handling is enabled. |
+| iOS below 17.4, Android below 12 without a supporting browser | `false`. These devices stay on the custom scheme flow. |
+| Sandbox mode | `false` on both platforms, because a sandbox host carries no domain association. |
+
+Keep the fallback branch. It is what lets one build serve every device.
+
+---
+
+## Verifying your domain
+
+The operating system will only deliver the redirect to your app if it can confirm you own the host. Both files must be served over HTTPS with `Content-Type: application/json` and no redirects.
+
+The host that matters is the domain your app loads, and the match is exact. Publish the files on that hostname, spelled the same way, including any `www` prefix. A subdomain does not inherit its parent, so `auth.yourapp.com` is not covered by files served on `yourapp.com`, and a host carrying a port cannot be verified at all.
+
+<Steps>
+  <Step title="Enable Associated Domains on your main Bundle ID">
+    Open the Apple Developer portal, go to **Certificates, Identifiers and Profiles**, then **Identifiers**, and select the Bundle ID your app ships under. On the **Capabilities** tab, tick **Associated Domains** and save.
+
+    Enable it on the main Bundle ID, not on an extension identifier. Both halves of the Apple association file depend on this capability: `applinks` for the redirect and `webcredentials` for the sign-in session. Without it the operating system never reads your file at all, so the sheet opens, closes, and reports nothing.
+  </Step>
+  <Step title="Serve the Apple association file">
+    Publish this at `https://yourapp.com/.well-known/apple-app-site-association`, replacing `TEAMID.BUNDLEID` with your own.
+
+    ```json
+    {
+        "applinks": {
+            "details": [
+                { "appIDs": ["TEAMID.BUNDLEID"], "components": [{ "/": "/*" }] }
+            ]
+        },
+        "webcredentials": {
+            "apps": ["TEAMID.BUNDLEID"]
+        }
+    }
+    ```
+
+    The `webcredentials` section is the part most existing setup guides leave out, because universal links never needed it. A file with only an `applinks` section verifies deep links correctly and fails sign-in, which is a confusing pair of symptoms to debug.
+  </Step>
+  <Step title="Copy your SHA-256 fingerprint from Play Console">
+    The Despia Editor does not show this value, because the certificate that matters is held by Google rather than produced by your build. Open the Play Console, select your app, then go to **Test and release**, **App integrity**, and open the **App signing** tab. On older consoles the same page sits under **Release**, **Setup**, **App integrity**.
+
+    Under **App signing key certificate**, copy the **SHA-256 certificate fingerprint**, a colon separated hex string.
+
+    ```text
+    AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99
+    ```
+
+    Take the app signing key, not the upload key. Google re-signs every install it serves using the app signing key, so a file carrying only the upload key fingerprint verifies nothing for users who install from Play. The app signing key certificate only appears once the app exists in Play Console and a first bundle has been uploaded, so finish that before publishing the file.
+  </Step>
+  <Step title="Serve the Android association file">
+    Publish this at `https://yourapp.com/.well-known/assetlinks.json`, using the fingerprint from the previous step and the package name of your app.
+
+    ```json
+    [{
+        "relation": ["delegate_permission/common.handle_all_urls"],
+        "target": {
+            "namespace": "android_app",
+            "package_name": "com.yourcompany.yourapp",
+            "sha256_cert_fingerprints": [
+                "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99"
+            ]
+        }
+    }]
+    ```
+
+    `sha256_cert_fingerprints` is an array, so add the **Upload key certificate** fingerprint from that same App integrity page as a second entry if you also install build artifacts directly onto a test device. Those builds are signed with the upload key rather than the app signing key, and without its fingerprint the domain will not verify on them.
+
+    One file covers both Android paths, the in-browser session and the verified link fallback, so serving it correctly is what makes either of them work.
+  </Step>
+  <Step title="Set the domain in the Despia Editor">
+    Enter the same host in your app's deep link domain settings, using the exact hostname the association files are published on, including any `www` prefix.
+
+    This has to be the domain your app itself loads. The session watches your app's own host, while the iOS association is granted from this setting, so if the two name different hosts the sheet opens on a domain the build was never associated with and closes without completing.
+  </Step>
+  <Step title="Turn on Web App Synchronization">
+    Go to **Addons**, open **Web App Synchronization**, and enable it. This is what activates the native capability in the build. The association files and the domain setting on their own do nothing until this is on.
+  </Step>
+  <Step title="Raise the version and deploy to the store">
+    Open **Settings**, then **Versioning**, and raise the version with the **Big**, **Medium**, or **Small** button. Then run a new store deployment for the platform you are enabling, iOS or Android.
+
+    The capability is written into the binary at build time, so it only reaches users through a deployment that carries the new version. Deploy to each store separately if you are enabling both.
+  </Step>
+</Steps>
+
+<Warning>
+  None of the above reaches your app without a fresh store deployment on a raised version. Skip it and the installed binary carries no association for the domain and no native capability, so on iOS the sign-in sheet opens, closes immediately, and reports nothing that looks like an error.
+</Warning>
+
+Once both files are live, check the Android side from Google's own view of your domain before you build.
+
+```text
+https://digitalassetlinks.googleapis.com/v1/statements:list?source.web.site=https://yourapp.com&relation=delegate_permission/common.handle_all_urls
+```
+
+An empty `statements` array means the file is unreachable, redirected, or served with the wrong content type. Play Console also reports verification state per domain on its **Deep links** page after a release, which is the fastest way to catch a fingerprint mismatch on a build that is already live.
+
+Apple fetches your association file through a CDN when the app installs or updates, and a failed first fetch is cached with no way to invalidate it. If the file was missing or misconfigured at that moment, correcting it is not enough on its own: reinstall the app or increment the build number.
+
+---
+
+## Handling a broken domain association
+
+A missing association is not reported when the session starts. It arrives later as the same cancellation code iOS uses when a user dismisses the sheet, which means an app that treats every cancellation as a user action will swallow a real misconfiguration in silence. Assign `window.onAuthCallbackError` to catch it. The runtime only calls it when it is a function, so it costs nothing to leave undefined.
+
+```javascript
+window.onAuthCallbackError = function (host, code) {
+    console.error('native auth callback failed', host, code)
+    showLegacySignInButton()
+}
+```
+
+The runtime invokes it with two positional arguments.
+
+```javascript
+window.onAuthCallbackError('yourapp.com', 1)
+```
+
+<ParamField path="host" type="string">
+  The domain the session was watching. Compare it against your configured host to confirm the association files are published on the right hostname, including any `www` prefix.
+</ParamField>
+
+<ParamField path="code" type="number">
+  The underlying platform error code. On iOS a value of `1` is the shared cancellation code, which here means the domain is not associated with the app. On Android the value identifies a failed or timed out domain verification, which points at `assetlinks.json`.
+</ParamField>
+
+The runtime does not retry on the legacy flow after this fires, because the authorize URL was already built for the HTTPS redirect URI. Use the callback to surface a fallback path to the user, and treat it as a signal to check your association files.
+
+A user who simply dismisses the sheet or closes the tab does not reach this callback. That case is an ordinary cancellation and is not reported as a failure.
+
+---
+
+## Keeping older devices on the legacy flow
+
+Leave `type` out and the runtime runs the original custom scheme flow, unchanged. Existing integrations need no edits, and a device that reports `despia.httpsAuthCallback` as `false` lands here automatically when you branch on the flag.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia(`oauth://?url=${encodeURIComponent(authUrl)}`)
+}
+```
+
+```javascript
+// runs on your native-callback page, inside the secure session
+window.location.href = `myapp://oauth/auth?access_token=${token}`
+```
+
+Two provider notes are worth checking before you migrate. Google installed app clients accept custom scheme and loopback redirect URIs only, and Microsoft Entra requires its own scheme, so both stay on this flow. Okta, Auth0, and Clerk support HTTPS redirect URIs on a verified domain. Use a top level server redirect for the final hop as well, since matching applies to main frame navigations and an iframe navigation never matches.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

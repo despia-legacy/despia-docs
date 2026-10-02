@@ -1,0 +1,328 @@
+---
+title: "Manual"
+icon: "code"
+description: "Complete guide for exporting and working with your Despia application as native Swift code."
+---
+
+## Overview
+
+Despia's Xcode Export feature allows you to download your entire iOS project, including all source files and dependencies. This gives advanced developers full access to the native codebase for customization beyond the standard Despia platform capabilities.
+
+### What You Can Do With Manual Export
+
+- Make low-level modifications to the native code
+- Integrate additional third-party libraries
+- Configure custom build settings
+- Deploy directly through Xcode
+- Implement advanced native iOS features
+
+### Who Should Use This Feature
+
+**Recommended for:**
+
+- Experienced iOS developers comfortable with Xcode and Swift
+- Projects requiring deep native code customization
+- Teams with dedicated iOS development resources
+
+**Not recommended for:**
+
+- Developers unfamiliar with iOS development or Xcode
+- Projects that can be handled with Despia's Auto Publish feature
+- Teams wanting to maintain automatic over-the-air updates
+
+> **Note:** This approach is recommended for experienced iOS developers who are comfortable working with Xcode and Swift. If you're not familiar with iOS development, we recommend using the **Auto Publish** option instead.
+
+---
+
+## Export Process
+
+### Step 1: Access the Export Option
+
+1. Log in to your Despia dashboard
+2. Open your project
+3. Click on the **Export Project** button in the top navigation bar
+
+### Step 2: Select Swift Project
+
+In the export modal that appears:
+
+1. Click on the **Swift Project** option
+2. You'll see a preview of some of the native Swift code that will be included in your export
+3. Review the folder structure displayed in the preview panel
+
+This preview gives you a glimpse of the project structure and native code you'll receive.
+
+### Step 3: Export Source Code
+
+1. Click the **Export Source Code + Dependencies** button at the bottom of the modal
+2. Your browser will download a ZIP file containing your complete Xcode project
+3. The download may take a few moments depending on your project size and connection speed
+
+**What's Included:**
+
+- Complete Swift source code
+- All project dependencies
+- Asset catalogs and resources
+- Build configurations
+- Xcode workspace file
+
+---
+
+## Working with the Exported Project
+
+### Opening in Xcode
+
+Follow these steps to open your exported project:
+
+1. **Extract the downloaded ZIP file** to a location on your Mac
+2. **Double-click the **`.xcworkspace`**file**  (not the .xcodeproj file)
+3. Xcode will open your project
+4. **Wait for Xcode to complete indexing** the project before building
+
+> **Important:** Always open the `.xcworkspace` file, not the `.xcodeproj` file, to ensure all dependencies load correctly.
+
+### Understanding the Project Structure
+
+The exported project follows standard iOS project architecture and contains all the necessary components to build and deploy your application. Once opened in Xcode, you'll have access to:
+
+- Complete source code
+- Resources and asset catalogs
+- Configuration files
+- Dependencies and frameworks
+- Build settings
+
+Xcode will automatically organize the project into its standard navigator view, making it easy to browse through the different sections of your application.
+
+---
+
+## Making Modifications
+
+### Development Workflow
+
+When modifying the exported project:
+
+1. **Make your desired changes** to the code or configuration
+2. **Test thoroughly** on simulators and physical devices if available
+3. **Build and archive** your application using Xcode's built-in tools
+4. **Submit to the App Store** following the standard submission process
+
+### Important Considerations
+
+**Key points to remember:**
+
+- Once you export and modify the project outside of Despia, those changes won't automatically sync back to your Despia project
+- Consider using version control (like Git) to track your changes
+- The exported project contains all the necessary dependencies and configurations to build a complete iOS application
+
+### Testing Your Changes
+
+**Recommended testing approach:**
+
+| Test Type              | Description                                        |
+| :--------------------- | :------------------------------------------------- |
+| Simulator Testing      | Test basic functionality on iOS Simulator          |
+| Device Testing         | Test on physical devices for accurate performance  |
+| Multiple iOS Versions  | Verify compatibility across supported iOS versions |
+| Different Device Sizes | Test on various iPhone and iPad screen sizes       |
+
+---
+
+## Publishing Your Modified App
+
+### Preparation Steps
+
+After making your modifications:
+
+1. In Xcode, select your target and ensure signing is configured correctly
+2. Verify your Bundle Identifier matches your App Store Connect entry
+3. Check that all certificates and provisioning profiles are valid
+4. Update version and build numbers as needed
+
+### Creating an Archive
+
+1. Select **Product \> Archive** to create an archive of your application
+2. Wait for the archive process to complete
+3. The Xcode Organizer window will open automatically
+
+### Uploading to App Store Connect
+
+1. Use the Xcode Organizer to upload your build to App Store Connect
+2. Select your archive from the list
+3. Click **Distribute App**
+4. Choose **App Store Connect** as the distribution method
+5. Follow the prompts to upload your build
+
+### Completing Submission
+
+Complete the submission process in App Store Connect:
+
+1. Log in to [App Store Connect](https://appstoreconnect.apple.com/)
+2. Navigate to your app
+3. Wait for your build to finish processing (typically 10-30 minutes)
+4. Select the build for your app version
+5. Complete all required metadata
+6. Submit for review
+
+---
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### Build Errors After Export
+
+**Issue:** Project won't build after opening in Xcode
+
+**Solutions:**
+
+- Clean build folder: Product \> Clean Build Folder
+- Delete derived data and rebuild
+- Verify all dependencies are properly linked
+- Check that you're opening the `.xcworkspace` file
+
+#### Signing Issues
+
+**Issue:** Code signing errors prevent archiving
+
+**Solutions:**
+
+- Verify that your Apple Developer account is correctly configured in Xcode
+- Check Signing & Capabilities tab for correct team selection
+- Ensure provisioning profiles are up to date
+- Try automatic signing if manual signing fails
+
+#### Missing Dependencies
+
+**Issue:** Build fails due to missing libraries
+
+**Solutions:**
+
+- Ensure all dependencies are properly linked
+- Check that package dependencies resolved correctly
+- Verify internet connection during initial build
+- Try cleaning and rebuilding the project
+
+---
+
+## Getting Help
+
+### When to Contact Support
+
+If you encounter any issues with the exported project:
+
+- Check that you have the latest version of Xcode installed
+- Ensure all dependencies are properly linked
+- Verify that your Apple Developer account is correctly configured in Xcode
+
+### Support Resources
+
+For additional assistance:
+
+| Support Channel | Contact Information                             | Response Time         |
+| :-------------- | :---------------------------------------------- | :-------------------- |
+| Email           | [support@despia.com](mailto:support@despia.com) | 24-48 hours           |
+| Dashboard Chat  | Available in your Despia dashboard              | During business hours |
+
+### Support Scope
+
+**What we can help with:**
+
+- Export process issues
+- Understanding the exported project structure
+- General questions about Despia features
+- Troubleshooting export-related problems
+
+**Outside our support scope:**
+
+- Extensive custom development assistance
+- Advanced Xcode troubleshooting unrelated to Despia
+- Third-party library integration support
+- General iOS development tutoring
+
+> We're happy to help with any questions about the export process, though extensive custom development assistance may be outside our support scope.
+
+---
+
+## Alternative: Auto Publish
+
+Remember that this option is primarily for advanced developers who need direct access to the native code. For a simpler publishing experience, consider using our **Auto Publish** feature instead.
+
+### Benefits of Auto Publish
+
+| Feature       | Auto Publish               | Manual Export            |
+| :------------ | :------------------------- | :----------------------- |
+| Ease of Use   | Very simple                | Requires Xcode knowledge |
+| Build Process | Automatic                  | Manual in Xcode          |
+| Updates       | Over-the-air updates       | Manual rebuilds required |
+| Customization | Limited to Despia features | Full native code access  |
+| Maintenance   | Handled by Despia          | Developer responsibility |
+
+### When to Choose Auto Publish
+
+Auto Publish is the better choice when:
+
+- You don't need custom native code modifications
+- You want simplified deployment and maintenance
+- You prefer automatic over-the-air updates
+- Your team lacks iOS development expertise
+
+---
+
+## Best Practices
+
+### Version Control
+
+After exporting your project:
+
+1. Initialize a Git repository in your project folder
+2. Create an initial commit with the exported code
+3. Track all changes with meaningful commit messages
+4. Use GitHub, GitLab, or Bitbucket for backup and collaboration
+
+**Recommended .gitignore entries:**
+
+```
+# Xcode
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.xccheckout
+
+# Build artifacts
+build/
+*.ipa
+*.dSYM.zip
+
+# Dependencies
+Pods/
+```
+
+### Documentation
+
+Maintain documentation for:
+
+- Custom modifications made to the exported code
+- Reasons for specific implementation choices
+- Build and deployment procedures
+- Known issues and workarounds
+
+### Regular Updates
+
+- Keep Xcode updated to the latest version
+- Test your app on new iOS versions when released
+- Periodically re-export from Despia if you need updated base code
+- Monitor for security updates and apply promptly
+
+---
+
+## Next Steps
+
+After successfully exporting and working with your Xcode project:
+
+1. **Test thoroughly** before submitting to the App Store
+2. **Submit for TestFlight** testing if needed
+3. **Complete App Store submission** when ready
+4. **Monitor reviews and ratings** after launch
+5. **Plan for maintenance** and future updates
+
+For detailed information about the App Store submission process, refer to the main [iOS Deployment Guide](https://claude.ai/chat/ios-deployment-guide.md).

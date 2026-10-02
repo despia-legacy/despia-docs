@@ -1,0 +1,106 @@
+---
+title: "ATT & Tracking"
+description: "Your Despia build is blocked at submission over NSUserTrackingUsageDescription. Here is what the key means and how to clear it."
+icon: "user-shield"
+---
+
+## The Error
+
+You submitted your app and App Store Connect stopped the version with a message about NSUserTrackingUsageDescription. You do not run ads, you never touch the IDFA, and you never asked to track anyone, but the key is in the build anyway and Apple wants you to declare tracking you are not doing.
+
+**This is the exact message that blocks the submission:**
+
+```text
+Your app contains NSUserTrackingUsageDescription, indicating that you will request permission to track users. To publish this information on your app's product page, you must indicate which data types are tracking users. If this is incorrect, update your app binary and upload a new build to App Store Connect.
+```
+
+---
+
+## Why This Happens
+
+NSUserTrackingUsageDescription is the Info.plist string paired with App Tracking Transparency. When it is in your binary, iOS treats your app as one that intends to call the ATT prompt and track users across other apps and websites. App Store Connect then forces the matching declaration: either you fill in the tracking data types under App Privacy, or you ship a binary without the key. Until one of those is true, the version will not move to review.
+
+In a hand-built Xcode project you would have added that key yourself. In a managed build you did not, which is why it feels like it appeared from nowhere. In Despia the key is controlled by a single build setting, Disable Tracking Declaration. Left off, the key ships in the binary. Switched on, it does not.
+
+This is the key sitting in your Info.plist right now:
+
+```xml
+<key>NSUserTrackingUsageDescription</key>
+<string>This identifier will be used to deliver personalized ads to you.</string>
+```
+
+If nothing in your app calls the ATT prompt, that declaration is dead weight, and it is the only reason Apple is asking for a privacy answer you do not have.
+
+### Why it ships on by default
+
+The default is deliberate. Your app is a web app, and web apps often carry third-party scripts the developer did not write and cannot see in the compiled binary. Some analytics and marketing scripts may count as tracking depending on configuration, especially if they are used for ads, attribution, cross-site profiling, or data sharing with third parties. Apple defines Data Used to Track You as app data linked with data from other companies' apps, websites, or offline properties and used for advertising or shared with a data broker, so a Meta Pixel wired for ad attribution can qualify while a first-party, self-hosted analytics setup may not. On a WebView app the binary looks clean to you while a script like that quietly reports on every session, so Despia ships the declaration on as the safe posture until you have confirmed what your scripts actually do.
+
+<Warning>
+  Turning off the declaration on a build that still loads tracking scripts does not fix anything. You will have shipped tracking while telling Apple you do not track, which is a privacy policy violation, not a warning. It is grounds for rejection at review, or a takedown later if it clears and Apple catches it in a scan. Only switch Disable Tracking Declaration on after you have audited your web codebase and confirmed no script links user data with other companies' apps or websites for advertising, attribution, or sharing with a data broker.
+</Warning>
+
+---
+
+## The Fix
+
+Once you have verified your web app does not track, remove the declaration and ship a clean binary.
+
+<Steps>
+  <Step title="Turn on Disable Tracking Declaration">
+    Open the Despia dashboard, go to Settings, and switch on Disable Tracking Declaration.
+  </Step>
+  <Step title="Bump the version number">
+    Still in Settings, raise the version number. App Store Connect only accepts a new build under a higher number.
+  </Step>
+  <Step title="Publish a fresh iOS build">
+    Top right, go to Publish, choose iOS, and run Publish Project. Wait for the build to finish.
+  </Step>
+  <Step title="Attach the new build">
+    In App Store Connect, open the app, go to the Distribution tab, select the version, and add the new build.
+  </Step>
+  <Step title="Submit for review">
+    The rebuilt binary has no NSUserTrackingUsageDescription key, so the warning is gone and Apple stops asking you to declare tracking.
+  </Step>
+</Steps>
+
+<Info>
+  If the version is already locked in Waiting for Review, App Store Connect will not let you swap the build. Remove the app from review first, then attach the new build and resubmit. Nothing is lost, the review clock just restarts on the new binary.
+</Info>
+
+<Warning>
+  The toggle only affects future builds. If you flip Disable Tracking Declaration but attach an old binary, the key is still in that build and App Store Connect keeps blocking you. You have to publish a new build and upload that one.
+</Warning>
+
+---
+
+## If your app does track
+
+If the audit turns up tracking you want to keep, personalized ads through AdMob, an SDK that reads the IDFA, or web pixels you rely on for attribution, do not remove the declaration. Leave Disable Tracking Declaration off, open App Store Connect, go to App Privacy, and declare the tracking data types Apple is asking for. That path clears the same warning, and it is the honest one. Removing the key while the app still tracks is the violation, not the fix.
+
+---
+
+## Quick Checklist
+
+Before resubmitting:
+
+- Confirmed whether your app actually tracks, web pixels and analytics tags included
+- Disable Tracking Declaration set to match reality, on for no tracking, off if you track
+- Version number bumped
+- Fresh iOS build published from Despia
+- New build attached in App Store Connect
+- App Privacy declared if you left tracking on
+
+---
+
+## Still Having Issues?
+
+If the warning survives a clean rebuild:
+
+1. **Check the attached build.** Make sure the build selected in App Store Connect is the new one, not the previous binary that still carries the key.
+2. **Watch for a prior tracking declaration.** If an earlier version declared tracking, App Store Connect may hold the privacy answer until the clean build passes review. Reply to the reviewer noting the trackers are removed, and update App Privacy once it clears.
+3. **Confirm the toggle order.** Disable Tracking Declaration has to be on before you hit Publish, not after.
+
+Contact [support@despia.com](mailto:support@despia.com) with:
+
+- Your App Store Connect rejection or warning message
+- A screenshot of your Disable Tracking Declaration setting in Despia

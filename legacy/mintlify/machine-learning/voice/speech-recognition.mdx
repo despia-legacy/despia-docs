@@ -1,0 +1,329 @@
+---
+title: "Speech Recognition"
+icon: "microphone"
+description: "Convert spoken audio into text on-device using the native iOS speech recognition engine."
+---
+
+Despia exposes two interoperable speech recognition surfaces on iOS and Android, both backed by the platform's native recognizer. The `speechrecognition://` URL-scheme bridge gives you a flat, four-event control flow. The `window.SpeechRecognition` polyfill is a drop-in Web Speech API replacement, so existing code targeting Safari or Chrome and libraries like `react-speech-recognition` run unmodified inside your app. The same JavaScript runs identically on both platforms.
+
+<Info>
+  The first session triggers a microphone permission prompt on both platforms, plus an additional Speech Recognition prompt on iOS. Until permissions are granted, no audio is captured. The decision is remembered for subsequent sessions.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Register a global callback before issuing the first command, then trigger sessions through the `speechrecognition://` scheme. Events arrive as flat objects on the callback you registered, and any events emitted before the callback is set are silently dropped.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onSpeechRecognitionEvent = (event) => {
+    if (event.type === 'result') {
+        console.log(event.transcript, event.isFinal ? '(final)' : '(partial)')
+    }
+}
+
+if (isDespia) {
+    despia('speechrecognition://start?language=en-US&interim=true')
+}
+```
+
+Stop a session cleanly with `despia('speechrecognition://stop')` to finalize the in-flight utterance, or `despia('speechrecognition://abort')` to cancel immediately with no final result. Calling `start` while a session is active emits an `error` with `message: "already_started"`.
+
+---
+
+## Start parameters
+
+All parameters are optional and passed as query string values on `speechrecognition://start`. Boolean params accept `true`, `1`, or `yes`, case-insensitive.
+
+| Param | Default | Meaning |
+| :-- | :-- | :-- |
+| `language` | system locale | BCP-47 tag, for example `en-US`, `de-DE`, `ja-JP`. Omit to use the device default. |
+| `continuous` | `false` | Keep listening across utterances until `stop` or `abort`. |
+| `interim` | `false` | Stream non-final partial results. |
+| `max` | `1` | Cap on alternatives. iOS decides how many to actually return. |
+| `known_words` | none | Comma-separated list of custom words or phrases to bias the recognizer toward. Accepts the alias `knownWords`. See [Biasing toward custom vocabulary](#biasing-toward-custom-vocabulary). |
+
+```javascript
+despia('speechrecognition://start?language=en-US&continuous=true&interim=true&max=3')
+```
+
+The device system locale (`Locale.current`) is used when `language` is omitted, which may differ from the page's `<html lang>` value.
+
+---
+
+## Biasing toward custom vocabulary
+
+Product names, technical jargon, proper nouns, and other words outside the system dictionary often get transcribed phonetically (`Despia` becomes `desk pier`, `SwiftUI` becomes `swift you why`). Passing a `known_words` list nudges the recognizer to prefer your terms when the audio is ambiguous, without affecting recognition of anything else.
+
+### URL-scheme bridge
+
+Pass `known_words` as a comma-separated query parameter. The parameter also accepts the alias `knownWords`.
+
+```javascript
+despia('speechrecognition://start?language=en-US&known_words=Despia,API,SwiftUI')
+```
+
+For multi-word phrases or non-ASCII characters, percent-encode the value. Spaces become `%20`, accented characters use UTF-8 percent encoding. Values are trimmed, de-duplicated, and empty entries are dropped.
+
+```javascript
+const phrases = ['New York', 'São Paulo', 'Café Müller']
+const encoded = phrases.map(encodeURIComponent).join(',')
+
+despia(`speechrecognition://start?language=en-US&known_words=${encoded}`)
+```
+
+### Polyfill
+
+Set the `knownWords` property as an array of strings before calling `start()`. This is a Despia extension to the Web Speech API, not part of the standard, so it is ignored cleanly outside the app.
+
+```javascript
+const recognition = new window.SpeechRecognition()
+recognition.lang = 'en-US'
+recognition.knownWords = ['Despia', 'API', 'SwiftUI']
+recognition.continuous = true
+recognition.start()
+```
+
+### Platform support
+
+| Platform | Backing API | Behavior |
+| :-- | :-- | :-- |
+| iOS 10 and later | `SFSpeechAudioBufferRecognitionRequest.contextualStrings` | Re-applied to every recognition request, so biasing persists across utterance rotation in `continuous` mode. |
+| Android 13 and later | `RecognizerIntent.EXTRA_BIASING_STRINGS` | Forwarded to the system recognizer. |
+| Older Android | none | Silently ignored. Recognition still works without biasing. |
+
+### Guidance
+
+This is a bias, not a whitelist. Words outside the list are still recognized normally, the list just shifts the recognizer's preference when audio is ambiguous. A few practical notes:
+
+- Keep the list reasonably small. Apple's guidance for `contextualStrings` is roughly 100 short phrases or fewer for best effect. Very long lists dilute the signal.
+- Prefer specific terms over common words. Adding `the` to the list does nothing useful, adding your product name does.
+- An empty or omitted list adds zero overhead, no biasing is applied at all rather than an empty bias.
+- Update the list per session if context changes, for example a navigation app might pass the user's current city's neighborhood names.
+
+---
+
+## Result events
+
+Each `result` event carries the best alternative at the top level, plus the full ranked list under `alternatives`.
+
+```javascript
+window.onSpeechRecognitionEvent = (event) => {
+    if (event.type === 'result') {
+        const text       = event.transcript        // best alternative
+        const confidence = event.confidence        // 0.0 to 1.0
+        const isFinal    = event.isFinal
+        const all        = event.alternatives      // [{ transcript, confidence }, ...]
+    }
+}
+```
+
+Interim partials only arrive when the session was started with `interim=true`. In `continuous=true` mode, each completed utterance produces its own `result` with `isFinal: true` until you stop the session.
+
+On Android, `confidence` is usually `0.0` because the platform recognizer rarely returns per-alternative scores. Do not gate UX on the confidence value, rank by array order instead, `alternatives[0]` is always the best transcription. iOS returns real values in the `0.0` to `1.0` range.
+
+If nothing is recognized at all, no `result` is emitted, the session goes `start` then `end` (or `start`, `error{no-speech}`, `end` on a clean stop). Detect this by counting `result` events before `end`.
+
+---
+
+## Error events
+
+The `error` field uses the standard Web Speech vocabulary, identical on both platforms. Every `error` is followed by `end`, so cleanup that listens for `end` runs reliably in both success and failure paths.
+
+| `error` | Cause | Typical `message` |
+| :-- | :-- | :-- |
+| `not-allowed` | Microphone permission denied or not yet determined. | `speech_recognition_denied`, `ERROR_INSUFFICIENT_PERMISSIONS` |
+| `service-not-allowed` | Recognizer unavailable, busy, or restricted by MDM or parental controls. | `recognizer_unavailable`, `ERROR_RECOGNIZER_BUSY` |
+| `language-not-supported` | No recognizer for the requested BCP-47 tag. | `no_recognizer_for_locale`, `ERROR_LANGUAGE_NOT_SUPPORTED` |
+| `audio-capture` | Audio engine failure, network failure on Android, or unknown command. | `audio_engine_failed`, `ERROR_AUDIO`, `ERROR_NETWORK`, `unknown_command` |
+| `no-speech` | Clean stop but nothing was recognized. | `ERROR_NO_MATCH` |
+
+Android `ERROR_NETWORK` and `ERROR_SERVER` failures are intentionally folded into `audio-capture` so the same error-handling code runs on both platforms. If you need to distinguish a network failure from a true audio engine failure, read the platform-specific code from `event.message`.
+
+```javascript
+window.onSpeechRecognitionEvent = (event) => {
+    if (event.type === 'error') {
+        if (event.error === 'not-allowed') {
+            showPermissionPrompt()
+        } else if (event.error === 'language-not-supported') {
+            retryWithSystemLocale()
+        }
+    }
+    if (event.type === 'end') {
+        resetMicButton()
+    }
+}
+```
+
+---
+
+## Push to talk
+
+Capture a single utterance for the duration the user holds the button. Map `pointercancel` to `abort` so a swipe-off discards the result instead of finalizing it.
+
+```javascript
+const button = document.getElementById('mic')
+const output = document.getElementById('transcript')
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onSpeechRecognitionEvent = (event) => {
+    if (event.type === 'result') {
+        output.textContent = event.transcript
+    }
+    if (event.type === 'error') {
+        output.textContent = `error: ${event.error}`
+    }
+}
+
+button.addEventListener('pointerdown', () => {
+    if (isDespia) despia('speechrecognition://start?interim=true')
+})
+
+button.addEventListener('pointerup', () => {
+    if (isDespia) despia('speechrecognition://stop')
+})
+
+button.addEventListener('pointercancel', () => {
+    if (isDespia) despia('speechrecognition://abort')
+})
+```
+
+---
+
+## Continuous dictation
+
+For long-form input like notes, messaging composers, or voice memos, start with `continuous=true` and `interim=true` so each finalized utterance accumulates while interim partials update the UI live.
+
+```javascript
+let committed = ''
+const field = document.getElementById('notes')
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onSpeechRecognitionEvent = (event) => {
+    if (event.type === 'result') {
+        if (event.isFinal) {
+            committed += event.transcript + ' '
+            field.value = committed
+        } else {
+            field.value = committed + event.transcript
+        }
+    }
+}
+
+if (isDespia) {
+    despia('speechrecognition://start?continuous=true&interim=true&language=en-US')
+}
+
+// Later, when the user dismisses the dictation UI
+if (isDespia) despia('speechrecognition://stop')
+```
+
+Always provide an explicit stop affordance in the UI. On Android, the recognizer cycles internally during silence in continuous mode rather than ending on its own, so the session will run until you call `stop` or `abort`.
+
+---
+
+## Web Speech API compatibility
+
+The same engine is exposed as `window.SpeechRecognition` (and the `webkitSpeechRecognition` alias), so portable Web Speech code runs as-is. This is the surface that `react-speech-recognition` and similar libraries already target.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition
+
+if (isDespia && Recognition) {
+    const recognition = new Recognition()
+    recognition.lang = 'en-US'
+    recognition.continuous = true
+    recognition.interimResults = true
+    recognition.maxAlternatives = 3
+
+    recognition.onresult = (event) => {
+        const result = event.results[event.resultIndex]
+        console.log(result.isFinal ? 'final' : 'partial', result[0].transcript)
+    }
+    recognition.onerror = (event) => console.warn(event.error, event.message)
+    recognition.onend = () => console.log('closed')
+
+    recognition.start()
+}
+```
+
+The polyfill emits the full standard event sequence (`start`, `audiostart`, `soundstart`, `speechstart`, `result`, `speechend`, `soundend`, `audioend`, `end`) and supports multiple simultaneous recognizers, each with its own engine instance. It no-ops gracefully outside the Despia runtime, which is why the `isDespia` gate and the `Recognition` existence check work as a clean feature detection.
+
+Opt out of the polyfill on a specific page with a meta tag, which leaves the `speechrecognition://` URL-scheme bridge fully active:
+
+```html
+<meta name="speech-recognition-polyfill" content="off">
+```
+
+The polyfill events are plain objects rather than DOM `Event` instances, so they do not support `preventDefault`, `stopPropagation`, or bubbling. Reading `event.results` inside an `onnomatch` handler is a no-op since `nomatch` events do not carry a `results` field.
+
+---
+
+## Concurrency and audio behavior
+
+The URL-scheme bridge is single-session, only one `speechrecognition://` session can be active at a time. The polyfill supports multiple simultaneous recognizers, but they all share the single device microphone. Calling `start` on the URL-scheme bridge while a session is active emits an `error` with `message: "already_started"`, and the running session continues uninterrupted.
+
+Any concurrent media playback (background music, video) is ducked to a lower volume for the duration of any recognition session, and restored when the last session ends. If your app plays audio during dictation, expect it to attenuate while a session is active and recover when `end` fires.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

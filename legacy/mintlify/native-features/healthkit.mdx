@@ -1,0 +1,229 @@
+---
+title: "HealthKit (Legacy)"
+icon: "heart-pulse"
+description: "Read and write Apple HealthKit data including steps, heart rate, sleep, workouts, and more within your Despia app."
+hidden: true
+---
+
+The Despia native bridge gives your web app direct access to Apple HealthKit, covering quantity types, category types (including sleep), workouts, and characteristics. Data is returned as JSON via the `despia()` call.
+
+<Info>
+  HealthKit is iOS only. Always gate calls behind an `isDespiaIOS` check so the feature degrades gracefully in a browser or on Android.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Pass a `readhealthkit://` URL with an identifier and optional `days` parameter. Despia requests permission, fetches the data, and returns it via `healthkitResponse`.
+
+```javascript
+const isDespiaIOS = navigator.userAgent.toLowerCase().includes('despia') && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+if (isDespiaIOS) {
+    const data  = await despia('readhealthkit://HKQuantityTypeIdentifierStepCount?days=7', ['healthkitResponse'])
+    const steps = data.healthkitResponse
+    // [{ "date": "2025-11-17", "value": 9820, "unit": "count" }, ...]
+}
+```
+
+---
+
+## Read
+
+### Quantity types
+
+Use any valid `HKQuantityTypeIdentifier` to read numeric health metrics such as steps, heart rate, distance, or body mass.
+
+```javascript
+if (isDespiaIOS) {
+    const data      = await despia('readhealthkit://HKQuantityTypeIdentifierHeartRate?days=30', ['healthkitResponse'])
+    const heartRate = data.healthkitResponse
+    // [{ "date": "2025-11-17", "value": 72, "unit": "count/min" }, ...]
+}
+```
+
+For a full list of supported identifiers, see [Apple's HKQuantityTypeIdentifier documentation](https://developer.apple.com/documentation/healthkit/hkquantitytypeidentifier).
+
+### Sleep data
+
+Sleep analysis uses `HKCategoryTypeIdentifierSleepAnalysis`. Each record includes a `label` with the sleep stage (`inBed`, `awake`, `core`, `deep`, `rem`, or `asleep`) alongside `startDate` and `endDate`.
+
+```javascript
+if (isDespiaIOS) {
+    const data  = await despia('readhealthkit://HKCategoryTypeIdentifierSleepAnalysis?days=7', ['healthkitResponse'])
+    const sleep = data.healthkitResponse
+    // [
+    //   { "startDate": "2025-11-17T22:30:00Z", "endDate": "2025-11-18T06:00:00Z", "value": 3, "label": "deep" },
+    //   { "startDate": "2025-11-18T06:00:00Z", "endDate": "2025-11-18T06:45:00Z", "value": 4, "label": "rem" }
+    // ]
+}
+```
+
+### Workouts
+
+Use `HKWorkoutTypeIdentifier` to fetch workout sessions. Each record includes `activityType` (e.g. `running`, `yoga`, `hiit`), `duration` in seconds, `calories`, and `distance` in meters.
+
+```javascript
+if (isDespiaIOS) {
+    const data     = await despia('readhealthkit://HKWorkoutTypeIdentifier?days=14', ['healthkitResponse'])
+    const workouts = data.healthkitResponse
+    // [
+    //   { "date": "2025-11-16T08:00:00Z", "activityType": "running", "duration": 1820, "calories": 310, "distance": 5200 },
+    //   { "date": "2025-11-17T07:30:00Z", "activityType": "hiit",    "duration": 2400, "calories": 420, "distance": 0    }
+    // ]
+}
+```
+
+### Characteristics
+
+Characteristics such as date of birth, biological sex, and blood type are static values. They are returned as a plain string rather than an array.
+
+```javascript
+if (isDespiaIOS) {
+    const data = await despia('readhealthkit://HKCharacteristicTypeIdentifierDateOfBirth', ['healthkitResponse'])
+    const dob  = data.healthkitResponse
+    // "1990-06-15T00:00:00Z"
+}
+```
+
+Supported identifiers: `HKCharacteristicTypeIdentifierDateOfBirth`, `HKCharacteristicTypeIdentifierBiologicalSex`, `HKCharacteristicTypeIdentifierBloodType`, `HKCharacteristicTypeIdentifierFitzpatrickSkinType`.
+
+---
+
+## Write
+
+Use `writehealthkit://` to save a numeric value to HealthKit. The format is `writehealthkit://IdentifierString//Value`. Writing adds to existing data rather than replacing it.
+
+```javascript
+if (isDespiaIOS) {
+    // Write body mass in kg
+    despia('writehealthkit://HKQuantityTypeIdentifierBodyMass//74.5')
+
+    // Write step count
+    despia('writehealthkit://HKQuantityTypeIdentifierStepCount//10000')
+}
+```
+
+---
+
+## Realtime updates
+
+The observer system fires a webhook POST to your server whenever HealthKit data changes. Pass a comma-separated list of identifiers, a delivery frequency, and your server URL.
+
+```javascript
+if (isDespiaIOS) {
+    despia('healthkit://observe?types=HKQuantityTypeIdentifierStepCount,HKCategoryTypeIdentifierSleepAnalysis&frequency=hourly&server=https://your-server.com/webhook')
+}
+```
+
+### Parameters
+
+| Parameter   | Required | Description |
+|-------------|----------|-------------|
+| `types`     | Yes      | Comma-separated list of HealthKit identifiers to observe |
+| `frequency` | No       | One of `immediate`, `hourly`, `daily`, `weekly`. Defaults to `immediate` |
+| `server`    | Yes      | Full URL of the endpoint to receive webhook POSTs |
+
+### Webhook payload
+
+Your server receives a `POST` with `Content-Type: application/json` on every update. The `data` object contains one key per observed type, each holding an array of the most recent records (last 1 day).
+
+```json
+{
+  "event": "healthkit:update",
+  "userId": "abc123-device-id",
+  "timestamp": "2025-11-18T08:00:00Z",
+  "data": {
+    "HKQuantityTypeIdentifierStepCount": [
+      { "date": "2025-11-18", "value": 4210, "unit": "count" }
+    ]
+  }
+}
+```
+
+### Payload fields
+
+| Field       | Type   | Description |
+|-------------|--------|-------------|
+| `event`     | string | Always `healthkit:update` |
+| `userId`    | string | Device ID, consistent across all events from the same device |
+| `timestamp` | string | ISO 8601 timestamp of when the webhook was sent |
+| `data`      | object | One key per observed type, each containing an array of records |
+
+Each record in `data` follows the same shape as a standard read response for that type. Quantity types include `date`, `value`, and `unit`. Category types include `startDate`, `endDate`, `value`, and `label`. Workout records include `date`, `activityType`, `duration`, `calories`, and `distance`.
+
+### Stopping observers
+
+Pass `all` to stop every active observer or a comma-separated list for specific types. Awaiting with `["observingHealthKit"]` returns the updated active types after the call resolves.
+
+```javascript
+if (isDespiaIOS) {
+    // Stop all observers
+    const data = await despia('healthkit://unobserve?types=all', ['observingHealthKit'])
+    console.log(data.observingHealthKit) // []
+
+    // Stop a specific type
+    const data = await despia('healthkit://unobserve?types=HKQuantityTypeIdentifierStepCount', ['observingHealthKit'])
+    console.log(data.observingHealthKit) // ["HKCategoryTypeIdentifierSleepAnalysis"]
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card icon="npm" href="https://www.npmjs.com/package/despia-native" title="NPM Package">
+    despia-native
+  </Card>
+  <Card icon="envelope" href="mailto:support@despia.com" title="Support">
+    support@despia.com
+  </Card>
+</CardGroup>

@@ -1,0 +1,292 @@
+---
+title: "Reference"
+icon: "code"
+description: "Payload envelope, event names, status values, error codes, quirks, and platform support."
+---
+
+Flat reference for everything the bridge emits. For per-method documentation, see [Auth Methods](/authentication/clerk/auth-methods), [Sessions](/authentication/clerk/sessions), [Backend](/authentication/clerk/backend), and [Account](/authentication/clerk/account).
+
+<CardGroup cols={2}>
+  <Card title="Payload envelope" icon="brackets-curly" href="#payload-envelope">
+    Shape of every `onClerkEvent` callback
+  </Card>
+
+  <Card title="Events" icon="signal-stream" href="#events">
+    Every event name the bridge can emit
+  </Card>
+
+  <Card title="Status values" icon="circle-info" href="#status-values">
+    What `status` strings mean
+  </Card>
+
+  <Card title="Error codes" icon="triangle-exclamation" href="#error-codes">
+    Every `error.code` and what fires it
+  </Card>
+
+  <Card title="Quirks" icon="microchip" href="#quirks">
+    Bridge behavior worth knowing
+  </Card>
+
+  <Card title="Platform support" icon="mobile-screen" href="#platform-support">
+    iOS vs Android, \+3 Android divergences
+  </Card>
+</CardGroup>
+
+---
+
+## Payload envelope
+
+Every `onClerkEvent` callback receives an object with this shape:
+
+```typescript
+{
+    ok: boolean,                                // false means error present
+    event: string,                              // see event names below
+    status?: string,                            // success detail
+    error?: { code: string, message: string },  // when ok === false
+    // plus route-specific fields documented per page
+}
+```
+
+Always branch on `ok` first.
+
+```javascript
+window.onClerkEvent = (r) => {
+    if (!r.ok) {
+        console.error(r.event, r.error.code, r.error.message)
+        return
+    }
+    // success path
+}
+```
+
+---
+
+## Events
+
+Every command emits at least one event. Some routes emit only error envelopes, their success transfers into a different event (for example, OAuth success becomes a `signIn` or `signUp` event).
+
+| Event | Emitted by | Reference |
+| --- | --- | --- |
+| `ready` | Configure | [Configure](/authentication/clerk/introduction#configure) |
+| `state` | State snapshot | [Session State](/authentication/clerk/sessions#session-state) |
+| `token` | JWT refresh | [Force a refresh](/authentication/clerk/sessions#force-a-refresh) |
+| `signIn` | Any sign-in reaching a session | [Auth Methods](/authentication/clerk/auth-methods) |
+| `signUp` | Any sign-up reaching a session | [Auth Methods](/authentication/clerk/auth-methods) |
+| `emailCode` | Email OTP flow | [Email Code](/authentication/clerk/auth-methods#email-code) |
+| `phoneCode` | SMS OTP flow | [Phone Code](/authentication/clerk/auth-methods#phone-code) |
+| `secondFactor` | MFA continuation | [MFA](/authentication/clerk/auth-methods#mfa) |
+| `resetPassword` | Password reset flow | [Reset Password](/authentication/clerk/auth-methods#reset-password) |
+| `passkey` | Passkey registration | [Passkeys](/authentication/clerk/auth-methods#passkeys) |
+| `authview` | Auth Sheet close | [Auth Sheet](/authentication/clerk/auth-methods#auth-sheet) |
+| `userprofile` | User Profile sheet close | [User Profile](/authentication/clerk/account#user-profile) |
+| `signOut` | Sign Out | [Sign Out](/authentication/clerk/account#sign-out) |
+| `attribution` | Attribution toggle | [Attribution Sync](/authentication/clerk/account#attribution-sync) |
+| `ssr` | SSR toggle | [Backend](/authentication/clerk/backend) |
+| `enterpriseSSO` | Enterprise SSO errors | Success transfers to `signIn`/`signUp` |
+| `ticket` | Magic Link Ticket errors | Success emits `signIn` |
+| `configure`, `manual`, `oauth`, `apple` | Error envelopes only | Success of each transfers to a different event |
+| `unknown` | Unrecognized `clerk://` host | Returns `unknown_command` |
+
+---
+
+## Status values
+
+`status` on `signIn`, `signUp`, `emailCode`, `phoneCode`, `secondFactor`, and `resetPassword` is the raw Clerk SDK status, passed through verbatim. Match `complete` explicitly and treat anything else as "needs another step."
+
+<Tabs>
+  <Tab title="Sign-in / sign-up">
+    | Status | Meaning |
+    | --- | --- |
+    | `complete` | Session established. Payload carries `userId` and (if present) `emailAddress`. JWT refresher starts. |
+    | `needs_identifier` | Sign-in missing the identifier |
+    | `needs_first_factor` | Password or other first factor required |
+    | `needs_second_factor` | MFA required, continue with [`method=second_factor`](/authentication/clerk/auth-methods#mfa) |
+    | `needs_new_password` | Password reset required |
+    | `needs_client_trust` | Trusted-device challenge required |
+    | `missing_requirements` | Sign-up missing email/phone verification |
+    | `abandoned` | Sign-up timed out |
+  </Tab>
+  <Tab title="Lifecycle">
+    | Status | Meaning |
+    | --- | --- |
+    | `configured` | First-time configure success |
+    | `already_configured` | Same publishable key re-passed |
+    | `reconfigured` | Different key, tenant switched |
+    | `code_sent` | OTP code dispatched (email, SMS, or MFA second factor) |
+    | `registered` | Passkey added to the signed-in account |
+    | `dismissed` | Auth Sheet closed without a new sign-in |
+    | `closed` | User Profile sheet closed |
+    | `enabled` / `disabled` | `attribution` or `ssr` toggle |
+  </Tab>
+</Tabs>
+
+---
+
+## Error codes
+
+Every error envelope follows `{ ok: false, event, error: { code, message } }`. `error.message` is human-readable (Clerk's own text for SDK errors, the bridge's text for guard errors). Error codes are grouped by the route that emits them.
+
+<AccordionGroup>
+  <Accordion title="Configure and lifecycle" icon="gear">
+    | Code | Triggered by | Meaning |
+    | --- | --- | --- |
+    | `invalid_key` | `configure` | Key missing or does not start with `pk_` |
+    | `reconfigure_in_progress` | `configure` | Previous tenant switch still running |
+    | `reconfigure_failed` | `configure` | SDK reconfigure threw |
+    | `not_configured` | Any non-configure route | `clerk://configure` not called yet |
+    | `signout_failed` | `signout` | Network error during server-side revoke |
+    | `token_fetch_failed` | `token` | Refresh failed, `window.clerkJWT` keeps last value |
+  </Accordion>
+
+  <Accordion title="Build and runtime guards" icon="shield-halved">
+    | Code | Triggered by | Meaning |
+    | --- | --- | --- |
+    | `unsupported_os` | All routes | Below the Clerk SDK runtime minimum (iOS 17\+, clerk-android's minimum API level) |
+    | `sdk_not_linked` | All routes | Clerk SDK or prebuilt UI not in the build |
+    | `unknown_command` | Unknown host | For example, `clerk://foo` |
+    | `unknown_method` | `manual` | `method=` not recognized |
+    | `unknown_action` | OTP, reset password, passkey | `action=` not recognized for the route |
+    | `missing_params` | Manual flows | Required field absent |
+    | `missing_state` | OTP verify, reset password steps, MFA continuation | A later step called before its prerequisite (shared state, one multi-step flow at a time) |
+  </Accordion>
+
+  <Accordion title="Password, OAuth, Apple" icon="key">
+    | Code | Triggered by | Meaning |
+    | --- | --- | --- |
+    | `auth_failed` | `password` | Wrong credentials, account locked, etc. Clerk's message in `error.message` |
+    | `oauth_failed` | `oauth` | User cancelled, network error, or provider denied |
+    | `use_native_apple` | `oauth&provider=apple` | Use [`method=apple`](/authentication/clerk/auth-methods#apple-sign-in) instead |
+    | `apple_failed` | `apple` | User cancelled Sign in with Apple |
+  </Accordion>
+
+  <Accordion title="OTP and code flows" icon="hashtag">
+    | Code | Triggered by | Meaning |
+    | --- | --- | --- |
+    | `email_code_failed` | `email_code` | Code wrong or expired |
+    | `phone_code_failed` | `phone_code` | Code wrong, expired, or SMS send failed |
+    | `second_factor_failed` | `second_factor` | Wrong code, expired, or strategy error |
+    | `prepare_not_needed` | `second_factor&action=prepare` | Strategy does not require a prepare step (TOTP, backup codes) |
+    | `reset_password_failed` | `reset_password` | Wrong code, expired, password policy rejected, etc. |
+  </Accordion>
+
+  <Accordion title="SSO, ticket, passkey" icon="building-shield">
+    | Code | Triggered by | Meaning |
+    | --- | --- | --- |
+    | `enterprise_sso_failed` | `enterprise_sso` | User cancelled, no SSO connection for the domain, or provider error |
+    | `ticket_failed` | `ticket` | Ticket invalid, expired, or already used |
+    | `passkey_failed` | `passkey` | User cancelled or no credential |
+    | `not_signed_in` | `passkey&action=register` | Cannot register a passkey without a signed-in user |
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## OAuth providers
+
+Recognized values for [`method=oauth`](/authentication/clerk/auth-methods#oauth). Anything else routes to Clerk's custom provider handler.
+
+`google`, `github`, `microsoft`, `gitlab`, `discord`, `twitter` (alias `x`), `twitch`, `linkedin`, `linkedin_oidc`, `facebook`, `tiktok`, `dropbox`, `atlassian`, `bitbucket`, `notion`, `line`, `instagram`, `coinbase`, `spotify`, `xero`, `box`, `slack`, `linear`, `hubspot`, `huggingface`, `vercel`.
+
+<Warning>
+  `provider=apple` is rejected with `use_native_apple`. Use [`method=apple`](/authentication/clerk/auth-methods#apple-sign-in) for the native sheet on iOS or Apple OAuth via Chrome Custom Tabs on Android.
+</Warning>
+
+---
+
+## Quirks
+
+<AccordionGroup>
+  <Accordion title="Invocation and event delivery" icon="bolt">
+    `despia()` calls for `clerk://` routes are fire-and-forget. Results arrive through `window.onClerkEvent`.
+
+    Events are not buffered. A handler attached after a command was issued misses the result. Wire `window.onClerkEvent` before any `clerk://` call.
+
+    `fetch()` and `XMLHttpRequest` cannot trigger `clerk://` URLs. Use `despia()` to invoke the bridge.
+  </Accordion>
+
+  <Accordion title="JWT timing on completion" icon="clock">
+    `window.clerkJWT` populates a tick after sign-in completion, not synchronously. After `configure` or any flow reaching `status: "complete"`, the JWT refresher starts and `window.clerkJWT` is written on the next event loop tick.
+
+    Read `window.clerkJWT` on your next API call, or force a synchronous refresh with `clerk://token` if you need the token immediately in the same handler.
+  </Accordion>
+
+  <Accordion title="Debug logging" icon="terminal">
+    Every inbound URL and every outbound event is printed to the platform console with a `[Clerk]` prefix (Xcode console on iOS, Logcat on Android). The JWT value itself is never logged. Grep for `[Clerk]` while debugging to trace exactly what the bridge received and what it emitted.
+
+    Toggle off with `ClerkBridge.LOG = false` on Android or `loggingEnabled = false` on iOS.
+
+    If `window.onClerkEvent` is not defined as a function when the bridge tries to emit, the bridge logs a console warning identifying which event was dropped. The most common integration mistake is not defining the handler before the first `clerk://` call.
+  </Accordion>
+
+  <Accordion title="Lenient query parsing" icon="filter">
+    The bridge splits the query string at known-key boundaries, so an unencoded `&`, `#`, or `=` inside a password survives intact.
+
+    **Recognized keys:** `method`, `type`, `identifier`, `password`, `newPassword`, `email`, `emailAddress`, `firstName`, `lastName`, `username`, `phoneNumber`, `phone`, `code`, `action`, `provider`, `ephemeral`, `mode`, `dismissable`, `key`, `ticket`, `enabled`, `header`, `domains`.
+
+    Values are percent-decoded once. Unrecognized parameter names are folded into the previous value and silently ignored.
+  </Accordion>
+
+  <Accordion title="Parameter value formats" icon="text-size">
+    **Boolean parameters** accept `true`, `false`, `1`, `0`, `yes`, `no` (case-insensitive).
+
+    **Mode values** are lowercase: `signin`, `signup`, `signinorup` (aliases `signin_or_up`, `default`).
+
+    **Status values** pass through verbatim from the Clerk SDK. Match `complete` explicitly and treat anything else as "needs more steps."
+
+    **Phone numbers** are normalized to E.164 natively. `+1 (555) 123-4567`, `%2B15551234567`, and `+15551234567` all reach Clerk as `+15551234567`.
+  </Accordion>
+
+  <Accordion title="Server-side trust" icon="lock">
+    On the server, trust only the verified `sub` claim from the JWT. Never accept a client-reported `userId` as proof of identity. The JWT is verifiable against Clerk's JWKS, but client-supplied IDs are not.
+
+    See [Backend](/authentication/clerk/backend) for verification patterns.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Platform support
+
+Same `clerk://` URLs, event names, status strings, error codes, and payload shapes work identically on iOS and Android. Implementation differences happen under the hood, the JS contract is the same.
+
+### Under-the-hood differences
+
+| Concern | iOS | Android |
+| --- | --- | --- |
+| Secure session storage | Keychain | Android Keystore |
+| Apple Sign In | Native `ASAuthorizationController` | Apple OAuth via Chrome Custom Tabs |
+| OAuth provider flow | `ASWebAuthenticationSession` | Chrome Custom Tabs |
+| Sheet container | View controller (page sheet) | Activity (bottom sheet dialog) |
+| Passkey provider | iCloud Keychain | Google Password Manager (Credential Manager, API 28\+) |
+| Runtime minimum | iOS 17\+ | clerk-android's minimum supported API level |
+
+`apple_failed` exists on Android too, even though the underlying flow is OAuth rather than the native sheet.
+
+### Input-inert on Android
+
+Three optional parameters are accepted on both platforms for schema parity but currently have no native effect on Android due to clerk-android SDK limitations. Passing them on Android is a no-op rather than an error.
+
+| Parameter | iOS behavior | Android behavior |
+| --- | --- | --- |
+| [`clerk://authview?mode=...`](/authentication/clerk/auth-methods#auth-sheet) | Opens the requested screen (`signin`, `signup`, or `signinorup`) | Always opens the combined sign-in-or-up screen. clerk-android-ui's `AuthView()` does not expose a mode parameter |
+| [`method=oauth&ephemeral=true`](/authentication/clerk/auth-methods#oauth) | Skips shared browser cookies via `ASWebAuthenticationSession` | Inert. Chrome Custom Tab has no ephemeral session option |
+| [`method=enterprise_sso&ephemeral=true`](/authentication/clerk/auth-methods#enterprise-sso) | Skips shared browser cookies | Inert. Same SDK limitation as OAuth |
+
+### Custom OAuth providers
+
+All 26 named providers in the [OAuth providers](#oauth-providers) list resolve identically on both platforms. An unrecognized provider value (a custom Clerk OAuth provider configured in your dashboard) runs as Clerk's generic `CUSTOM` strategy on Android, the bridge cannot carry the specific provider key. On iOS the exact custom provider key is preserved end-to-end. In both cases the flow runs rather than failing.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

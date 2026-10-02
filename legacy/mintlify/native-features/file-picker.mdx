@@ -1,0 +1,167 @@
+---
+title: "File Picker"
+description: "Route every file upload to the correct native picker based on the file types your input accepts."
+icon: "paperclip"
+---
+
+Give users a native picker that matches what your upload actually accepts. Photo and video inputs open the system photo picker, audio and document inputs open the Files or Documents picker scoped to those exact formats, and camera inputs go straight to the lens. Selected files arrive in the input as ordinary `File` objects backed by a URL, so a large recording or video uploads without being copied through memory first.
+
+<Info>
+  Routing is driven entirely by the standard `accept` attribute on your `<input type="file">`. There is no SDK call for the common cases: existing upload forms get native pickers with no code change.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+The `accept` attribute on your file input decides which native picker opens. The value is parsed when the user taps the input, mapped to native file types, and the matching picker is presented scoped to those types. Nothing else is required.
+
+```html
+<input type="file" accept="audio/*">
+```
+
+Extensions, MIME types, and wildcards are all understood, and the mapping is generic rather than a fixed list of supported formats. `.mp3` and `.dwg` resolve the same way.
+
+| `accept` value | Picker that opens |
+| --- | --- |
+| Absent or empty | Source sheet: camera, photo library, files, document scan |
+| `image/*` or a concrete image type such as `image/png` | Photo picker, images only |
+| `video/*` or a concrete video type | Photo picker, videos only |
+| `image/*,video/*` | Photo picker, photos and videos |
+| `audio/*`, `.mp3,.m4a,.wav`, `application/pdf`, `.csv`, `.zip` | Documents picker, scoped to those types |
+| Mixed media and documents such as `image/*,.pdf` | Documents picker, with the image types included in scope |
+
+Anything that does not resolve to a photo or video type goes to the documents picker, because the photo library has nothing to show for it. An extension the system does not recognise is dropped from the scope rather than blocking the picker, and an input whose every token is unrecognised opens the documents picker showing all files.
+
+---
+
+## Uploading audio recordings
+
+Audio inputs are the clearest case for scoped document picking. A voice note, a podcast clip, or a recording produced by `MediaRecorder` lives in Files or a cloud provider, not in the photo library, so the documents picker is what opens.
+
+```html
+<input type="file" accept=".mp3,.m4a,.wav">
+```
+
+`accept="audio/*"` behaves identically and is the better choice when you want to accept any audio format the device can supply. Both forms filter the picker so only matching files are selectable, and neither offers a camera or a document scanner. Selected files arrive as URL-backed `File` objects, so a long recording is streamed on upload rather than held in memory.
+
+---
+
+## Restricting to photos or videos
+
+Media inputs open the system photo picker filtered to the type you asked for, which keeps users out of the file system entirely.
+
+```html
+<input type="file" accept="image/*">
+<input type="file" accept="video/*">
+<input type="file" accept="image/*,video/*">
+```
+
+Concrete media types work the same way, so `accept="image/png,image/jpeg"` still opens the photo picker rather than the documents picker.
+
+---
+
+## Opening the camera directly
+
+Pair `capture` with a media `accept` to skip the picker and open the camera. The `accept` value decides whether the camera opens in photo or video mode, and the `capture` value decides which lens.
+
+```html
+<input type="file" accept="image/*" capture="environment">
+<input type="file" accept="image/*" capture="user">
+<input type="file" accept="video/*" capture="environment">
+```
+
+`environment` selects the rear camera and `user` selects the front camera. `capture` only applies to image and video inputs, since there is no camera that can produce a PDF or an audio file. On an input that accepts anything else it is ignored and the normal routing applies.
+
+---
+
+## Accepting multiple files
+
+The standard `multiple` attribute enables multi-select in whichever picker opens, including the documents picker.
+
+```html
+<input type="file" accept=".pdf,.csv" multiple>
+```
+
+Cancelling any picker leaves the input's `FileList` empty and raises no error, so a cancel and a genuine failure are distinguishable in your change handler.
+
+---
+
+## Handing the picker back to the browser
+
+Some flows want the standard web file picker rather than a scoped native one, for example a page that already implements its own file browsing UI. Turning native routing off returns every file input on the page to the default behaviour.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('filepicker://type?native_overwrite=true')
+}
+```
+
+Pass `native_overwrite=false` to hand the picker back to the native runtime. The setting applies to every file input from the moment it is set, survives navigation, and resets when the app is relaunched, so a page that depends on it should set it on load rather than once per session. `true`, `1`, and `yes` all enable it, `false`, `0`, and `no` all disable it, and a call carrying no recognisable value leaves the current setting untouched.
+
+On Android this returns control to the platform file chooser. On iOS it presents the standard source sheet offering the camera, the photo library, files, and a document scan, which are the same sources the web picker offers there.
+
+---
+
+## Limiting the upload sources
+
+The upload sources offered when an input has no `accept` value are configurable per app in the Despia Editor. The available modes are camera and gallery together, camera only, or gallery only, and the setting applies to the source sheet rather than to type-scoped pickers, which are always driven by `accept`.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

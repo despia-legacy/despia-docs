@@ -1,0 +1,93 @@
+---
+title: "Rewarded Ads"
+description: "Monetize your Lovable mobile app with native rewarded video advertisements that grant users in-app rewards."
+icon: "trophy"
+---
+
+<iframe src="https://www.youtube.com/embed/hr9N6CkO1yM" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native rewarded ad functionality to my app using the Despia SDK from: https://www.npmjs.com/package/despia-native
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a rewarded ad system that displays video advertisements and grants rewards to users who complete watching them. Use `despia("displayrewardedad://")` to trigger the ad display.
+
+  Add a button that allows users to watch ads to earn rewards:
+
+  e.g. "Watch Ad for 100 Coins", "Get Free Lives"
+
+  <Note>
+    The Despia Native Runtime will call the global function `updateRewardedStatus(status)` when a rewarded ad interaction occurs. You need to define this callback function in your code.
+  </Note>
+  **Important:** Only grant the reward to the user when the status parameter equals the string `'true'`. This means the ad was successfully watched to completion. If the status is anything other than `'true'`, do not grant any reward - the user either skipped the ad or it failed to complete.
+
+  The function will receive the following data:
+
+  ```javascript
+  // Example value passed into the updateRewardedStatus() function call by the native runtime
+  
+  updateRewardedStatus('true');  // Only grant reward when status === 'true'
+  ```
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  **Important Security Considerations:**
+
+  Always verify the user agent includes "despia" to prevent unauthorized function calls from web browsers:
+
+  ```javascript
+  function updateRewardedStatus(status) {
+      if (navigator.userAgent.includes("despia")) {
+          // Process reward
+      }
+  }
+  ```
+
+  **Daily Limits - Abuse Prevention:**
+
+  We strongly recommend implementing daily limits to prevent abuse. Track the number of ads watched per user per day and enforce a reasonable maximum (e.g., 5-10 ads per day). For high-value rewards, consider implementing backend validation to verify ad completions.
+
+  **Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.**
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and native mobile ad networks. When users tap the rewarded ad button, Despia displays a video advertisement through the device's native ad system. Upon successful completion, the native runtime automatically triggers your callback function, allowing you to grant the promised reward seamlessly.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Display Rewarded Ad
+
+Call the despia() function with the rewarded ad command:
+
+```javascript
+despia("displayrewardedad://");
+```
+
+## Resources
+
+[**NPM Package**](https://www.npmjs.com/package/despia-native)
+
+View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native rewarded ads into your generated apps.
+
+For additional support or questions, please contact our support team at [support@despia.com](mailto:support@despia.com)

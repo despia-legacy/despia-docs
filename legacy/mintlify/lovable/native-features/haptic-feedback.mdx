@@ -1,0 +1,109 @@
+---
+title: "Haptic Feedback"
+description: "Add native tactile feedback to enhance user interactions in your Lovable mobile app."
+icon: "waveform"
+---
+
+<iframe src="https://www.youtube.com/embed/ch6OOeVxWXA" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add advanced haptic effect functionality to your mobile app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Use the despia command function to trigger advanced haptic effects:
+
+  - `despia("heavyhaptic://")` - Heavy haptic feedback with enhanced vibration patterns
+  - `despia("lighthaptic://")` - Light haptic feedback for subtle interactions
+  - `despia("successhaptic://")` - Success pattern for completed actions
+  - `despia("warninghaptic://")` - Warning pattern for cautionary alerts
+  - `despia("errorhaptic://")` - Error pattern for failed operations
+
+  These commands create immersive tactile experiences and also register custom URL schemes for external triggering.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia SDK provides advanced haptic effect capabilities through URL scheme commands. The `heavyhaptic://` command creates intense, layered vibration patterns that provide strong tactile feedback for critical interactions. It automatically adapts to device capabilities and provides optimized patterns for different hardware.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+### **Usage** **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Advanced Haptic Effects**
+
+Trigger Haptic Feedback on user interactions & events:
+
+```javascript
+// Heavy haptic effect with enhanced patterns
+despia("heavyhaptic://");
+
+// Light haptic feedback
+despia("lighthaptic://");
+
+// Success haptic pattern
+despia("successhaptic://");
+
+// Warning haptic pattern
+despia("warninghaptic://");
+
+// Error haptic pattern
+despia("errorhaptic://");
+
+// Example usage for critical actions
+const handleCriticalAction = () => {
+  despia("heavyhaptic://");
+  // Important action here
+};
+
+// Example usage for confirmation dialogs
+const handleConfirmation = (confirmed) => {
+  if (confirmed) {
+    despia("heavyhaptic://");
+    executeAction();
+  } else {
+    despia("warninghaptic://");
+  }
+};
+
+// Example usage for game events
+const handleGameEvent = (eventType) => {
+  switch (eventType) {
+    case 'powerup':
+      despia("heavyhaptic://");
+      break;
+    case 'damage':
+      despia("errorhaptic://");
+      break;
+    case 'victory':
+      despia("successhaptic://");
+      break;
+  }
+};
+```
+
+## **Resources**
+
+- [NPM Package](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of advanced haptic effects into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

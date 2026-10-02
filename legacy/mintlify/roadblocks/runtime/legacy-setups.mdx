@@ -1,0 +1,171 @@
+---
+title: "Legacy Setups"
+icon: "robot"
+description: "AI coding tools often generate outdated Despia setups. This guide covers the two most common mistakes: legacy environment detection and targeting the internal window.despia object."
+---
+
+## Why this happens
+
+AI coding tools that do not reference the current docs at [setup.despia.com](https://setup.despia.com) or the Despia MCP server tend to build on older runtime patterns. The two below are by far the most common. Both produce code that either never detects the runtime or calls something that was never meant to be public.
+
+The fix is the same in every case: install the official SDK and detect the runtime from the user agent, never from `window.despia`.
+
+---
+
+## Mistake 1: legacy environment detection
+
+**Problem:** Native calls never fire. The app behaves as if it is always running in a plain browser, even inside the Despia app.
+
+**Cause:** The generated code uses an outdated detection method, usually a check against `window.despia`, a custom global, or a parsed platform string.
+
+The only supported way to detect the runtime is the user agent. The `despia` string is present in `navigator.userAgent` when running inside Despia.
+
+```javascript
+// Any Despia runtime
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+// iOS only
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+// Android only
+const isDespiaAndroid = isDespia &&
+    navigator.userAgent.toLowerCase().includes('android')
+```
+
+Use `isDespia` to gate every native call. Use `isDespiaIOS` or `isDespiaAndroid` only for platform-specific behaviour. No regex, no `navigator.platform`, no other parsing.
+
+---
+
+## Mistake 2: targeting window.despia
+
+**Problem:** Errors like `despia is not defined`, `typeof` checks that are always falsy, or scheme calls that silently do nothing.
+
+**Cause:** The code reads or writes `window.despia` directly to detect the runtime or trigger a feature.
+
+`window.despia` is an internal runtime detail. The SDK sets it transiently while dispatching a scheme, and it is not a stable or public API. Detecting on it or assigning to it is unsupported and will break across runtime versions.
+
+**Wrong:**
+
+```javascript
+// Always unreliable, do not detect like this
+if (typeof window.despia !== 'undefined') {
+    callNativeFeature()
+}
+
+// Never assign directly, this is internal plumbing
+window.despia = 'successhaptic://'
+```
+
+**Right:** import the SDK and call it. Gate on the user agent.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('successhaptic://')
+}
+```
+
+---
+
+## The correct setup
+
+The SDK is the only supported entry point. Install it from NPM or load it from the CDN.
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+The SDK handles command queuing, promise-based variable watching, the 30-second timeout, and TypeScript definitions. Reimplementing any of that by hand against `window.despia` is the root cause of both mistakes above.
+
+---
+
+## Stop the tool generating legacy code
+
+The reliable fix is to give your AI tool the current API knowledge up front, so it never falls back to old patterns.
+
+Point it at the Despia MCP server, which gives the assistant full knowledge of the `despia-native` API without pasting docs into the chat.
+
+```text
+https://setup.despia.com/mcp
+```
+
+Cursor, VS Code, Claude Desktop, Windsurf, Lovable, v0, and Base44 all support MCP. If your tool does not, copy the relevant feature pages from [setup.despia.com](https://setup.despia.com) directly into the chat. Setup details for each client are in the [MCP server docs](https://setup.despia.com/mcp-server).
+
+---
+
+## Remember
+
+**Detection is the user agent, nothing else.**
+
+- `navigator.userAgent.toLowerCase().includes('despia')`
+- Never detect on `window.despia` or a custom global
+
+**`window.despia` is internal.**
+
+- Never read it to check the runtime
+- Never write to it to call a feature
+- The official SDK is the only public entry point
+
+**Give the AI the current API.**
+
+- Add the MCP server at `https://setup.despia.com/mcp`
+- Or paste the relevant docs into the chat
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="MCP Server" icon="sparkles" href="https://setup.despia.com/mcp-server">
+    AI coding assistant integration
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

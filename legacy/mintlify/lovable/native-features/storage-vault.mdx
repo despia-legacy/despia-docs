@@ -1,0 +1,294 @@
+---
+title: "Storage Vault"
+description: "Store and retrieve user identity data that persists across app sessions through your Lovable mobile app using the Despia SDK. Perfect for identifying users, preventing trial abuse, and managing login sessions."
+icon: "vault"
+---
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add identity vault functionality to my app using the Despia SDK from: https://www.npmjs.com/package/despia-native
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  **Store identity data** by calling:
+
+  ```javascript
+  await despia(`setvault://?key=${keyName}&value=${value}&locked=${isLocked}`)
+  ```
+
+  **Retrieve identity data** by calling:
+
+  ```javascript
+  const data = await despia(`readvault://?key=${keyName}`, [keyName])
+  const value = data[keyName]
+  ```
+
+  The identity vault provides:
+
+  - **Persistent storage** - Data survives app restarts, updates, and even uninstall/reinstall
+  - **Cross-device sync** - Works across all user's devices with the same Apple ID or Google account
+  - **User tracking** - Identify the same user even after they uninstall and reinstall your app
+  - **Face ID protection** - Optional biometric lock for sensitive actions
+  - **Automatic timeout** - 30-second timeout prevents app freezing
+
+  Parameters:
+
+  - **key** - Name for your stored data (use simple names like "userId", "deviceId", "sessionToken")
+  - **value** - The data to store (text/string)
+  - **locked** - Set to `'true'` to require Face ID/fingerprint, `'false'` for normal storage
+
+  **Perfect for:**
+
+  - Identifying users across sessions
+  - Preventing free trial abuse (track device even after uninstall)
+  - Storing login session tokens
+  - Protecting sensitive actions with Face ID/Touch ID
+  - Saving user preferences and app settings
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+## How it Works
+
+The Identity Vault uses your phone's built-in secure storage:
+
+- **iPhone**: Uses iCloud Key Value Store - data syncs automatically across all devices with the same Apple ID
+- **Android**: Uses Key/Value Backup API - data backs up to Google Drive and restores when app is reinstalled
+
+Both systems are built into the operating system and handle encryption automatically. Your data is protected and syncs across devices with the same account.
+
+When `locked` is set to `true`, users must authenticate with Face ID (iPhone), Touch ID (iPhone), or fingerprint (Android) to access the data.
+
+**Why this matters**: Even if someone uninstalls your app and reinstalls it, the vault data comes back. This helps you identify returning users and prevent abuse of free trials.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+---
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Store Data
+
+**Basic storage:**
+
+```javascript
+await despia(`setvault://?key=userId&value=user123&locked=false`);
+```
+
+**Protected with Face ID/fingerprint:**
+
+```javascript
+await despia(`setvault://?key=sessionToken&value=abc123&locked=true`);
+```
+
+### 3. Retrieve Data
+
+**Read basic data:**
+
+```javascript
+const data = await despia(`readvault://?key=userId`, ['userId']);
+const userId = data.userId;
+console.log(userId); // "user123"
+```
+
+**Read Face ID protected data:**
+
+```javascript
+// User will see Face ID/fingerprint prompt
+const data = await despia(`readvault://?key=sessionToken`, ['sessionToken']);
+const token = data.sessionToken;
+console.log(token); // "abc123" (only after Face ID success)
+```
+
+### 4. Prevent Free Trial Abuse
+
+```javascript
+// Check if user has used trial before
+async function checkIfNewUser() {
+  try {
+    const data = await despia(`readvault://?key=hasUsedTrial`, ['hasUsedTrial']);
+    
+    if (data.hasUsedTrial === 'yes') {
+      console.log('User already used their trial');
+      return false;
+    }
+  } catch (error) {
+    // No data found - this is a new user
+    console.log('New user, can start trial');
+    await despia(`setvault://?key=hasUsedTrial&value=yes&locked=false`);
+    return true;
+  }
+}
+```
+
+### 5. Simple Login Session
+
+```javascript
+// Save login session
+async function saveLoginSession(token) {
+  await despia(`setvault://?key=loginToken&value=${token}&locked=false`);
+}
+
+// Check if user is logged in when app opens
+async function checkLogin() {
+  try {
+    const data = await despia(`readvault://?key=loginToken`, ['loginToken']);
+    
+    if (data.loginToken) {
+      console.log('User is logged in');
+      return true;
+    }
+  } catch (error) {
+    console.log('User needs to log in');
+    return false;
+  }
+}
+```
+
+### 6. Protect Sensitive Actions with Face ID
+
+```javascript
+// User wants to delete their account
+async function deleteAccountWithConfirmation() {
+  // Store temporary confirmation key
+  await despia(`setvault://?key=deleteConfirm&value=confirmed&locked=true`);
+  
+  // This triggers Face ID/fingerprint
+  try {
+    const data = await despia(`readvault://?key=deleteConfirm`, ['deleteConfirm']);
+    
+    if (data.deleteConfirm === 'confirmed') {
+      // Face ID passed, delete account
+      await deleteAccount();
+      
+      // Clear the confirmation key
+      await despia(`setvault://?key=deleteConfirm&value=&locked=false`);
+    }
+  } catch (error) {
+    console.log('User cancelled or Face ID failed');
+  }
+}
+```
+
+### 7. Track App Opens
+
+```javascript
+// Count how many times user opened the app
+async function trackAppOpen() {
+  try {
+    const data = await despia(`readvault://?key=openCount`, ['openCount']);
+    const count = parseInt(data.openCount || '0') + 1;
+    
+    await despia(`setvault://?key=openCount&value=${count}&locked=false`);
+    
+    if (count === 1) {
+      console.log('First time opening app');
+    } else {
+      console.log(`App opened ${count} times`);
+    }
+  } catch (error) {
+    await despia(`setvault://?key=openCount&value=1&locked=false`);
+  }
+}
+```
+
+### 8. Handle Errors
+
+```javascript
+async function readData(keyName) {
+  try {
+    const data = await despia(`readvault://?key=${keyName}`, [keyName]);
+    return data[keyName];
+  } catch (error) {
+    console.log('Could not read data:', error);
+    return null;
+  }
+}
+```
+
+### 9. Common Examples
+
+**Remember device:**
+
+```javascript
+await despia(`setvault://?key=deviceId&value=device123&locked=false`);
+```
+
+**Save user settings:**
+
+```javascript
+await despia(`setvault://?key=darkMode&value=true&locked=false`);
+```
+
+**Protect with Face ID:**
+
+```javascript
+await despia(`setvault://?key=sensitiveAction&value=approved&locked=true`);
+```
+
+**Check first app launch:**
+
+```javascript
+try {
+  await despia(`readvault://?key=firstLaunch`, ['firstLaunch']);
+  console.log('User has opened app before');
+} catch {
+  await despia(`setvault://?key=firstLaunch&value=done&locked=false`);
+  console.log('First time user!');
+}
+```
+
+---
+
+## What to Store
+
+### Good Uses
+
+- User IDs and device IDs
+- Free trial tracking
+- Login session tokens
+- App preferences and settings
+- First-time user flags
+- Actions that need Face ID confirmation
+
+### Don't Store
+
+- Passwords (use proper login systems)
+- Credit card numbers (use payment processors)
+- Private encryption keys
+- Data that requires legal compliance (medical, financial records)
+
+## Tips
+
+1. **Keep it simple** - Store simple text values like IDs and tokens
+2. **Use Face ID for important actions** - Set `locked=true` when you want user confirmation
+3. **Data persists forever** - It survives uninstall/reinstall, perfect for tracking users
+4. **Works offline** - No internet connection needed
+5. **Syncs across devices** - Same data on user's iPhone and iPad (iCloud) or Android devices (Google account)
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native purchase restoration into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

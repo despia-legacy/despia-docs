@@ -1,0 +1,552 @@
+---
+title: "Blank Screen Redirects"
+description: "Your app was rejected because it shows a blank or white screen during authentication. Here's how to fix it."
+icon: "align-left"
+---
+
+## What are blank screen redirect rejections?
+
+**Apple rejects apps that flash white screens during login**
+
+When your app redirects to an external OAuth page and back, users often see a blank white screen for a moment. Apple considers this a poor user experience and will reject your app.
+
+Common rejection messages:
+
+- "The app displays a blank screen during the authentication process"
+- "Users experience a white flash when signing in"
+- "The login flow does not provide adequate visual feedback"
+- "The app appears unresponsive during authentication"
+
+This rejection requires fixing the authentication flow to eliminate blank screens.
+
+---
+
+## Why this happens
+
+**Web redirects cause visible loading gaps**
+
+The traditional OAuth redirect flow works like this:
+
+1. User taps "Sign in with Apple"
+2. Browser redirects to [apple.com](http://apple.com) → **blank screen**
+3. User authenticates on Apple's page
+4. Apple redirects back to your callback URL → **blank screen**
+5. Callback page processes tokens
+6. Redirect to app home
+
+Steps 2 and 4 often show blank white screens while the browser loads. Apple's reviewers see this and reject.
+
+**Common causes:**
+
+- Using redirect-based OAuth instead of Apple JS SDK on iOS/Web
+- Google `/native-callback` page relies on React instead of static HTML
+- No loading state shown while backend processes tokens (React apps)
+
+---
+
+## How to fix it
+
+### Use Apple JS SDK instead of redirects
+
+**The JS SDK shows a native dialog with no redirects**
+
+On iOS and Web, the Apple JS SDK opens a native authentication dialog. There's no redirect to [apple.com](http://apple.com), so no blank screen.
+
+```html
+<!-- Load Apple JS SDK in index.html -->
+<script 
+  type="text/javascript" 
+  src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
+></script>
+```
+
+```javascript
+// Initialize Apple ID
+window.AppleID.auth.init({
+  clientId: 'com.yourcompany.yourapp.web',
+  scope: 'name email',
+  redirectURI: 'https://yourapp.com/auth/apple/callback',
+  usePopup: false,
+});
+
+// Sign in - shows native dialog, no redirect
+async function signInWithApple() {
+  try {
+    const response = await window.AppleID.auth.signIn();
+    
+    // Credentials returned directly to JavaScript
+    const { id_token, code } = response.authorization;
+    const user = response.user; // Only on first sign in
+    
+    // Send to your backend for verification
+    await verifyAppleToken(id_token, code, user);
+    
+  } catch (error) {
+    if (error.error === 'popup_closed_by_user') {
+      console.log('User cancelled');
+    }
+  }
+}
+```
+
+**Platform behavior:**
+
+| Platform             | Experience                       |
+| :------------------- | :------------------------------- |
+| iOS (native)         | Face ID dialog appears instantly |
+| iOS (Safari)         | Native Apple dialog, no redirect |
+| Web (Chrome/Firefox) | Apple popup window               |
+| Android              | Must use `oauth://` (see below)  |
+
+The JS SDK eliminates the redirect entirely on iOS and Web. No redirect = no blank screen.
+
+---
+
+### Apple JS SDK needs a loading component (not static HTML)
+
+**The JS SDK returns credentials to JavaScript, then you show a loading state**
+
+Unlike redirect flows, the Apple JS SDK returns credentials directly to your JavaScript. You then need to verify these with your backend. During verification, show a loading screen.
+
+**The flow:**
+
+1. `AppleID.auth.signIn()` shows native dialog
+2. User authenticates (Face ID on iOS, popup on web)
+3. Credentials (`id_token`, `code`, `user`) returned to JavaScript
+4. Navigate to loading page/component
+5. Loading page POSTs credentials to backend API
+6. Backend verifies token, returns JSON with session tokens
+7. Frontend sets session, navigates to app
+
+**React loading component example:**
+
+```javascript
+// After getting credentials from JS SDK
+const { idToken, code, user } = await window.AppleID.auth.signIn();
+
+// Navigate to loading page with credentials
+navigate('/auth-loading', {
+  state: { idToken, code, user },
+  replace: true
+});
+```
+
+```javascript
+// /auth-loading page component
+function AuthLoading() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const { idToken, code, user } = location.state || {};
+    
+    // POST to backend API (returns JSON, not HTML)
+    fetch('/api/auth/apple/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id_token: idToken, code, user })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.access_token) {
+        setSession(data.access_token, data.refresh_token);
+        navigate('/', { replace: true });
+      }
+    });
+  }, []);
+  
+  return (
+    <div className="loading-screen">
+      <div className="spinner" />
+      <p>Signing you in...</p>
+    </div>
+  );
+}
+```
+
+**Key difference from redirect flows:**
+
+| Flow                      | Loading screen                   | Backend response         |
+| :------------------------ | :------------------------------- | :----------------------- |
+| Apple JS SDK (iOS/Web)    | React component                  | JSON                     |
+| Apple form_post (Android) | Apple's page (during processing) | 302 redirect to deeplink |
+| Google oauth:// (native)  | Static HTML page                 | N/A (client-side)        |
+
+The Apple JS SDK flow uses your app's own loading component because there's no redirect that would cause a blank screen. The Android flow keeps Apple's page visible during backend processing, then redirects to the deeplink.
+
+---
+
+### Google and other standard OAuth use /native-callback
+
+**The native-callback page IS your loading screen for Google**
+
+For Google Sign In on native (and other OAuth providers that use standard redirects), the authentication happens in a secure browser session. When the OAuth provider redirects back, it lands on your `/native-callback` page which serves as the loading screen.
+
+**Note:** Apple Sign In on Android is different. It uses `form_post` directly to your backend, which processes and redirects. See "Apple Sign In on Android" section.
+
+```javascript
+import despia from 'despia-native';
+
+// Google Sign In on native
+async function signInWithGoogle() {
+  // Get OAuth URL from backend
+  const response = await fetch('/api/auth/google/start', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ deeplink_scheme: 'myapp' })
+  });
+  const { url } = await response.json();
+  
+  // Open in secure browser session
+  // Google will redirect to /native-callback which shows the loader
+  despia(`oauth://?url=${encodeURIComponent(url)}`);
+}
+```
+
+The flow for Google:
+
+1. `despia('oauth://?url=...')` opens secure browser
+2. User authenticates with Google
+3. Google redirects to `/native-callback`
+4. `/native-callback` shows loader while processing tokens
+5. Redirects to `myapp://oauth/auth?tokens` to close browser and return to app
+
+The `/native-callback` page must render a loader immediately via static HTML.
+
+---
+
+### Serve static HTML on callback pages (Google native)
+
+**Callback pages need static HTML loaders, not React**
+
+When Google redirects to your `/native-callback` page, that page must display a loading spinner before any JavaScript framework loads. React components won't render fast enough.
+
+**This applies to:**
+
+- `/native-callback` for Google OAuth on native
+- Any OAuth redirect callback page (not Apple on Android)
+
+**This does NOT apply to:**
+
+- Apple JS SDK flow (use React loading component instead)
+- Apple on Android (backend handles form_post and redirects)
+- Pages you navigate to within your app
+
+**Wrong: React-only loading**
+
+```html
+<!-- This shows blank screen until JS loads -->
+<!DOCTYPE html>
+<html>
+<head><title>Loading</title></head>
+<body>
+  <div id="root"></div>
+  <script src="/bundle.js"></script>
+  <!-- User sees blank white screen until bundle.js loads and renders -->
+</body>
+</html>
+```
+
+**Right: Static HTML loader**
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Signing in...</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .loader-container {
+      text-align: center;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid #e0e0e0;
+      border-top-color: #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .message {
+      color: #666;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <!-- This shows IMMEDIATELY, before any JS loads -->
+  <div class="loader-container">
+    <div class="spinner"></div>
+    <p class="message">Completing sign in...</p>
+  </div>
+  
+  <!-- JavaScript loads after, user already sees spinner -->
+  <script src="/bundle.js"></script>
+</body>
+</html>
+```
+
+The static HTML and CSS render instantly. The user sees the spinner while JavaScript loads and processes the authentication.
+
+---
+
+### The native-callback page is your client-side loading screen
+
+**For Google and other standard OAuth flows using oauth://**
+
+Your `/native-callback` page is a client-side page that renders a loading screen while processing tokens and redirecting back to the app via deeplink. This is used for:
+
+- Google Sign In on iOS and Android
+- Any OAuth provider that redirects back to a client-side URL
+
+```html
+<!-- /native-callback page - client-side loading screen for Google OAuth -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Completing sign in...</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .message {
+      color: white;
+      margin-top: 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Static loader renders immediately -->
+  <div class="spinner"></div>
+  <p class="message">Completing sign in...</p>
+  
+  <script>
+    // Parse tokens from URL and redirect to deeplink
+    const params = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.substring(1));
+    
+    const deeplinkScheme = params.get('deeplink_scheme') || 'myapp';
+    
+    const accessToken = hash.get('access_token') || params.get('access_token');
+    const refreshToken = hash.get('refresh_token') || params.get('refresh_token');
+    const error = params.get('error');
+    
+    if (error) {
+      window.location.href = `${deeplinkScheme}://oauth/auth?error=${encodeURIComponent(error)}`;
+    } else if (accessToken) {
+      const tokenParams = new URLSearchParams({ access_token: accessToken });
+      if (refreshToken) tokenParams.set('refresh_token', refreshToken);
+      window.location.href = `${deeplinkScheme}://oauth/auth?${tokenParams}`;
+    }
+  </script>
+</body>
+</html>
+```
+
+The static HTML and CSS render immediately. The user sees a branded loading screen (not a blank white page) while the JavaScript processes tokens and redirects to the deeplink.
+
+---
+
+### Apple Sign In on Android: backend processes then redirects
+
+**Apple's form_post is handled entirely server-side**
+
+Apple Sign In on Android uses `response_mode: form_post`, which POSTs directly to your backend. The backend processes everything (verify token, create user, generate session) and then returns a 302 redirect to the deeplink. No HTML is served.
+
+**The flow:**
+
+1. `oauth://` opens ASWebAuthenticationSession
+2. User authenticates on Apple's page
+3. Apple POSTs form_post to your backend endpoint
+4. Backend verifies token, creates/finds user, generates session tokens
+5. Backend returns 302 redirect to `myapp://oauth/auth?tokens`
+6. Deeplink closes browser, app navigates to `/auth?tokens`
+7. App sets session
+
+**Backend handles form_post and redirects:**
+
+```javascript
+// Backend endpoint receives Apple's form_post
+// POST /api/auth/apple/callback
+app.post('/api/auth/apple/callback', async (req, res) => {
+  const { id_token, code, state, user } = req.body;
+  
+  // Parse deeplink scheme from state
+  let deeplinkScheme = 'myapp';
+  if (state && state.includes('|')) {
+    const parts = state.split('|');
+    deeplinkScheme = parts[2] || deeplinkScheme;
+  }
+  
+  try {
+    // 1. Verify Apple token
+    const tokenPayload = await verifyAppleToken(id_token);
+    const appleUserId = tokenPayload.sub;
+    const email = tokenPayload.email;
+    
+    // 2. Create or find user in your database
+    const user = await findOrCreateUser(appleUserId, email);
+    
+    // 3. Generate session tokens
+    const { accessToken, refreshToken } = await generateSession(user.id);
+    
+    // 4. Redirect to deeplink (closes browser, returns to app)
+    const params = new URLSearchParams({
+      access_token: accessToken,
+      refresh_token: refreshToken
+    });
+    
+    res.redirect(302, `${deeplinkScheme}://oauth/auth?${params}`);
+    
+  } catch (error) {
+    // Redirect with error
+    res.redirect(302, `${deeplinkScheme}://oauth/auth?error=${encodeURIComponent(error.message)}`);
+  }
+});
+```
+
+**Why this works without a loading screen:**
+
+The user sees Apple's authentication page. Once they authenticate, Apple POSTs to your backend. Your backend processes everything (typically 100-500ms) and redirects. The browser then navigates to the deeplink which closes the ASWebAuthenticationSession.
+
+The user experience is:
+
+1. Apple's page (with Apple's own loading states)
+2. Brief processing (browser shows Apple's page still)
+3. Browser closes, back in app
+
+There's no blank screen because Apple's page remains visible during backend processing.
+
+---
+
+### Match your app's design
+
+**The loader should feel like part of your app**
+
+Use your app's colors, fonts, and branding in the loading screen. This makes the transition seamless.
+
+```css
+/* Match your app's theme */
+body {
+  background: #1a1a2e; /* Your app's background */
+  color: #eaeaea;
+}
+
+.spinner {
+  border-color: rgba(255,255,255,0.2);
+  border-top-color: #e94560; /* Your app's accent color */
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  margin-bottom: 20px;
+}
+```
+
+---
+
+## Quick checklist
+
+**Apple Sign In on iOS and Web (JS SDK):**
+
+1. Apple JS SDK loaded in index.html
+2. `signIn()` called for native dialog
+3. Credentials returned to JavaScript (no redirect)
+4. Navigate to React loading component with credentials
+5. Loading component POSTs to backend API
+6. Backend returns JSON (not HTML)
+7. Frontend sets session
+
+**Apple Sign In on Android (form_post to backend):**
+
+ 8. Backend endpoint handles form_post from Apple
+ 9. Backend processes everything server-side (verify, create user, generate session)
+10. Backend returns 302 redirect to deeplink
+11. No HTML served (Apple's page stays visible during processing)
+
+**Google and other OAuth on native (client-side /native-callback):**
+
+12. `/native-callback` page has static HTML loader
+13. Loader renders before JavaScript executes
+14. Tokens processed client-side
+15. Deeplink redirect happens after loader is visible
+
+**Static HTML callback pages (Google native only):**
+
+16. Static HTML with inline CSS (not external stylesheet)
+17. Spinner/loader visible immediately on page load
+18. No blank/white screen at any point
+19. Design matches your app theme
+
+---
+
+## Common rejection reasons
+
+| Rejection                     | Fix                                               |
+| :---------------------------- | :------------------------------------------------ |
+| "Blank screen during auth"    | Use Apple JS SDK instead of redirect on iOS/Web   |
+| "White flash on Google login" | Add static HTML loader to `/native-callback` page |
+| "Unresponsive during sign in" | Show loading state while backend processes tokens |
+| "Poor authentication UX"      | Match loader design to app theme                  |
+
+---
+
+## Platform summary
+
+| Platform         | Apple Sign In                       | Google Sign In                  | Callback handling              |
+| :--------------- | :---------------------------------- | :------------------------------ | :----------------------------- |
+| iOS (Despia)     | JS SDK → React loading              | `oauth://` → `/native-callback` | React component / Static HTML  |
+| iOS (Safari)     | JS SDK → React loading              | Standard OAuth                  | React component                |
+| Android (Despia) | `oauth://` → backend → 302 redirect | `oauth://` → `/native-callback` | Backend redirect / Static HTML |
+| Web              | JS SDK → React loading              | Standard OAuth                  | React component                |
+
+**Key insight:**
+
+- **Apple JS SDK (iOS/Web):** Returns credentials to JS. Navigate to React loading component, POST to backend for JSON response.
+- **Apple on Android:** Backend receives form_post, processes everything server-side, returns 302 redirect to deeplink. No HTML served.
+- **Google on native:** Redirects to `/native-callback` client-side page. Page must have static HTML loader.
+
+---
+
+## Still stuck?
+
+If you keep getting rejected for blank screens:
+
+1. Record your login flow and watch for any white/blank frames
+2. Check that callback pages have inline CSS loaders (not just JS)
+3. Test on slow network to see if loader appears before JS loads
+4. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Screen recording of your login flow
+   - Your rejection notice in full
+   - URLs of your callback pages

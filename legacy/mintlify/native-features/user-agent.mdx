@@ -1,0 +1,157 @@
+---
+title: "User Agent"
+icon: "lightbulb"
+description: "Detect whether your app is running in the Despia native runtime and identify the platform to conditionally render features like in-app purchases or native modules."
+---
+
+When your web application runs inside the Despia native runtime, the user agent string includes "despia" along with platform identifiers like "iphone", "ipad", or "android". Check `navigator.userAgent` to detect this and conditionally render platform-specific features.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+The Despia runtime injects "despia" into the user agent string alongside the standard platform identifiers. A simple substring check tells you which environment your code is running in.
+
+```javascript
+// Any Despia runtime
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+// iOS only
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+// Android only
+const isDespiaAndroid = isDespia && navigator.userAgent.toLowerCase().includes('android')
+```
+
+---
+
+## Conditional payment flow
+
+Show an in-app purchase button inside Despia and a web checkout flow in the browser. This is the standard pattern for hybrid apps that ship to both the App Store and the web, since native stores require their own billing for digital goods.
+
+```tsx
+import { useState, useEffect } from 'react'
+import despia from 'despia-native'
+
+function CheckoutButton() {
+    const [isDespia, setIsDespia] = useState(false)
+
+    useEffect(() => {
+        setIsDespia(navigator.userAgent.toLowerCase().includes('despia'))
+    }, [])
+
+    if (isDespia) {
+        return (
+            <button onClick={() => despia('iap://?productId=pro_monthly')}>
+                Purchase in App
+            </button>
+        )
+    }
+
+    return (
+        <button onClick={() => window.location.href = 'https://checkout.stripe.com/...'}>
+            Purchase with Stripe
+        </button>
+    )
+}
+```
+
+---
+
+## Platform-specific UI
+
+Render different layouts or copy depending on which platform the user is on. Useful for store review compliance, where iOS and Android have different policy requirements around external links and payment language.
+
+```tsx
+function App() {
+    const userAgent = navigator.userAgent.toLowerCase()
+    const isDespia = userAgent.includes('despia')
+    const isDespiaIOS = isDespia && (userAgent.includes('iphone') || userAgent.includes('ipad'))
+    const isDespiaAndroid = isDespia && userAgent.includes('android')
+
+    return (
+        <div>
+            {isDespia && (
+                <div className="banner">
+                    Running natively on {isDespiaIOS ? 'iOS' : 'Android'}
+                </div>
+            )}
+
+            {!isDespia && (
+                <a href="/download">Get the app</a>
+            )}
+        </div>
+    )
+}
+```
+
+---
+
+## SSR safety
+
+`navigator` is undefined during server-side rendering in frameworks like Next.js or Remix. Guard the check with a `typeof` test or run it inside `useEffect` so it executes on the client only.
+
+```javascript
+const isDespia = typeof navigator !== 'undefined' &&
+    navigator.userAgent.toLowerCase().includes('despia')
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

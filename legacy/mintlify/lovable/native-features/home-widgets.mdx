@@ -1,0 +1,150 @@
+---
+title: "Home Widgets"
+description: "Display dynamic SVG content in iOS home screen widgets with real-time data updates and user personalization through your Lovable mobile app."
+icon: "border-all"
+---
+
+<iframe src="https://www.youtube.com/embed/oAUh41pgFOA" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add iOS home widget functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a dynamic home widget system that uses Despia’s command method like: `` despia(`widget://${svg}?refresh=${refresh_time}`) `` to set and update SVG content in iOS home screen widgets with personalized user data.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  <Note>
+    The refresh time is set in minutes, for example, `refresh_time` = 1 means the widget content will refresh every minute using background processing, even when the app is closed.
+  </Note>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and iOS home widget system. Smart widgets are SVG-based widgets that display dynamic content from your backend, update automatically at specified intervals, and can show user-specific data. Every time the widget requests the image, it loads data from your backend and injects text using string replacement for tokenized text like `{NAME}` and `{SCORE}` with user data from the database.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Set Static Fallback Widget
+
+Define your static SVG fallback widget URL:
+
+```javascript
+const svgWidgetUrl = "https://myapp.com/widgets/fallback-widget.svg";
+const refreshTime = 10; // minutes
+```
+
+Set the widget using Despia function call:
+
+```javascript
+despia(`widget://${svgWidgetUrl}?refresh=${refreshTime}`)
+```
+
+### 3. Set Dynamic Widget with User Data
+
+Define your dynamic SVG widget URL with user ID:
+
+```javascript
+const userId = "user123";
+const svgWidgetUrl = `https://myapp.com/widgets/custom/${userId}`;
+const refreshTime = 3; // minutes
+```
+
+Update widget after user login:
+
+```javascript
+despia(`widget://${svgWidgetUrl}?refresh=${refreshTime}`)
+```
+
+### 4. Update Widget Content
+
+To refresh widget content with new data:
+
+```javascript
+const newRefreshTime = 2; // minutes
+despia(`widget://${svgWidgetUrl}?refresh=${newRefreshTime}`)
+```
+
+### 5. Backend Implementation
+
+Your backend endpoint should return SVG content with proper headers:
+
+```javascript
+// Set proper content type
+response.headers['Content-Type'] = 'image/svg+xml';
+
+// Example SVG template with tokenized text
+const svgTemplate = `<svg xmlns="http://www.w3.org/2000/svg" width="360" height="169" viewBox="0 0 360 169">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2c2c2e" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#1c1c1e" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+  
+  <rect width="360" height="169" fill="url(#bgGradient)"/>
+  
+  <text x="28" y="51" font-size="24" font-weight="700" fill="#ffffff">Hey {NAME}</text>
+  
+  <text x="30" y="100" font-size="16" font-weight="600" fill="#ffffff">Current Score: {SCORE}</text>
+</svg>`;
+
+// Replace placeholders with user data
+const dynamicSvg = svgTemplate
+  .replace('{NAME}', userData.name)
+  .replace('{SCORE}', userData.score);
+
+return dynamicSvg;
+```
+
+### 6. Refresh Rate Options
+
+Choose appropriate refresh intervals:
+
+```javascript
+const refreshTime = 1;  // 1 minute
+const refreshTime = 2;  // 2 minutes
+const refreshTime = 3;  // 3 minutes
+const refreshTime = 10; // 10 minutes
+const refreshTime = 20; // 20 minutes
+```
+
+## Backend Integration
+
+Your backend endpoint should return SVG content with tokenized text replacement:
+
+```
+<!-- Example backend response for /widgets/custom/:userId -->
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="169" viewBox="0 0 360 169">
+  <text>Welcome {NAME}!</text>
+  <text>Score: {SCORE}</text>
+</svg>
+```
+
+## **Resources**
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native iOS smart widgets into your generated apps with dynamic SVG content and real-time data updates.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

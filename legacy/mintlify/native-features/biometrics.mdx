@@ -1,0 +1,170 @@
+---
+title: "Biometrics"
+icon: "fingerprint"
+description: "Trigger Face ID, Touch ID, or device passcode authentication through Despia and respond via three global callback functions."
+---
+
+<iframe src="https://www.youtube.com/embed/6a0cZRuuLaY" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Note>
+
+<Warning>
+  This `bioauth://` scheme is the legacy biometric API, kept available for apps already shipping with it. New apps should use [Storage Vault](/native-features/storage-vault) instead. Storage Vault binds biometric authentication to encrypted token storage backed by iCloud Key Value Store on iOS and Android Key/Value Backup on Android, which means tokens survive uninstall and sync across devices on the same Apple ID or Google account. The legacy `bioauth://` only verifies client-side, it does not store anything. For any flow that ends with "and now I have a session token", Storage Vault is the better tool.
+</Warning>
+
+`despia('bioauth://')` triggers the system biometric prompt. The runtime then calls one of three globals on `window`: `onBioAuthSuccess()`, `onBioAuthFailure(errorCode, errorMessage)`, or `onBioAuthUnavailable()`. Define all three before triggering the call.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Two pieces. First, attach the three callbacks to `window` so the runtime can find them. Second, trigger the prompt with `despia('bioauth://')`. The runtime detects which biometric method is available (Face ID, Touch ID, or device passcode) and presents the matching system UI.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onBioAuthSuccess = function () {
+    // user verified
+}
+
+window.onBioAuthFailure = function (errorCode, errorMessage) {
+    // user attempted but failed, or cancelled the prompt
+}
+
+window.onBioAuthUnavailable = function () {
+    // device has no biometrics enrolled, or hardware is missing
+}
+
+if (isDespia) {
+    despia('bioauth://')
+}
+```
+
+The callbacks are global because the native runtime invokes them by name. Defining them inside a closure or module scope will not work, the runtime cannot reach them.
+
+---
+
+## The three callback paths
+
+| Callback | When it fires | What you should do |
+| :-- | :-- | :-- |
+| `onBioAuthSuccess()` | The user authenticated successfully | Unlock the gated feature, refresh the session, navigate forward |
+| `onBioAuthFailure(errorCode, errorMessage)` | The user tried and failed, or cancelled the prompt | Surface the error gracefully and offer a retry or password fallback |
+| `onBioAuthUnavailable()` | The device has no biometrics enrolled, or the hardware is unavailable | Skip the biometric path and fall back to your standard auth flow |
+
+`onBioAuthUnavailable()` matters more than it seems. A user with a brand new device, a borrowed device, or a device after a reset may not have Face ID or Touch ID configured. Treat this as a normal branch, not as an error.
+
+---
+
+## Gate a sensitive action behind biometrics
+
+The typical pattern is a "Confirm with Face ID" button on a sensitive action like a payment, a logout from all sessions, or an account deletion confirmation. Define the callbacks once on mount, then trigger the prompt from the button handler.
+
+```jsx
+import { useEffect } from 'react'
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function ConfirmPayment({ amount, onConfirmed }) {
+    useEffect(() => {
+        window.onBioAuthSuccess = () => {
+            onConfirmed()
+        }
+
+        window.onBioAuthFailure = (code, msg) => {
+            console.warn('biometric failed', code, msg)
+            // optional: show a "try again" toast
+        }
+
+        window.onBioAuthUnavailable = () => {
+            // fall back to password confirmation
+            promptForPassword().then(ok => ok && onConfirmed())
+        }
+    }, [onConfirmed])
+
+    function confirm() {
+        if (isDespia) {
+            despia('bioauth://')
+        } else {
+            // browser preview, skip biometrics and ask for password
+            promptForPassword().then(ok => ok && onConfirmed())
+        }
+    }
+
+    return <button onClick={confirm}>Confirm ${amount} with Face ID</button>
+}
+```
+
+Re-binding the callbacks inside `useEffect` rather than at module scope keeps them tied to the component currently asking for authentication. If two screens both want biometric confirmation, the second one's mount overwrites the first one's callbacks, which is the correct behavior. The previous screen is no longer visible, so its handler should not fire.
+
+---
+
+## Security model
+
+This API verifies that the device's owner is present, nothing more. It does not produce a token, does not sign anything, and does not communicate with your backend. Treat it as a client-side gate, not as authentication.
+
+For any flow where a successful biometric should grant access to a server-protected resource, pair it with a real auth system. The biometric proves the human in front of the phone is the same human who set up the device. Your backend still needs its own session, JWT, or cookie issued through a normal auth flow. Combine the two by gating the _use_ of an existing session token behind biometrics, not by treating the biometric prompt itself as login.
+
+For apps that need biometric-gated access to secrets (session tokens, API keys, recovery phrases), [Storage Vault](/native-features/storage-vault) is the right tool. Setting `locked=true` on a vault entry triggers Face ID or Touch ID before reading the value back, so the secret is never exposed to JavaScript without a successful biometric.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

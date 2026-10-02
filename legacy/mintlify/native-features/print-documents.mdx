@@ -1,0 +1,216 @@
+---
+title: "Print Documents"
+description: "Open the native print dialog with a PDF or image from a CDN URL, letting users send the document to any connected printer through the system print interface."
+icon: "print"
+---
+
+<iframe src="https://www.youtube.com/embed/EHa5lz6cyP4" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only things that matter are the SDK call, the job name, and a publicly hosted file URL with the right headers.
+</Note>
+
+`printitem://` opens the native print dialog with a PDF or image fetched from the URL you pass. The user picks a printer (any AirPrint printer on iOS, any Mopria-compatible printer on Android), adjusts copies, page range, and orientation, then sends the job. The system handles the rest.
+
+<Warning>
+  The `printItem` URL must be a publicly fetchable HTTPS endpoint that returns the file with the correct `Content-Type` header. Data URLs (`data:application/pdf;base64,...`), blob URLs (`blob:...`), and `file://` paths are not accepted. The runtime needs to fetch the file from the network, so upload the bytes to a CDN, S3 bucket, or similar storage first and pass the resulting public URL into the call.
+</Warning>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Two query parameters: a job name and a CDN URL. Encode both with `encodeURIComponent` so spaces and special characters survive the trip through the scheme handler.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function printFile(jobName, fileUrl) {
+    if (!isDespia) return
+
+    const job = encodeURIComponent(jobName)
+    const url = encodeURIComponent(fileUrl)
+
+    despia(`printitem://?jobName=${job}&printItem=${url}`)
+}
+
+printFile('Invoice 12345', 'https://cdn.example.com/invoices/12345.pdf')
+```
+
+The job name shows in the print preview header and in the printer queue. Pick something descriptive enough that the user can identify the job if they need to cancel it from a printer with a queue display.
+
+---
+
+## Scheme parameters
+
+| Parameter | Value | Notes |
+| :-- | :-- | :-- |
+| `jobName` | The label shown in the print dialog and queue | Wrap with `encodeURIComponent`. Keep it short and identifiable, e.g. "Invoice 12345", not just "Document" |
+| `printItem` | An HTTPS URL pointing to a PDF or supported image | Wrap with `encodeURIComponent`. Must serve the file with a correct `Content-Type` header |
+
+---
+
+## Server requirements
+
+The endpoint serving the file has to send the right headers. The OS uses these to render the print preview correctly and to decide which printers can handle the job.
+
+| Header | Required value | What it does |
+| :-- | :-- | :-- |
+| `Content-Type` | The accurate MIME type, e.g. `application/pdf`, `image/jpeg`, `image/png` | Determines how the file is rendered in the print preview. Wrong type may show a broken preview or fail entirely |
+| `Content-Length` | The file size in bytes | Helps the OS show an accurate progress bar during fetch |
+| CORS headers | `Access-Control-Allow-Origin` if served from a different domain than your app | Required if the file lives on a separate origin from your web app |
+
+```javascript
+// Example endpoint serving a generated PDF for print
+export default async function handler(req, res) {
+    const buffer = await generateInvoicePdf(req.query.id)
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Length', buffer.length)
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    res.send(buffer)
+}
+```
+
+If you are serving from S3, Cloudflare R2, or another object store, set `Content-Type` on the object metadata when you upload. Most stores let you specify it per object, and it gets returned automatically on every fetch.
+
+---
+
+## Print a remote PDF or image
+
+The simplest case is printing a file you already have a CDN URL for, such as a generated invoice, a shipping label returned by your backend, or a product image.
+
+```jsx
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function PrintButton({ jobName, fileUrl, label = 'Print' }) {
+    function print() {
+        if (!isDespia) return
+
+        const job = encodeURIComponent(jobName)
+        const url = encodeURIComponent(fileUrl)
+
+        despia(`printitem://?jobName=${job}&printItem=${url}`)
+    }
+
+    return <button onClick={print}>{label}</button>
+}
+```
+
+---
+
+## Print a generated document
+
+Documents and images that you generate on the fly (custom PDFs, dynamic charts, captured screenshots) come back as binary data, not URLs. Upload the bytes to your storage layer first, then pass the resulting public URL into the SDK call.
+
+```javascript
+async function generateAndPrint(orderId) {
+    if (!isDespia) return
+
+    // 1. Generate the file as a Blob
+    const res    = await fetch(`/api/labels/${orderId}`)
+    const blob   = await res.blob()
+
+    // 2. Upload the blob to your CDN or storage backend
+    const formData = new FormData()
+    formData.append('file', blob, `label-${orderId}.pdf`)
+
+    const upload = await fetch('/api/uploads', { method: 'POST', body: formData })
+    const data   = await upload.json()
+
+    // 3. Print the resulting public URL
+    const job = encodeURIComponent(`Shipping Label ${orderId}`)
+    const url = encodeURIComponent(data.url)
+    despia(`printitem://?jobName=${job}&printItem=${url}`)
+}
+```
+
+For files where the backend returns a CDN URL directly (most modern PDF generation services do this), skip the upload step and pass the returned URL straight in.
+
+```javascript
+async function printGeneratedReceipt(orderId) {
+    if (!isDespia) return
+
+    const res  = await fetch(`/api/receipts/${orderId}/pdf`)
+    const data = await res.json()
+
+    const job = encodeURIComponent(`Receipt ${orderId}`)
+    const url = encodeURIComponent(data.pdfUrl)
+    despia(`printitem://?jobName=${job}&printItem=${url}`)
+}
+```
+
+---
+
+## Supported file types
+
+| Type | MIME | Notes |
+| :-- | :-- | :-- |
+| PDF | `application/pdf` | Most reliable choice for multi-page documents, layout-sensitive content, and anything that needs to print exactly as designed |
+| JPEG | `image/jpeg` | Standard for photos and rasterized exports |
+| PNG | `image/png` | Standard for screenshots and graphics with transparency. Transparency renders as white on print |
+| GIF | `image/gif` | Animated GIFs print only the first frame |
+| WebP | `image/webp` | Supported on iOS 14\+ and modern Android. Older devices may fail to render WebP, fall back to PNG or JPEG for maximum compatibility |
+
+For anything more complex than a single image (multi-page documents, precise layout, custom paper sizes), generate a PDF on the backend and print that. The print dialog gives the user finer control over PDF jobs than image jobs.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

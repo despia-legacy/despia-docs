@@ -1,0 +1,254 @@
+---
+title: "NFC"
+icon: "nfc-symbol"
+description: "Read from and write to NFC tags directly from your web app."
+tag: "V4"
+---
+
+Communicate with physical NFC tags from your web app. The runtime activates the device's NFC chip in either read or write mode, and the next tag the user taps against the phone is processed.
+
+<Info>
+  The device must have NFC hardware. All modern iPhones from XS onwards and most Android phones support NFC, but some budget Android models do not. On devices without NFC, the call resolves silently.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Setup
+
+NFC on iOS is a capability that has to be enabled on the App ID itself before the runtime can access the NFC chip. Enable it in Apple Developer, toggle the addon in the Despia Editor, then rebuild.
+
+<Steps>
+  <Step title="Open Apple Developer">
+    Sign in at [developer.apple.com](https://developer.apple.com) and go to **Certificates, Identifiers & Profiles \> Identifiers**.
+  </Step>
+  <Step title="Open your core bundle ID">
+    Select the App ID that matches your app's core bundle ID (the one Despia builds against).
+  </Step>
+  <Step title="Enable NFC Tag Reading">
+    Under **Capabilities**, tick **NFC Tag Reading** and save. Apple regenerates the provisioning profile with the new entitlement.
+  </Step>
+  <Step title="Enable NFC in the Despia Editor">
+    Go to **App \> Addons** and toggle **NFC** on.
+  </Step>
+  <Step title="Rebuild a fresh native binary">
+    Trigger a new build from the Despia Editor. The new binary picks up the updated provisioning profile and the addon flag.
+  </Step>
+</Steps>
+
+<Warning>
+  If you skip the rebuild, `nfc://read` and `nfc://write` resolve silently. No system NFC sheet appears, `window.onNFCEvent` never fires, and the call looks identical to running on a device without NFC hardware. Any change to the App ID capabilities or the Despia Editor addon list requires a fresh build to take effect.
+</Warning>
+
+---
+
+## How it works
+
+NFC has two modes, read and write. Each mode is triggered by its own scheme call, and results flow back through a global event callback on `window`.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+// to read
+if (isDespia) despia('nfc://read')
+
+// to write
+if (isDespia) despia(`nfc://write?value=${encodeURIComponent('hello')}`)
+```
+
+Each call is one-shot. The runtime enters the requested mode, processes a single tag, then exits. Trigger them independently from your own UI handlers, never both in the same gesture.
+
+---
+
+## Handling NFC events
+
+Define `window.onNFCEvent` once at app startup. The runtime invokes it with a single object whenever something happens during an active NFC session, whether a tag is read, a write completes, the user cancels, or anything goes wrong.
+
+```javascript
+window.onNFCEvent = function (event) {
+    switch (event.type) {
+        case 'read':
+            console.log('tag id:', event.id)
+            console.log('payload:', event.data)
+            break
+        case 'write':
+            console.log('write successful')
+            break
+        case 'dismissed':
+            console.log('user cancelled the scan')
+            break
+        case 'error':
+            console.error('NFC error:', event.error)
+            break
+    }
+}
+```
+
+The four event types and their fields:
+
+<ParamField path="read" type="object">
+  Fires when a tag is successfully scanned in read mode. Carries `id`, the tag's unique identifier as a lowercase hex string (empty string if the device cannot read it), and `data`, the NDEF payload content as a string.
+</ParamField>
+
+<ParamField path="write" type="object">
+  Fires when a write completes successfully. No additional fields.
+</ParamField>
+
+<ParamField path="dismissed" type="object">
+  Fires when the user closes the system NFC sheet before a tag is scanned. No additional fields.
+</ParamField>
+
+<ParamField path="error" type="object">
+  Fires on any other failure, read or write. Carries `error`, a human-readable message describing what went wrong.
+</ParamField>
+
+A successful read or write does not also emit `dismissed` or `error`, the in-flight action is cleared as soon as the success event fires. You can treat the four event types as mutually exclusive per session.
+
+---
+
+## Reading NFC tags
+
+Call `nfc://read` to enter read mode. When the user taps a tag, the runtime fires `window.onNFCEvent({ type: 'read', id, data })` with the tag identifier and the NDEF payload.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onNFCEvent = function (event) {
+    if (event.type === 'read') {
+        console.log('tag id:', event.id)
+        console.log('payload:', event.data)
+    }
+}
+```
+
+Trigger the read from any UI element:
+
+```html
+<button onclick="despia('nfc://read')">Scan a tag</button>
+```
+
+---
+
+## Writing to NFC tags
+
+Pass the value to write as the `value` query parameter. The runtime enters write mode, the next tag the user taps receives the payload, and `window.onNFCEvent({ type: 'write' })` fires when the write completes.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onNFCEvent = function (event) {
+    if (event.type === 'write') {
+        console.log('write successful')
+    }
+}
+
+const value = 'https://example.com'
+if (isDespia) despia(`nfc://write?value=${encodeURIComponent(value)}`)
+```
+
+Always wrap the value in `encodeURIComponent`. Without it, URLs with `?`, `&`, or `=` inside the payload will break the scheme parse on the native side.
+
+Trigger the write from any UI element:
+
+```html
+<button onclick="despia(`nfc://write?value=${encodeURIComponent('https://example.com')}`)">Write URL to tag</button>
+```
+
+---
+
+## Handling cancellation and failure
+
+The runtime distinguishes between the user closing the NFC sheet and an actual failure. A `dismissed` event fires when the user backs out before a tag is scanned, and is not an error condition. An `error` event fires for everything else, including malformed tags, tags that are not NDEF formatted, write failures, and session timeouts.
+
+```javascript
+window.onNFCEvent = function (event) {
+    if (event.type === 'dismissed') {
+        // user closed the sheet, reset UI without surfacing a failure
+        resetScanButton()
+        return
+    }
+
+    if (event.type === 'error') {
+        // surface a retry prompt, log the underlying message
+        showToast(`NFC failed: ${event.error}`)
+    }
+}
+```
+
+The `error` message is a passthrough of the underlying platform error string, suitable for logging or developer-facing diagnostics. For end-user messaging, map the type to your own copy rather than displaying the raw string.
+
+---
+
+## Writing a vCard
+
+To write a contact card that a phone can save directly from a tap, format the payload as a vCard string prefixed with `VCARD_` and join the properties with underscores.
+
+```javascript
+const contact = {
+    name: 'John Doe',
+    title: 'Developer',
+    phone: '0452641211'
+}
+
+const vcard = `VCARD_FN:${contact.name}_Title:${contact.title}_TEL;TYPE=CELL:${contact.phone}`
+
+if (isDespia) despia(`nfc://write?value=${encodeURIComponent(vcard)}`)
+```
+
+Any standard vCard property works (`FN`, `ORG`, `EMAIL`, `URL`, `ADR`, `TEL`, and the rest). When another phone reads the tag, the OS recognises the vCard and offers to save the contact natively.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

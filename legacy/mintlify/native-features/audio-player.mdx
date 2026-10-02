@@ -1,0 +1,437 @@
+---
+title: "Audio"
+description: "Stream audio with a real native player, lock-screen controls, and live config updates."
+icon: "headphones"
+---
+
+Play a queue or a paginated feed of audio through a real native player that keeps running in the background, drives the lock screen and Control Center, and survives page reloads. The operating system owns playback end to end, so audio continues after the screen locks or the web view suspends, and every remote control, interruption, and route change stays in sync with your web app. Your page never touches an `<audio>` element, it hands the native player a track list and reacts to the events that come back.
+
+<Info>
+  Loading a queue or feed never starts playback on its own, always follow it with a play command. Native playback also outlives web view reloads and in-app navigation, so re-sync your UI on every page load or it will render stale state.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Assign one global handler, `window.onAudioEvent`, and every state change comes back through it: play, pause, track changes, buffering, feed pages, errors. To start, hand the native player a track list, then issue a play command. Loading the queue rebuilds the player but does not start playback, so `play` or `playat` always follows it.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+// native player calls this on every state change
+window.onAudioEvent = function (evt) {
+    console.log(evt.type, evt.state)
+}
+
+if (isDespia) {
+    const tracks = [
+        { id: 't1', url: 'https://cdn.example.com/1.mp3', title: 'Track One' },
+        { id: 't2', url: 'https://cdn.example.com/2.mp3', title: 'Track Two' },
+    ]
+
+    const params = new URLSearchParams({ tracks: JSON.stringify(tracks) }).toString()
+
+    despia(`audio://setqueue?${params}`)
+    despia('audio://play')
+}
+```
+
+`window.onAudioEvent` is assigned outside the `isDespia` gate because setting a property on `window` is harmless in a normal browser. Only the scheme calls are gated.
+
+---
+
+## The track object
+
+Both the inline queue and the feed responses use the same track shape. `id`, `url`, and `title` are required, everything else is optional.
+
+```json
+{
+    "id": "ep-102",
+    "url": "https://cdn.example.com/ep-102.mp3",
+    "title": "Episode 102",
+    "author": "The Daily Grind",
+    "poster": "https://cdn.example.com/ep-102.jpg",
+    "duration_seconds": 1834,
+    "metadata": { "season": 4 }
+}
+```
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `id` | Yes | Unique per track. Used to track which track is current across config updates and feed swaps, and to de-duplicate feed pages. |
+| `url` | Yes | Any asset the native player can stream: mp3, m4a, HLS. Must be a public HTTPS URL. |
+| `title` | Yes | Shown as the lock-screen title. |
+| `author` | No | Shown as the lock-screen artist. |
+| `poster` | No | Lock-screen artwork, fetched asynchronously. |
+| `duration_seconds` | No | Informational only, the real duration comes from the asset once it loads. |
+| `metadata` | No | Any JSON you want, echoed back untouched inside every event's `state`. |
+
+Tracks missing `id`, `url`, or `title` are dropped from the queue silently. `author` and `poster` are what populate the lock screen, not `artist` and `artwork`.
+
+<Warning>
+  `url` and `poster` must be publicly fetchable HTTPS URLs. Blob URLs, data URLs, and `file://` paths are not accepted. If your page generates audio or artwork locally, upload it first and pass the resulting CDN URL.
+</Warning>
+
+---
+
+## Load a fixed queue
+
+Use `audio://setqueue` when you have the full track list up front. It replaces the whole queue, stops any current playback, and rebuilds the player without autoplaying.
+
+```javascript
+if (isDespia) {
+    const params = new URLSearchParams({
+        tracks:        JSON.stringify(tracks),
+        start_index:   '0',
+        controls:      'next,prev,skipforward,skipback',
+        skip_interval: '15',
+    }).toString()
+
+    despia(`audio://setqueue?${params}`)
+    despia('audio://play')
+}
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `tracks` | Yes | JSON string of the track array. `URLSearchParams` encodes it for you, otherwise wrap with `encodeURIComponent(JSON.stringify(...))`. |
+| `start_index` | No | Initial index, clamped to the queue bounds. Default `0`. |
+| `loop` | No | `'true'` repeats the current track forever. Default `'false'`. |
+| `skip_interval` | No | Seconds for the skip buttons and lock-screen jumps. Default `15`. |
+| `speed_rate` | No | Playback rate, `0.5` to `3.0`. Kept from before if omitted. |
+| `controls` | No | Which optional lock-screen controls to show, see [Lock screen and background behaviour](#lock-screen-and-background-behaviour). |
+
+`setqueue` resets `loop` and `skip_interval` to their defaults when you omit them, while `speed_rate` and `controls` are preserved. To change a setting without rebuilding the queue, use `audio://config` instead.
+
+---
+
+## Load a paginated feed
+
+Use `audio://setfeed` when tracks load incrementally from a server. The native player fetches the first page immediately, plays through it, and fetches the next page before the queue runs dry.
+
+```javascript
+if (isDespia) {
+    const params = new URLSearchParams({
+        url:                'https://api.example.com/podcast/feed?show=42',
+        prefetch_threshold: '3',
+        controls:           'skipforward,skipback,seek',
+        skip_interval:      '30',
+    }).toString()
+
+    despia(`audio://setfeed?${params}`)
+    despia('audio://playat?index=0')
+}
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `url` | Yes | Feed endpoint. `URLSearchParams` encodes it, otherwise wrap with `encodeURIComponent(...)`. Your own query params are preserved. |
+| `prefetch_threshold` | No | Fetch the next page when this many tracks remain ahead. Default `3`. |
+| `start_index` | No | Initial index, clamped once the first page arrives. |
+| `loop`, `skip_interval`, `speed_rate`, `controls` | No | Same meaning as `setqueue`. |
+
+Your endpoint answers `GET` with `Accept: application/json` and returns `{ "tracks": [ ... ] }`. For pages after the first, the native player appends `after=<id of the last track in the queue>`, so return the tracks that come after that id. Return an empty `tracks` array to signal the end of the feed, playback then ends with an `ended` event after the last track. A failed page fetch emits `feed_unavailable` and is retried automatically as playback continues, it does not end the feed.
+
+Re-issuing `setfeed` with the same `url` is an idempotent no-op, the player keeps running. Re-issuing with a different `url` continues playback during the fetch: if the currently playing track's `id` appears in the new first page, playback carries on seamlessly at its new index, otherwise the player is torn down and you get a `terminated` event.
+
+---
+
+## Playback controls
+
+The lock-screen buttons fire these schemes automatically. Call them yourself to drive your own on-page controls, the resulting events flow back through `window.onAudioEvent` either way.
+
+```javascript
+despia('audio://play')            // resume, or start the current track if the player was torn down
+despia('audio://pause')           // pause, position is kept
+despia('audio://next')            // next track
+despia('audio://prev')            // previous track
+despia('audio://playat?index=2')  // start a specific queue index
+
+// relative seek, defaults to the configured skip_interval
+despia('audio://skipforward')
+despia('audio://skipback')
+
+// absolute seek, in seconds
+despia('audio://seek?position=120')
+
+// playback rate, clamped 0.5 to 3.0, survives track changes
+despia('audio://speed?rate=1.5')
+```
+
+`next` at the end of a feed queue fetches the next page first, so you see `buffering` then `next`, and at the true end of the queue it emits `ended` instead. With `loop` on, `next` restarts the current track. `prev` at index `0` is a no-op. Out-of-range `playat` indexes are ignored. `skipforward` and `skipback` accept an optional `seconds` param that overrides the configured `skip_interval` for that one call.
+
+---
+
+## Reading events
+
+Every state change arrives through the single `window.onAudioEvent` handler. Dispatch on `evt.type`. Most events carry a full `state` object, and the queue-changing ones also carry the current `queue`.
+
+```javascript
+window.onAudioEvent = function (evt) {
+    if (evt.type === 'position') {
+        ui.setProgress(evt.positionSeconds, evt.durationSeconds)
+        return
+    }
+
+    const s = evt.state
+    ui.setStatus(s.status)
+    ui.setSpeed(s.speed_rate)
+    if (s.queue) ui.setQueue(s.queue, s.current_index)
+
+    switch (evt.type) {
+        case 'ended':            ui.showEndCard();                    break
+        case 'track_error':      ui.toast('Track failed: ' + evt.error); break
+        case 'feed_unavailable': ui.toast('Feed error: ' + evt.error);  break
+        case 'error':            console.warn('audio:', evt.error);     break
+    }
+}
+```
+
+A standard event looks like this. `queue` is present only on queue-changing events, and `duration_seconds` is `null` until the asset reports it.
+
+```json
+{
+    "type": "next",
+    "state": {
+        "status": "playing",
+        "mode": "feed",
+        "current_index": 2,
+        "position_seconds": 0,
+        "duration_seconds": 1834,
+        "loop": false,
+        "skip_interval": 30,
+        "speed_rate": 1,
+        "feed_exhausted": false,
+        "queue": [ { "id": "ep-102", "url": "...", "title": "Episode 102" } ]
+    }
+}
+```
+
+The 1 Hz progress tick is a different, flatter shape with camelCase keys. Handle it as its own case before touching `evt.state`.
+
+```json
+{ "type": "position", "positionSeconds": 12.4, "durationSeconds": 1834, "status": "playing" }
+```
+
+Error-carrying events add a top-level `error` string.
+
+```json
+{ "type": "track_error", "error": "invalid_url", "state": { "status": "stopped" } }
+```
+
+<ParamField path="state" type="object">
+  Carried by every event except `position`. `status` is one of `stopped`, `playing`, `paused`, `buffering`. `mode` is `inline` or `feed`. `current_index` is the source of truth for the current track. `position_seconds` and `duration_seconds` are in seconds, `duration_seconds` is `null` until known. `loop`, `skip_interval`, and `speed_rate` reflect current config. `feed_exhausted` is `true` once the feed has returned its last page. `queue` is the full track array, present only on queue-flagged event types.
+</ParamField>
+
+<ParamField path="position" type="object">
+  The 1 Hz progress tick, flat and camelCase: `positionSeconds`, `durationSeconds` (`null` until known), and `status`. Use it to drive your scrubber. Do not persist listening progress from it, use a webhook for that.
+</ParamField>
+
+<ParamField path="error" type="object">
+  Command-level failure. `error` is one of `unknown_command: ...`, `invalid_tracks_json`, `invalid_feed_url`, `no_track`, `invalid_seek_seconds`. `track_error` reports `invalid_url` or the underlying playback error. `feed_unavailable` reports `http_<status>`, `malformed_response: <preview>`, or `network_error`.
+</ParamField>
+
+Every event type and when it fires:
+
+| Type | Fires when | Carries queue |
+| --- | --- | --- |
+| `play` | Playback started or resumed | Yes |
+| `pause` | Paused | No |
+| `playing` | Audio actually rendering, after buffering | No |
+| `buffering` | Player stalled or waiting | No |
+| `next` / `prev` | Track changed | Yes |
+| `seek` | Absolute seek completed | No |
+| `skipforward` / `skipback` | Relative seek completed, adds `skipSeconds` | No |
+| `speed` | Playback rate changed | No |
+| `ended` | Queue finished and feed exhausted | Yes |
+| `terminated` | Player torn down, queue is empty | Yes |
+| `state` | Reply to `sync` | Yes |
+| `config_updated` | Reply to `config` | No |
+| `feed_loading` | Feed fetch started | Yes |
+| `feed_updated` | Queue changed, from `setqueue` or a new feed page | Yes |
+| `feed_unavailable` | Feed fetch failed, adds `error` | Yes |
+| `webhook_registered` | Reply to `webhook`, adds `webhook_url` | Yes |
+| `error` | Command-level failure, adds `error` | Yes |
+| `track_error` | Current track failed to load or play, adds `error` | Yes |
+
+Auto-advance and lock-screen actions emit the same events as your own calls, so your UI stays correct no matter who pressed the button. A track transition can emit `play` immediately followed by `next`, treat `next` and `prev` as the track-changed signal and `state.current_index` as the source of truth. Events emitted while the web view is loading or backgrounded are buffered and flushed in order when it returns, except `position` ticks, which are dropped while the web view is away.
+
+---
+
+## Update config without restarting playback
+
+Use `audio://config` to change settings on an active player without tearing it down. Toggle loop, change speed, swap which lock-screen controls show, or adjust the skip interval, playback continues through the change. Only the params you pass change, the rest are left untouched.
+
+```javascript
+if (isDespia) {
+    // hide every optional lock-screen button except play and pause
+    despia('audio://config?controls=')
+
+    // speed up mid-track with no restart
+    despia('audio://config?speed_rate=1.5')
+
+    // several at once
+    const params = new URLSearchParams({
+        controls:      'skipforward,skipback',
+        speed_rate:    '2',
+        skip_interval: '10',
+    }).toString()
+
+    despia(`audio://config?${params}`)
+}
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `controls` | No | Comma-separated `next`, `prev`, `skipforward`, `skipback`, `seek`. Empty for play and pause only. Applied live. |
+| `loop` | No | `'true'` or `'false'`. Takes effect on the next track-end. |
+| `skip_interval` | No | Seconds. Updates the button labels and the default jump distance. |
+| `speed_rate` | No | Number, clamped `0.5` to `3.0`. Applied live, no track restart. |
+
+Each successful call fires `config_updated` with the new values in `state`. The `queue` is not included, since config never changes the queue, and `controls` is not echoed back, since your code already knows what it sent.
+
+```json
+{
+    "type": "config_updated",
+    "state": {
+        "status": "playing",
+        "mode": "feed",
+        "current_index": 2,
+        "position_seconds": 73.5,
+        "duration_seconds": 372.7,
+        "loop": true,
+        "skip_interval": 30,
+        "speed_rate": 1.5,
+        "feed_exhausted": false
+    }
+}
+```
+
+---
+
+## Track progress on your backend
+
+Register a webhook with `audio://webhook` and the native player POSTs JSON to your endpoint on every playback milestone, including ones triggered from the lock screen while your web app is suspended. This is how you record listening progress that your page is not awake to see.
+
+```javascript
+if (isDespia) {
+    const hook = 'https://api.example.com/hooks/audio?token=' + userToken
+    despia(`audio://webhook?url=${encodeURIComponent(hook)}`)
+}
+```
+
+The body is the same `{ type, state }` payload as the events above, with the full queue, plus an ISO-8601 `timestamp`. Milestone types are `track.play`, `track.pause`, `track.next`, `track.prev`, `track.seek`, `track.skipforward`, `track.skipback`, `track.speed`, `track.ended`, and `player.terminated`. Identify the listener yourself, for example with a signed token in the webhook URL. Omit or empty the `url` to clear the webhook. Delivery is fire-and-forget with no retries, so treat it as a progress signal, not a ledger.
+
+---
+
+## Re-hydrate after a reload
+
+Native playback survives web view reloads and in-app navigation, but a fresh page knows nothing about it. Call `audio://sync` on every page load and SPA route change. It replies with a `state` event carrying the full state and queue, so you can rebuild your UI to match what is already playing.
+
+```javascript
+if (isDespia) {
+    despia('audio://sync')
+}
+```
+
+---
+
+## Stop playback
+
+Call `audio://terminate` to fully stop. It tears down the player, releases the audio session so other apps resume their audio, clears the queue and feed state, and removes the Now Playing card. It emits a `terminated` event. Because the player keeps running after the user closes your page, always give them a visible stop control that calls this.
+
+```javascript
+if (isDespia) {
+    despia('audio://terminate')
+}
+```
+
+---
+
+## Lock screen and background behaviour
+
+Every track shows a Now Playing card on the lock screen, Control Center, Dynamic Island, CarPlay, and watch, with title, artist, artwork, live position, and playback rate. Play and pause are always enabled. The `controls` param on `setqueue`, `setfeed`, and `config` gates the optional buttons, comma-separated and case-insensitive.
+
+| Token | Control |
+| --- | --- |
+| `next` | Next-track button |
+| `prev` | Previous-track button |
+| `skipforward` | Skip-ahead button, uses `skip_interval` |
+| `skipback` | Skip-back button, uses `skip_interval` |
+| `seek` | Scrubber dragging |
+
+All controls are enabled by default. `controls=skipforward,skipback,seek` gives a podcast layout, and `controls=` with no value leaves only play and pause. This gates the system UI only, your `audio://` commands always work regardless.
+
+Playback continues when the app is backgrounded or the screen locks. Starting playback claims exclusive audio, so other apps like Apple Music pause, exactly like a native music app. The session activates on the first play and releases on `terminate`. A phone call, Siri, or alarm pauses playback and you get a `pause` event, then playback resumes with a `play` event once the system says the interruption is over. Unplugging headphones or disconnecting Bluetooth pauses playback and emits `pause`, following standard iOS etiquette.
+
+---
+
+## Choosing the right command
+
+`audio://config` exists because `setqueue` and `setfeed` are heavy operations that rebuild the player. Reach for `config` whenever you only need to change a setting.
+
+| Want to | Use | Rebuilds the player |
+| --- | --- | --- |
+| Load a fixed list of tracks | `audio://setqueue` | Yes, and stops current playback without autoplaying |
+| Switch to a paginated feed | `audio://setfeed` with a new `url` | Yes, may terminate if the current track is absent from the new feed |
+| Re-issue the same feed URL | `audio://setfeed` with the same `url` | No, idempotent no-op |
+| Change `controls`, `loop`, `speed_rate`, or `skip_interval` | `audio://config` | No, never touches the player or queue |
+| Re-sync a fresh page to live playback | `audio://sync` | No |
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

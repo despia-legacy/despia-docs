@@ -1,0 +1,741 @@
+---
+title: "Manual"
+icon: "code"
+description: "Complete guide for exporting and working with your Despia application as native Android code."
+---
+
+## Overview
+
+Despia's Android Studio Export feature allows you to download your entire Android project, including all source files and dependencies. This gives advanced developers full access to the native codebase for customization beyond the standard Despia platform capabilities.
+
+### What You Can Do With Manual Export
+
+- Make low-level modifications to the native code
+- Integrate additional third-party libraries
+- Configure custom build settings
+- Deploy directly through Android Studio
+- Implement advanced native Android features
+- Access Gradle configuration files
+
+### Who Should Use This Feature
+
+**Recommended for:**
+
+- Experienced Android developers comfortable with Android Studio
+- Projects requiring deep native code customization
+- Teams with dedicated Android development resources
+- Developers familiar with Gradle and Android build systems
+
+**Not recommended for:**
+
+- Developers unfamiliar with Android development or Android Studio
+- Projects that can be handled with Despia's Auto Publish feature
+- Teams wanting to maintain automatic over-the-air updates
+
+> **Note:** This approach is recommended for experienced Android developers who are comfortable working with Android Studio and native code. If you're not familiar with Android development, we recommend using the **Auto Publish** option instead.
+
+---
+
+## Export Process
+
+### Step 1: Access the Export Option
+
+1. Log in to your Despia dashboard
+2. Open your project
+3. Click on the **Export Project** button in the top navigation bar
+
+### Step 2: Select Android Project
+
+In the export modal that appears:
+
+1. Click on the **Android Project** option
+2. You'll see a preview of some of the native code that will be included in your export
+3. Review the folder structure displayed in the preview panel
+
+This preview gives you a glimpse of the project structure and native code you'll receive.
+
+### Step 3: Export Source Code
+
+1. Click the **Export Source Code + Dependencies** button at the bottom of the modal
+2. Your browser will download a ZIP file containing your complete Android Studio project
+3. The download may take a few moments depending on your project size and connection speed
+
+**What's Included:**
+
+- Complete Java/Kotlin source code
+- All project dependencies
+- Resource files and assets
+- Gradle build configurations
+- Android manifest files
+- Keystore for signing (if available)
+
+---
+
+## Working with the Exported Project
+
+### Opening in Android Studio
+
+Follow these steps to open your exported project:
+
+1. **Extract the downloaded ZIP file** to a location on your computer
+2. **Open Android Studio**
+3. Select **Open an Existing Project** from the welcome screen (or File → Open)
+4. **Navigate to the extracted folder** and select it
+5. **Wait for Android Studio** to complete the Gradle sync process
+
+> **Important:** The initial Gradle sync may take several minutes. Do not interrupt this process.
+
+### System Requirements
+
+| Requirement    | Minimum               | Recommended           |
+| :------------- | :-------------------- | :-------------------- |
+| Android Studio | Latest stable version | Latest stable version |
+| RAM            | 8 GB                  | 16 GB or more         |
+| Disk Space     | 10 GB free            | 20 GB free            |
+| Java JDK       | JDK 11 or higher      | JDK 17                |
+
+### Understanding the Project Structure
+
+Once opened in Android Studio, you'll have access to:
+
+- Complete source code
+- Resource files (layouts, images, strings)
+- Configuration files
+- Build scripts (Gradle)
+- Dependencies and libraries
+
+Android Studio will automatically organize the project into its standard view, making it easy to navigate through the different sections of your application.
+
+---
+
+## Making Modifications
+
+### Development Workflow
+
+When modifying the exported project:
+
+1. **Make your desired changes** to the code or configuration
+2. **Test thoroughly** on multiple device configurations
+3. **Build and sign** your APK/AAB using Android Studio's built-in tools
+4. **Submit to Google Play Store** following the standard submission process
+
+### Important Considerations
+
+**Key points to remember:**
+
+- Once you export and modify the project outside of Despia, those changes won't automatically sync back to your Despia project
+- Consider using version control (like Git) to track your changes
+- The exported project contains all the necessary dependencies and configurations to build a complete Android application
+
+### Testing Your Changes
+
+**Recommended testing approach:**
+
+| Test Type               | Description                                       |
+| :---------------------- | :------------------------------------------------ |
+| Emulator Testing        | Test on Android Virtual Devices (AVDs)            |
+| Device Testing          | Test on physical devices for accurate performance |
+| Multiple API Levels     | Verify compatibility across Android versions      |
+| Different Screen Sizes  | Test on various device form factors               |
+| Different Manufacturers | Test on Samsung, Google, etc.                     |
+
+### Gradle Sync Issues
+
+If Gradle sync fails:
+
+1. Check internet connection (dependencies need to download)
+2. Verify Gradle version compatibility
+3. Ensure Android SDK is properly installed
+4. Check build.gradle files for errors
+5. Invalidate caches and restart: File → Invalidate Caches / Restart
+
+---
+
+## Building Your Modified App
+
+### Build Configuration
+
+Android Studio provides two output formats:
+
+| Format | Purpose            | Use Case                        |
+| :----- | :----------------- | :------------------------------ |
+| APK    | Android Package    | Direct installation, testing    |
+| AAB    | Android App Bundle | Google Play Store (recommended) |
+
+### Creating a Signed Build
+
+#### Step 1: Generate Signing Key (if needed)
+
+If you don't have a keystore:
+
+1. Select **Build → Generate Signed Bundle / APK**
+2. Click **Create new...** under Key store path
+3. Fill in the key store information:
+   - Key store path: Choose save location
+   - Password: Strong password
+   - Alias: Key alias name
+   - Validity: 25+ years
+4. Save the key store securely
+
+> **Critical:** Keep your keystore file and passwords secure. Losing them means you cannot update your app on Google Play.
+
+#### Step 2: Build Signed APK/AAB
+
+1. In Android Studio, select **Build → Generate Signed Bundle / APK**
+2. Choose **Android App Bundle (AAB)** for Play Store or **APK** for direct installation
+3. Click **Next**
+
+**Configure signing:**
+
+- Key store path: Select your keystore file (or use one from Despia export)
+- Key store password: Enter password
+- Key alias: Select alias
+- Key password: Enter key password
+
+**Select build variant:**
+
+- Release (for production)
+- Debug (for testing)
+
+4. Click **Next**
+5. Choose destination folder
+6. Click **Finish**
+
+### Build Output
+
+After successful build:
+
+| File Type | Location        | Use                           |
+| :-------- | :-------------- | :---------------------------- |
+| AAB       | `/app/release/` | Upload to Google Play Console |
+| APK       | `/app/release/` | Direct device installation    |
+
+---
+
+## Publishing Your Modified App
+
+### Uploading to Google Play Console
+
+#### Step 1: Prepare Your Build
+
+1. Ensure you built a **Release** variant (not Debug)
+2. Locate your AAB or APK file
+3. Verify the version code is higher than previous versions
+
+#### Step 2: Upload to Play Console
+
+1. Log in to [Google Play Console](https://play.google.com/console)
+2. Navigate to your app
+3. Go to **Release → Production** (or Testing track)
+4. Click **Create new release**
+
+#### Step 3: Add Your Build
+
+1. Click **Upload** in the App bundles section
+2. Select your AAB file
+3. Wait for processing (5-10 minutes)
+4. Review any warnings or errors
+
+#### Step 4: Complete Release Information
+
+1. Add **release notes** describing changes
+2. Review **countries and regions**
+3. Complete any required compliance forms
+
+#### Step 5: Submit for Review
+
+1. Click **Review release**
+2. Verify all information is correct
+3. Click **Start rollout to Production**
+
+### Review Process
+
+| Stage      | Duration                 |
+| :--------- | :----------------------- |
+| Upload     | 5-10 minutes             |
+| Processing | 10-30 minutes            |
+| Review     | 1-7 days (typically 1-3) |
+| Published  | Immediate after approval |
+
+---
+
+## Troubleshooting
+
+### Common Issues and Solutions
+
+#### Gradle Sync Failed
+
+**Issue:** "Gradle sync failed: ..."
+
+**Solutions:**
+
+- Check that you have the latest version of Android Studio installed
+- Verify internet connection (Gradle downloads dependencies)
+- Ensure all dependencies are properly synced in the Gradle files
+- Try File → Sync Project with Gradle Files
+- Invalidate caches: File → Invalidate Caches / Restart
+
+#### Missing SDK Packages
+
+**Issue:** "Failed to find target with hash string..."
+
+**Solutions:**
+
+- Open SDK Manager: Tools → SDK Manager
+- Verify that you have the necessary SDKs installed
+- Install required SDK platforms and build tools
+- Accept SDK licenses if prompted
+
+#### Build Errors
+
+**Issue:** Compilation errors after export
+
+**Solutions:**
+
+- Check for syntax errors in modified code
+- Verify all imports are correct
+- Ensure dependencies versions are compatible
+- Clean and rebuild: Build → Clean Project, then Build → Rebuild Project
+
+#### Signing Issues
+
+**Issue:** Cannot sign the app
+
+**Solutions:**
+
+- Verify keystore file exists and path is correct
+- Check keystore password and key alias
+- Use the keystore exported from Despia if available
+- Create new keystore if original is lost (new app only)
+
+#### App Won't Run
+
+**Issue:** App crashes immediately after installation
+
+**Solutions:**
+
+- Check logcat for error messages
+- Verify minimum SDK version matches device
+- Test on different devices/emulators
+- Check for missing permissions in AndroidManifest.xml
+
+---
+
+## Advanced Configuration
+
+### Modifying Gradle Files
+
+#### App-level build.gradle
+
+Located at `/app/build.gradle`:
+
+```java
+apply plugin: 'com.onesignal.androidsdk.onesignal-gradle-plugin'
+apply plugin: 'com.android.application'
+apply plugin: 'com.google.gms.google-services'
+
+def keystorePropertiesFile = rootProject.file("keystore.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def isBundleBuild = gradle.startParameter.taskNames.any { task ->
+    task.toLowerCase().contains("bundle")
+}
+
+android {
+
+    ext {
+        // Please insert your OneSignal ID here, then sync and rebuild your project:
+        if (System.getenv()["CI"]){
+            ONESIGNAL_APP_ID = System.getenv()["ONESIGNAL_APP_ID"]
+        }else{
+            ONESIGNAL_APP_ID = '"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"'
+        }
+    }
+
+    //ABI support (32-bit vs 64-bit)ABI support (32-bit vs 64-bit)
+    splits {
+        abi {
+            enable !isBundleBuild
+            reset()
+            include "armeabi-v7a", "arm64-v8a"
+            universalApk true
+        }
+    }
+
+    // get version code from the specified property argument `-PversionCode` during the build call
+    def getMyVersionCode = { ->
+        return project.hasProperty('versionCode') ? versionCode.toInteger() : 1
+    }
+
+    // get version name from the specified property argument `-PversionName` during the build call
+    def getMyVersionName = { ->
+        return project.hasProperty('versionName') ? versionName : "1.0"
+    }
+
+    compileSdk 36
+    namespace "com.app.myappname"
+    defaultConfig {
+        applicationId "com.app.myappname"
+        minSdk 24
+        targetSdk 36
+        versionCode getMyVersionCode()
+        versionName getMyVersionName()
+        multiDexEnabled true
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        manifestPlaceholders = [
+                onesignal_app_id: ONESIGNAL_APP_ID,
+                onesignal_google_project_number: 'REMOTE'
+        ]
+    }
+    signingConfigs {
+        debug {
+            // Development build configuration
+        }
+        release {
+            if (System.getenv()["CI"]) { // CI=true is exported by Codemagic
+                storeFile file(System.getenv()["CM_KEYSTORE_PATH"])
+                storePassword System.getenv()["CM_KEYSTORE_PASSWORD"]
+                keyAlias System.getenv()["CM_KEY_ALIAS"]
+                keyPassword System.getenv()["CM_KEY_PASSWORD"]
+            } else {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+    buildTypes {
+        debug {
+            debuggable true
+            buildConfigField "Boolean", "IS_DEBUG_MODE", 'true'
+            buildConfigField "String", "ONESIGNAL_APP_ID", ONESIGNAL_APP_ID
+        }
+        release {
+            minifyEnabled true
+            shrinkResources true
+            buildConfigField "boolean", "IS_DEBUG_MODE", 'false'
+            buildConfigField "String", "ONESIGNAL_APP_ID", "${ONESIGNAL_APP_ID}"
+            
+            // Use the 'optimize' version for better AAB performance
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+    
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+    buildFeatures {
+        buildConfig = true // Enable BuildConfig feature
+    }
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.core:core:1.17.0'
+    implementation 'androidx.activity:activity:1.12.2'
+    androidTestImplementation('androidx.test.espresso:espresso-core:3.1.0', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+
+    implementation platform('com.google.firebase:firebase-bom:27.1.0')
+
+    implementation 'com.onesignal:OneSignal:[5.0.0, 5.1.99]'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'com.google.android.material:material:1.6.1'
+    testImplementation 'junit:junit:4.13.2'
+    implementation 'com.google.android.gms:play-services-ads:22.1.0'
+    implementation 'androidx.browser:browser:1.4.0'
+    implementation 'com.google.android.play:review:2.0.1'
+    implementation 'com.github.ybq:Android-SpinKit:1.4.0'
+    implementation 'com.github.jaiselrahman:FilePicker:1.3.2'
+    implementation 'com.android.billingclient:billing:7.0.0'
+    implementation 'com.google.android.gms:play-services-location:[17.0.0, 17.99.99]'
+    implementation 'com.github.bumptech.glide:glide:4.13.2'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.13.2'
+
+    implementation 'pl.droidsonroids.gif:android-gif-drawable:1.2.29'
+
+    implementation 'com.github.blikoon:QRCodeScanner:0.1.2'
+    implementation 'com.google.android.gms:play-services-mlkit-document-scanner:16.0.0'
+
+    implementation 'com.google.firebase:firebase-analytics:21.1.0'
+    implementation 'com.google.firebase:firebase-messaging:23.0.7'
+    implementation 'androidx.annotation:annotation:1.4.0'
+    implementation 'com.facebook.android:audience-network-sdk:6.21.0'
+    compileOnly "com.facebook.infer.annotation:infer-annotation:0.18.0"
+    implementation 'androidx.work:work-runtime:2.8.0-alpha03'
+
+    implementation 'androidx.core:core-splashscreen:1.0.0'
+
+    implementation 'com.pushwoosh:pushwoosh-firebase:6.7.32'
+    implementation 'androidx.biometric:biometric:1.1.0'
+    implementation 'androidx.lifecycle:lifecycle-process:2.3.1'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation 'com.android.support:multidex:1.0.3'
+    implementation("com.google.android.ump:user-messaging-platform:3.1.0")
+
+    implementation("com.revenuecat.purchases:purchases:8.22.0")
+    implementation("com.revenuecat.purchases:purchases-ui:8.22.0")
+
+    implementation 'com.google.android.gms:play-services-code-scanner:16.1.0'
+    implementation 'org.nanohttpd:nanohttpd:2.3.1'
+
+}
+```
+
+**Common modifications:**
+
+- Change package name
+- Update version code/name
+- Modify SDK versions
+- Add/remove dependencies
+
+#### Adding Dependencies
+
+Add libraries in `dependencies` block:
+
+```java
+dependencies {
+    implementation 'com.example:library:1.0.0'
+}
+```
+
+After adding, sync Gradle: File → Sync Project with Gradle Files
+
+### Android Manifest Configuration
+
+Located at `/app/src/main/AndroidManifest.xml`
+
+**Common modifications:**
+
+- Add/remove permissions
+- Configure activities
+- Set up intent filters
+- Define app components
+
+---
+
+## Getting Help
+
+### When to Contact Support
+
+If you encounter any issues with the exported project:
+
+- Check that you have the latest version of Android Studio installed
+- Ensure all dependencies are properly synced in the Gradle files
+- Verify that you have the necessary SDKs installed
+- Review Android Studio's error messages and suggestions
+
+### Support Resources
+
+For additional assistance:
+
+| Support Channel | Contact Information                             | Response Time         |
+| :-------------- | :---------------------------------------------- | :-------------------- |
+| Email           | [support@despia.com](mailto:support@despia.com) | 24-48 hours           |
+| Dashboard Chat  | Available in your Despia dashboard              | During business hours |
+
+### Support Scope
+
+**What we can help with:**
+
+- Export process issues
+- Understanding the exported project structure
+- General questions about Despia features
+- Troubleshooting export-related problems
+
+**Outside our support scope:**
+
+- Extensive custom development assistance
+- Advanced Android Studio troubleshooting unrelated to Despia
+- Third-party library integration support
+- General Android development tutoring
+- Gradle configuration beyond basic setup
+
+> We're happy to help with any questions about the export process, though extensive custom development assistance may be outside our support scope.
+
+---
+
+## Alternative: Auto Publish
+
+Remember that this option is primarily for advanced developers who need direct access to the native code. For a simpler publishing experience, consider using our **Auto Publish** feature instead.
+
+### Benefits Comparison
+
+| Feature        | Auto Publish               | Manual Export                       |
+| :------------- | :------------------------- | :---------------------------------- |
+| Ease of Use    | Very simple                | Requires Android Studio knowledge   |
+| Build Process  | Automatic                  | Manual in Android Studio            |
+| Updates        | Over-the-air updates       | Manual rebuilds required            |
+| Customization  | Limited to Despia features | Full native code access             |
+| Maintenance    | Handled by Despia          | Developer responsibility            |
+| Learning Curve | Minimal                    | Requires Android development skills |
+
+### When to Choose Auto Publish
+
+Auto Publish is the better choice when:
+
+- You don't need custom native code modifications
+- You want simplified deployment and maintenance
+- You prefer automatic over-the-air updates
+- Your team lacks Android development expertise
+- Project requirements fit within Despia's feature set
+
+---
+
+## Best Practices
+
+### Version Control
+
+After exporting your project:
+
+1. Initialize a Git repository in your project folder
+2. Create an initial commit with the exported code
+3. Track all changes with meaningful commit messages
+4. Use GitHub, GitLab, or Bitbucket for backup and collaboration
+
+**Recommended .gitignore entries:**
+
+```
+# Built application files
+*.apk
+*.aab
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Generated files
+bin/
+gen/
+out/
+build/
+
+# Gradle files
+.gradle/
+gradle-app.setting
+!gradle-wrapper.jar
+
+# Local configuration file
+local.properties
+
+# Android Studio files
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild
+.cxx
+```
+
+### Security Considerations
+
+**Keystore Management:**
+
+- Never commit keystore files to version control
+- Store keystore and passwords securely
+- Create backups of keystore file
+- Document keystore information separately
+
+**API Keys and Secrets:**
+
+- Use environment variables or secure storage
+- Never hardcode API keys in source code
+- Consider using Android's BuildConfig for configuration
+
+### Code Documentation
+
+Maintain documentation for:
+
+- Custom modifications made to exported code
+- Reasons for specific implementation choices
+- Build and deployment procedures
+- Dependencies and their purposes
+- Known issues and workarounds
+
+### Regular Updates
+
+- Keep Android Studio updated to latest stable version
+- Update Gradle and dependencies regularly
+- Test on latest Android versions
+- Monitor for security updates
+- Consider re-exporting from Despia periodically for updated base code
+
+---
+
+## Testing Strategies
+
+### Local Testing
+
+1. **Emulator Testing**
+   - Create AVDs for different API levels
+   - Test various screen sizes
+   - Simulate different device configurations
+2. **Physical Device Testing**
+   - Test on actual hardware
+   - Connect via USB debugging
+   - Enable Developer Options on device
+
+### Pre-Release Testing
+
+Before publishing:
+
+1. **Internal Testing Track**
+   - Upload AAB to Play Console
+   - Test with internal team
+   - Verify all features work
+2. **Closed Testing**
+   - Invite limited testers
+   - Gather feedback
+   - Fix issues before production
+3. **Open Testing**
+   - Broader audience testing
+   - Monitor crash reports
+   - Address feedback
+
+---
+
+## Next Steps
+
+After successfully exporting and working with your Android Studio project:
+
+1. **Test thoroughly** before submitting to Google Play
+2. **Submit for internal testing** if needed
+3. **Complete Play Store listing** requirements
+4. **Submit for production** when ready
+5. **Monitor reviews and ratings** after launch
+6. **Plan for maintenance** and future updates
+
+For detailed information about the Google Play submission process, refer to the main [Android Deployment Guide](https://claude.ai/chat/android-deployment-guide.md).
+
+---
+
+## Additional Resources
+
+### Android Development Resources
+
+- [Android Developer Documentation](https://developer.android.com/)
+- [Android Studio User Guide](https://developer.android.com/studio/intro)
+- [Gradle Build Documentation](https://docs.gradle.org/)
+- [Material Design Guidelines](https://material.io/design)
+
+### Google Play Resources
+
+- [Google Play Console Help](https://support.google.com/googleplay/android-developer/)
+- [Launch Checklist](https://developer.android.com/distribute/best-practices/launch/)
+- [App Quality Guidelines](https://developer.android.com/quality)
+
+### Community Resources
+
+- Stack Overflow (android tag)
+- Reddit r/androiddev
+- Android Developers YouTube Channel
+- Google Developer Groups

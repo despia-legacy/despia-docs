@@ -1,0 +1,86 @@
+---
+title: "Camera Roll"
+icon: "photo-film"
+description: "Save images directly to the device's photo gallery from your Lovable mobile app."
+---
+
+<iframe src="https://www.youtube.com/embed/ycW7OvQAvO8" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add image saving functionality to your mobile app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Use the despia command function to save images to the camera roll:
+
+  - Save any image URL directly to device photo gallery: `despia("savethisimage://?url=${imageUrl}")`
+
+  This command enables users to save generated images, screenshots, or any visual content to their device's camera roll with native integration
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia SDK provides native image saving capabilities through URL scheme commands. The `savethisimage://?url=${imageUrl}` command downloads and saves images directly to the device's photo gallery with proper permissions handling. It automatically manages the download process, file format conversion, and integrates with the native photo library APIs for seamless user experience.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Save Images to Camera Roll**
+
+Trigger image saving on user interactions & events:
+
+```javascript
+// Save image from URL to camera roll
+const imageUrl = "data:image/png;base64,iVBORw0KGgoAAAANSU...";
+despia(`savethisimage://?url=${imageUrl}`);
+
+// Example usage for critical actions
+const handleSaveImage = () => {
+  const imageUrl = document.getElementById('myImage').src;
+  despia(`savethisimage://?url=${imageUrl}`);
+  // Image saved to gallery
+};
+
+// Example usage for canvas content
+const saveCanvasImage = () => {
+  const canvas = document.getElementById('myCanvas');
+  const dataURL = canvas.toDataURL('image/png');
+  despia(`savethisimage://?url=${dataURL}`);
+};
+
+// Example usage for user interactions
+const handleImageAction = (imageUrl) => {
+  if (imageUrl) {
+    despia(`savethisimage://?url=${imageUrl}`);
+  }
+};
+```
+
+## **Resources**
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native image saving functionality into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

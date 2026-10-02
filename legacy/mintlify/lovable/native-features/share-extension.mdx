@@ -1,0 +1,114 @@
+---
+title: "Share Extension"
+description: "Access shared content (images and text) from other apps when your Lovable application is opened via share functionality."
+icon: "file-import"
+---
+
+<iframe src="https://www.youtube.com/embed/KtYBtKJY4l0" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add shared data receiving functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Register a global callback function `window.onSharedDataReceived = function(value, type)` that receives shared content when users share images, URLs, or text to your app. The `type` parameter will be `'image'`, `'url'`, or `'text'`, and the `value` parameter contains the shared content.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** When users share content (like a photo from their gallery or a link from their browser) to your app, the Despia runtime opens your application in a web view and calls the `onSharedDataReceived(value, type)` function with the shared data. Images are provided as data URLs, URLs as plain strings, and text as plain strings. Video sharing is not yet supported.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Register the Callback
+
+Register the `onSharedDataReceived` callback to handle shared data:
+
+```javascript
+window.onSharedDataReceived = function(value, type) {
+  switch (type) {
+    case 'image':
+      // value is a data URL (e.g., 'data:image/png;base64,...')
+      handleSharedImage(value);
+      break;
+    case 'url':
+      // value is a URL string (e.g., 'https://example.com')
+      handleSharedUrl(value);
+      break;
+    case 'text':
+      // value is a plain text string
+      handleSharedText(value);
+      break;
+  }
+};
+```
+
+## Example Use Cases
+
+Handling a shared image:
+
+```javascript
+window.onSharedDataReceived = function(value, type) {
+  if (type === 'image') {
+    document.getElementById('preview').src = value;
+  }
+};
+```
+
+Handling a shared URL:
+
+```javascript
+window.onSharedDataReceived = function(value, type) {
+  if (type === 'url') {
+    window.location.href = '/bookmark?url=' + encodeURIComponent(value);
+  }
+};
+```
+
+Handling shared text:
+
+```javascript
+window.onSharedDataReceived = function(value, type) {
+  if (type === 'text') {
+    document.getElementById('notes').value = value;
+  }
+};
+```
+
+## Supported Content Types
+
+- **Images:** Provided as data URLs (e.g., `data:image/png;base64,...`) with type `'image'`
+- **URLs:** Provided as URL strings (e.g., `https://example.com`) with type `'url'`
+- **Text:** Provided as plain text strings with type `'text'`
+- **Videos:** Not yet supported
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+
+View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of shared content handling into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

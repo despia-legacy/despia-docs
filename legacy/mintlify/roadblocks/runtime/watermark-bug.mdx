@@ -1,0 +1,217 @@
+---
+title: "Watermark Bug"
+description: "You upgraded to a commercial license but the Despia watermark is still visible in your app. Here is why and how to fix it."
+icon: "stamp"
+---
+
+## The #1 cause: your build predates the license upgrade
+
+<Danger>
+  **The watermark is compiled into the native binary at build time, not loaded over the air.** If you published your app before purchasing the commercial license, that build contains the watermark forever. Upgrading your license does not retroactively modify binaries that already exist on the App Store, Play Store, or on your test device. The watermark is removed only on builds generated after the upgrade.
+</Danger>
+
+**Typical timeline:**
+
+- You publish a build while on the free tier
+- Days or weeks later, you purchase the commercial license
+- You expect the watermark to disappear from the build you already shipped
+- It does not, and it cannot
+
+**Why this happens:** Native binaries are signed, packaged, and frozen at the moment of publish. The watermark is part of the compiled native layer, not part of the web app loaded by the Despia runtime. There is no mechanism, on Despia's side or on the OS platforms themselves, that reaches into an installed binary and alters its contents. Republishing is the only path.
+
+---
+
+## The fix
+
+Publish a fresh build after the license is active. The new binary will be generated against your commercial license and will ship without the watermark.
+
+<Steps>
+  <Step title="Confirm your license is active">
+    Open the Despia editor and verify that your commercial license shows as active for the target platform. iOS and Android licenses are separate. An Android license does not remove the iOS watermark and an iOS license does not remove the Android watermark.
+  </Step>
+  <Step title="Publish a new build">
+    Go to **Despia \> Publish \> Select OS \> Publish Project**. Choose the OS you upgraded the license for. Despia will generate a fresh native build with the watermark removed.
+  </Step>
+  <Step title="Distribute the new build">
+    Submit the new version to the App Store, Play Store, or your internal test track. Existing installs of the old binary will still show the watermark until users update, because that watermark lives inside their installed file.
+  </Step>
+</Steps>
+
+<Warning>
+  The watermark is not OTA-removable. OTA updates only refresh the web layer. Anything compiled into the native binary, including the watermark, requires a fresh native build to change.
+</Warning>
+
+---
+
+## Common symptoms
+
+You are likely hitting this issue if:
+
+- You purchased a commercial license but the watermark is still visible in your installed app
+- You rebuilt the web side but the watermark persists
+- The watermark is gone in browser preview but still appears in the native app
+- You upgraded one platform but the other platform still shows the watermark
+- The most recent build on the App Store or Play Store still shows the watermark to end users
+
+---
+
+## Why the browser shows it gone but the app does not
+
+The Despia editor and any web preview reflect your current account state in real time. The installed native app reflects the account state at the moment its binary was built. These are two different snapshots in time. The browser sees today. The installed app sees the day it was published.
+
+---
+
+## Common confusion
+
+### "I paid, so why is it still there?"
+
+What you paid for changes what future builds look like. It does not retroactively change binaries that already exist on user devices or in the stores. The binary on a phone is a fixed file downloaded from the App Store or Play Store. Despia cannot reach into that file and modify it, and the platforms themselves do not permit this. Publishing a new build is the only path.
+
+### "I rebuilt and the watermark is still there"
+
+Most often one of these:
+
+- The OS you rebuilt is not the one with the watermark. iOS and Android are licensed and built independently. Verify that you rebuilt the correct OS, and that the license for that OS is active.
+- Your testing device is still running the old build. Uninstall the app completely, then install the freshly published version.
+- A service worker is caching the old web layer in a way that masks the new build. See [No OTA Updates](/troubleshooting/no-ota-updates) for the full service worker cleanup procedure.
+
+### "It works in the editor preview but not in the installed app"
+
+Editor preview reflects your current license. The installed native app reflects the license at the moment of its build. This is not a bug, it is how native distribution works on iOS and Android.
+
+---
+
+## Correct order of operations
+
+Always upgrade the license first, then publish. The sequence matters.
+
+<Steps>
+  <Step title="Purchase the commercial license">
+    Upgrade for the target OS, iOS, Android, or both. Each platform is licensed separately.
+  </Step>
+  <Step title="Verify the license is active">
+    Open the Despia editor and check the license status for the OS you intend to publish. Do not proceed until it shows active.
+  </Step>
+  <Step title="Publish the new build">
+    Go to **Despia \> Publish \> Select OS \> Publish Project** and publish.
+  </Step>
+  <Step title="Submit to the stores">
+    Upload the new build to App Store Connect or Google Play Console, or push it to your internal test track. Increment your version or build number as needed for the stores to accept the upload.
+  </Step>
+</Steps>
+
+If you publish before upgrading, the build will contain the watermark regardless of what you do to your account afterwards. You will have to publish again once the license is active.
+
+---
+
+## What about iOS vs Android specifically
+
+Licensing is per-platform. The same is true of the watermark.
+
+| Scenario | Result |
+| :-- | :-- |
+| iOS license active, Android license not purchased | iOS builds clean, Android builds watermarked |
+| Android license active, iOS license not purchased | Android builds clean, iOS builds watermarked |
+| Both licenses active, only iOS rebuilt after upgrade | iOS clean, Android still watermarked until rebuilt |
+| Both licenses active, both rebuilt after upgrade | Both clean |
+
+If your customers see a watermark on Android specifically, check the Android license status and confirm that the Android build was published after the license went active.
+
+---
+
+## Testing the new build
+
+To confirm the watermark is actually gone:
+
+1. Verify the license is active for the target OS in the Despia editor
+2. Publish a new build via **Despia \> Publish \> Select OS \> Publish Project**
+3. Wait for the build to complete
+4. Uninstall the old app from your test device completely
+5. Install the new build, either from a fresh store listing, TestFlight, or a Play Console internal track
+6. Open the app and confirm the watermark is no longer visible
+
+<Note>
+  **Tip:** Bump your version number or build number on every republish so you can tell at a glance, both in the stores and in your testing notes, which binary is which.
+</Note>
+
+---
+
+## Troubleshooting checklist
+
+### License verification
+
+- Commercial license purchased for the affected OS
+- License showing as active in the Despia editor
+- Correct Despia account signed in, not a separate workspace or team account
+
+### Build verification
+
+- Build published after the license became active, not before
+- Correct OS selected at publish time
+- Build version or number incremented from the previous release
+
+### Distribution verification
+
+- New build uploaded to App Store Connect or Google Play Console
+- New build is the version actually being downloaded by testers, not a cached older release
+- Internal test track points to the new build
+
+### Device testing
+
+- Old app uninstalled completely from the test device
+- New build freshly installed
+- App opened with network connection so it can fully initialize
+
+---
+
+## Common mistakes
+
+### Mistake 1: Upgrading and not rebuilding
+
+The most frequent case. The license is purchased, the editor shows it as active, but no fresh build is published. Nothing about the installed app changes until you publish.
+
+### Mistake 2: Rebuilding only one OS
+
+Licenses and builds are per-platform. Upgrading and rebuilding iOS does nothing for Android, and vice versa.
+
+### Mistake 3: Testing on top of the old install
+
+If the old build is still installed, your device may load it from the existing app icon rather than the new version, especially with TestFlight and Play Console internal tracks. Uninstall completely before testing.
+
+### Mistake 4: Confusing OTA updates with native rebuilds
+
+OTA updates refresh the web layer only. The watermark lives in the native layer. No combination of web-side changes, cache clears, or OTA pushes will remove a watermark from a binary that was built before the license upgrade.
+
+### Mistake 5: Publishing during the upgrade
+
+If a publish was in flight when the license was applied, the resulting build may still reference the pre-upgrade state. Confirm the license is active first, then start the publish.
+
+---
+
+## Quick reference
+
+**Symptom:** Watermark still visible after purchasing the commercial license.
+
+**Cause:** The installed build was published before the license upgrade. The watermark is baked into the native binary at build time.
+
+**Fix:** Go to **Despia \> Publish \> Select OS \> Publish Project**, publish a new build, distribute it, and have testers reinstall.
+
+**Per platform:** iOS and Android are licensed and built separately. Upgrade and rebuild each OS you want clean.
+
+**Not the fix:** Force-closing the app, clearing the app cache, waiting, or pushing OTA updates. None of these touch the native binary.
+
+---
+
+## Remember
+
+**The golden rule:** The watermark is compiled into the binary at build time. The only way to remove it is to publish a fresh build after the commercial license is active.
+
+**Order matters:** License first, then publish. Publishing before the upgrade always produces a watermarked binary, regardless of what you do to your account afterwards.
+
+**Per-platform:** iOS and Android licenses are separate, and so are their builds. Upgrading one does not affect the other.
+
+**Always test on a clean install:** Uninstall the old version before installing the new build, otherwise you cannot trust what you are seeing.
+
+---
+
+For support or questions, contact: [support@despia.com](mailto:support@despia.com)

@@ -1,0 +1,155 @@
+---
+title: "Sandbox"
+description: "Repoint a compiled app at a test environment at runtime without rebuilding, then restore production when testing is done."
+icon: "flask"
+---
+
+Repoint a compiled app at a test environment at runtime, without rebuilding. Testers can redirect the running app from its production host to a staging host and start URL, run QA against the test backend, then restore the production app when they are done. Every switch, and every launch that starts in a test environment, shows a native alert so it is always clear which environment is live, and the behaviour is identical on iOS and Android.
+
+<Info>
+  A test-environment override persists across app restarts. Once set, every cold launch reloads into the test environment and shows a reminder alert until it is cleared. Return to production when testing is done.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+The web app triggers a `sandbox://` scheme from the running page. `sandbox://set` overrides the runtime host and start URL, persists the override, and reloads the WebView into the test environment. `sandbox://clear` restores the production host and start URL and reloads back into the production app. Both actions are callable directly from your loaded page.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('sandbox://set?host=staging.example.com')
+}
+```
+
+The scheme dispatches from the main app WebView only, not from pages opened in the in-app browser tab.
+
+---
+
+## Point the app at a test environment
+
+Provide a host, a start URL, or both. The host is the bare domain used for in-app link routing; the start URL is the full entry point the WebView loads. When the start URL carries its own query string, wrap it with `encodeURIComponent`.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    const startUrl = 'https://staging.example.com/login'
+    despia(`sandbox://set?host=staging.example.com&start_url=${encodeURIComponent(startUrl)}`)
+}
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `host` | No | Bare domain with no scheme, path, or port (for example `staging.example.com`). Used for same-origin and in-app link routing. If omitted, derived from the start URL's host. |
+| `start_url` | No | Full `http` or `https` URL the WebView loads as the entry point. Wrap with `encodeURIComponent(...)` when it carries its own query string. If omitted, derived as `https://<host>`. |
+
+At least one of the two is required. Pass only `host` and the start URL becomes `https://<host>`; pass only `start_url` and the host is taken from it. The start URL must use `http` or `https` and have a valid host, and the host must be a bare domain with no scheme, path, or port. Invalid input shows a native error alert and changes nothing, so the app stays where it is. On success the WebView reloads through the standard load path, so the usual runtime query parameters are appended exactly as in production.
+
+<Warning>
+  The production and test sites share one WebView data store, so cookies, local storage, and service workers carry across both. If leftover state disturbs a test, clear the app cache before switching environments.
+</Warning>
+
+---
+
+## Check which environment is running
+
+The runtime injects `despia.isSandbox` at document start on every page. It is `true` whenever a test environment is active, including on the first page after a cold launch into a persisted override, and `false` in production. Treat a missing value as production.
+
+```javascript
+if (despia.isSandbox) {
+    // pointed at the test environment
+    showTestBanner()
+}
+```
+
+The value updates in place the moment `sandbox://set` or `sandbox://clear` fires, before the reload lands, so a banner or guard reading it stays correct through the transition and on every navigation after it.
+
+---
+
+## Switch between test environments
+
+Calling `sandbox://set` again while already in a test environment switches hosts directly. The production snapshot captured at launch is left untouched, so a later `sandbox://clear` always returns to production, never to the previous test environment.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('sandbox://set?host=staging-two.example.com')
+}
+```
+
+---
+
+## Return to production
+
+`sandbox://clear` removes the override, restores the production host and start URL from the snapshot captured at launch, and reloads into the production app.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('sandbox://clear')
+}
+```
+
+If no test environment is active, `clear` shows an informational alert and does nothing, so it is safe to call unconditionally. Because the override persists, a cold launch returns to the last test environment until `clear` runs.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

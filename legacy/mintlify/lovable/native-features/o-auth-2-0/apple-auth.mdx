@@ -1,0 +1,941 @@
+---
+title: "Apple Auth"
+---
+
+````markdown expandable
+# Apple Sign In - Complete Platform-Aware Implementation
+
+## Platform Strategy
+
+**iOS (Despia)**: Apple JS SDK -> Native Face ID dialog (instant)
+**Android (Despia)**: oauth:// protocol -> ASWebAuthenticationSession -> form_post
+**Web**: Apple JS SDK -> Native browser dialog (instant)
+
+**Why Different Approaches**:
+- iOS has native Apple Sign In support -> Use JS SDK for instant dialog
+- Android has NO native Apple Sign In -> Use oauth:// to trigger browser session
+- Web has Apple Sign In support -> Use JS SDK for instant dialog
+
+## Apple Developer Console Setup
+
+### Required Links to Register
+
+You need to register these URLs in your Apple Developer Console Service ID configuration:
+
+**Domains**:
+- Your app domain: `your-app.lovable.app` (or your custom domain)
+- Supabase function domain: `your-project-ref.supabase.co`
+
+**Return URLs**:
+- Edge function callback: `https://your-project-ref.supabase.co/functions/v1/auth-apple-callback`
+- App callback (for JS SDK): `https://your-app.lovable.app/auth/apple/callback`
+
+### Step-by-Step Guide
+
+#### 1. Create App ID
+
+1. Go to https://developer.apple.com/account/resources/identifiers/list
+2. Click the **+** button
+3. Select **App IDs** → **Continue**
+4. Select **App** type → **Continue**
+5. Fill in:
+   - **Description**: Your app name (e.g., "My Awesome App")
+   - **Bundle ID**: Explicit (e.g., `com.yourcompany.yourapp`)
+6. Under **Capabilities**, check **Sign In with Apple**
+7. Click **Continue** → **Register**
+
+#### 2. Create Service ID
+
+1. Go to https://developer.apple.com/account/resources/identifiers/list
+2. Click the **+** button
+3. Select **Services IDs** → **Continue**
+4. Fill in:
+   - **Description**: "Your App Web Auth"
+   - **Identifier**: `com.yourcompany.yourapp.web` (MUST be different from App ID)
+5. Click **Continue** → **Register**
+
+#### 3. Configure Service ID
+
+1. Click on your newly created Service ID
+2. Check **Sign In with Apple**
+3. Click **Configure** next to Sign In with Apple
+4. In the configuration screen:
+   
+   **Primary App ID**: Select your App ID from step 1
+   
+   **Domains and Subdomains** - Add both:
+   ```
+   your-app.lovable.app
+   your-project-ref.supabase.co
+   ```
+   
+   **Return URLs** - Add both:
+   ```
+   https://your-project-ref.supabase.co/functions/v1/auth-apple-callback
+   https://your-app.lovable.app/auth/apple/callback
+   ```
+
+5. Click **Save**
+6. Click **Continue** → **Save**
+
+**Important Notes**:
+- The first Return URL is for Android (receives form_post from oauth:// flow)
+- The second Return URL is for JS SDK initialization (iOS/Web)
+- Both domains must be registered even though JS SDK uses different flow
+- No `www` prefix unless your actual domain uses it
+
+#### 4. Create Sign In Key
+
+1. Go to https://developer.apple.com/account/resources/authkeys/list
+2. Click the **+** button
+3. Fill in:
+   - **Key Name**: "Sign In with Apple Key"
+4. Check **Sign In with Apple**
+5. Click **Configure** next to Sign In with Apple
+6. Select your **Primary App ID** → **Save**
+7. Click **Continue** → **Register**
+8. **CRITICAL**: Download the `.p8` file (you can only download once!)
+9. Note the **Key ID** shown on screen
+
+#### 5. Note Your Credentials
+
+You'll need these values for environment variables:
+
+- **Team ID**: Found in top right of Apple Developer portal (e.g., `ABCD1234EF`)
+- **Service ID**: The identifier you created (e.g., `com.yourcompany.yourapp.web`)
+- **Key ID**: From the key you created (e.g., `ABC123DEFG`)
+- **Private Key**: Contents of the `.p8` file
+
+### Verification Checklist
+
+Before proceeding, verify:
+- [ ] Service ID created and configured
+- [ ] Both domains added (app domain + Supabase domain)
+- [ ] Both return URLs added (edge function + app callback)
+- [ ] Sign In key created and `.p8` file downloaded
+- [ ] Team ID, Service ID, and Key ID noted
+- [ ] `.p8` file contents saved securely
+
+## Implementation
+
+### 1. Load Apple JS SDK in index.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your App</title>
+  
+  <!-- Apple Sign In JS SDK (for iOS and Web) -->
+  <script 
+    type="text/javascript" 
+    src="https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js"
+  ></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
+```
+
+### 2. Apple Auth Library with Platform Detection
+
+```typescript
+// src/lib/apple-auth.ts
+import { supabase } from '@/integrations/supabase/client';
+
+const APPLE_CLIENT_ID = import.meta.env.VITE_APPLE_CLIENT_ID || '';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
+const APP_URL = import.meta.env.VITE_APP_URL || window.location.origin;
+
+if (!APPLE_CLIENT_ID) console.warn('Set VITE_APPLE_CLIENT_ID in .env');
+if (!SUPABASE_URL) console.warn('Set VITE_SUPABASE_URL in .env');
+
+// Platform detection
+export function detectPlatform(): 'ios' | 'android' | 'web' {
+  const ua = navigator.userAgent.toLowerCase();
+  if (ua.includes('despia-iphone') || ua.includes('despia-ipad')) return 'ios';
+  if (ua.includes('despia-android')) return 'android';
+  return 'web';
+}
+
+// Initialize Apple ID (for iOS and Web only)
+export function initAppleAuth() {
+  const platform = detectPlatform();
+  
+  // Only initialize for iOS and Web (Android uses oauth:// flow)
+  if (platform === 'android') return;
+  
+  if (!APPLE_CLIENT_ID) return;
+
+  if (typeof window !== 'undefined' && (window as any).AppleID) {
+    (window as any).AppleID.auth.init({
+      clientId: APPLE_CLIENT_ID,
+      scope: 'name email',
+      redirectURI: `${APP_URL}/auth/apple/callback`,
+      usePopup: false,
+    });
+  }
+}
+
+// iOS/Web: Sign in with Apple JS SDK
+export async function signInWithAppleJS(): Promise<{
+  idToken: string;
+  code: string;
+  user?: any;
+}> {
+  if (typeof window === 'undefined' || !(window as any).AppleID) {
+    throw new Error('Apple ID not initialized');
+  }
+
+  try {
+    const response = await (window as any).AppleID.auth.signIn();
+    return {
+      idToken: response.authorization.id_token,
+      code: response.authorization.code,
+      user: response.user,
+    };
+  } catch (error: any) {
+    if (error.error === 'popup_closed_by_user') {
+      throw new Error('Sign in cancelled');
+    }
+    throw error;
+  }
+}
+
+// Android: Sign in with oauth:// protocol
+export function signInWithOAuthProtocol(deeplinkScheme: string = 'myapp'): void {
+  if (!APPLE_CLIENT_ID || !SUPABASE_URL) {
+    throw new Error('Apple Sign In not configured');
+  }
+
+  const state = `${crypto.randomUUID()}|android|${deeplinkScheme}`;
+
+  const params = new URLSearchParams({
+    client_id: APPLE_CLIENT_ID,
+    response_type: 'code id_token',
+    response_mode: 'form_post',
+    scope: 'name email',
+    redirect_uri: `${SUPABASE_URL}/functions/v1/auth-apple-callback`,
+    state: state,
+  });
+
+  const appleAuthUrl = `https://appleid.apple.com/auth/authorize?${params.toString()}`;
+  
+  // Use oauth:// protocol to trigger ASWebAuthenticationSession
+  window.location.href = `oauth://?url=${encodeURIComponent(appleAuthUrl)}`;
+}
+
+// Set session from tokens
+export async function setAppleSession(
+  accessToken: string,
+  refreshToken: string
+): Promise<boolean> {
+  try {
+    const { error } = await supabase.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+    return !error;
+  } catch {
+    return false;
+  }
+}
+```
+
+### 3. LoginButton with Platform Detection
+
+```typescript
+// src/components/LoginButton.tsx
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
+import { 
+  detectPlatform, 
+  signInWithAppleJS, 
+  signInWithOAuthProtocol 
+} from '@/lib/apple-auth';
+
+interface LoginButtonProps {
+  onError?: (error: string) => void;
+  deeplinkScheme?: string;
+}
+
+const LoginButton = ({ onError, deeplinkScheme = 'myapp' }: LoginButtonProps) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+
+  const handleAppleLogin = async () => {
+    setIsLoading(true);
+
+    try {
+      const platform = detectPlatform();
+
+      if (platform === 'android') {
+        // Android: Use oauth:// protocol
+        // This will redirect, so loading state doesn't matter
+        signInWithOAuthProtocol(deeplinkScheme);
+      } else {
+        // iOS/Web: Use Apple JS SDK
+        const { idToken, code, user } = await signInWithAppleJS();
+
+        // Navigate to loading page with credentials
+        navigate('/auth-loading', {
+          state: { idToken, code, user, platform },
+          replace: true,
+        });
+      }
+    } catch (err) {
+      console.error('Apple Sign In error:', err);
+      onError?.(err instanceof Error ? err.message : 'Sign in failed');
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      onClick={handleAppleLogin}
+      disabled={isLoading}
+      className="w-full bg-black hover:bg-gray-800 text-white"
+    >
+      {isLoading ? (
+        <span className="flex items-center gap-2">
+          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+          Connecting...
+        </span>
+      ) : (
+        <span className="flex items-center gap-2">
+          <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/>
+          </svg>
+          Sign in with Apple
+        </span>
+      )}
+    </Button>
+  );
+};
+
+export default LoginButton;
+```
+
+### 4. AuthLoading Page (Handles JS SDK Response)
+
+```typescript
+// src/pages/AuthLoading.tsx
+import { useEffect, useState } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { setAppleSession } from '@/lib/apple-auth';
+
+const AuthLoading = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const processAppleAuth = async () => {
+      const { idToken, code, user, platform } = location.state || {};
+
+      if (!idToken) {
+        navigate('/auth?error=Missing+credentials', { replace: true });
+        return;
+      }
+
+      try {
+        // Send to edge function for verification
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/auth-apple-callback`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              id_token: idToken,
+              code,
+              user: user ? JSON.stringify(user) : null,
+              platform: platform || 'web',
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.error) {
+          setError(data.error);
+          setTimeout(() => {
+            navigate(`/auth?error=${encodeURIComponent(data.error)}`, { replace: true });
+          }, 2000);
+          return;
+        }
+
+        if (data.access_token && data.refresh_token) {
+          const success = await setAppleSession(data.access_token, data.refresh_token);
+
+          if (success) {
+            navigate('/', { replace: true });
+          } else {
+            setError('Failed to set session');
+            setTimeout(() => {
+              navigate('/auth?error=Session+failed', { replace: true });
+            }, 2000);
+          }
+        }
+      } catch (err) {
+        console.error('Auth processing error:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error');
+        setTimeout(() => {
+          navigate('/auth?error=Processing+failed', { replace: true });
+        }, 2000);
+      }
+    };
+
+    processAppleAuth();
+  }, [location.state, navigate]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-600 to-purple-800">
+      <div className="text-center p-8">
+        <svg className="w-16 h-16 mx-auto mb-6 animate-spin" viewBox="0 0 50 50">
+          <circle className="opacity-25" cx="25" cy="25" r="20" stroke="white" strokeWidth="3" fill="none"/>
+          <path className="opacity-75" fill="white" d="M25 5 A 20 20 0 0 1 45 25"/>
+        </svg>
+        <h1 className="text-2xl font-semibold text-white mb-2">
+          {error ? 'Sign in failed' : 'Signing you in'}
+        </h1>
+        <p className="text-white/80 text-sm">
+          {error || 'Please wait a moment...'}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default AuthLoading;
+```
+
+### 5. Auth Page (Handles Android Redirect)
+
+```typescript
+// src/pages/Auth.tsx
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import LoginButton from '@/components/LoginButton';
+import { setAppleSession } from '@/lib/apple-auth';
+
+const Auth = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [showLogin, setShowLogin] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const hasRun = useRef(false);
+
+  useEffect(() => {
+    if (hasRun.current) return;
+    hasRun.current = true;
+
+    const handleAuth = async () => {
+      const { data: { session: existingSession } } = await supabase.auth.getSession();
+      if (existingSession) {
+        navigate('/', { replace: true });
+        return;
+      }
+
+      const errorParam = searchParams.get('error');
+      if (errorParam) {
+        setError(decodeURIComponent(errorParam));
+        return;
+      }
+
+      // Check for tokens (from Android oauth:// redirect)
+      const accessToken = searchParams.get('access_token');
+      const refreshToken = searchParams.get('refresh_token');
+
+      if (accessToken && refreshToken) {
+        setIsProcessing(true);
+        const success = await setAppleSession(accessToken, refreshToken);
+        if (success) {
+          window.history.replaceState({}, '', '/auth');
+          navigate('/', { replace: true });
+        } else {
+          setError('Failed to set session');
+          setIsProcessing(false);
+        }
+        return;
+      }
+
+      setShowLogin(true);
+    };
+
+    handleAuth();
+  }, [searchParams, navigate]);
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-sm space-y-4">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-4 text-center">
+            <h2 className="text-lg font-semibold text-destructive">Sign in failed</h2>
+            <p className="mt-2 text-sm text-muted-foreground">{error}</p>
+          </div>
+          <Button onClick={() => { setError(null); setShowLogin(true); }} className="w-full">
+            Try again
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showLogin) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-sm space-y-6 text-center">
+          <div>
+            <h1 className="text-2xl font-bold">Welcome</h1>
+            <p className="mt-2 text-muted-foreground">Sign in to continue</p>
+          </div>
+          <LoginButton onError={setError} />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <div className="text-center">
+        <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="mt-4 text-sm text-muted-foreground">
+          {isProcessing ? 'Completing sign in...' : 'Loading...'}
+        </p>
+      </div>
+    </div>
+  );
+};
+
+export default Auth;
+```
+
+### 6. Initialize Apple Auth
+
+```typescript
+// src/App.tsx
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import Index from './pages/Index';
+import Auth from './pages/Auth';
+import AuthLoading from './pages/AuthLoading';
+import { initAppleAuth } from './lib/apple-auth';
+
+function App() {
+  useEffect(() => {
+    // Initialize Apple ID (iOS and Web only)
+    initAppleAuth();
+  }, []);
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Index />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/auth-loading" element={<AuthLoading />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
+```
+
+### 7. Edge Function (Handles Both JSON and form_post)
+
+```typescript
+// supabase/functions/auth-apple-callback/index.ts
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import * as jose from "https://deno.land/x/jose@v4.14.4/index.ts";
+
+let applePublicKeys: jose.JWTVerifyGetKey | null = null;
+let keysLastFetched = 0;
+
+async function getApplePublicKeys(): Promise<jose.JWTVerifyGetKey> {
+  const now = Date.now();
+  if (applePublicKeys && (now - keysLastFetched) < 24 * 60 * 60 * 1000) return applePublicKeys;
+  applePublicKeys = jose.createRemoteJWKSet(new URL('https://appleid.apple.com/auth/keys'));
+  keysLastFetched = now;
+  return applePublicKeys;
+}
+
+async function verifyAppleToken(idToken: string, clientId: string): Promise<jose.JWTPayload> {
+  const JWKS = await getApplePublicKeys();
+  const { payload } = await jose.jwtVerify(idToken, JWKS, {
+    issuer: 'https://appleid.apple.com',
+    audience: clientId,
+  });
+  return payload;
+}
+
+serve(async (req) => {
+  const appUrl = Deno.env.get('APP_URL')!;
+  const clientId = Deno.env.get('APPLE_CLIENT_ID')!;
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
+
+  // CORS for JSON requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
+    });
+  }
+
+  if (req.method !== 'POST') {
+    return new Response('Method not allowed', { status: 405 });
+  }
+
+  try {
+    const contentType = req.headers.get('content-type') || '';
+    let idToken: string;
+    let userJson: string | null = null;
+    let platform = 'web';
+    let deeplinkScheme: string | undefined;
+
+    // Handle both JSON (from JS SDK) and form_post (from Android oauth://)
+    if (contentType.includes('application/json')) {
+      // iOS/Web: JSON from JS SDK
+      const body = await req.json();
+      idToken = body.id_token;
+      userJson = body.user;
+      platform = body.platform || 'web';
+    } else {
+      // Android: form_post from oauth://
+      const formData = await req.formData();
+      idToken = formData.get('id_token') as string;
+      userJson = formData.get('user') as string;
+      const state = formData.get('state') as string;
+
+      if (state?.includes('|')) {
+        const parts = state.split('|');
+        platform = parts[1];
+        if (parts[2]) deeplinkScheme = parts[2];
+      }
+    }
+
+    if (!idToken) {
+      if (contentType.includes('application/json')) {
+        return new Response(JSON.stringify({ error: 'No identity token' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { 'Location': `${appUrl}/auth?error=${encodeURIComponent('No identity token')}` }
+      });
+    }
+
+    // Verify token
+    const tokenPayload = await verifyAppleToken(idToken, clientId);
+    const appleUserId = tokenPayload.sub as string;
+    const email = tokenPayload.email as string | undefined;
+
+    // Parse user info
+    let displayName = 'Apple User', firstName = '', lastName = '';
+    if (userJson) {
+      try {
+        const userData = JSON.parse(userJson);
+        if (userData.name) {
+          firstName = userData.name.firstName || '';
+          lastName = userData.name.lastName || '';
+          displayName = [firstName, lastName].filter(Boolean).join(' ') || 'Apple User';
+        }
+      } catch {}
+    }
+
+    const userEmail = email || `${appleUserId}@apple.oauth`;
+
+    const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+    const supabasePublic = createClient(supabaseUrl, anonKey);
+
+    // Create or find user
+    let userId: string;
+    const { data: createData, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      email: userEmail,
+      email_confirm: true,
+      user_metadata: {
+        apple_user_id: appleUserId,
+        display_name: displayName,
+        first_name: firstName,
+        last_name: lastName,
+        provider: 'apple'
+      }
+    });
+
+    if (createError?.message?.includes('already been registered')) {
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const existingUser = existingUsers?.users.find(
+        u => u.email === userEmail || u.user_metadata?.apple_user_id === appleUserId
+      );
+      if (!existingUser) {
+        if (contentType.includes('application/json')) {
+          return new Response(JSON.stringify({ error: 'User not found' }), {
+            status: 404,
+            headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+          });
+        }
+        return new Response(null, {
+          status: 302,
+          headers: { 'Location': `${appUrl}/auth?error=${encodeURIComponent('User not found')}` }
+        });
+      }
+      userId = existingUser.id;
+
+      if (firstName || lastName) {
+        await supabaseAdmin.auth.admin.updateUserById(userId, {
+          user_metadata: { display_name: displayName, first_name: firstName, last_name: lastName }
+        });
+      }
+    } else if (createError) {
+      if (contentType.includes('application/json')) {
+        return new Response(JSON.stringify({ error: 'Failed to create user' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { 'Location': `${appUrl}/auth?error=${encodeURIComponent('Failed to create user')}` }
+      });
+    } else {
+      userId = createData.user.id;
+    }
+
+    // Generate session
+    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+      type: 'magiclink',
+      email: userEmail,
+    });
+
+    if (linkError || !linkData) {
+      if (contentType.includes('application/json')) {
+        return new Response(JSON.stringify({ error: 'Failed to generate session' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { 'Location': `${appUrl}/auth?error=${encodeURIComponent('Failed to generate session')}` }
+      });
+    }
+
+    const { data: sessionData, error: sessionError } = await supabasePublic.auth.verifyOtp({
+      token_hash: linkData.properties.hashed_token,
+      type: 'email',
+    });
+
+    if (sessionError || !sessionData.session) {
+      if (contentType.includes('application/json')) {
+        return new Response(JSON.stringify({ error: 'Failed to create session' }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { 'Location': `${appUrl}/auth?error=${encodeURIComponent('Failed to create session')}` }
+      });
+    }
+
+    const accessToken = sessionData.session.access_token;
+    const refreshToken = sessionData.session.refresh_token;
+
+    // Return tokens based on request type
+    if (contentType.includes('application/json')) {
+      // iOS/Web: Return JSON
+      return new Response(
+        JSON.stringify({ access_token: accessToken, refresh_token: refreshToken }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+        }
+      );
+    } else {
+      // Android: Redirect to deeplink
+      const params = new URLSearchParams({ access_token: accessToken, refresh_token: refreshToken });
+      if (platform === 'android' && deeplinkScheme) {
+        return new Response(null, {
+          status: 302,
+          headers: { 'Location': `${deeplinkScheme}://oauth/auth?${params}` }
+        });
+      }
+      return new Response(null, {
+        status: 302,
+        headers: { 'Location': `${appUrl}/auth?${params}` }
+      });
+    }
+
+  } catch (error) {
+    console.error('Error:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+    });
+  }
+});
+```
+
+### 8. Environment Variables
+
+**Frontend (.env file)**:
+```env
+# Your Service ID from Apple Developer Console (Step 2)
+VITE_APPLE_CLIENT_ID=com.yourcompany.yourapp.web
+
+# Your Supabase project URL
+VITE_SUPABASE_URL=https://your-project-ref.supabase.co
+
+# Your app URL (must match domain registered in Apple Console)
+VITE_APP_URL=https://your-app.lovable.app
+```
+
+**Backend (Supabase Edge Function Secrets)**:
+
+Go to Supabase Dashboard → Project Settings → Edge Functions → Secrets
+
+Add these secrets:
+
+```
+# Your Service ID (same as VITE_APPLE_CLIENT_ID)
+APPLE_CLIENT_ID=com.yourcompany.yourapp.web
+
+# Your Team ID from Apple Developer Console (top right corner)
+APPLE_TEAM_ID=ABCD1234EF
+
+# Your Key ID from the Sign In key you created
+APPLE_KEY_ID=ABC123DEFG
+
+# Contents of your .p8 file (replace newlines with \n)
+APPLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\nMIGT...your key...\n-----END PRIVATE KEY-----
+
+# Your app URL (must match VITE_APP_URL)
+APP_URL=https://your-app.lovable.app
+```
+
+**Important for APPLE_PRIVATE_KEY**:
+1. Open your `.p8` file in a text editor
+2. Copy entire contents including `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----`
+3. Replace actual newlines with `\n` literal string
+4. Example:
+   ```
+   -----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGBy...\n...rest of key...\n-----END PRIVATE KEY-----
+   ```
+
+## Platform Flows
+
+**iOS Flow**:
+1. Button click
+2. AppleID.auth.signIn() (JS SDK)
+3. Native Face ID dialog (instant!)
+4. Credentials returned to JS
+5. Navigate to /auth-loading
+6. POST to edge function (JSON)
+7. Get Supabase tokens
+8. setSession()
+9. Logged in
+
+**Android Flow**:
+1. Button click
+2. window.location.href = 'oauth://...'
+3. ASWebAuthenticationSession opens
+4. User authenticates
+5. Apple POSTs to edge function (form_post)
+6. Edge function redirects to deeplink
+7. WebView navigates to /auth?tokens
+8. setSession()
+9. Logged in
+
+**Web Flow**:
+1. Button click
+2. AppleID.auth.signIn() (JS SDK)
+3. Native browser dialog (instant!)
+4. Credentials returned to JS
+5. Navigate to /auth-loading
+6. POST to edge function (JSON)
+7. Get Supabase tokens
+8. setSession()
+9. Logged in
+
+## Why This Works
+
+- **iOS**: JS SDK triggers native dialog = instant, no redirects
+- **Android**: oauth:// protocol needed (no native Apple support)
+- **Web**: JS SDK works in browser = instant, no redirects
+- **Edge function**: Handles both JSON (iOS/Web) and form_post (Android)
+
+## Benefits
+
+- Fast on iOS/Web (no redirect delays)
+- Works on Android (oauth:// protocol)
+- Clean code
+- Better UX everywhere
+
+## Quick Reference
+
+### URLs Registered in Apple Developer Console
+
+| URL Type | URL | Used For |
+|----------|-----|----------|
+| Domain | `your-app.lovable.app` | Your app domain |
+| Domain | `your-project-ref.supabase.co` | Supabase functions domain |
+| Return URL | `https://your-project-ref.supabase.co/functions/v1/auth-apple-callback` | Android form_post callback |
+| Return URL | `https://your-app.lovable.app/auth/apple/callback` | JS SDK initialization |
+
+### Service ID Configuration Summary
+
+```
+Service ID: com.yourcompany.yourapp.web
+Primary App ID: com.yourcompany.yourapp
+
+Domains:
+  - your-app.lovable.app
+  - your-project-ref.supabase.co
+
+Return URLs:
+  - https://your-project-ref.supabase.co/functions/v1/auth-apple-callback
+  - https://your-app.lovable.app/auth/apple/callback
+```
+
+### Common Issues
+
+**"Invalid redirect_uri" error**:
+- Check both return URLs are registered exactly as shown
+- No trailing slashes
+- Must use https://
+- Domain must match exactly
+
+**"Invalid client_id" error**:
+- Check VITE_APPLE_CLIENT_ID matches your Service ID
+- Service ID format: `com.company.app.web`
+
+**JS SDK not loading**:
+- Check script tag in index.html
+- Verify CDN URL: `https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/en_US/appleid.auth.js`
+
+**Android not redirecting back**:
+- Check deeplink scheme configured in app
+- Verify edge function returns 302 redirect
+- Check state parameter includes deeplink scheme
+````

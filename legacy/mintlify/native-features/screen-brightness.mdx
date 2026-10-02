@@ -1,0 +1,166 @@
+---
+title: "Screen Brightness"
+description: "Set screen brightness behavior for scanning workflows, with three modes for automatic, always-bright, and standard rendering."
+icon: "lightbulb"
+---
+
+<iframe src="https://www.youtube.com/embed/lP9ZkgGYcEE" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is calling `scanningmode://` with the right mode at the right time.
+</Note>
+
+`scanningmode://` switches the screen between three brightness behaviors tuned for scanning workflows: barcode display, QR code presentation, ticket gates, loyalty cards, anything where the user needs the device to be readable by an external scanner. The runtime takes over the brightness curve while the mode is active and restores user control when you switch back to `off`.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Pass one of three modes to `scanningmode://`. The runtime applies the matching brightness behavior immediately and keeps it in effect until the next call.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('scanningmode://on')
+}
+```
+
+The mode persists across screen renders and JavaScript navigations, but resets when the app is killed or backgrounded long enough for the OS to suspend it. Always call again on the screen where the scannable content lives, do not assume a previous setting carried over.
+
+---
+
+## The three modes
+
+| Mode | Behavior | When to use |
+| :-- | :-- | :-- |
+| `on` | Forces maximum brightness, disables auto-dim and lock screen timeout | While displaying a barcode, QR code, ticket, or loyalty card that an external scanner needs to read |
+| `auto` | Lets the OS manage brightness normally but stops the screen from dimming or locking | Background scanning sessions, longer flows where the user is actively interacting and you do not want the lock to interrupt |
+| `off` | Returns full control to the OS, including auto-dim and the user's normal lock timeout | Default state, and what you call when leaving the scannable screen |
+
+```javascript
+despia('scanningmode://on')   // bright + no dim + no lock
+despia('scanningmode://auto') // user brightness + no dim + no lock
+despia('scanningmode://off')  // standard, OS controls everything
+```
+
+The most common bug is forgetting to switch back to `off` when the user navigates away. The screen stays at maximum brightness across the rest of the app session, which drains the battery quickly and makes the device uncomfortable to look at. Pair every `on` or `auto` call with an `off` call on unmount.
+
+---
+
+## Boost brightness on a barcode screen
+
+The natural pattern is a "show your code" screen where the user displays a barcode for an external scanner. Switch to `on` when the screen mounts, switch to `off` when it unmounts.
+
+```jsx
+import { useEffect } from 'react'
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function BarcodeScreen({ code }) {
+    useEffect(() => {
+        if (!isDespia) return
+
+        despia('scanningmode://on')
+
+        return () => {
+            if (isDespia) despia('scanningmode://off')
+        }
+    }, [])
+
+    return (
+        <div className="barcode">
+            <img src={`https://barcodes.example.com/${code}.svg`} alt="" />
+            <p>Show this code to the scanner</p>
+        </div>
+    )
+}
+```
+
+Returning the cleanup function from `useEffect` is the part that matters. React calls it on unmount, which catches both deliberate navigation away and accidental component swaps. Without the cleanup, brightness stays maxed out for the rest of the session.
+
+In Vue, Svelte, or vanilla JavaScript, hook the equivalent lifecycle pair: `onMounted` plus `onUnmounted`, `onMount` plus `onDestroy`, or a manual `unload` handler. The pattern is always the same, set on enter, reset on leave.
+
+---
+
+## Auto mode for longer flows
+
+For flows where the user is actively interacting (filling a form, scanning multiple codes in a row, reading a long QR-code-protected document) `auto` is the better fit. It respects the user's preferred brightness while preventing the lock screen from interrupting.
+
+```jsx
+function ContinuousScanFlow() {
+    useEffect(() => {
+        if (!isDespia) return
+
+        despia('scanningmode://auto')
+
+        return () => {
+            if (isDespia) despia('scanningmode://off')
+        }
+    }, [])
+
+    return <CodeReader />
+}
+```
+
+The difference from `on` is comfort. Forcing maximum brightness on a screen the user is staring at for a minute or more is harsh, especially indoors. `auto` keeps the lock off without burning their eyes.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

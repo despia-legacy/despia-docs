@@ -1,0 +1,771 @@
+---
+title: "Paywalls"
+icon: "coins"
+description: "Monetize your app with seamless payment processing through Apple and Google's native billing systems using RevenueCat Paywalls."
+hidden: true
+---
+
+<iframe src="https://www.youtube.com/embed/UNQKJndVBXA" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="AI Prompt" icon="sparkles">
+  Add native mobile monetization to my app using the Despia SDK from: [https://www.npmjs.com/package/despia-native](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a payment system that launches RevenueCat Paywalls using: `despia("revenuecat://launchPaywall?external_id={USER_ID}&offering={OFFERING}")`
+
+  Detect the platform using the Despia user agent:
+
+  ```javascript
+  const isDespia = navigator.userAgent.toLowerCase().includes('despia');
+  const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+  );
+  const isDespiaAndroid = isDespia &&
+    navigator.userAgent.toLowerCase().includes('android');
+  ```
+
+  If running in Despia (iOS or Android), launch the native RevenueCat Paywall. If not running in Despia (i.e. the user is on your web app), fall back to a RevenueCat Web Purchase Link with the user's ID appended:
+
+  ```javascript
+  if (isDespia) {
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`);
+  } else {
+    // Web fallback - redirect to RevenueCat Web Purchase Link
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`;
+  }
+  ```
+
+  <Danger>
+    Always append the user's ID to the RevenueCat Web Purchase Link URL. This links the web payment directly to their account - so if they later open your mobile app, the purchase and entitlements are already there waiting for them.
+  </Danger>
+
+  In RevenueCat, create a single entitlement (e.g. `"premium"`) and link both iOS and Android products to it. Check for it with `p.entitlementId === "premium"`. For one-time purchases, match the exact `entitlementId` (e.g. `"no_ads"`).
+
+  <Note>
+    The Despia Native Runtime will call the global function `onRevenueCatPurchase()` when an in-app purchase or subscription is successfully made on the client side. This should not grant access immediately on its own - but it is the right moment to either poll your backend until the RevenueCat webhook confirms the purchase, or run a client-side entitlement check via `getpurchasehistory://` to instantly verify active entitlements with no backend needed. You should also call `getpurchasehistory://` proactively on app load, page navigation, and before gating any premium feature. These checks are instant, offline-capable, and require no network round-trip to your server.
+  </Note>
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+
+  Payment confirmation will happen via RevenueCat's Webhooks, so make sure to include or instruct me to set up the correct backend structure.
+
+  **You can find the documentation about this here:** [**https://www.revenuecat.com/docs/integrations/webhooks**](https://www.revenuecat.com/docs/integrations/webhooks)
+
+  - Read and follow all best practices for Webhook events here: [**https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields**](https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields)
+  - Check out the sample Webhook event schemas here: [**https://www.revenuecat.com/docs/integrations/webhooks/sample-events**](https://www.revenuecat.com/docs/integrations/webhooks/sample-events)
+
+  Once the payment is confirmed on the backend, the backend should send a webhook to the frontend to let it know that this user's in-app purchase session was completed.
+
+  Also add a **Restore Purchases** button that calls: `despia("getpurchasehistory://", ["restoredData"])`
+
+  Use the restore response to check active entitlements and re-grant access where appropriate:
+
+  ```javascript
+  const data = await despia("getpurchasehistory://", ["restoredData"]);
+  const purchases = data.restoredData;
+  
+  const activePurchases = purchases.filter(p => p.isActive);
+  const hasPremium = activePurchases.some(p => p.entitlementId === "premium");
+  
+  if (hasPremium) {
+    // Grant premium features
+  }
+  ```
+
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it Works:** Despia acts as a bridge between your app and native mobile payment systems. When a user taps a button to open the paywall, Despia displays a native RevenueCat Paywalls interface configured in your RevenueCat dashboard. The paywall handles the complete purchase flow through Apple's App Store or Google Play Store, ensuring secure transactions and automatic subscription management.
+
+## Setting Up Your Paywall in RevenueCat
+
+Before you can launch a paywall in Despia, you need to build one in the RevenueCat dashboard. RevenueCat's Paywall Editor lets you design a fully customizable native paywall without writing any UI code.
+
+### Key concepts
+
+| Concept | Description |
+| --- | --- |
+| Components | RevenueCat's predefined UI elements that can be added to a paywall - text, images, purchase buttons, etc. |
+| Component properties | The configurable properties of each component that control its style and behavior - width, height, border, etc. |
+| Templates | Pre-built paywalls from RevenueCat that you can use as a starting point and fully customize. |
+| Offerings | The set of packages (products) you want to present to a user. Each paywall is linked to one Offering. |
+
+### 1. Create a new paywall
+
+1. Go to [**RevenueCat Dashboard**](https://app.revenuecat.com) -\> your project -\> **Paywalls**
+2. Click **\+ New Paywall**
+3. Select the **Offering** you want to attach the paywall to. If you don't have one without a paywall yet, you can duplicate an existing offering or create a new one
+
+<Note>
+  The offering ID you set here (e.g. `default`, `premium`, `annual_sale`) is the same value you'll pass to the `offering` parameter when launching the paywall via Despia.
+</Note>
+
+### 2. Choose a starting point
+
+You can begin by:
+
+- **Choosing a template** - the fastest way to get started. All templates are fully customizable.
+- **Starting from scratch** - full creative control over layout and components.
+- **Importing from Figma** - if you already have a design, use the [RevenueCat Figma plugin](https://www.revenuecat.com/docs/tools/paywalls/creating-paywalls/importing-from-figma) to import your frames directly.
+
+We recommend starting with a template unless you have a very specific custom design in mind.
+
+### 3. Build with the editor
+
+The Paywall Editor is divided into three areas:
+
+- **Left sidebar** - add components, view layers, manage branding, upload media, configure localization, and adjust paywall settings
+- **Preview** - a live preview of your paywall as you build
+- **Control panel** - toggle locale, light/dark mode, and sheet vs. full-screen preview
+
+#### Available components
+
+| Component | Description |
+| --- | --- |
+| Text | Customizable text string |
+| Image | Uploaded image |
+| Video | Uploaded video |
+| Icon | Icon from RevenueCat's provided list |
+| Stack | Container for grouping and jointly configuring child components |
+| Footer | A fixed-position section with unique styling |
+| Package | A selectable package with custom styling and text |
+| Purchase button | The CTA that triggers the purchase of the selected package |
+| Button | Other interactions - Privacy Policy link, back button, etc. |
+| Carousel | Swipeable pages |
+| Countdown | Live countdown timer to a specific date/time |
+| Timeline | A connected list of timeline items |
+| Tabs | Display different package groups in separate tabs |
+| Switch | Toggle between two sets of options |
+| Social proof | Pre-styled components for testimonials and reviews |
+| Feature list | Pre-styled components for listing features or benefits |
+| Awards | Pre-styled components to highlight app awards |
+| Express checkout | Apple Pay and Google Pay quick-purchase buttons (web) |
+
+#### Editor shortcuts
+
+| Action | Mac | Windows |
+| --- | --- | --- |
+| Undo | `Cmd + Z` | `Ctrl + Z` |
+| Redo | `Cmd + Y` | `Ctrl + Y` |
+| Save | `Cmd + S` | `Ctrl + S` |
+
+### 4. Save and publish
+
+| State | Description |
+| --- | --- |
+| **Inactive (Draft)** | Saved but not served to users. Use this while building. |
+| **Published** | Live and available via the SDK. Served based on your Default Offering, Targeting, or Experiments config. |
+
+Click **Save to draft** at any time to save your progress without going live. When you're ready, click **Publish Paywall** - the paywall will immediately become available through the RevenueCat SDK.
+
+### 5. Configure exit offers (optional)
+
+Exit offers let you present an alternative offer when a user dismisses the paywall without purchasing - useful for recovering potentially lost conversions.
+
+To set one up:
+
+1. Create a separate Offering with a discounted or alternative package, and build a paywall for it
+2. In the main paywall's editor, open **Exit offer settings** and select that offering
+
+Best practices for exit offers:
+
+- Offer something not available in the main paywall (a discount, a free trial, etc.)
+- Keep the exit paywall simple and focused on value
+- Don't overuse them - they should feel like a special opportunity, not a pressure tactic
+
+### 6. Duplicate paywalls
+
+To reuse a paywall as a starting point, click the **...** menu next to any paywall and choose:
+
+- **Duplicate to this project** - copies the paywall within the same project
+- **Duplicate to another project** - copies to a different project you own
+
+<Warning>
+  Custom fonts are not preserved when duplicating to another project. You'll need to re-upload and manually set the fonts in the destination project.
+</Warning>
+
+<Tip>
+  Create your own "template library" by duplicating paywalls and leaving them unattached to any Offering. They'll stay in your dashboard as ready-to-use starting points without affecting what gets served to your users.
+</Tip>
+
+---
+
+## Installation
+
+Install the Despia package from NPM:
+
+```bash
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Detect Platform & Launch Paywall
+
+Always check for Despia first before attempting to launch the native paywall. If not running in Despia (e.g. the user is on your web app), fall back to a RevenueCat Web Purchase Link instead.
+
+```javascript
+// Detect if running in Despia
+const isDespia = navigator.userAgent.toLowerCase().includes('despia');
+
+// Detect iOS in Despia
+const isDespiaIOS = isDespia && (
+  navigator.userAgent.toLowerCase().includes('iphone') ||
+  navigator.userAgent.toLowerCase().includes('ipad')
+);
+
+// Detect Android in Despia
+const isDespiaAndroid = isDespia &&
+  navigator.userAgent.toLowerCase().includes('android');
+
+function handleUpgrade() {
+  if (isDespia) {
+    // Native paywall - works on both iOS and Android
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`);
+  } else {
+    // Web fallback - redirect to RevenueCat Web Purchase Link
+    // Append the user's ID so the purchase is linked to their account
+    // and entitlements are available in the mobile app too
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`;
+  }
+}
+```
+
+<Danger>
+  **Always include the user's ID in the Web Purchase Link URL. This ties the web payment to their account so entitlements are instantly available across both your web app and mobile app - no extra steps needed for the user.**
+</Danger>
+
+#### Web Checkout Link (non-Despia fallback)
+
+To get your `pay.rev.cat` token, go to RevenueCat and create a new Web Purchase Link - select an existing offering or create a new one with your web products:
+
+[**RevenueCat -\> Web -\> Create Purchase Link**](https://app.revenuecat.com)
+
+Once created, append the user's `app_user_id` directly to the URL - this is the critical part that links the web purchase to their account:
+
+```bash
+https://pay.rev.cat/<token>/<userId>
+```
+
+Optional URL parameters (all should be [URL encoded](https://www.urlencoder.org/)):
+
+| Parameter | Description |
+| --- | --- |
+| `email` | Pre-fills the email field on checkout - `?email=<customerEmail>` |
+| `currency` | Override automatic currency selection - `?currency=EUR` |
+| `package_id` | Pre-select a package and skip straight to checkout |
+| `skip_purchase_success=true` | Skip the success page and trigger your configured redirect immediately |
+
+<Danger>
+  The `app_user_id` in the URL is what RevenueCat includes in every webhook event. **The user must already exist in your database before redirecting them to the checkout link** - otherwise when the `INITIAL_PURCHASE` webhook fires, your backend won't find the user and won't be able to grant access.
+</Danger>
+
+### 3. Handle the Purchase Callback
+
+The Despia Native Runtime calls `onRevenueCatPurchase()` globally as soon as the store confirms a transaction. This is your signal that something happened - but not yet proof that access should be granted.
+
+There are two patterns for what to do inside this callback:
+
+#### With a backend - poll until the webhook confirms
+
+```javascript
+window.onRevenueCatPurchase = async () => {
+  // The RevenueCat webhook will hit your server shortly.
+  // Poll until your backend confirms the user's status has updated.
+  const verified = await pollForPurchaseVerification(userId);
+  if (verified) {
+    setIsPremium(true);
+  }
+};
+```
+
+#### Without a backend - run the client-side entitlement check
+
+If you don't have a backend, skip the polling and check the native store directly using `getpurchasehistory://`. This queries Apple or Google in real time and returns the user's active entitlements instantly - no server, no network dependency beyond the store itself.
+
+```javascript
+window.onRevenueCatPurchase = async () => {
+  const data = await despia("getpurchasehistory://", ["restoredData"]);
+  const active = (data.restoredData ?? []).filter(p => p.isActive);
+
+  if (active.some(p => p.entitlementId === "premium")) {
+    unlockPremiumFeatures();
+  }
+  if (active.some(p => p.entitlementId === "no_ads")) {
+    removeAds();
+  }
+};
+```
+
+<Danger>
+  **Never grant access based on the `onRevenueCatPurchase` callback alone if you have a backend.** Always wait for your backend to confirm via the RevenueCat webhook before unlocking features. The callback is a trigger to start checking - not confirmation of a valid purchase.
+</Danger>
+
+### 4. Run entitlement checks proactively
+
+Don't wait for a purchase event to check entitlements. Call `getpurchasehistory://` proactively in three places:
+
+| When | Why |
+| --- | --- |
+| **App load / page mount** | Restore state for returning users immediately, before any interaction |
+| **Page navigation** | Re-gate features as users move through the app without requiring a full reload |
+| **Before any gated feature** | Catch edge cases where entitlement state changed mid-session (e.g. expiry, refund) |
+
+These checks are instant and offline-capable. Apple and Google cache entitlement state on-device, so they don't require a live network connection to your server.
+
+```javascript
+// Run on app load
+async function checkEntitlementsOnLoad() {
+  const data = await despia("getpurchasehistory://", ["restoredData"]);
+  const active = (data.restoredData ?? []).filter(p => p.isActive);
+
+  if (active.some(p => p.entitlementId === "premium")) {
+    unlockPremiumFeatures();
+  }
+  if (active.some(p => p.entitlementId === "no_ads")) {
+    removeAds();
+  }
+}
+
+checkEntitlementsOnLoad();
+
+// Re-check before gating any feature
+async function guardPremiumFeature() {
+  const data = await despia("getpurchasehistory://", ["restoredData"]);
+  const active = (data.restoredData ?? []).filter(p => p.isActive);
+  const hasPremium = active.some(p => p.entitlementId === "premium");
+
+  if (!hasPremium) {
+    // No active entitlement - launch the paywall instead
+    if (isDespia) {
+      despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`);
+    } else {
+      window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+// Usage before any premium action:
+if (await guardPremiumFeature()) {
+  openPremiumContent();
+}
+
+// Purchase callback - reuse the same check
+window.onRevenueCatPurchase = checkEntitlementsOnLoad;
+```
+
+<Tip>
+  Because `onRevenueCatPurchase` and your on-load check do the same thing, you can point them at the same function. One consistent entitlement check, called in all the right places.
+</Tip>
+
+## Complete Client-Side Example
+
+### Set up offerings and entitlements in RevenueCat
+
+Before launching paywalls in code, configure them in your RevenueCat dashboard:
+
+1. Go to [**RevenueCat Dashboard**](https://app.revenuecat.com) -\> your project -\> **Entitlements**
+2. Click **New Entitlement** and name it `premium` (or `no_ads` for one-time purchases)
+3. Click into the entitlement and click **Attach products**
+4. Attach your iOS and Android products - both platforms will resolve to the same `entitlementId`
+5. Go to **Offerings** and create or configure your offering (e.g. `default`, `premium`, `annual_sale`)
+6. Build your paywall UI in the RevenueCat dashboard under **Paywalls** (see [Setting Up Your Paywall in RevenueCat](#setting-up-your-paywall-in-revenuecat) above)
+
+Repeat for any additional entitlements (e.g. `no_ads`).
+
+### Full example
+
+```javascript
+import despia from 'despia-native';
+
+// Platform detection
+const isDespia = navigator.userAgent.toLowerCase().includes('despia');
+const isDespiaIOS = isDespia && (
+  navigator.userAgent.toLowerCase().includes('iphone') ||
+  navigator.userAgent.toLowerCase().includes('ipad')
+);
+const isDespiaAndroid = isDespia &&
+  navigator.userAgent.toLowerCase().includes('android');
+
+// Offering IDs - configure these in your RevenueCat dashboard under Offerings
+const OFFERINGS = {
+  default:    "default",
+  premium:    "premium",
+  annualSale: "annual_sale",
+};
+
+// Entitlement check - instant and offline-capable
+async function checkEntitlementsOnLoad() {
+  const data = await despia("getpurchasehistory://", ["restoredData"]);
+  const active = (data.restoredData ?? []).filter(p => p.isActive);
+
+  if (active.some(p => p.entitlementId === "premium")) {
+    unlockPremiumFeatures();
+  }
+  if (active.some(p => p.entitlementId === "no_ads")) {
+    removeAds();
+  }
+}
+
+// Guard for gating premium features
+async function guardPremiumFeature() {
+  const data = await despia("getpurchasehistory://", ["restoredData"]);
+  const active = (data.restoredData ?? []).filter(p => p.isActive);
+  const hasPremium = active.some(p => p.entitlementId === "premium");
+
+  if (!hasPremium) {
+    if (isDespia) {
+      despia(`revenuecat://launchPaywall?external_id=${userId}&offering=${OFFERINGS.default}`);
+    } else {
+      window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`;
+    }
+    return false;
+  }
+
+  return true;
+}
+
+// Run on app load
+checkEntitlementsOnLoad();
+
+// Purchase callback - reuse the same check
+window.onRevenueCatPurchase = checkEntitlementsOnLoad;
+
+// Paywall buttons
+function handleUpgrade() {
+  if (isDespia) {
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=${OFFERINGS.default}`);
+  } else {
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`;
+  }
+}
+
+function handleAnnualSale() {
+  if (isDespia) {
+    despia(`revenuecat://launchPaywall?external_id=${userId}&offering=${OFFERINGS.annualSale}`);
+  } else {
+    window.location.href = `https://pay.rev.cat/<your_token>/${encodeURIComponent(userId)}`;
+  }
+}
+
+// Restore button (required by App Store guidelines)
+async function handleRestore() {
+  const data = await despia("getpurchasehistory://", ["restoredData"]);
+  const active = (data.restoredData ?? []).filter(p => p.isActive);
+
+  if (active.length === 0) {
+    alert("No active purchases found.");
+    return;
+  }
+
+  if (active.some(p => p.entitlementId === "premium")) {
+    unlockPremiumFeatures();
+  }
+  if (active.some(p => p.entitlementId === "no_ads")) {
+    removeAds();
+  }
+}
+
+// Usage before any premium action:
+if (await guardPremiumFeature()) {
+  openPremiumContent();
+}
+```
+
+## Subscriptions: Set Up Webhooks for Best Practice
+
+Client-side entitlement checks work well for simple apps, but **server-side webhook events are always recommended for subscriptions**. Webhooks let you:
+
+- **Revoke access the moment a subscription expires** - rather than waiting for the next client-side check
+- **Log users out of your web app** when their subscription lapses
+- **Sync subscription state** across all platforms and databases in real time
+- **React to cancellations, refunds, and billing issues** automatically
+
+<Card title="Despia Webhook Starter Template" icon="webhook" href="https://setup.despia.com/best-practices/backend/revenue-cat/webhooks">
+  A full backend webhook handler template covering all RevenueCat event types, database schema, and best practices.
+</Card>
+
+### 1. Add a webhook endpoint to your server
+
+Create a `POST /webhooks/revenuecat` endpoint. RevenueCat sends an `Authorization` header with a secret you define - just make up a random string and store it as an environment variable.
+
+<Warning>
+  Some backends like Supabase Edge Functions or Convex apply their own authentication middleware by default, which will block incoming RevenueCat requests before your code runs. Make sure to **disable the default auth middleware on this endpoint** so RevenueCat's `Authorization: Bearer` token can reach your handler and be validated there.
+</Warning>
+
+```javascript
+const WEBHOOK_SECRET = process.env.REVENUECAT_WEBHOOK_SECRET; // e.g. "xK9mP2qRt7vL"
+
+export async function POST(req) {
+  // 1. Validate the Authorization header
+  const auth = req.headers.get('authorization') ?? '';
+  const token = auth.startsWith('Bearer ') ? auth.slice(7) : auth;
+
+  if (token !== WEBHOOK_SECRET) {
+    return new Response('Unauthorized', { status: 401 });
+  }
+
+  // 2. Parse the event
+  const body = await req.json();
+  const event = body.event;
+  if (!event) return new Response('Bad Request', { status: 400 });
+
+  const { type, app_user_id, environment } = event;
+
+  // 3. Handle sandbox events - skip unless user is a tester
+  // Mark users as testers in your DB (e.g. is_tester: true) so they can
+  // verify the full purchase flow in sandbox without affecting real users
+  if (environment === 'SANDBOX') {
+    const user = await db.findOne('users', { app_user_id });
+    if (!user?.is_tester) {
+      return new Response('OK', { status: 200 });
+    }
+    // User is a tester - fall through and process as if production
+  }
+
+  // 4. Extract entitlements - RC webhook sends entitlement_ids as a flat array
+  // e.g. ["premium"] and entitlement_id as the primary single string
+  // store values are uppercase: "APP_STORE" | "PLAY_STORE" | "RC_BILLING" | "STRIPE"
+  const entitlementIds = event.entitlement_ids ?? [];
+
+  // 5. Handle the event type
+  switch (type) {
+    case 'INITIAL_PURCHASE':
+    case 'RENEWAL':
+    case 'UNCANCELLATION':
+    case 'SUBSCRIPTION_EXTENDED':
+      await db.upsert('user_subscriptions', {
+        app_user_id,
+        is_active: true,
+        subscription_status: 'active',
+        entitlements: JSON.stringify(entitlementIds),
+        expires_at: event.expiration_at_ms ? new Date(event.expiration_at_ms) : null,
+        product_id: event.product_id,
+        store: event.store,
+        last_webhook_event: type,
+        last_updated: new Date(),
+      });
+      break;
+
+    case 'CANCELLATION':
+      // Subscription cancelled but access continues until expiry
+      await db.upsert('user_subscriptions', {
+        app_user_id,
+        is_active: true, // still active until expires_at
+        subscription_status: 'cancelled',
+        expires_at: event.expiration_at_ms ? new Date(event.expiration_at_ms) : null,
+        last_webhook_event: type,
+        last_updated: new Date(),
+      });
+      break;
+
+    case 'EXPIRATION':
+    case 'REFUND':
+      // Revoke access immediately
+      await db.upsert('user_subscriptions', {
+        app_user_id,
+        is_active: false,
+        subscription_status: 'expired',
+        last_webhook_event: type,
+        last_updated: new Date(),
+      });
+      break;
+
+    case 'BILLING_ISSUE':
+      // Grace period - flag but keep active for now
+      await db.upsert('user_subscriptions', {
+        app_user_id,
+        billing_issue: true,
+        grace_period_expires_at: event.grace_period_expires_at_ms
+          ? new Date(event.grace_period_expires_at_ms)
+          : null,
+        last_webhook_event: type,
+        last_updated: new Date(),
+      });
+      break;
+  }
+
+  return new Response('OK', { status: 200 });
+}
+```
+
+### 2. Database schema
+
+Create a `user_subscriptions` table to store subscription state:
+
+```sql
+CREATE TABLE user_subscriptions (
+  app_user_id             VARCHAR(255) PRIMARY KEY,
+  is_active               BOOLEAN DEFAULT false,
+  subscription_status     VARCHAR(50),   -- active, cancelled, expired, billing_issue
+  product_id              VARCHAR(255),
+  entitlements            JSONB,
+  expires_at              TIMESTAMP,
+  grace_period_expires_at TIMESTAMP,
+  billing_issue           BOOLEAN DEFAULT false,
+  store                   VARCHAR(50),   -- app_store, play_store
+  last_webhook_event      VARCHAR(100),
+  last_updated            TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX idx_user_subs_active  ON user_subscriptions(is_active);
+CREATE INDEX idx_user_subs_expires ON user_subscriptions(expires_at);
+```
+
+### 3. Register the webhook in RevenueCat
+
+1. Go to **RevenueCat Dashboard -\> Project -\> Integrations -\> Webhooks**
+2. Click **Add new webhook**
+3. Set the **URL** to your endpoint - e.g. `https://yourapp.com/webhooks/revenuecat`
+4. Set the **Authorization header** to the same random secret you put in your env var
+5. Select **All events**
+6. Save - RevenueCat will now send events to your server in real time
+
+### 4. Consider a cron job as backup
+
+Webhooks can occasionally fail (server downtime, timeouts, etc.). A cron job that periodically syncs subscription status from the RevenueCat API is a reliable safety net - especially important for catching cancellations and expirations that your webhook might have missed.
+
+<Card title="Cron Job Template" icon="clock" href="https://setup.despia.com/best-practices/backend/revenue-cat/webhooks">
+  Our full backend template includes a self-healing cron job that runs every 5 minutes, prioritizes expiring subscriptions, and stays within RevenueCat's API rate limits. Combined with webhooks it gives 99.9%\+ sync reliability.
+</Card>
+
+## Restore Purchases
+
+Despia queries the native platform's billing system to retrieve all purchases associated with the current user's App Store or Google Play account. This includes active subscriptions, expired subscriptions, consumables, and non-consumable (lifetime) purchases.
+
+### 1. Retrieve Purchase History
+
+```javascript
+const data = await despia("getpurchasehistory://", ["restoredData"]);
+const purchases = data.restoredData;
+console.log(purchases);
+```
+
+### 2. Example Response (iOS)
+
+```json
+[
+  {
+    "transactionId": "1000000987654321",
+    "originalTransactionId": "1000000123456789",
+    "productId": "com.app.premium.monthly",
+    "type": "subscription",
+    "entitlementId": "premium",
+    "externalUserId": "abc123",
+    "isAnonymous": false,
+    "isActive": true,
+    "willRenew": true,
+    "purchaseDate": "2024-01-15T14:32:05Z",
+    "originalPurchaseDate": "2023-06-20T09:15:33Z",
+    "expirationDate": "2024-02-15T14:32:05Z",
+    "store": "app_store",
+    "country": "USA",
+    "receipt": "MIIbngYJKoZIhvcNAQcCoIIbajCCG2YCAQExDzAN...",
+    "environment": "production"
+  }
+]
+```
+
+### 3. Example Response (Android)
+
+```json
+[
+  {
+    "transactionId": "GPA.3372-4150-9088-12345",
+    "originalTransactionId": "GPA.3372-4150-9088-12345",
+    "productId": "com.app.premium.monthly",
+    "type": "subscription",
+    "entitlementId": "premium",
+    "externalUserId": "abc123",
+    "isAnonymous": false,
+    "isActive": true,
+    "willRenew": true,
+    "purchaseDate": "2024-01-15T14:32:05Z",
+    "originalPurchaseDate": "2023-06-20T09:15:33Z",
+    "expirationDate": "2024-02-15T14:32:05Z",
+    "store": "play_store",
+    "country": "US",
+    "receipt": "kefhajglhaljhfajkfajk.AO-J1OxBnT3hAjkl5FjpKc9...",
+    "environment": "production"
+  }
+]
+```
+
+### 4. Check Active Entitlements
+
+```javascript
+const data = await despia("getpurchasehistory://", ["restoredData"]);
+const purchases = data.restoredData;
+
+// In RevenueCat, create a single "premium" entitlement and link both your iOS
+// and Android products to it. entitlementId will be "premium" on both platforms.
+const hasPremium = purchases.some(p => p.isActive && p.entitlementId === "premium");
+const hasNoAds   = purchases.some(p => p.isActive && p.entitlementId === "no_ads");
+
+if (hasPremium) {
+  // Grant premium features
+}
+```
+
+## Testing Your Integration
+
+<Danger>
+  **AI cannot test payment integrations for you.** RevenueCat, native StoreKit/Google Billing, webhooks, and your backend are cross-platform processes that require real end-to-end testing with multiple accounts and devices. There is no shortcut here - a payment integration is one of the most critical parts of your app and must be thoroughly verified by you before going live.
+</Danger>
+
+Here's what you should test manually:
+
+**Web -\> Mobile**
+
+1. Log in to your web app and complete a purchase via the Web Purchase Link
+2. Open the mobile app logged in with the same account
+3. Verify entitlements are active and premium features are unlocked
+
+**Mobile -\> Web**
+
+1. Complete a purchase on the mobile app via TestFlight (no real money - use sandbox test accounts)
+2. Open your web app logged in with the same account
+3. Verify your backend has the correct subscription state
+
+**Webhooks**
+
+1. Go to **RevenueCat Dashboard -\> Integrations -\> Webhooks**
+2. Check the event log - verify events are arriving at your server
+3. Confirm your database is updating `is_active`, `subscription_status`, and `expires_at` correctly for each event type
+4. Test `EXPIRATION` and `CANCELLATION` events to make sure access is revoked properly
+
+**Restore Purchases**
+
+1. Delete and reinstall the app
+2. Tap the Restore Purchases button
+3. Verify native IAP entitlements are recovered correctly
+
+<Note>
+  TestFlight and sandbox purchases use test accounts and never charge real money. Always test on TestFlight before submitting to the App Store. See [Apple's sandbox testing guide](https://developer.apple.com/documentation/storekit/in-app_purchase/testing_in-app_purchases_with_sandbox) and [Google Play's test purchases guide](https://developer.android.com/google/play/billing/test) for setup instructions.
+</Note>
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- [RevenueCat Paywalls - Creating Paywalls](https://www.revenuecat.com/docs/tools/paywalls/creating-paywalls)
+- [RevenueCat Webhooks Template](https://setup.despia.com/best-practices/backend/revenue-cat/webhooks)
+- [RevenueCat Webhooks](https://www.revenuecat.com/docs/integrations/webhooks)
+- [Webhook Event Types & Fields](https://www.revenuecat.com/docs/integrations/webhooks/event-types-and-fields)
+- [Sample Webhook Events](https://www.revenuecat.com/docs/integrations/webhooks/sample-events)
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

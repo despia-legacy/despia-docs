@@ -1,0 +1,370 @@
+---
+title: "Auth Methods"
+icon: "arrow-right-from-bracket"
+description: "Auth Sheet, email/username/phone password, OAuth, Apple, email and phone OTP, passkeys, MFA, Enterprise SSO, password reset, and magic-link tickets."
+---
+
+Present Clerk's prebuilt sheet, or drive each flow from your own UI. Both produce the same session and emit through `window.onClerkEvent`. [Configure](/authentication/clerk/introduction#configure) first.
+
+Successful sign-in flows emit:
+
+```json
+{
+    "ok": true,
+    "event": "signIn",
+    "status": "complete",
+    "userId": "user_2abcDEF",
+    "emailAddress": "jane@example.com"
+}
+```
+
+`status` is `complete` when the session is established, otherwise a raw Clerk status (`needs_first_factor`, `needs_second_factor`, `needs_new_password`, `needs_identifier`, `missing_requirements`, `abandoned`) meaning the flow needs another step. The same applies to `signUp`, `emailCode`, `phoneCode`, `secondFactor`, `resetPassword`, and `ticket` events, when `status` is `complete` the payload carries `userId` and (if a primary email exists) `emailAddress`, the JWT refresher starts, and `window.clerkJWT` populates shortly after.
+
+Multi-step flows (email code, phone code, password reset, MFA) hold one pending sign-in in memory at a time. Starting one cancels any other in flight, and calling a later step before the start step returns `missing_state`.
+
+---
+
+## Auth Sheet
+
+Clerk's prebuilt sign-in sheet, native UI covering email/password, OAuth, magic links, MFA, password reset, and passkeys.
+
+| Param | Values | Default |
+| --- | --- | --- |
+| `mode` | `signinorup`, `signin`, `signup` | `signinorup` |
+| `dismissable` | `true`, `false`, `1`, `0`, `yes`, `no` | `true` |
+
+```javascript
+despia('clerk://authview?mode=signinorup&dismissable=true')
+```
+
+<Note>
+  On Android `mode` is accepted but currently inert, the sheet always opens the combined sign-in-or-up screen. iOS honours all three modes. See [Platform support](/authentication/clerk/reference#platform-support).
+</Note>
+
+Emits `authview` when the sheet closes:
+
+```json
+{
+    "ok": true,
+    "event": "authview",
+    "status": "complete",
+    "userId": "user_2abcDEF",
+    "emailAddress": "jane@example.com"
+}
+```
+
+`status: "complete"` fires when the sheet closes with a _different_ user signed in than before, the payload carries `userId` and `emailAddress` (the latter only if the account has a primary email, a phone or username-only account omits it). This also covers switching accounts mid-sheet, an already-signed-in user who signs into a different account inside the sheet gets `complete` with the new `userId`. `status: "dismissed"` fires when the sheet closed without a user-identity change (swipe-down, cancel, or an already-signed-in user opening and closing the sheet without switching accounts).
+
+```javascript
+window.onClerkEvent = (r) => {
+    if (r.ok && r.event === 'authview' && r.status === 'complete') {
+        // User is signed in
+        renderApp()
+    }
+}
+```
+
+On `complete` the JWT refresher starts and populates `window.clerkJWT` **a tick later**, not in the same callback. If you need the token in the same handler, force a refresh with `clerk://token`:
+
+```javascript
+if (r.event === 'authview' && r.status === 'complete') {
+    despia('clerk://token')
+    // Next event will be { event: 'token', jwt: '...' }, and window.clerkJWT is now set
+}
+```
+
+For most apps reading `window.clerkJWT` on the next API call is enough, the refresher keeps it fresh thereafter.
+
+Errors: `not_configured`, `unsupported_os`, `sdk_not_linked`.
+
+---
+
+## Password
+
+Manual password sign-in or sign-up. Sign-in accepts email, username, or phone as the identifier. Sign-up requires a password plus at least one of email, username, or phone.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=password` | yes |  |
+| `type` | no | `signin` (default) or `signup` |
+| `identifier` | sign-in | Email, username, or phone. Aliases on sign-in: `emailAddress`, `email`, `username` |
+| `emailAddress` | sign-up | At least one of `emailAddress` (alias `email`), `username`, or `phoneNumber` required |
+| `username` | sign-up | At least one of `emailAddress`, `username`, or `phoneNumber` required |
+| `phoneNumber` | sign-up | At least one of `emailAddress`, `username`, or `phoneNumber` required |
+| `password` | yes |  |
+| `firstName`, `lastName` | no | Sign-up only, optional |
+
+```javascript
+// Sign in with email
+despia('clerk://manual?method=password&type=signin&identifier=jane@example.com&password=hunter2')
+
+// Sign in with username
+despia('clerk://manual?method=password&type=signin&identifier=jane&password=hunter2')
+
+// Sign in with phone
+despia('clerk://manual?method=password&type=signin&identifier=+15551234567&password=hunter2')
+
+// Sign up with email
+despia('clerk://manual?method=password&type=signup&emailAddress=new@example.com&password=hunter2&firstName=Sam')
+
+// Sign up with username only
+despia('clerk://manual?method=password&type=signup&username=jane&password=hunter2')
+```
+
+Emits `signIn` or `signUp`. Errors: `missing_params`, `auth_failed`.
+
+---
+
+## OAuth
+
+System-browser OAuth via `ASWebAuthenticationSession` (iOS) or Chrome Custom Tabs (Android).
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=oauth` | yes |  |
+| `provider` | yes | See providers below |
+| `type` | no | `signin` (default) or `signup` |
+| `ephemeral` | no | `true` skips shared browser cookies. Default `false` |
+
+```javascript
+despia('clerk://manual?method=oauth&provider=google')
+```
+
+Emits `signIn` or `signUp` depending on whether the external account is new.
+
+**Providers:** `google`, `github`, `microsoft`, `gitlab`, `discord`, `twitter` (alias `x`), `twitch`, `linkedin`, `linkedin_oidc`, `facebook`, `tiktok`, `dropbox`, `atlassian`, `bitbucket`, `notion`, `line`, `instagram`, `coinbase`, `spotify`, `xero`, `box`, `slack`, `linear`, `hubspot`, `huggingface`, `vercel`. Anything else routes to Clerk's custom provider handler.
+
+Errors: `missing_params`, `use_native_apple`, `oauth_failed`.
+
+<Note>
+  On Android, `ephemeral=true` is accepted but currently inert (Chrome Custom Tabs has no private-session option). Unrecognized provider values run as Clerk's generic custom strategy rather than carrying the specific custom provider key. See [Platform support](/authentication/clerk/reference#platform-support).
+</Note>
+
+<Warning>
+  `provider=apple` is rejected with `use_native_apple`. App Review requires the native Apple sheet, use Apple Sign In below.
+</Warning>
+
+---
+
+## Apple Sign In
+
+Native `ASAuthorizationController` sheet on iOS, Apple OAuth via Chrome Custom Tabs on Android. JS contract is identical.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=apple` | yes |  |
+| `type` | no | `signin` (default) or `signup` |
+
+```javascript
+despia('clerk://manual?method=apple')
+```
+
+Emits `signIn` or `signUp`. Errors: `apple_failed`.
+
+---
+
+## Email Code
+
+Two-step email OTP for sign-in or sign-up. Verify must follow start in the same app session.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=email_code` | yes |  |
+| `action` | no | `start` (default) or `verify` |
+| `type` | no | `signin` (default) or `signup`. Pass on **both** start and verify |
+| `emailAddress` | start | Or alias `email` |
+| `firstName`, `lastName`, `username` | start | Sign-up only, optional |
+| `code` | verify | The OTP the user received |
+
+```javascript
+// Sign in
+despia('clerk://manual?method=email_code&action=start&emailAddress=jane@example.com')
+despia('clerk://manual?method=email_code&action=verify&code=123456')
+
+// Sign up
+despia('clerk://manual?method=email_code&action=start&type=signup&emailAddress=jane@example.com&firstName=Jane')
+despia('clerk://manual?method=email_code&action=verify&type=signup&code=123456')
+```
+
+Emits `emailCode` with `status: "code_sent"` after start, then `complete` (or a `needs_*` status) after verify.
+
+Errors: `missing_params`, `missing_state` (verify before start), `unknown_action`, `email_code_failed`.
+
+---
+
+## Phone Code
+
+Two-step SMS OTP. Verify must follow start in the same app session. Shares pending-flow state with Email Code, only one OTP flow runs at a time.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=phone_code` | yes | Alias `sms` |
+| `action` | no | `start` (default) or `verify` |
+| `phoneNumber` | start | E.164 like `+15551234567`. Alias `phone`. Human formatting like `+1 (555) 123-4567` is normalized. |
+| `code` | verify | The OTP from the SMS |
+
+```javascript
+// 1. Send the SMS
+despia('clerk://manual?method=phone_code&action=start&phoneNumber=+15551234567')
+
+// 2. Verify (after user enters code)
+despia('clerk://manual?method=phone_code&action=verify&code=123456')
+```
+
+Emits `phoneCode` with `status: "code_sent"` after start, then `complete` (or a `needs_*` status) after verify.
+
+Errors: `missing_params`, `missing_state` (verify before start), `unknown_action`, `phone_code_failed`.
+
+---
+
+## Passkeys
+
+Native passkey UI. `signin` uses an existing passkey, `register` adds one to the current signed-in user.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=passkey` | yes |  |
+| `action` | no | `signin` (default) or `register` |
+
+```javascript
+// Sign in with an existing passkey
+despia('clerk://manual?method=passkey&action=signin')
+
+// Register a new passkey on the signed-in account
+despia('clerk://manual?method=passkey&action=register')
+```
+
+`signin` emits a normal `signIn` event. `register` emits:
+
+```json
+{
+    "ok": true,
+    "event": "passkey",
+    "status": "registered",
+    "passkeyId": "psk_2abc",
+    "name": "iPhone 15"
+}
+```
+
+Saved to iCloud Keychain (iOS) or Google Password Manager (Android). Errors: `not_signed_in`, `unknown_action`, `passkey_failed`.
+
+---
+
+## MFA
+
+Continues a sign-in whose first-factor result came back with `status: "needs_second_factor"`. Consumes the pending sign-in.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=second_factor` | yes | Aliases `mfa`, `2fa` |
+| `action` | no | `verify` (default) or `prepare` (sends an SMS or email code) |
+| `strategy` | no | `totp` (default), `phone_code`, `email_code`, `backup_code` |
+| `code` | verify | The MFA code or backup code |
+
+```javascript
+// TOTP from an authenticator app, single call
+despia('clerk://manual?method=second_factor&code=123456')
+
+// Backup code, single call
+despia('clerk://manual?method=second_factor&strategy=backup_code&code=ab-cd-ef')
+
+// SMS second factor, two calls
+despia('clerk://manual?method=second_factor&strategy=phone_code&action=prepare')
+despia('clerk://manual?method=second_factor&strategy=phone_code&code=123456')
+
+// Email second factor, two calls
+despia('clerk://manual?method=second_factor&strategy=email_code&action=prepare')
+despia('clerk://manual?method=second_factor&strategy=email_code&code=123456')
+```
+
+TOTP and backup codes verify in a single call with no prepare step. Phone and email factors need `action=prepare` first to send the code.
+
+Emits `secondFactor` with `status: "code_sent"` after prepare, then `complete` (or another `needs_*` status) after verify.
+
+Errors: `missing_state` (no pending sign-in to continue), `missing_params`, `prepare_not_needed` (called prepare on a strategy that doesn't need one), `second_factor_failed`.
+
+---
+
+## Enterprise SSO
+
+SAML / OIDC enterprise sign-in. Routes the user to their organization's identity provider based on their email domain.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=enterprise_sso` | yes | Aliases `sso`, `saml` |
+| `emailAddress` | yes | Or alias `email` |
+| `ephemeral` | no | `true` skips shared browser cookies. Default `false` |
+
+```javascript
+despia('clerk://manual?method=enterprise_sso&emailAddress=jane@acme.com')
+```
+
+OAuth-style transfer flow, emits `signIn` or `signUp` depending on whether the user is new to the organization.
+
+Errors emit with `event: "enterpriseSSO"`: `missing_params`, `enterprise_sso_failed`.
+
+<Note>
+  On Android, `ephemeral=true` is accepted but currently inert. See [Platform support](/authentication/clerk/reference#platform-support).
+</Note>
+
+---
+
+## Reset Password
+
+Three-step password reset. The pending sign-in lives in memory across steps, all three must run in the same app session.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=reset_password` | yes | Aliases `reset`, `forgot_password` |
+| `action` | no | `start` (default), `verify`, or `reset` |
+| `identifier` | start | Email or phone. Aliases `emailAddress`, `email`, `phoneNumber`, `phone`. Phone triggers an SMS reset code, email triggers an email reset code. |
+| `code` | verify | The reset code from email or SMS |
+| `newPassword` | reset | The new password. Alias `password` |
+
+```javascript
+// 1. Send a reset code
+despia('clerk://manual?method=reset_password&action=start&identifier=jane@example.com')
+
+// 2. Verify the code
+despia('clerk://manual?method=reset_password&action=verify&code=123456')
+
+// 3. Set the new password
+despia('clerk://manual?method=reset_password&action=reset&newPassword=NewSecret123')
+```
+
+Emits `resetPassword` with `status: "code_sent"` → `needs_new_password` → `complete`.
+
+Errors: `missing_params`, `missing_state`, `unknown_action`, `reset_password_failed`.
+
+---
+
+## Magic Link Ticket
+
+Native equivalent of an email magic link. Clerk's mobile SDKs don't include an email-link sign-in strategy, so the bridge takes a one-time ticket your backend mints through Clerk's API. Your backend emails or pushes a deep link carrying the ticket, the app forwards the ticket to the bridge to complete sign-in.
+
+| Param | Required | Notes |
+| --- | --- | --- |
+| `method=ticket` | yes | Alias `magic_link` |
+| `ticket` | yes | The one-time Clerk sign-in ticket minted by your backend |
+
+```javascript
+despia('clerk://manual?method=ticket&ticket=' + ticketFromDeepLink)
+```
+
+Emits a normal `signIn` event with the result status.
+
+Errors emit with `event: "ticket"`: `missing_params`, `ticket_failed`.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

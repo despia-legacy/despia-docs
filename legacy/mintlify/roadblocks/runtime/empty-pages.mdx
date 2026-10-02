@@ -1,0 +1,196 @@
+---
+title: "Empty Pages"
+icon: "page"
+description: "Your app loads but shows a blank white screen. Here's how to fix it."
+---
+
+## Splash screen never appears (most common)
+
+**App "crashes" or shows white screen immediately on launch. You never see the splash screen logo.**
+
+This is the most common issue. If you're starting a fresh install and the splash screen GIF never displays at all, the problem is almost always a **corrupt or incompatible GIF file**.
+
+Despia uses a GIF library in Swift on iOS to render animated splash screens. This library is strict about GIF metadata. If your file doesn't meet its requirements, it fails silently and you get a white screen.
+
+### GIF requirements
+
+Your splash screen GIF needs proper metadata to work. Here's what the library expects:
+
+| Requirement                   | Details                                                                                               |
+| :---------------------------- | :---------------------------------------------------------------------------------------------------- |
+| **Global Color Table**        | Must be present. Some export tools skip this.                                                         |
+| **Frame delays**              | Each frame needs a valid delay time (typically 0.03s to 0.1s). Zero or missing delays break playback. |
+| **Logical Screen Descriptor** | Width/height must be defined in the GIF header, not just inferred from frames.                        |
+| **No corrupted frames**       | Partial or malformed frame data causes silent failures.                                               |
+| **Reasonable file size**      | Very large GIFs (10MB+) may cause memory issues on older devices.                                     |
+| **Transparent background**    | Recommended. Ensures the GIF displays correctly over your splash screen color.                        |
+
+### How to fix your GIF
+
+**Recommended: Use Canva**
+
+For most users, [Canva](https://canva.com/) is the easiest option. It exports GIFs with correct metadata automatically, even on the free plan. When exporting:
+
+- Select GIF format
+- Use a transparent background
+- Download and upload to Despia
+
+**Alternative: Photoshop**
+
+If you have Photoshop: File → Export → Save for Web (Legacy) → GIF. Make sure to use a transparent background.
+
+---
+
+## Check your URL first
+
+**No https:// or missing SSL certificate**
+
+If you're serving remotely via the link in Despia Editor \> Dynamic App Source, you need a valid HTTPS URL like `https://example.com`.
+
+Common mistakes:
+
+- Missing `https://` prefix (just `example.com` won't work)
+- No SSL certificate installed
+- Certificate expired or invalid
+
+**Fix:** Add `https://` and make sure your SSL cert is valid. Test the URL in a browser first.
+
+---
+
+## Local server not loading
+
+**White screen with local server enabled**
+
+If local server is on but you're seeing a white screen:
+
+1. **Try closing and reopening the app.** Old cache is often the culprit.
+2. **Verify your manifest.** Check that `/despia/local.json` returns valid structure:
+
+```json
+{
+  "entry": "/index.html",
+  "assets": [
+    "/index.html",
+    "/assets/app.abc123.css",
+    "/assets/app.def456.js",
+    "/assets/logo.xyz789.png"
+  ]
+}
+```
+
+Test it: Open `https://yourapp.com/despia/local.json` in a browser. You should see the JSON above.
+
+3. **Make sure it's a client-side app.** Server-side apps won't work with local server.
+
+**Using Next.js?** You need to build a static export:
+
+- Add `output: 'export'` to `next.config.js`
+- Run `npm run build`
+- Entry point must be `index.html`
+
+Static export docs: https://nextjs.org/docs/app/building-your-application/deploying/static-exports
+
+---
+
+## Routing issues
+
+**Link is correct, local server is off, but still white screen**
+
+This is usually a routing problem. Common causes:
+
+### Trailing slash issues
+
+WebView environments sometimes add trailing slashes (`/`) to URLs. If your router doesn't handle this, it breaks.
+
+**Example problem:**
+
+- Your app expects: `https://example.com/dashboard`
+- WebView requests: `https://example.com/dashboard/`
+- Router doesn't match, shows blank
+
+**Fix:** Update your router config to handle trailing slashes. Most frameworks have built-in support:
+
+**React Router:**
+
+```tsx
+// Handle both /dashboard and /dashboard/
+<Route path="/dashboard/*" element={<Dashboard />} />
+```
+
+**Vue Router:**
+
+```javascript
+// Set strict: false to handle trailing slashes
+const router = createRouter({
+  strict: false,
+  routes: [...]
+})
+```
+
+**Next.js:**
+
+```javascript
+// next.config.js
+module.exports = {
+  trailingSlash: true // or false, just be consistent
+}
+```
+
+### Redirect loops
+
+**Example problem:**
+
+- App start URL in Despia: `https://example.com/auth`
+- Auth redirects logged-in users to: `https://example.com/home/`
+- Trailing slash breaks routing
+- Infinite redirect loop or blank screen
+
+**Fix:** Make sure your redirects use consistent URL formats. Either always use trailing slashes or never use them.
+
+---
+
+## DNS and www issues
+
+**www subdomain not configured**
+
+If you point Despia to `https://www.example.com` but haven't set up the www subdomain, you'll get a blank screen.
+
+**Check:** Does `https://www.example.com` work in a browser? If not, you have two options:
+
+1. **Remove www from Despia:** Change link to `https://example.com`
+2. **Add www support to DNS:** Configure www subdomain in your DNS settings
+
+**Important:** DNS changes can take hours to propagate. If you just made DNS changes:
+
+- Wait a few hours
+- Uninstall and reinstall the app
+- Don't panic if it doesn't work immediately
+
+---
+
+## Quick debugging checklist
+
+1. Splash screen GIF has valid metadata
+2. URL has `https://` prefix
+3. SSL certificate is valid (test in browser)
+4. Local server manifest at `/despia/local.json` is valid
+5. App is client-side (not server-rendered)
+6. Router handles trailing slashes
+7. No redirect loops
+8. www/non-www matches your DNS setup
+9. If using Next.js, built with static export
+
+---
+
+## Still stuck?
+
+If none of this helps:
+
+1. **Test your URL in a regular mobile browser** (Safari/Chrome). Does it work there?
+2. **Check browser console for errors** (use remote debugging)
+3. **Contact support:** [support@despia.com](mailto:support@despia.com) with:
+   - Your app URL
+   - Screenshot of white screen
+   - Browser console errors (if any)
+   - Whether local server is on/off
+   - What splash screen file format you're using

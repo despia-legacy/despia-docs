@@ -1,0 +1,545 @@
+---
+title: "Minimum Functionality"
+description: "Your app was rejected for not meeting minimum functionality requirements. Here's what that means and how to fix it."
+icon: "align-left"
+---
+
+## What is minimum functionality?
+
+**App stores require apps to provide real value**
+
+Both Apple and Google reject apps that are too simple, feel like websites wrapped in an app shell, or don't offer meaningful native functionality. This applies to all native apps, whether built with React Native, SwiftUI, Kotlin, Flutter, or Despia. Every native app must provide native value.
+
+Common rejection messages:
+
+- "Your app does not provide enough functionality to be suitable for the App Store"
+- "This app appears to be a repackaged website"
+- "The app lacks the features expected of an app in this category"
+
+This rejection is about perceived value, not technical bugs.
+
+---
+
+## Why this happens
+
+**Easy deployment invites misuse**
+
+Despia makes it simple to build and deploy native apps from web technologies. That's a feature, but it also means some users try to submit things that were never meant to be apps, like landing pages, single-screen brochures, or simple contact forms.
+
+App stores reject these submissions regardless of how they were built. A landing page built in SwiftUI would get the same rejection as one built with Despia.
+
+Common mistakes:
+
+- Submitting a landing page or marketing site as an app
+- No native features like push notifications, offline support, or haptics
+- Limited interactivity or depth
+- Single-screen apps with minimal navigation
+- Layout looks like a mobile website instead of a native app
+
+The platform works. The submission just needs to be an actual app.
+
+---
+
+## How to fix it
+
+**Priority order:** Mobile UI/UX comes first. Even with native features, a website-style layout will get rejected. Get the foundation right, then add native capabilities on top.
+
+### Make your app look like an app
+
+**Mobile apps have a distinct layout pattern**
+
+Reviewers recognize mobile website layouts instantly. If your app has sidebars, hamburger menus, or top navigation bars like a desktop site, it signals "website wrapper" immediately.
+
+**What reviewers expect to see:**
+
+- Top bar showing the current page title (optional back button)
+- Content area in the middle
+- Bottom navigation bar with icons for main sections
+- No sidebars or dropdown menus
+- No desktop-style top navigation
+
+---
+
+### Foundation architecture
+
+**Applications require a root frame element that establishes viewport boundaries**
+
+```html
+<head>
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+  >
+</head>
+
+<body>
+  <div class="app-root">
+    <div class="safe-area-top"></div>
+    
+    <header class="app-header">
+      <!-- Fixed header -->
+    </header>
+    
+    <main class="app-content">
+      <!-- Scrollable content -->
+    </main>
+    
+    <footer class="app-footer">
+      <!-- Fixed footer with bottom navigation -->
+    </footer>
+    
+    <div class="safe-area-bottom"></div>
+  </div>
+</body>
+```
+
+**CSS implementation:**
+
+```css
+/* Root frame - establishes viewport boundaries */
+.app-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Safe area frames - handle device boundaries */
+.safe-area-top {
+  flex-shrink: 0;
+  height: var(--safe-area-top, env(safe-area-inset-top, 0));
+}
+
+.safe-area-bottom {
+  flex-shrink: 0;
+  height: var(--safe-area-bottom, env(safe-area-inset-bottom, 0));
+}
+
+/* Header frame - fixed positioning */
+.app-header {
+  flex-shrink: 0;
+  padding: 1rem;
+}
+
+/* Content frame - scrollable container */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 1rem;
+  
+  /* Hide scrollbar for native appearance */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Footer frame - fixed positioning */
+.app-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+}
+```
+
+**Key requirements:**
+
+- Use `position: fixed` for root frame (do not use `height: 100vh`)
+- Include dedicated safe area spacer elements
+- Header and footer use `flex-shrink: 0` (non-scrolling)
+- Content area uses `flex: 1` and `overflow-y: auto` (scrollable)
+- Apply `scrollbar-width: none` for native appearance
+
+---
+
+### Device boundaries
+
+**Safe area variables**
+
+The Despia runtime automatically injects CSS variables for device-specific boundary insets (notches, status bars, home indicators).
+
+```css
+.element {
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+```
+
+See: [Safe Areas](https://setup.despia.com/lovable/native-features/safe-areas)
+
+**PWA fallback implementation**
+
+When deployed as a PWA, Despia-specific variables are unavailable. Implement fallback values using standard environment variables.
+
+```css
+.element {
+  /* Despia variable → standard env() → default value */
+  padding-top: var(--safe-area-top, env(safe-area-inset-top, 0));
+  padding-bottom: var(--safe-area-bottom, env(safe-area-inset-bottom, 0));
+}
+```
+
+---
+
+### Bottom navigation example
+
+**Use clean, minimal SVG icons with current state highlighting:**
+
+```html
+<footer class="app-footer">
+  <nav class="bottom-nav">
+    <button class="nav-item active">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+      </svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <span>Search</span>
+    </button>
+    <button class="nav-item">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      <span>Profile</span>
+    </button>
+  </nav>
+</footer>
+```
+
+```css
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 56px;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #6b7280;
+  background: none;
+  border: none;
+}
+
+.nav-item.active {
+  color: #2563eb;
+}
+
+.nav-item span {
+  font-size: 12px;
+}
+```
+
+**Bottom navigation guidelines:**
+
+- Keep to 3-5 items maximum
+- Highlight current tab with color or fill
+- Labels are optional but helpful
+- Use consistent icon style (outline or filled)
+
+Fix: Restructure your app to use bottom navigation, remove sidebars, and handle safe areas properly.
+
+---
+
+### Add native functionality
+
+**Show reviewers your app does more than a browser**
+
+Despia provides native features through the `despia-native` SDK. These universal features help any app pass review:
+
+**1. Push notifications.** Register for remote push via OneSignal.
+
+```javascript
+import despia from 'despia-native';
+
+// Register for push notifications
+despia('registerpush://');
+
+// Link device to your user ID for targeted notifications
+despia(`setonesignalplayerid://?user_id=${userId}`);
+```
+
+See: [OneSignal Integration](https://setup.despia.com/lovable/native-features/onesignal)
+
+**2. Local notifications.** Schedule notifications that work offline.
+
+```javascript
+// Send a local notification after 60 seconds
+despia(`sendlocalpushmsg://push.send?s=60&msg=Don't forget to check in&!#Reminder`);
+```
+
+See: [Local Push Notifications](https://setup.despia.com/lovable/native-features/offline-push)
+
+**3. Haptic feedback.** Add tactile responses to interactions.
+
+```javascript
+// Five haptic types available
+despia('lighthaptic://');     // Light tap
+despia('heavyhaptic://');     // Strong tap
+despia('successhaptic://');   // Success feedback
+despia('warninghaptic://');   // Warning alert
+despia('errorhaptic://');     // Error feedback
+```
+
+See: [Haptic Feedback](https://setup.despia.com/lovable/native-features/haptic-feedback)
+
+**4. Biometric authentication.** Protect actions with Face ID, Touch ID, or fingerprint.
+
+```javascript
+// Store data that requires biometric unlock
+await despia('setvault://?key=sessionToken&value=abc123&locked=true');
+
+// Reading triggers Face ID/fingerprint prompt
+const data = await despia('readvault://?key=sessionToken', ['sessionToken']);
+```
+
+See: [Storage Vault](https://setup.despia.com/lovable/native-features/storage-vault)
+
+**5. Native sharing.** Use the system share sheet.
+
+```javascript
+// Open native share dialog
+despia(`shareapp://message?=${encodeURIComponent('Check this out!')}&url=https://myapp.com`);
+```
+
+See: [Share Dialog](https://setup.despia.com/lovable/native-features/share-dialog)
+
+**6. Offline support.** Cache assets locally with the localhost server.
+
+```
+npm install --save-dev @despia/local
+```
+
+Configure for your framework (Vite, Next.js, Webpack) to generate the `/despia/local.json` manifest. The native container caches assets and serves them offline.
+
+See: [Localhost Server](https://setup.despia.com/local-server/how-it-works)
+
+Fix: Implement at least two native features before resubmitting. See the [full SDK reference](https://setup.despia.com/introduction) for all available features.
+
+---
+
+### Conditionally hide web UI in native
+
+**If you have a PWA, hide web-specific features in the native app**
+
+Some features make sense on the web but not in a native app, like Stripe checkout buttons, cookie banners, or PWA install prompts. Use user agent detection to show the right UI for each environment.
+
+See: [User Agent Detection](https://setup.despia.com/lovable/native-features/user-agent)
+
+**Basic platform detection:**
+
+```javascript
+// Detect if running in Despia
+const isDespia = navigator.userAgent.toLowerCase().includes('despia');
+
+// Detect iOS in Despia
+const isDespiaIOS = isDespia && 
+  (navigator.userAgent.toLowerCase().includes('iphone') || 
+   navigator.userAgent.toLowerCase().includes('ipad'));
+
+// Detect Android in Despia
+const isDespiaAndroid = isDespia && 
+  navigator.userAgent.toLowerCase().includes('android');
+```
+
+**Conditional feature rendering:**
+
+```javascript
+function CheckoutButton() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isDespia = userAgent.includes('despia');
+
+  // Show Stripe checkout for web, RevenueCat for native
+  if (!isDespia) {
+    return (
+      <button onClick={() => window.location.href = '/stripe-checkout'}>
+        Purchase with Stripe
+      </button>
+    );
+  }
+
+  // Show in-app purchase for Despia
+  return (
+    <button onClick={() => despia('revenuecat://launchPaywall?external_id=user_123&offering=default')}>
+      Purchase in App
+    </button>
+  );
+}
+```
+
+See: [RevenueCat Paywalls](https://setup.despia.com/lovable/native-features/paywalls)
+
+**Common things to hide in native:**
+
+- Stripe/web payment buttons (use RevenueCat instead)
+- Cookie consent banners
+- PWA install prompts
+- Browser-specific footer links
+- "Open in app" banners
+
+**Debugging tip:** Use a Chrome extension to change your user agent to `despia-iphone`, `despia-ipad`, or `despia-android` for quick testing without deploying to a device.
+
+---
+
+### Differentiate from your website
+
+**Your app should feel distinct**
+
+If your app looks exactly like your website, reviewers will reject it.
+
+**Example problem:**
+
+- Website lives at `https://example.com`
+- App loads `https://example.com` with no changes
+- Reviewer sees no reason for the app to exist
+
+**Ways to differentiate:**
+
+- Use bottom navigation instead of website menus
+- Add haptic feedback to buttons and interactions
+- Use biometric login instead of password-only
+- Enable push notifications for updates
+- Add offline support so the app works without internet
+- Remove browser-specific elements like footer links and cookie banners
+
+Fix: Create an app-specific experience, not a 1:1 copy of your site.
+
+---
+
+### Add depth and content
+
+**Thin apps get rejected**
+
+Single-purpose apps with minimal screens are high-risk.
+
+**What reviewers want to see:**
+
+- Multiple screens or sections
+- Interactive elements like forms, filters, and search
+- User-generated content or personalization
+- Regular content updates
+
+**Example problem:**
+
+- App has one screen showing business hours and a contact form
+- This works fine as a website but fails as an app
+
+Fix: Expand your app's scope. Add features like booking, ordering, account management, or content feeds.
+
+---
+
+### Write a strong App Store description
+
+**Help reviewers understand your app's value**
+
+A vague description makes reviewers assume the worst.
+
+**Bad description:**
+
+> "Access our website on your phone."
+
+**Better description:**
+
+> "Get instant push notifications when your order ships, unlock the app with Face ID, and browse products offline. Includes haptic feedback for a responsive native experience."
+
+Fix: List specific native features and benefits. Mention push notifications, biometrics, and offline support explicitly.
+
+---
+
+### Use the reviewer notes field
+
+**Explain what makes your app an app**
+
+When submitting, use the reviewer notes to preempt objections.
+
+**Include:**
+
+- Which native features you implemented
+- How the app differs from your website
+- Why users benefit from the app vs. browser
+
+**Example note:**
+
+> "This app uses native features including push notifications via OneSignal, Face ID authentication through Identity Vault, haptic feedback on all interactive elements, and full offline support via localhost server. The app experience is streamlined for mobile with bottom tab navigation and proper safe area handling."
+
+Fix: Write detailed reviewer notes for every submission.
+
+---
+
+## Quick checklist
+
+**Layout (get this right first):**
+
+1. App uses mobile layout pattern (bottom nav, no sidebars)
+2. Root frame uses `position: fixed` (not `height: 100vh`)
+3. Safe areas handled with dedicated spacer elements
+4. Viewport meta tag includes `viewport-fit=cover`
+5. Browser-specific elements removed
+
+**Native features:**
+
+6. At least two native features implemented via `despia-native`
+7. Push notifications registered and configured
+8. Haptic feedback added to key interactions
+
+**Content and submission:**
+
+ 9. App experience differs from public website
+10. App has multiple screens or meaningful depth
+11. App Store description highlights native functionality
+12. Reviewer notes explain app value
+
+---
+
+## Native features that help pass review
+
+**Highest impact:**
+
+- Mobile-like UI/UX (bottom navigation, no sidebars, proper safe areas)
+
+This is the foundation. Without a proper mobile app layout, native features won't save your submission. The core has to be right first.
+
+**High impact:**
+
+- Push notifications (`registerpush://`, `setonesignalplayerid://`)
+- Local notifications (`sendlocalpushmsg://`)
+- Offline support (`@despia/local` localhost server)
+- Biometric authentication (`setvault://` with `locked=true`)
+
+**Medium impact:**
+
+- Haptic feedback (`successhaptic://`, `errorhaptic://`, etc.)
+- Native sharing (`shareapp://`)
+- Safe area CSS variables (`var(--safe-area-top)`, `var(--safe-area-bottom)`)
+
+See the [full SDK reference](https://setup.despia.com/introduction) for implementation details.
+
+---
+
+## Still stuck?
+
+If you keep getting rejected:
+
+1. Read the full rejection reason carefully. Apple and Google often include specific guidance.
+2. Compare your app to approved competitors. What native features do they use?
+3. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Your rejection notice in full
+   - Current app URL
+   - List of native features implemented
+   - How your app differs from your website

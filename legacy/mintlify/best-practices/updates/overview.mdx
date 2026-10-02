@@ -1,0 +1,136 @@
+---
+title: "Overview"
+description: "Getting OTA updates right means your app stays fast, your users stay unblocked, and you never give a reviewer a reason to push back."
+icon: "book"
+---
+
+## Ship web changes via OTA. Ship native changes as a binary.
+
+The distinction is simple: changes made in Despia affect the native binary and require a new submission. Changes made to your web app are delivered over the air automatically.
+
+When in doubt, ask: does this change require a new SDK, a new permission, or a new entitlement? If yes, it is a binary change. Everything else is OTA.
+
+## Despia's defaults give you more flexibility than you might expect
+
+Despia declares a broad set of permissions and capabilities in every binary by default: camera, microphone, contacts, location, and more. This means most casual OTA deployments that touch those capabilities are already covered. You are not starting from a minimal binary and adding permissions one by one.
+
+For the majority of feature additions, the native side is already declared and you can ship the web layer freely via OTA. The cases that still require a new binary are genuinely new native integrations: adding a payments SDK, biometrics, a third-party analytics library at the native level, or anything that was not included in Despia's defaults.
+
+## Use the local server for offline apps
+
+If your app needs to work without connectivity, use `@despia/local`. It downloads your web build to the device and serves it from `http://localhost`. After the initial hydration, the app launches instantly from cache with no network request, and OTA updates still apply automatically in the background.
+
+Service workers technically work with Despia, but they are a pain to manage correctly. Misconfigured caching is one of the most common reasons OTA updates stop reaching users. It is exactly why we built the local server. We do not suggest service workers.
+
+```bash
+npm install --save-dev @despia/local
+```
+
+Enable it in **Despia \> Settings \> Local Server** after your first deployment with the plugin.
+
+## Always ship the binary before the web layer that depends on it
+
+When a new native capability needs a new binary, the deployment order matters.
+
+<Steps>
+  <Step title="Integrate the native SDK in Despia">
+    
+  </Step>
+  <Step title="Increment the bundle version in Despia > Settings > Versioning">
+    
+  </Step>
+  <Step title="Submit to App Store / Google Play">
+    
+  </Step>
+  <Step title="Wait for approval">
+    
+  </Step>
+  <Step title="Deploy the web layer via OTA">
+    
+  </Step>
+  <Step title="Gate the new UI with VersionGuard">
+    
+  </Step>
+</Steps>
+
+Skipping steps 3 and 4 means users on the old binary encounter a web layer that calls a native API that does not exist on their device yet.
+
+## Gate new features with VersionGuard
+
+When you ship web UI that depends on a specific binary version, wrap it with `despia-version-guard`. Users who have not yet updated to the required binary see nothing, or a fallback, instead of a broken experience.
+
+```bash
+npm install despia-version-guard
+```
+
+```jsx
+import { VersionGuard } from 'despia-version-guard';
+
+<VersionGuard min_version="2.1.0">
+  <NewFeature />
+</VersionGuard>
+```
+
+Because `despia.bundleNumber` is injected synchronously before your app starts, there is no loading state and no flash of incorrect content.
+
+## Never use "coming soon" in a submission
+
+<Warning>
+  Do not include "coming soon" labels, placeholder sections, or anything that implies a feature will be added after submission. This is direct evidence to a reviewer that the feature was deliberately withheld and planned for OTA delivery. It hands them the justification they need to reject your app.
+</Warning>
+
+The same applies to: "available in the next update," greyed-out locked features with an unlock date, and beta badges on unreleased sections.
+
+If a feature is not ready, do not show it. Ship it fully via OTA when it is, with no prior indication it was coming.
+
+## Use VersionGuard to show coming soon safely
+
+If you want to tease upcoming functionality without the compliance risk, gate both states behind a version check. Show the placeholder only to users below the required version, and show the real feature to everyone who meets it.
+
+```jsx
+import { VersionGuard } from 'despia-version-guard';
+
+<VersionGuard min_version="2.1.0" fallback={<ComingSoonPlaceholder />}>
+  <RealFeature />
+</VersionGuard>
+```
+
+<Note>
+  Reviewers always run the latest binary. They land on the live feature, never the placeholder. The coming soon state is only visible to users whose device has not yet received the new binary. Nothing in the submission signals a planned workaround to review.
+</Note>
+
+## Be conservative with major UI changes
+
+Both stores permit OTA updates to the web layer, but Apple's interpretation of Guideline 3.3.2 is subjective. Updates that dramatically change what a user experiences can attract review questions even when they are technically compliant.
+
+If a change substantially alters the nature of your app, consider shipping it as a binary update instead. This keeps your versioning meaningful and removes any ambiguity. Reserve OTA for what it is best at: bug fixes, performance improvements, copy and UI iteration, and gradual feature rollouts.
+
+## Test every OTA update before it reaches users
+
+<Steps>
+  <Step title="Deploy a visible change (button color, text, layout)">
+    
+  </Step>
+  <Step title="Verify it is live in a browser">
+    
+  </Step>
+  <Step title="Force close the native app completely, not just background it">
+    
+  </Step>
+  <Step title="Wait 2-3 seconds, then reopen">
+    
+  </Step>
+  <Step title="Confirm the change appears">
+    
+  </Step>
+</Steps>
+
+<Tip>
+  Display a build timestamp or version hash somewhere in your UI during development. It removes all guesswork about which version is running.
+</Tip>
+
+If updates are not appearing: check for service worker caching, purge your CDN cache, and confirm the app was fully force-closed.
+
+## Use OTA for critical fixes without hesitation
+
+Stores are not punitive when the reasoning is sound. If something is genuinely broken and the existing experience is unacceptable without a fix, shipping it as an OTA update is reasonable and generally accepted by both Apple and Google. If you can explain the fix clearly and it serves the user, it is defensible.

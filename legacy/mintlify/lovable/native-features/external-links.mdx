@@ -1,0 +1,67 @@
+---
+title: "External Links"
+description: "Control how your app handles external links with custom routing for payments, OAuth, and deep linking"
+icon: "link"
+---
+
+<iframe src="https://www.youtube.com/embed/xndyQytJs3E" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native link handling to control whether links open in Safari, in-app browser tabs, or navigate within your app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Simply use `window.open(url, '_blank')` to open links in the in-app browser, or configure domains in Despia settings to force Safari opening for payment compliance.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia apps are native iOS and Android applications that handle link opening natively. When you use `window.open(url, '_blank')`, the Despia runtime automatically handles opening links in the in-app browser by default. You can configure specific domains in your Despia project settings to force them to open in Safari instead (required for payment compliance).
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Open Links in In-App Browser**
+
+Implement regular `_blank` link targets to open the in-app browser:
+
+```javascript
+// Payment flow (opens in Safari if domain is whitelisted)
+const handleStripePayment = () => {
+  window.open('https://buy.stripe.com/your-checkout', '_blank');
+};
+
+// Any external content (opens in in-app browser)
+const openExternalLink = () => {
+  window.open('https://example.com/help', '_blank');
+};
+```
+
+## **Resources**
+
+- [NPM Package](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native link handling and deep linking into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

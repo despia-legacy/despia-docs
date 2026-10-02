@@ -1,0 +1,1069 @@
+---
+title: "Changelog"
+description: "New features, improvements, and fixes across the Despia platform."
+icon: "clock-rotate-left"
+---
+
+<Update label="September 03, 2026" description="Age Assurance - OS age range checks on iOS and Android">
+  ## Age Assurance
+
+  Despia apps can now read the age range the operating system already holds for a user, on iOS and Android, from a single call that returns the same shape on both platforms. Apple Declared Age Range and Google Play Age Signals sit behind one bridge, so a build can gate mature content, unlock adult-only features, or soften an experience for a minor without ever asking for a birthdate.
+
+  **What ships today:**
+
+  - **`ageassurance://check`.** Fires the platform consent sheet and delivers a verdict to `window.onAgeAssuranceResult`. Pass `gates` as up to three comma-separated ages you actually gate on, and `id` to correlate the response. Nothing throws and nothing rejects: every outcome, including every failure, arrives as a verdict with a `status` of `shared`, `declined`, `verification_required`, `not_applicable`, `unavailable`, or `error`.
+  - **Three-state gates.** Each key in the `gates` map answers `true`, `false`, or `null`, where `null` means the requested age falls inside the returned band and the operating system genuinely did not answer. Test for `=== true` before unlocking anything. Reading `null` as `true` is what hands adult content to a minor and costs an app its listing.
+  - **Assurance tiers.** Every shared verdict carries how the age was established: `self_declared`, `guardian_declared`, `verified_estimated`, `verified_strong`, or `unknown`. Require a stronger tier for the flows that need one.
+  - **`ageassurance://resolve`.** Android only. Sends a user into Play's own verification flow when Google answers `verification_required`. On iOS the command is absent from `ageAssuranceFeatures` and answers `error` with `unsupported_action`.
+  - **`ageassurance://last` and `ageassurance://forget`.** `last` replays the retained verdict without prompting. `forget` drops it on the native side and resets `ageAssuranceVerdict` to `null`, which is what you call on logout or an account switch so the next person to sign in cannot read the previous user's age range.
+  - **Capability globals.** `ageAssuranceAvailable`, `ageAssuranceProvider`, `ageAssuranceReason`, `ageAssuranceFeatures`, and `ageAssuranceVerdict` are plain globals that never prompt. Branch on these rather than on the operating system version or the user agent. They exist only in the top-level page: an `<iframe>` never receives them and an `ageassurance://` call from one is refused.
+
+  Coverage differs sharply by platform. Android reaches effectively every device from 6.0 upward, while iOS requires 26.2 or later and answers `unavailable` on the Simulator, so real iOS testing needs a physical device. Because Apple shapes its band from the ages passed at call time and Google returns bands configured in Play Console, the same user can produce different `ageLower` and `ageUpper` values on each platform. The `gates` map is the part that means the same thing everywhere.
+
+  Everything the web app receives is client-side and can be forged. Treat the verdict as a signal that shapes the experience, and for anything load-bearing echo it to your backend paired with App Attest or Play Integrity.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  This feature requires action. The native SDKs are linked at build time, so enabling the Age Assurance addon under App, then Addons is not enough on its own. Enable Declared Age Range on your identifier in the Apple Developer portal and regenerate the provisioning profile that build uses, accept the Age signals terms in Play Console and set your bands there, then rebuild with an increased version code. Until all of that is done every call answers `status: "unavailable"` with `reason: "not_configured"`, silently and with no warning. Confirm `despia.ageAssuranceAvailable` is `true` on the new install before relying on any verdict.
+</Update>
+
+<Update label="August 08, 2026" description="Easy OAuth - HTTPS sign-in callback on your own domain">
+  ## Easy OAuth
+
+  Social sign-in can now finish on your own domain instead of on a custom scheme, with the provider's redirect landing directly in your app and no intermediate callback page to build.
+
+  Pass `type=https` on the `oauth://` scheme and the runtime watches your entire host for the provider's redirect. When it lands, the secure browser session closes and your app loads that exact callback URL, query string and fragment intact.
+
+  **What ships today:**
+
+  - **The `type=https` parameter.** One flag on the `oauth://` scheme selects the flow. There is no callback path to configure, because the session watches the whole host and any redirect home finishes the login.
+  - **Verbatim delivery.** The callback URL loads exactly as the provider sent it, so implicit flow providers that return tokens in the fragment now work. The legacy flow rebuilds from path and query only, which drops the fragment.
+  - **Cookies land in your app.** The redirect is recognised at navigation time and never fetched inside the browser session, so your app makes the only real request and any `Set-Cookie` header on it is written to your app's own store.
+  - **Capability detection.** `despia.httpsAuthCallback` reports whether the current device can finish on your domain, so your page can pick the right `redirect_uri` before it builds the authorize URL. That choice cannot be changed once the flow starts.
+  - **Association failure reporting.** `window.onAuthCallbackError(host, code)` fires when the domain association is broken, a case iOS otherwise reports with the same code it uses for an ordinary user cancellation.
+  - **iOS and Android parity.** iOS runs the session on `ASWebAuthenticationSession` (17.4 and later). Android runs an Auth Tab where the browser supports it, falling back to a verified App Link with a Custom Tab.
+
+  Setup is required before the flow can work. Your domain needs an `apple-app-site-association` file carrying a `webcredentials` section and an `assetlinks.json` file carrying your Play app signing key fingerprint, Associated Domains has to be enabled on your main Bundle ID, and Web App Synchronization has to be turned on under Addons. The capability is written into the binary at build time, so it reaches users only through a store deployment on a raised version. The [Easy OAuth documentation](/native-features/oauth/easy-login-flow) covers each step, including where to find the SHA-256 fingerprint in Play Console.
+
+  This is opt-in and additive. Existing integrations are unaffected: a `despia()` call that does not pass `type=https` runs the legacy custom scheme flow unchanged, needs no code edits, and keeps working on devices that cannot support the new flow.
+</Update>
+
+<Update label="August 08, 2026" description="Android - 16 KB page size compliance and build verification">
+  ## Android 16 KB page size compatibility
+
+  Android builds now ship native libraries that meet Google Play's 16 KB page size requirement, and every build is checked against that requirement before the bundle is uploaded.
+
+  Previously the Android runtime included a build of `libsqliteJni.so` produced before NDK r28. Its segments were aligned correctly, so the usual alignment check passed, but its RELRO region stopped partway through the writable segment. The loader cannot apply protection to a partial page, so it dropped that protection entirely, and Google Play flagged the bundle for arm64-v8a and x86_64.
+
+  **What changes:**
+
+  - **Updated SQLite native library.** The runtime now resolves androidx.sqlite to a version built with NDK r28, which pads the RELRO region out to a 16 KB boundary. This is the library named in the Play Console warning.
+  - **Release gate on every build.** Each Android build is inspected after compilation and before upload. Any 64-bit native library that is not 16 KB compatible fails the build with the offending file named, so a future dependency update cannot reintroduce the problem silently.
+  - **Native libraries stay uncompressed.** Libraries are kept uncompressed and page aligned inside the package, so the system maps them directly instead of extracting copies at install time and discarding their alignment.
+
+  No dashboard configuration or integration code changes are required. Rebuild your Android app to pick up the updated runtime.
+</Update>
+
+<Update label="June 11, 2026" description="In-app rating - native star prompt without leaving the app">
+  ## Native in-app rating prompt
+
+  The `rateapp://` scheme now presents the operating system's native star rating prompt as a sheet inside your app, so users can leave a rating in a single tap without the session being interrupted.
+
+  Previously the scheme could route users out to the store listing depending on the `showcustomrateappdialog` configuration flag. A rating request cost the user their place in the app and required a manual trip back, which is the main reason in-app rating prompts convert poorly.
+
+  **What changes:**
+
+  - **Native prompt on the bare scheme.** Both `rateapp://` and `rateapp://rating` present the native rating sheet in place and never navigate away from your app.
+  - **Explicit opt-in for the review composer.** `rateapp://review` is now the only variant that leaves the app. It opens the store's write-review composer for your listing, which makes it suited to an explicit "Write a review" button rather than an automatic prompt.
+  - **`showcustomrateappdialog` is deprecated.** The flag is no longer read. The bare scheme always shows the native prompt regardless of what it is set to.
+
+  The operating system rate limits the native prompt to a small number of displays per user per year and suppresses it silently once that budget is spent. Treat the command as a request rather than a guarantee, and do not block a flow or show a confirmation on the assumption that the user saw it.
+
+  Existing `rateapp://` calls need no changes and pick up the native prompt automatically. If your app relied on `showcustomrateappdialog` to send users to the store listing, switch those calls to `rateapp://review` to keep the previous behaviour.
+</Update>
+
+<Update label="August 05, 2026" description="RevenueCat - multipage paywall support">
+  ## Multipage RevenueCat paywalls
+
+  Paywalls built as multi-screen flows in RevenueCat now render every screen in Despia builds, so a paywall authored as Screen 1, Screen 2, then the purchase screen arrives on device in that order.
+
+  Previously these paywalls opened directly on the final purchase screen. RevenueCat gates multipage rendering behind a minimum native SDK version and falls back to the last screen on anything older, so the earlier screens were dropped before the app ever drew them. Nothing in the paywall design or the offering configuration caused this, which is why affected paywalls still previewed correctly in the RevenueCat dashboard.
+
+  **What ships today:**
+
+  - **iOS runtime.** purchases-ios and RevenueCatUI move from 5.80.3 to 5.83.0, the first release that renders multipage paywalls.
+  - **Android runtime.** purchases and purchases-ui move from 10.13.0 to 10.16.0, the matching Android release.
+  - **Existing paywall calls.** The `revenuecat://launchPaywall` scheme is unchanged. Paywalls launched with a specific offering identifier, and paywalls launched with the default offering, both pick up multipage rendering with no change to how they are called.
+
+  A new build is required. The RevenueCat SDK is compiled into the native binary, so multipage paywalls appear only in builds created after this release. No dashboard configuration changes or integration code changes are needed.
+</Update>
+
+<Update label="August 01, 2026" description="OneSignal - available in builds with AD_ID disabled">
+  ## OneSignal with the advertising ID disabled
+
+  Android apps that disable the advertising ID can now use OneSignal. Previously, turning off tracking excluded the OneSignal SDK from the build entirely.
+
+  The OneSignal SDK declares `com.google.android.gms.permission.AD_ID` by default, which contradicts a Play Console data safety declaration stating the app does not collect an advertising identifier. Rather than ship a manifest that conflicts with that declaration, the SDK was dropped from tracking-disabled builds, which also removed push notifications along with it.
+
+  **What changes:**
+
+  - **OneSignal ships without AD_ID.** The permission is stripped from the build instead of the SDK being excluded. Push notifications, in-app messages, tags, and segments all work as normal.
+  - **Only advertising-ID features are unavailable.** Anything that depends on the identifier itself - ad network attribution and GAID-based audience matching - stays off. Everything outside that scope is in.
+  - **The data safety declaration stays accurate.** The shipped AAB does not declare the advertising ID permission, so an app declaring no advertising identifier collection matches what is actually built.
+
+  Existing apps need a fresh native build to pick this up. No dashboard configuration or integration code changes are required beyond leaving the tracking setting off.
+</Update>
+
+<Update label="July 31, 2026" description="File Picker - native pickers driven by the accept attribute">
+  ## File Picker
+
+  File inputs now open the native picker that matches what the upload actually accepts, driven entirely by the standard `accept` attribute. Existing upload forms get native pickers with no code change.
+
+  **What ships today:**
+
+  - **Accept-driven routing.** The `accept` value is parsed when the user taps the input, mapped to native file types, and the matching picker is presented scoped to those types. Extensions, MIME types, and wildcards are all understood, and the mapping is generic rather than a fixed list, so `.mp3` and `.dwg` resolve the same way.
+  - **Photo picker for media.** `image/*`, `video/*`, `image/*,video/*`, and concrete types such as `image/png` open the system photo picker filtered to that type, keeping users out of the file system entirely.
+  - **Documents picker for everything else.** Audio, PDFs, archives, and mixed media open the documents picker scoped to the accepted formats. An unrecognised extension is dropped from the scope rather than blocking the picker.
+  - **Direct camera capture.** Pairing `capture` with a media `accept` skips the picker and opens the camera. `environment` selects the rear lens, `user` the front. On non-media inputs `capture` is ignored and normal routing applies.
+  - **Multi-select.** The standard `multiple` attribute enables multi-select in whichever picker opens, including the documents picker. Cancelling leaves the `FileList` empty and raises no error, so a cancel stays distinguishable from a genuine failure.
+  - **Browser picker handoff.** The `filepicker://type?native_overwrite=true` command returns every file input on the page to the default web picker. The setting survives navigation and resets on relaunch, so pages that depend on it should set it on load.
+  - **Configurable upload sources.** The sources offered when an input has no `accept` value are set per app in the Despia Editor: camera and gallery, camera only, or gallery only.
+
+  Selected files arrive as ordinary `File` objects backed by a URL, so a long recording or a large video is streamed on upload rather than copied through memory first.
+
+  Full documentation is available on the [File Picker](/native-features/file-picker) page.
+
+  No integration code changes are required for accept-driven routing. Changing the upload source mode in the Despia Editor requires a fresh native build.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+</Update>
+
+<Update label="July 31, 2026" description="Dynamic App Source - custom URL scheme">
+  ## Custom URL scheme
+
+  The scheme your app registers with iOS and Android is now editable in **Despia > App > Settings > Dynamic App Source > URL Scheme**.
+
+  Until now the value was generated from your app name on the first build. App names containing spaces, punctuation, accented characters, or a leading digit produced a scheme the operating system will not register, and App Store Connect flags the malformed entry at submission rather than at build time.
+
+  **What ships today:**
+
+  - **Editable field.** Enter the value on its own, with no `://` suffix and no path. Entering `myapp` registers `myapp://`.
+  - **Independent of app name.** Renaming your app no longer changes the scheme, so a live login flow survives a rename.
+  - **Compliance control.** Apps whose generated scheme was rejected can now set a valid one without renaming the app itself.
+
+  The scheme is what closes a native authentication session and hands tokens back to your WebView, so changing it on a live app means registering the new value alongside the old one in every OAuth provider dashboard before shipping. Existing apps keep their current scheme until the field is edited. See [URL Scheme](/native-features/url-scheme) for the compliance rules and the migration checklist.
+
+  Editing the field is a native configuration change and requires a fresh build. Until that build is installed, the binary on the device answers to the old scheme only, and return links fire silently with no error.
+</Update>
+
+<Update label="July 29, 2026" description="Local AI - cutting ties with Cactus, building our own engine">
+  ## Cutting ties with Cactus, investing in our own local AI
+
+  Despia demo apps no longer ship with the Cactus inference backend, and Cactus is being removed as the engine behind the local AI feature entirely.
+
+  Cactus was open source when we adopted it. That changed. The current license is source-available, with commercial use gated behind funding and revenue thresholds. Despia does not ship one app, it ships an engine inside every customer's app, so a dependency like that becomes a liability for every project built on the platform.
+
+  We are not willing to build Despia apps on infrastructure that is not open source, or that we do not control enough to guarantee quality and fair pricing. So we are building the engine ourselves.
+
+  **What we are investing in:**
+
+  - **A fully open source local AI ecosystem.** Apache-2.0, no usage limits, no revenue thresholds, no license checks, no telemetry. Built on llama.cpp and whisper.cpp, both MIT.
+  - **Usable outside Despia.** The engine ships as standalone Swift, Kotlin, and TypeScript packages, so React Native and Capacitor apps can use it directly without touching Despia at all.
+  - **First-class support inside Despia.** In Despia it stays fully low-code - the `intelligence` capability keeps its existing action names, arguments, and return shapes, so integration code written today does not change when the new engine lands.
+  - **Streaming, tool calling, and MCP.** Token streaming, a native tool-calling loop wired to your app's own module actions, and an MCP client, across iOS, Android, macOS, and Windows.
+
+  No dashboard configuration changes, rebuild steps, or integration code changes are required today. Apps relying on on-device inference should treat the capability as unavailable until the new engine is released.
+</Update>
+
+<Update label="July 28, 2026" description="Offline support - PWA service workers on iOS and Android">
+  ## PWA service workers
+
+  Despia apps can now run the service worker your web app already ships, giving you a working offline mode driven entirely by standard web APIs with no build tools and no native offline layer.
+
+  **What ships today:**
+
+  - **Service worker registration.** Registration, installation, activation, and fetch handling behave the same inside the app as they do in a browser PWA, on both iOS and Android.
+  - **Cache storage.** Precached documents, assets, and API responses are served when the device has no connection, using whatever caching strategy your worker defines.
+  - **Offline state through web APIs.** IndexedDB and localStorage are available for persisting sessions, drafts, and queued writes, so login screens and app state survive an offline launch.
+
+  Enable it under App > Settings > Offline Support > PWA, then increase the version code and rebuild. Offline support is a native runtime setting, so builds produced before the toggle was flipped ignore service worker registration entirely.
+
+  Your service worker is the single point of failure. A worker that caches once and never refreshes will pin users to an old release, block over the air updates, and can open the app to a white page when a cached document references assets that no longer exist. Serve from the network first while online, write successful responses back into the cache, and change the cache name on every release so stale entries are cleared on activate. See [PWA service workers](/native-features/service-workers) for the reference implementation and the offline verification test.
+
+  A dashboard change and a fresh native build are required. No integration code changes are needed beyond the service worker in your own web app.
+</Update>
+
+<Update label="July 26, 2026" description="Usage Descriptions - editable iOS and Android permissions">
+  ## Usage Descriptions
+
+  Every permission your app declares is now an editable field under App > Settings > Usage Descriptions. You control the wording of each iOS purpose string, and clearing a field removes the permission from the build entirely.
+
+  Until today, every Despia binary shipped a broad default permission set so that any web API you reached for would work without a new native build. Apple now runs an automated analysis of purpose strings at submission and rejects binaries under Guideline 5.1.1 when a string is generic or when a permission is declared for a resource the app never uses.
+
+  **What ships today:**
+
+  - **Editable purpose strings.** Each of the seventeen supported permissions has its own field. Write your own copy describing what your app does with the data, or use Revert to Default to restore the Despia wording and edit from there.
+  - **Removal by clearing the field.** An empty field removes the key from `Info.plist`. It also strips the feature, its native code, and any dependencies or libraries it imported, so exported Xcode and Android Studio projects contain no dead capability.
+  - **Android manifest mapping.** The iOS keys are mapped to their Android equivalents. Filling in a usage description adds the matching feature and permission to the Android manifest, and clearing it removes them from both platforms. The Health keys and Tracking are iOS only.
+  - **Supported keys.** Camera, Microphone, Photo Library, Save to Photos, Location While Using, Background Location, Always-On Location, Bluetooth, Contacts, Calendar, Face ID, Health Read, Health Write, Speech Recognition, NFC Scanning, and Tracking. Push Notifications is also a field, holding the copy for your own priming screen, since iOS does not allow custom text in the system notification alert.
+
+  A field must be completely empty for the permission to be removed. A single space counts as a value and the key stays in the build.
+
+  Removing a permission removes it from the binary, and no over-the-air update can add it back. If web code later calls an API whose usage description was removed, iOS terminates the app. Gate native capabilities on the app version using the `getappversion://` scheme, ship the binary carrying the new usage description first, then push the web update that enables the feature.
+
+  Existing apps keep their current permission set until you edit it. Changes to usage descriptions apply on the next native build.
+</Update>
+
+<Update label="July 26, 2026" description="V4 - core runtime being open sourced under MIT">
+  ## Open sourcing the Despia V4 runtime
+
+  Ahead of the V4 release, the core runtime is being prepared for publication as open source under the MIT license. The editor follows later this year.
+
+  The V4 runtime is a dynamic kernel. Every capability above it - WebView, native UI, web UI, backend - is a package that the kernel loads at runtime. What gets open sourced is the kernel, the brain of the system. The packages stay in a closed source folder and are not part of the release.
+
+  **What is included:**
+
+  - **The kernel.** Package loading, command dispatch, and lifecycle management - the layer everything else runs on.
+  - **The component contract.** The components folder and the attribute model that text, image, button, and every other primitive are declared against. Anyone can implement against it.
+  - **Nothing above the kernel.** The Despia WebView package, native UI package, web UI package, and backend package are excluded and remain closed source.
+
+  **Why:**
+
+  - **Auditability.** Enterprises evaluating Despia can read the runtime that executes their apps rather than take its behaviour on trust. This is the main blocker we hear in enterprise reviews.
+  - **Compliant deployments.** Under MIT, an organisation can vendor the kernel into its own internal build where compliance requires it, without a dependency on Despia infrastructure.
+  - **A usable runtime on its own.** The kernel is functional without our packages. Writing your own WebView package, native UI package, and component implementations against the contract gives you a working runtime at no cost.
+
+  This is not a wind-down of the commercial product. Despia's hosted platform, build pipeline, OTA updates, native packages, and support continue as they are, and open sourcing the kernel is intended to expand where Despia can be adopted, not reduce it. The goal is for Despia - hosted or self-hosted - to be the default runtime for AI-assisted development of production apps that stay maintainable and stay current through OTA updates.
+
+  Nothing changes for existing apps. No dashboard configuration changes, rebuild steps, or integration code changes are required. Repository and license details will be published with the V4 release.
+</Update>
+
+<Update label="July 09, 2026" description="AppsFlyer - Android support, deep linking, ad revenue">
+  ## AppsFlyer on Android, deferred deep linking, and ad revenue tracking
+
+  The native AppsFlyer integration now runs on Android alongside iOS, delivers deep link metadata to your web layer through a callback, and adds impression-level ad revenue reporting. Attribution, events, identity, and consent behave the same across both platforms and are driven entirely from your web layer.
+
+  **What ships today:**
+
+  - **Android support.** AppsFlyer now works on Android as well as iOS. The SDK is embedded and managed natively on both platforms, so installs, attribution, events, and deep links flow the same way.
+  - **Deferred deep linking.** The context you attach to a OneLink, the product, creator, invite code, or offer, survives a store install and arrives on first launch. Despia resolves the link natively and delivers the payload to `window.onAppsFlyerDeepLink`, and your app reads it to open the right content. Put the IDs a fresh install must receive into `deep_link_sub1` through `deep_link_sub10`.
+  - **Ad revenue tracking.** The `log_ad_revenue` scheme reports impression-level ad revenue per network across Meta, TikTok, and AdMob, feeding LTV and ROAS reporting per acquisition channel.
+  - **Live session and attribution.** A new session starts every time the app returns to the foreground, and attribution is re-injected the moment it resolves or updates, so `despia.appsFlyerAttribution`, `despia.appsFlyerReferrer`, and `despia.appsFlyerUID` stay current without polling.
+  - **Expanded attribution object.** The object now exposes a `raw` field with every key AppsFlyer returned, `pid` and `c` aliases, and campaign cost fields.
+
+  To use deep linking, define `window.onAppsFlyerDeepLink` early in your page and read the payload to open the right content. Adding your AppsFlyer Dev Key, OneLink domains, or ad platform IDs in the Despia Editor requires a fresh native build to take effect. See [Deep Linking](/analytics/appsflyer/deeplinking), [Ad Revenue](/analytics/appsflyer/ad-revenue), and [Campaigns](/analytics/appsflyer/campaigns).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+</Update>
+
+<Update label="July 07, 2026" description="Sandbox Testing - repoint a build at a staging environment at runtime">
+  ## Sandbox Testing
+
+  Sandbox Testing lets a compiled app be repointed at a test environment at runtime, without rebuilding. Testers can redirect the running app to a staging host and start URL, run QA against the test backend, then restore the production app when they are done.
+
+  **What ships today:**
+
+  - **Point at a test environment.** The `sandbox://set` command overrides the runtime host and start URL, persists the override, and reloads the WebView into staging. Pass a `host`, a `start_url`, or both, and the missing value is derived from the other.
+  - **Return to production.** The `sandbox://clear` command restores the production host and start URL from the snapshot captured at launch and reloads into the production app.
+  - **Read the current environment.** `despia.isSandbox` is `true` whenever a test environment is active and `false` in production, so the page can branch on which backend it is talking to.
+  - **Persists across launches.** An active override survives a cold launch. Every launch into a test environment shows a reminder alert, and each switch shows a native alert, so it is always clear which environment is live.
+  - **Identical on both platforms.** The commands, the persisted behaviour, and `despia.isSandbox` work 1:1 on iOS and Android.
+
+  See the [Sandbox Testing](/native-features/sandbox) documentation for the full parameter reference and QA flow.
+
+  The feature is part of the native runtime, so it is available in builds created from today onward. No dashboard configuration or integration code is required to receive it, and the commands are callable directly from your loaded page.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+</Update>
+
+<Update label="July 5, 2026" description="Audio - native player with lock-screen controls and feed pagination">
+  ## Native audio player
+
+  The native audio player is now. Hand the native side a fixed queue or a paginated feed and it owns playback end to end: background audio, lock-screen and Control Center controls, interruption handling, and route changes, all without your page touching an audio element.
+
+  **What ships today:**
+
+  - **Queue and feed playback.** The `audio://setqueue` scheme takes a fixed track list, and `audio://setfeed` points the player at a paginated server endpoint that it fetches ahead of time so the queue never runs dry.
+  - **Full transport controls.** `audio://play`, `pause`, `next`, `prev`, `playat`, `seek`, `skipforward`, `skipback`, and `speed` drive playback from your own UI, and the lock-screen buttons fire the same commands.
+  - **Live config without a restart.** The `audio://config` command toggles loop, playback speed, skip interval, and which lock-screen controls show, all while playback continues.
+  - **Lock screen and background.** Every track renders a Now Playing card across the lock screen, Control Center, Dynamic Island, CarPlay, and watch. Playback keeps running when the app is backgrounded or the screen locks, pauses for calls and Siri, and resumes automatically.
+  - **State through one callback.** All state changes arrive through a single `window.onAudioEvent` handler, including a 1 Hz progress tick, so your UI stays correct no matter who pressed the button.
+  - **Server-side progress tracking.** The `audio://webhook` command POSTs playback milestones to your backend, including ones triggered from the lock screen while your web app is suspended.
+  - **Reload survival.** Native playback outlives web view reloads and in-app navigation. Call `audio://sync` on page load to re-hydrate your UI to what is already playing.
+
+  Full scheme, parameter, and event reference is in the [Audio documentation](/native-features/audio-player).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  Enable the feature in the Despia Editor and trigger a fresh native build to pick it up. No integration code changes are required beyond wiring the `audio://` commands and the `window.onAudioEvent` handler documented above.
+</Update>
+
+<Update label="June 30, 2026" description="GPS Location - single reads and long-range background mode">
+  ## GPS single reads and long-range background tracking
+
+  The GPS Location feature now supports one-off location reads and a coarse long-range mode that keeps recording while the app is backgrounded and survives the app being force-killed.
+
+  **What ships today:**
+
+  - **Single location reads.** The `location://simple` scheme returns one GPS fix and stops, with no continuous session. It prompts only for While-Using permission and delivers the result as a one-element session array, which suits stamping a position onto a form submission, a check-in, or a photo.
+  - **Long-range background mode.** Setting `movement` to `50000` (500 metres) or higher on a `location://` call switches GPS into a low-power mode that fires roughly every 500 metres of travel, keeps running in the background, and survives termination. When iOS relaunches the app for the next point, Despia restores the session and resumes delivery automatically.
+  - **Automatic mode selection.** The tracking mode is chosen from the `movement` value with no separate flag. Values below `50000` keep continuous high-accuracy tracking, values of `50000` or higher select long-range mode.
+
+  Long-range mode is driven by distance rather than the `buffer` timer, requests Always location permission so the OS can wake a terminated app, and depends on the Background Location addon. Always call `stoplocation://` when a long-range session ends, since the persisted session is only cleared on stop and a later relaunch can otherwise resume tracking silently.
+
+  Full details are in the [GPS Location documentation](https://docs.despia.com/features/gps-location).
+
+  Single reads and continuous foreground tracking require no setup and work on existing builds. Long-range background tracking requires enabling the Background Location addon in the Despia Editor and triggering a fresh build, since the background capability is compiled into the app binary and cannot be applied over-the-air.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+</Update>
+
+<Update label="June 03, 2026" description="HealthKit - raw individual samples via raw=true">
+  ## HealthKit raw samples
+
+  The `readhealthkit://` scheme now accepts an opt-in `raw=true` parameter that returns every individual quantity sample with its own timestamp, instead of the default one averaged value per day.
+
+  The daily average was computed on-device, so the underlying samples never reached the web app. With `raw=true` they do, which unlocks intra-day and overnight analysis such as tracking how HRV moves across a night of sleep.
+
+  **What ships today:**
+
+  - **Raw quantity samples.** Add `raw=true` to a `readhealthkit://` read to receive individual samples, each with `startDate`, `endDate`, `value`, and `unit`, sorted oldest to newest.
+  - **Works across the existing call shape.** The parameter combines with comma-separated identifiers and multi-day `days` windows, and applies to quantity types only. It has no effect on sleep or workout reads, which already return per-sample data.
+
+  Adding `raw=true` is non-breaking. Calls without it return exactly the same daily aggregate as before. See the [Apple Health docs](/health-data/apple-health) for the full sample shape and examples.
+
+  This feature requires an app build that includes the update. On older builds `raw=true` is ignored and the read returns the daily aggregate, so rebuild from the Despia Editor to enable it. No dashboard configuration changes are required.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+</Update>
+
+<Update label="May 30, 2026" description="Offline support - opt-in PWA service workers on iOS and Android">
+  ## Service-worker offline support (opt-in)
+
+  Apps that load from a remote `https` origin and ship a Progressive Web App service worker can now run that worker inside the native WebView on iOS and Android, serving offline from the worker's own cache and behaving like an installed PWA. This is opt-in per app and off by default.
+
+  The native layer gets out of the way once the feature is on, so the worker owns the offline experience instead of the app dropping to its local-HTML fallback. Enabling it is the same on both platforms: select PWA in the editor's Offline Support section.
+
+  **What ships today:**
+
+  - **Worker-served offline on both platforms.** With the feature on, navigations flow through the service worker whether online or offline, and the native offline fallback no longer hijacks the navigation into the bundled local HTML.
+  - **App-Bound Domains on iOS.** WKWebView only runs service workers when the app declares its domains as App-Bound Domains, so opted-in iOS builds register the app host plus its in-app navigation domains automatically. On Android the WebView runs service workers natively, with none of the App-Bound constraints below.
+  - **Cold-start offline bootstrap.** On a cold offline launch the app loads a tiny same-origin page, waits for the worker to become ready, then soft-navigates to the target so the worker serves the cached shell.
+
+  **How to enable it:**
+
+  - In the Despia editor, open the Offline Support section and select PWA (service workers). The build registers the required domains automatically.
+  - If the main view loads third-party domains not already in the app config, list them as extra service-worker domains.
+
+  **Requirements and constraints:**
+
+  - The web app must be a client-side-routed SPA. A fresh top-level navigation to an uncached route is not served offline; in-page routing is.
+  - The origin must be served over `https`, the first launch must be online so the worker can install, and the persistent data store must stay intact. Clear-data and reset flows wipe the worker and its caches.
+  - On iOS only, App-Bound Domains is capped at 10 entries, listed individually, and every domain the main view navigates to in-webview must be listed. Full-page OAuth redirects or popup logins to unlisted domains (for example `accounts.google.com`, `m.facebook.com`, or `appleid.apple.com`) fail under App-Bound mode and should be routed through native sign-in instead.
+
+  For new offline-first apps, the Despia Local Server (`@despia/local`) is the cleaner option: it serves the build from `http://localhost`, so service workers and other PWA features work natively with none of the App-Bound Domains constraints above. See [https://setup.despia.com/local-server/introduction](https://setup.despia.com/local-server/introduction).
+
+  This feature is off by default and must be enabled per app. To turn it on, open the Offline Support section in the Despia editor and select PWA, confirm the web app is a client-side-routed SPA, and on iOS list any third-party in-webview domains. No changes are needed for apps that do not opt in.
+</Update>
+
+<Update label="May 24, 2025" description="Android - Kotlin support added alongside existing Java runtime">
+  ## Android runtime now supports Kotlin
+
+  Despia Android now runs on both Java and Kotlin. Previously, the Android layer was Java-only, which blocked integration with modern SDKs that require Kotlin.
+
+  Adding Kotlin support alongside the existing Java runtime removes that constraint and allows Despia Android builds to integrate with the growing set of SDKs that depend on Kotlin.
+
+  No dashboard configuration changes are required. Developers integrating Kotlin-based SDKs should rebuild their app to pick up the updated runtime.
+</Update>
+
+<Update label="May 20, 2026" description="Vision OCR - on-device text recognition for iOS and Android">
+  ## Vision OCR
+
+  Despia apps can now run optical character recognition on any image using the device's native text engine, returning the extracted text straight to your web app. Recognition happens entirely on-device, so it works offline and never sends image data anywhere, with no server round-trips and no third-party API keys.
+
+  **What ships today:**
+
+  - **Multiple image sources.** Recognize a hosted HTTPS image, a `data:` URI, a raw base64 string, a photo the user picks, or a multi-page document scan, all through one capability.
+  - **Native pickers.** The `@imagepicker` token opens the system photo library and the `@filepicker` token opens an image-filtered file browser, with the selection flowing straight into recognition.
+  - **Document scanning.** The `@documentscanner` token opens the native document camera with edge detection and perspective correction, recognizing every captured page and returning the combined text in one result.
+  - **Structured results.** Each result delivers the full text plus a per-line breakdown through the `window.onVisionEvent` callback. Lines carry a confidence score on iOS where the engine exposes one. Output is normalized so each line is trimmed and blank runs collapse before delivery.
+  - **Parallel recognition.** Jobs run independently and are correlated by a caller-supplied `id`, so several images can be processed at once.
+  - **Script hints.** An optional language hint constrains recognition to a known script for non-Latin text, though both platforms auto-detect by default.
+
+  See the [Vision OCR documentation](/machine-learning/vision/ocr) for the full event reference, error codes, and sample payloads.
+
+  **Privacy by design.** Because recognition runs fully on-device, no image or extracted text is ever transmitted to Despia or any third party. Sensitive content stays on the user's device, which removes the third-party processing and data-transfer exposure that frameworks like GDPR and HIPAA are concerned with. This makes the feature well-suited to handling personal and health-related data, though overall compliance still depends on how your app stores, transmits, and handles that data end to end.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  Vision OCR is available in the current `despia-native` package and requires a fresh native build to pick up the new capability. No dashboard configuration or integration credentials are required.
+</Update>
+
+<Update label="May 20, 2025" description="Push notifications - path routing and metadata delivery">
+  ## OneSignal push routing and metadata
+
+  Push notifications can now deliver a client-side route and arbitrary metadata to the web layer, enabling deep-link navigation and state restoration on notification tap without a full WebView reload.
+
+  **What ships today:**
+
+  - **Path-based routing.** Send a `path` key in the OneSignal `data` object (e.g. `/account/orders/4567?tab=tracking`). Despia applies the route via `pushState` and fires `popstate` on notification tap. Most SPA routers react to the `popstate` event and navigate automatically with no additional code required on the web side.
+  - **Metadata delivery.** Send a `metadata` key in the `data` object with any JSON value. The payload is delivered to `window.onNotificationEvent` as an object when sent via the REST API, or as a string requiring `JSON.parse` when set via the OneSignal dashboard Additional Data fields. Use it to restore app state on open.
+  - **`window.onNotificationEvent` hook.** For routers that do not react to a synthetic `popstate`, or when using `metadata`, define `window.onNotificationEvent` at the top of your entry bundle. The host app calls it on every notification tap after applying the URL change. If the handler is not defined when the event fires, the event is lost and will not be replayed.
+  - **Legacy `data.url` behavior unchanged.** Pushes that send only `data.url` continue to trigger a full WebView navigation. They now also fire `window.onNotificationEvent` with `url` in the payload, which is a no-op if the handler is not implemented.
+
+  Refer to the [push reference documentation](/native-features/onesignal/reference#deep-linking-and-routing-from-a-notification) for the full payload shape, timing table, and backend examples.
+
+  No dashboard configuration changes but a rebuild is required if you want to use the new API version. Add `path` and `metadata` to your OneSignal `data` object to use the new behavior.
+</Update>
+
+<Update label="May 19, 2026" description="PostHog analytics - event capture, feature flags, and GDPR consent">
+  ## PostHog analytics bridge
+
+  Despia now ships a native PostHog integration, exposing event capture, user identification, group analytics, screen tracking, feature flags, and GDPR consent controls through `despia()` schemes and four injected globals. Analytics run inside the native PostHog SDK, with batching, persistence, and delivery handled outside the WebView.
+
+  **What ships today:**
+
+  - **Event capture.** The `posthog://capture` scheme fires named events with optional URI-encoded JSON properties. Device context (OS, app version, screen size) is attached automatically by the native SDK, and your keys take precedence on any conflict.
+  - **Identity and aliasing.** The `posthog://identify` scheme links the device to your internal user ID and stores person properties on the PostHog person record. The `posthog://alias` scheme merges anonymous pre-signup history into the identified profile in a single call.
+  - **Group analytics.** The `posthog://group` scheme associates subsequent events with an organization, team, or workspace for B2B funnels. Group types are created automatically on first use, up to PostHog's hard limit of five per project.
+  - **Screen tracking.** The `posthog://screen` scheme sends a `$screen` event with the provided name, suitable for route-change tracking.
+  - **Super and person properties.** The `posthog://register` and `posthog://unregister` schemes manage session-level super properties appended to every captured event. The `posthog://set_person_properties` scheme updates the person record without capturing an event.
+  - **Feature flags via injected globals.** The `despia.postHogFlags` global holds all evaluated flag values, keyed by flag name, and updates in place whenever PostHog pushes new values. Reads are synchronous, always current, and require no `despia()` call.
+  - **Injected identity globals.** `despia.postHogDistinctId`, `despia.postHogSessionId`, and `despia.postHogOptedOut` are kept live on the `despia` object and update in place after every relevant scheme fires.
+  - **GDPR consent controls.** The `posthog://opt_out` and `posthog://opt_in` schemes act as the SDK-level consent cutoff. Events fired while opted out are dropped before they reach PostHog servers, and the cutoff persists across sessions.
+  - **Reset on logout.** The `posthog://reset` scheme clears the distinct ID, person properties, super properties, group associations, and session in a single call.
+
+  Full scheme list, parameters, and the standard auth flow are documented in the [PostHog reference](/analytics/posthog/reference).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  To enable the integration, paste your PostHog project API key into **Despia > App > Integrations > PostHog**, toggle the integration on, and rebuild. PostHog SDK initialization is compiled into the binary, so the rebuild is required before any scheme will fire.
+</Update>
+
+<Update label="May 19, 2025" description="Native features - PK Pass wallet support">
+  ## PK Pass / Wallet
+
+  The `wallet://pkpass` command is now available, letting your app present the native wallet sheet and add a `.pkpass` file to the user's device wallet.
+
+  **What ships today:**
+
+  - **Pass sheet trigger.** Call `despia('wallet://pkpass?url=...')` with a publicly hosted HTTPS URL pointing to a `.pkpass` file. The runtime fetches the file and presents the native add-to-wallet sheet.
+  - **Callback payloads.** Define `window.onWalletEvent` before the `despia()` call to receive the outcome. Payloads report `presented`, `dismissed`, and `failed` states, with typed `error` strings for download failures, invalid passes, and device restrictions.
+
+  Full documentation is available at [PK Pass](/wallet/pkpass)
+
+  **Packages:**
+
+  - [`despia-native`](https://www.npmjs.com/package/despia-native)
+
+  No dashboard configuration changes or rebuild steps are required to use this feature.
+</Update>
+
+<Update label="May 18, 2026" description="Clerk Auth - username login, SSO, MFA, password reset, magic links, SMS, sheet events">
+  ## Expanded Clerk Auth: SSO, MFA, password reset, SMS, magic links, and more
+
+  The native Clerk Auth bridge gains a wave of new sign-in methods and a handful of upgrades to existing flows. Everything works identically on iOS and Android.
+
+  **New sign-in methods:**
+
+  - **Enterprise SSO.** Route the user to their organization's SAML or OIDC identity provider based on email domain. Returns a normal sign-in or sign-up event depending on whether the user is new to the organization.
+  - **MFA continuation.** Continue a sign-in whose first-factor result came back needing a second factor. Supports TOTP and backup codes via single-call verify, plus a prepare step for SMS or email second factors.
+  - **Password reset.** Three-step reset flow: send a code, verify the code, set a new password. Works with both email and phone identifiers, the bridge picks the right delivery channel.
+  - **SMS one-time code.** Passwordless sign-in via a one-time code sent over SMS. Phone numbers are normalized to E.164, so human-formatted numbers like `+1 (555) 123-4567` are accepted directly.
+  - **Magic link tickets.** Native equivalent of an email magic link. Your backend mints a one-time ticket through Clerk's API and includes it in an email or push that deep-links into the app, the app forwards the ticket to the bridge to complete sign-in.
+
+  **Existing methods, more flexible:**
+
+  - **Username and phone sign-in.** Password sign-in now accepts any identifier: email, username, or phone. Pass `jane`, `jane@example.com`, or `+15551234567` and the bridge resolves it.
+  - **Sign-up without email.** Password sign-up no longer requires an email address. At least one of email, username, or phone is enough, alongside the password. Username-only or phone-only accounts are valid.
+  - **Email code sign-up.** The email code flow now supports new-account creation, not just sign-in. Optional first name, last name, and username can be passed when sending the code.
+
+  **Behavior upgrades to existing flows:**
+
+  - **Auth Sheet and User Profile emit close events.** The prebuilt sign-in sheet now fires a completion event when it closes, carrying `userId` and `emailAddress` if the user signed in, or a dismissed event if the sheet closed without sign-in. The User Profile sheet fires a closed event on dismiss. Apps no longer need to poll the session state after the sheet closes.
+  - **Shared pending-flow state.** Email code, phone code, password reset, and MFA continuation all hold one in-memory pending sign-in at a time. Starting a new flow cancels any other in flight, and calling a later step before its prerequisite returns a missing-state error.
+  - **Unified completion semantics.** Every flow that reaches a successful completion now follows the same pattern: the result payload carries `userId` (plus `emailAddress` if a primary email exists), the JWT refresher starts, attribution fires, and `window.clerkJWT` populates a tick later.
+
+  Full reference at [Auth Methods](https://docs.despia.com/authentication/clerk/auth-methods) and the [API Reference](/authentication/clerk/reference).
+
+  Clerk Auth remains opt-in. Apps already using the bridge get everything in this drop automatically as soon as the runtime updates. No dashboard configuration changes, native build settings, or rebuild steps are required.
+</Update>
+
+<Update label="May 18, 2025" description="WebSockets - native runtime connections with durable message delivery">
+  ## WebSockets
+
+  WebSocket connections can now be opened and managed through the native runtime, keeping them alive across WebView reloads, app backgrounding, and network loss.
+
+  **What ships today:**
+
+  - **Native connection ownership.** The connection lives on the native side rather than in the WebView. It persists through JavaScript suspension, app backgrounding, and WebView reloads without any additional handling in your code.
+  - **Durable inbound message storage.** Incoming messages are written to disk before your handler sees them. If the handler fails or the app restarts, Despia replays the message on the next resume, reconnect, or reload.
+  - **Durable outbound queue.** Sends issued while the socket is offline are saved and flushed in order once the connection is restored.
+  - **Auto-reconnect with backoff.** Dropped connections retry automatically with wait times that grow per attempt and cap at 30 seconds. A keepalive ping goes out every 25 seconds to prevent routers and proxies from closing idle sockets.
+  - **Subscribe frame registration.** The `websocket://subscribe` command registers a frame Despia sends to the server on every connect and reconnect, enabling server-side cursor replay for any messages missed during a gap.
+  - **Connection status.** The `websocket://status` command returns the live state of a connection, including pending outbound sends and unacknowledged inbound messages.
+
+  Full documentation is available at [WebSockets](/connectivity/websockets).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  Rebuild your app to pick up the new scheme handler. No dashboard configuration changes or integration code changes are required.
+</Update>
+
+<Update label="May 16, 2026" description="File viewer scheme - native preview with custom Android engine">
+  ## Native file preview with `fileviewer://`
+
+  A new `fileviewer://` URL scheme opens any remote file in a native previewer on both platforms: QuickLook on iOS, and Despia's own in-app file viewer on Android. Files served behind your existing login work without extra token plumbing, since the download reuses the WebView's current cookies and User-Agent.
+
+  **What ships today:**
+
+  - **Custom Android previewer.** Android uses Despia's own in-app file preview engine, not the system "Open with" chooser. This removes the dependency on whichever third-party file viewer the user happens to have installed and delivers render fidelity on par with QuickLook on iOS.
+  - **True cross-platform parity.** The same `fileviewer://` call renders identically on iOS and Android. Your users see consistent output regardless of device, OS version, or what apps they have installed.
+  - **Authenticated downloads.** The native fetch forwards the WebView's cookie jar and User-Agent automatically, so session-protected file URLs render without query-string tokens or custom headers.
+  - **Broad type coverage.** PDFs, images (PNG, JPG, HEIC), plain text, RTF, CSV, and Office documents (DOCX, XLSX, PPTX) are supported. The file extension is taken from the URL path, with a fallback to the response `Content-Type`.
+  - **Optional theme parameter.** Pass `theme=light` or `theme=dark` alongside `src` to match the native previewer to your app's current appearance. Defaults to the system appearance when omitted.
+
+  See the [File Viewer documentation](/native-features/file-viewer) for the full API contract, the CDN-only URL requirement, and the upload-first pattern for canvas-exported or generated files.
+
+  Rebuild your app to pick up the new scheme handler. No dashboard configuration changes or integration code changes are required.
+</Update>
+
+<Update label="May 16, 2026" description="Stripe Payment - PaymentSheet and CustomerSheet integration">
+  ## Stripe Payment
+
+  Native Stripe PaymentSheet and CustomerSheet integration is now available through the `stripe://payment` and `stripe://manage` native feature commands. Apps can charge cards, Apple Pay, Google Pay, and Link through the native payment sheet, and let signed-in customers add, remove, and select among their saved cards through Stripe's native CustomerSheet, all without leaving the web app or building a native wrapper.
+
+  Both actions share a single fire-and-listen pattern. Your backend creates the Stripe objects, your page forwards the secrets into `despia('stripe://...')`, and the Despia runtime fires `window.stripeEvent` once with the outcome. Route on `event.method`: `paymentSheet` for charges, `customerSheet` for card management.
+
+  **What ships today:**
+
+  - **Native PaymentSheet.** Call `despia('stripe://payment?publishable_key=...&payment_intent_client_secret=...')` to open Stripe's native payment sheet on top of the WebView. The sheet handles card entry, 3DS, Apple Pay, Google Pay, Link, and any other method enabled on the Payment Intent.
+  - **Optional saved cards on payment.** Pass `customer_id` (`cus_...`) and `ephemeral_key_secret` (`ek_...`) on `stripe://payment` to attach the Stripe customer so the sheet lists their saved cards and saves the new one for reuse. The pair is all-or-nothing: pass both for saved cards, pass neither for guest checkout (the default and original behavior). Passing exactly one returns a `missing param` failed event with no sheet. Existing integrations without these params continue to work unchanged.
+  - **Native CustomerSheet for saved cards.** Call `despia('stripe://manage?publishable_key=...&customer_id=...&ephemeral_key_secret=...&setup_intent_client_secret=...')` to let the customer manage their saved payment methods. The ephemeral key must be created server-side with the Stripe API version the mobile SDK expects and is short-lived. The optional SetupIntent client secret enables the "add a new card" flow.
+  - **Theme.** `theme=light`, `theme=dark`, or `theme=automatic` controls the sheet's color scheme on both actions. Case-insensitive, unknown values fall back to `automatic` which follows the device's system setting.
+  - **Accent color.** `accent_color=<hex>` sets the primary Pay button color and the sheet's primary accent. Accepts 6-digit hex, 3-digit shorthand, 8-digit hex with alpha, with or without a leading `#`, and the percent-encoded `%23` form. The native runtime tolerates raw `#` characters in any parameter position. Invalid values are silently ignored.
+  - **Corner radius.** `corner_radius=<pt>` sets the general corner radius applied to input fields and buttons together, including the secondary back button. Non-negative numbers only. Invalid, negative, or non-finite values are silently ignored.
+  - **Action corner radius.** `action_corner_radius=<pt>` overrides the primary Pay button corner radius independently of the general radius. When omitted, the Pay button inherits from `corner_radius`. When set without `corner_radius`, only the Pay button is rounded and the rest of the sheet stays at Stripe's default.
+  - **Single shared callback.** `window.stripeEvent` receives results from both actions. Branch on `event.method` to route between `paymentSheet` and `customerSheet`, then branch on `event.status` within each. PaymentSheet statuses are `completed`, `canceled`, or `failed`. CustomerSheet statuses are `selected`, `canceled`, or `failed`, with no `completed` since managing cards is not a payment.
+  - **Stable error contract.** A missing or empty required param returns the literal error string `missing param` on either action, which is safe to match on. All other failures return Stripe's localized SDK message, which should be logged or displayed but never branched on since it is locale-dependent.
+  - **iOS and Android parity.** The same commands work identically on both platforms with no fork in your web code. The native parser treats `#` as an ordinary character rather than a fragment delimiter, so hex colors and any position of the `#` resolve the same way everywhere.
+
+  Stripe Payment is for physical goods and real-world services. Digital goods (credits, coins, subscriptions, memberships, premium tiers, ad removal, level unlocks) must continue to use [RevenueCat](/native-features/revenuecat/introduction), the store-compliant in-app purchase path backed by Apple StoreKit and Google Play Billing. The `stripe://manage` action governs only Stripe-stored cards used for direct Stripe charges, not App Store or Play Store subscriptions managed through RevenueCat. Surface "Manage cards" only on screens where Stripe is the payment rail.
+
+  Documentation: [Stripe Payment](/payments/stripe), [Manage saved cards](/payments/stripe#manage-saved-cards).
+
+  **Packages:** [despia-native](https://www.npmjs.com/package/despia-native).
+
+  Rebuild your app from the Despia dashboard to receive the new native runtime. No dashboard toggle is required to enable the feature. To integrate on the web side, define `window.stripeEvent` on your page before firing either action, route on `event.method`, and call `despia('stripe://payment?...')` or `despia('stripe://manage?...')` with the secrets your backend returned.
+</Update>
+
+<Update label="May 15, 2026" description="Clerk Auth - native iOS and Android authentication bridge">
+  ## Clerk Auth for Despia
+
+  Despia now ships an optional native Clerk authentication bridge for iOS and Android, driven entirely from JavaScript over a `clerk://` URL scheme. Apps that need Keychain or Keystore backed sessions, native Sign in with Apple, offline cold-launch, or zero-config server-side auth can opt in. Apps using web auth providers like Supabase, Firebase, NextAuth, Auth0, or Clerk's own web SDK are unaffected and continue to work out of the box.
+
+  The same `clerk://` URLs, event payloads, status strings, and error codes work identically on iOS and Android. Implementation differences (Apple Sign In sheet vs Custom Tab, Keychain vs Keystore) happen under the hood and never reach the JS layer.
+
+  **What ships today:**
+
+  - **Configure and the two globals.** `clerk://configure` wires up the bridge. The native side writes `window.clerkJWT` (auto-refreshed every 50 seconds, under Clerk's 60-second TTL) and fires every result through `window.onClerkEvent`. Same-key configure is a no-op, different keys switch tenant and clear the secure session store.
+  - **Prebuilt Auth Sheet.** `clerk://authview` opens Clerk's native sign-in sheet covering email/password, OAuth, magic links, MFA, password reset, and passkeys in one prebuilt UI.
+  - **Email and password.** `clerk://manual?method=password` drives manual sign-in and sign-up flows with your own forms while keeping the native session and JWT refresh.
+  - **OAuth providers.** `method=oauth` runs system-browser OAuth via `ASWebAuthenticationSession` on iOS and Chrome Custom Tabs on Android. Over 25 providers supported (Google, GitHub, Microsoft, Discord, LinkedIn, Facebook, Slack, Notion, Vercel, and more), with unknown values passed through as Clerk custom providers.
+  - **Native Sign in with Apple.** `method=apple` uses Apple's native `ASAuthorizationController` sheet on iOS and Apple OAuth via Chrome Custom Tabs on Android. Required by App Review for any iOS app offering third-party social login.
+  - **Email one-time code.** `method=email_code` drives the two-step OTP flow with `action=start` and `action=verify`.
+  - **SMS one-time code.** `method=phone_code` (alias `sms`) ships the same two-step OTP flow over SMS. Phone numbers are normalized to E.164, both code flows share pending state so only one runs at a time.
+  - **Passkeys.** `method=passkey` signs in with an existing credential or registers a new one to the signed-in account. Saved to iCloud Keychain on iOS or Google Password Manager on Android.
+  - **User Profile sheet.** `clerk://userprofile` opens Clerk's prebuilt account-management sheet for editing profile, managing emails, phones, external accounts, passkeys, sessions, MFA, and account deletion.
+  - **Offline session snapshot.** `clerk://state` reads the full user and session object from the in-memory cache hydrated from secure storage. No network round-trip, works with the device fully offline.
+  - **Zero-config server-side auth.** `clerk://ssr` writes the session into the WebView cookie store scoped to your app host plus `localhost` and `127.0.0.1`. Next.js `clerkMiddleware()`, TanStack, and any framework reading standard Clerk cookies sees an authenticated user on the very first request, no Clerk web SDK on the page required. A TTL ladder (50s refresher, 55s cookie, 60s JWT) guarantees the cookie pair is always in a state Clerk middleware accepts without a handshake redirect. An optional `header=` param also injects the JWT on main-frame navigations.
+  - **Attribution sync.** `clerk://attribution` auto-mirrors the Clerk userId into OneSignal and AppsFlyer on every sign-in or sign-up and clears it on sign-out. Enabled by default, overridable via the existing `setonesignalplayerid://` and `appsflyer://set_user_id` routes.
+  - **Sign out and multi-tenant switching.** `clerk://signout` revokes the session, stops the JWT refresher, clears attribution IDs, and writes the signed-out cookie state. Calling `configure` again with a different publishable key switches tenant and resets everything atomically.
+
+  Full documentation:
+
+  - [Introduction](/authentication/clerk/introduction)
+  - [Auth Methods](/authentication/clerk/auth-methods)
+  - [Sessions](/authentication/clerk/sessions)
+  - [Backend](/authentication/clerk/backend)
+  - [Account](/authentication/clerk/account)
+  - [API Reference](/authentication/clerk/reference)
+
+  Clerk Auth is opt-in. The bridge stays inert until your web app fires `clerk://configure`, so apps not using it see no change. Apps that want it need a publishable key from the [Clerk Dashboard](https://dashboard.clerk.com) and a call to `clerk://configure` on boot. No dashboard configuration changes, native build settings, or rebuild steps are required to access the bridge - it ships in every Despia runtime.
+</Update>
+
+<Update label="May 15, 2026" description="Native features - speech recognition on iOS and Android">
+  ## Speech recognition
+
+  Despia now exposes the platform's native speech recognizer through two interoperable JavaScript surfaces, so your web app can transcribe audio on-device without a third-party STT service or paid API.
+
+  **What ships today:**
+
+  - **URL-scheme bridge.** A flat four-event control flow via `speechrecognition://start`, `stop`, and `abort`, with results delivered to a single `window.onSpeechRecognitionEvent` callback. Suited to push-to-talk UIs and explicit control flows.
+  - **Web Speech API polyfill.** A drop-in `window.SpeechRecognition` and `webkitSpeechRecognition` implementation that matches the standard browser surface. Existing Web Speech code and libraries like `react-speech-recognition` run unmodified inside your app.
+  - **Cross-platform parity.** Identical event shapes, error vocabulary, and parameter names on iOS and Android. The same JavaScript runs on both platforms with no branching. Android network failures are folded into the `audio-capture` error code so a single handler covers both runtimes.
+  - **Continuous and interim modes.** Long-form dictation with live partial transcripts, plus single-utterance push-to-talk, configurable per session via the `continuous` and `interim` query parameters.
+  - **BCP-47 language selection.** Pass any BCP-47 tag like `en-US`, `de-DE`, or `ja-JP`, or omit the language parameter to use the device system locale.
+  - **Custom vocabulary biasing.** Pass `known_words` as a comma-separated query parameter, or set `recognition.knownWords` on the polyfill, to nudge the recognizer toward product names, jargon, or proper nouns. Backed by `SFSpeechAudioBufferRecognitionRequest.contextualStrings` on iOS 10 and later and `EXTRA_BIASING_STRINGS` on Android 13 and later, with a graceful no-op on older Android.
+
+  Full documentation, including event ordering, the complete error code table, and end-to-end examples for push-to-talk and continuous dictation, is at [Speech recognition](/native-features/speech-recognition).
+
+  Rebuild your app from the Despia Editor to get the new bridge. Without a rebuild, `speechrecognition://` calls resolve silently and `window.SpeechRecognition` reads as undefined, since the native handler and the polyfill injection are both compiled into the signed binary.
+</Update>
+
+<Update label="May 14, 2026" description="NFC - read and write tags from your web app">
+  ## NFC tag reading and writing
+
+  Despia now exposes the device's NFC chip to your web app. Trigger a single-tap read or write through the `despia()` scheme, and handle the result through a global `window.onNFCEvent` callback.
+
+  **What ships today:**
+
+  - **Read mode.** `despia('nfc://read')` activates the system NFC sheet, scans one tag, and fires `window.onNFCEvent({ type: 'read', id, data })` with the tag's lowercase hex identifier and NDEF payload.
+  - **Write mode.** `despia('nfc://write?value=...')` writes an arbitrary payload to the next tapped tag and fires `window.onNFCEvent({ type: 'write' })` on success.
+  - **Cancellation and error handling.** The runtime distinguishes user-dismissed sessions (`type: 'dismissed'`) from platform failures (`type: 'error'`), so silent resets and retry prompts stay separate.
+  - **vCard payloads.** Write a contact card by prefixing the value with `VCARD_` and joining properties with underscores. The receiving phone recognises the vCard and offers to save the contact natively.
+
+  Available on all modern iPhones from XS onwards and most Android phones with NFC hardware. On devices without an NFC chip, scheme calls resolve silently.
+
+  Documentation: [NFC](/native-features/nfc).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  Setup is required. In Apple Developer, enable the **NFC Tag Reading** capability on your app's core bundle ID. In the Despia Editor, toggle **NFC** under **App > Addons**. Trigger a fresh native build to apply both changes. Without the rebuild, `nfc://read` and `nfc://write` resolve silently and `window.onNFCEvent` never fires.
+</Update>
+
+<Update label="May 10, 2026" description="Plugin bridge - window.despia switches to window.virtual.href after 15 years">
+  ## window.virtual.href - 15 years later, a new plugin bridge
+
+  After 15 years of routing every plugin call through `window.location.href` URL redirects, the bridge finally has a successor: `window.virtual.href`. This is a transparent internal architecture change on both iOS and Android, scoped to the `window.despia` and `despia()` paths. No code changes, no rebuilds, no NPM updates, no dashboard configuration - nothing on the developer side moves. The `window.despia` proxy now forwards to `window.virtual.href` instead of `window.location.href`, which removes the platform webview's URL character limit and eliminates the dropped-call risk caused by the navigation queue collapsing back-to-back navigations.
+
+  **Direct `window.location.href` plugin calls are unaffected and stay fully supported.** Over 7,500 apps - including most projects built with Despia before 2023 - call `window.location.href = "myscheme://..."` directly rather than going through the `window.despia` abstraction. That path is now the legacy bridge, but legacy here only means "the older path" - it remains active, fully maintained, and will continue to receive new feature support and improvements over time. Nothing about it is deprecated, and no app on the direct path needs to migrate, now or later.
+
+  For 15 years, the `window.location.href` redirect was the only way native code got triggered from the webview. It worked, but it inherited the platform webview's URL character cap - roughly 2KB on iOS WKWebView and a similar practical ceiling on Android WebView. Large payloads such as base64-encoded images, long AI prompts, or JSON blobs were silently truncated or rejected before native code ever saw them. Firing multiple plugin calls back-to-back was also unreliable, because the navigation queue on both WebKit and Android WebView could collapse them and silently drop the second call. `window.virtual.href` removes both constraints.
+
+  **Why nothing needs to change in your code.** Every Despia NPM package and the `despia()` helper have always called `window.despia`, never `window.location.href` directly. `window.despia` is a proxy: it used to forward to `window.location.href`, and it now forwards to `window.virtual.href`. This migration was planned from day one. `window.despia` was built as a proxy specifically so this kind of switch could happen invisibly - and today it has. The `despia()` calls already in your code keep working unchanged on both iOS and Android.
+
+  **What ships today for `window.despia` and `despia()` users:**
+
+  - **No character limit.** Pass multi-megabyte payloads directly on iOS and Android. Full base64 images, long prompts, JSON dumps, and config blobs all go through intact.
+  - **No dropped calls.** Fire as many plugin calls in a row as you want, in any order. Every call runs on both platforms.
+  - **Free-form strings.** Spaces, special characters, and newlines pass through as-is with no manual encoding required.
+  - **Same syntax as before.** `window.virtual.href = "myscheme://..."` uses the same scheme and parameter shape as the redirect path it replaces. The string is delivered straight to native code via a message channel instead of going through the URL redirect machinery.
+
+  **Why the URL scheme syntax stays.** Despia plugin calls keep the `myscheme://method?param=value` shape on both bridges, and that is a deliberate choice rather than a legacy quirk. JSON-based bridges have their place, but URL schemes have real advantages worth keeping: one-line calls compose cleanly, they grep and search trivially across a codebase, and they read well to AI coding tools, which handle flat scannable text far better than nested object payloads. The single meaningful argument against the URL approach was always the 2KB cap. With `window.virtual.href`, that cap is gone - so the syntax keeps every advantage and loses its only real drawback.
+
+  **Who this affects:** developers using the `despia()` NPM helper or assigning to `window.despia` directly. They get the upgrade automatically on their next deployment.
+
+  **Who this does not affect:** developers calling `window.location.href = "myscheme://..."` directly. That bridge stays exactly as it was, with full support and continued investment in new features and improvements.
+
+  No dashboard configuration changes, rebuild steps, code changes, or NPM package updates are required. Existing iOS and Android apps both inherit the appropriate behaviour automatically on their next deployment.
+</Update>
+
+<Update label="May 09, 2026" description="Action Sheet - native iOS and Android sheet runtime">
+  ## Action Sheet
+
+  A new `actionsheet://` scheme triggers a real platform action sheet over your web view, with a single global callback that fires when the user picks a row or dismisses the sheet.
+
+  **What ships today:**
+
+  - **Native iOS and Android sheets.** Pass a title and a JSON-encoded items array as URL params. The native side handles presentation and iPad anchoring to the centre of the WebView automatically.
+  - **Per-platform icons.** Each item accepts `iconIos` (any SF Symbol name) and `iconAndroid` (any Material drawable resource name). Missing or unknown icon names render the row without an icon, no crash.
+  - **Destructive styling.** Setting `destructive: true` on an item renders it in red, matching the platform cue users expect for irreversible actions like delete, remove, and leave.
+  - **Theme override.** Pass `theme: 'light'`, `'dark'`, or `'system'` to control sheet appearance independently of the operating system. Defaults to `system`.
+  - **Single global callback.** The native side calls `window.onSheetEvent(value)` once per sheet with the tapped item's value, or `null` if the user tapped Cancel, tapped outside, or tapped back.
+
+  Documentation: [Action Sheet](/native-features/action-sheet).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  This feature requires a native rebuild. Add the handlers in your web code, then rebuild your app from the dashboard for the feature to work.
+</Update>
+
+<Update label="May 09, 2026" description="Focus events - foreground and background lifecycle callbacks">
+  ## Focus events
+
+  Apps can now detect when they enter the foreground or background through global `window.focusin()` and `window.focusout()` callbacks. Attach handlers directly to the window object to react to lifecycle changes such as resuming sessions, refreshing data, or pausing media.
+
+  **What ships today:**
+
+  - **focusin callback.** Fires every time the app returns to the foreground, including the first launch resume. Use it to revalidate session state, refresh auth tokens, or reload content when the user comes back.
+  - **focusout callback.** Fires once per background transition. Use it to stop timers, pause video playback, or persist unsaved state before the app is suspended.
+
+  Detect the runtime with `navigator.userAgent.toLowerCase().includes('despia')` before assigning handlers to avoid running native-only code in browsers.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  This feature requires a native rebuild. Add the handlers in your web code, then rebuild your app from the dashboard for the callbacks to fire.
+</Update>
+
+<Update label="May 08, 2026" description="Apple Health - dedicated workouts scheme with per-workout stats">
+  ## Apple Health workouts with per-session statistics
+
+  A new `healthkit://workouts` scheme fetches workout sessions as a flat array and can attach aggregated quantity statistics computed across each individual workout's time range. The result lands on `window.healthkitWorkouts`, separate from the existing multi-type `healthkitResponse` object, so the new and legacy paths coexist in the same app.
+
+  **What ships today:**
+
+  - **Dedicated workouts endpoint.** Call `healthkit://workouts?days=N` to retrieve every workout in the last N days as a flat array, with `date`, `activityType`, `duration`, `calories`, `distance`, `value`, and `unit` on each record. Authorization for `HKWorkoutTypeIdentifier` is requested automatically on the first call.
+  - **Per-workout statistics.** Pass an `included=` parameter with a comma-separated list of `HKQuantityTypeIdentifier` values, each suffixed with `Average`, `Max`, `Min`, or `Sum`, to compute aggregates scoped to the workout's `startDate` to `endDate` window rather than the whole day. Results land on a `samples[]` array on each workout, with each entry exposing `key`, `value`, and `unit`.
+  - **Suffix-driven aggregation.** `Average` maps to discrete average, `Max` to discrete max, `Min` to discrete min, and `Sum` to cumulative sum. An identifier with no suffix defaults to discrete average. Authorization for every base quantity type referenced is requested in a single prompt, with the suffix stripped before the auth call. Invalid identifiers are silently skipped without affecting valid ones in the same call.
+  - **PascalCase activity types.** The new scheme returns Apple's `HKWorkoutActivityType` enum names directly, for example `Running`, `Cycling`, and `FunctionalStrengthTraining`. The legacy `readhealthkit://HKWorkoutTypeIdentifier` path continues to return lowercase values like `running`, so existing UIs reading from `healthkitResponse` are unaffected.
+  - **Fully backwards compatible.** Every existing `readhealthkit://` and `healthkit://read?types=...` call keeps working unchanged. Use `healthkit://workouts` for any workouts-only read or any read that needs per-workout statistics, and the legacy path when batching workouts with other unrelated identifiers in a single call.
+
+  Common combinations such as average and peak heart rate, summed active energy, and pace or power ranges are documented in the [Apple Health](/health-data/apple-health) page along with the new parameters and full response shape.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  Existing integrations require no code changes. To use the new scheme, call `healthkit://workouts` and read from `window.healthkitWorkouts`. If your app has not been rebuilt since the new endpoint shipped, trigger a fresh build from the Despia Editor to pick it up.<br /><br />This feature requires a native rebuild. Add the handlers in your web code, then rebuild your app from the dashboard for the callbacks to fire.
+</Update>
+
+<Update label="May 08, 2026" description="Gyroscope - live angular velocity and compass heading on one channel">
+  ## Gyroscope sensor
+
+  The gyroscope feature ships today, exposing live angular velocity readings alongside magnetic compass heading on a single channel through `gyroscope://start` and `gyroscope://stop`. Every gyro sample carries the latest cached heading, so one callback drives motion-based UI, shake gestures, AR overlays, fitness apps, and compass or Qibla needles.
+
+  **What ships today:**
+
+  - **Single-channel gyro and compass.** `window.onGyroscopeChange` receives `x`, `y`, `z` angular velocity in radians per second plus `heading`, `headingAccuracy`, and `timestamp` on every emitted reading. Heading is `-1` until the magnetometer produces its first fix.
+  - **Magnitude threshold.** `gyroscope://start?threshold=` filters readings natively against `√(x² + y² + z²)`. Pass `0` to receive every sample for tilt or parallax UI, higher values for shake-style gestures so the JavaScript layer only sees deliberate motion.
+  - **Tracking state flag.** `despia.gyroscopeActive` reflects whether the sensor is running and survives soft close and reopen. Boot code can branch on the flag to resume the live readout or show the start button without guessing.
+  - **Resume after soft close.** When the user backgrounds and reopens the app, the runtime restores the session using the last threshold and continues invoking `window.onGyroscopeChange` as soon as the handler is reattached.
+  - **Calibration prompts.** Readings carry a `calibration_required` status when iOS reports the magnetometer needs recalibrating. Heading continues to stream during this state so the page can surface a figure-8 hint and dismiss it when `headingAccuracy` returns to a good range.
+  - **Error handling.** Devices without a gyroscope or magnetometer emit a `status: "error"` payload with `error: "unavailable"`, and `despia.gyroscopeActive` stays `false` so fallback UI can take over.
+  - **No permission prompt.** Heading is delivered without requesting location access. True-north and Qibla conversions can be done in JavaScript using the page's own coordinates and a local declination value.
+
+  Full documentation is available at [Gyroscope](/native-features/gyroscope).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  No dashboard configuration changes are required. Install or update `despia-native`, define `window.onGyroscopeChange`, and call `gyroscope://start` to begin receiving readings.<br /><br />This feature requires a native rebuild. Add the handlers in your web code, then rebuild your app from the dashboard for the callbacks to fire.
+</Update>
+
+<Update label="May 07, 2026" description="Layout - device screen corner radius now exposed">
+  ## Screen Radius
+
+  The runtime now measures the device's hardware screen corner radius at page load and exposes it to the web layer, so modals, sheets, cards, and overlays can curve in lockstep with the physical bezel.
+
+  **What ships today:**
+
+  - **Automatic injection.** No scheme call is required. The runtime reads the top-left corner radius on every supported device and writes it to the page before stylesheets and scripts run.
+  - **JavaScript value.** `despia.screenRadius` returns the radius as a number in CSS pixels, for example `47.33` on iPhone 14 Pro. Use it for any sizing logic that needs the raw measurement.
+  - **CSS variable.** `--screen-radius` is scoped to the document root with a `px` unit, ready to drop into `border-radius` rules or `calc()` expressions for concentric inner corners.
+  - **Graceful fallback.** The value resolves to `0` on devices without rounded screens, on older OS versions, and in non-Despia environments. Pair every `var(--screen-radius)` with a `0px` default so `calc()` expressions stay valid in desktop previews and clamp to square corners.
+  - **Cross-platform parity.** iOS and Android expose identical values in CSS pixels, so feature code does not need to branch by platform.
+
+  Full layout patterns for inset modals, edge-pinned sheets, and combinations with safe area insets are documented in the [screen radius reference](/native-features/screen-radius).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native) on npm
+
+  This feature requires a native rebuild. Add the handlers in your web code, then rebuild your app from the dashboard for the callbacks to fire.
+</Update>
+
+<Update label="May 07, 2026" description="In-app purchases - RevenueCat Customer Center scheme">
+  ## RevenueCat Customer Center
+
+  A new `revenuecat://center` scheme opens the native RevenueCat Customer Center sheet, giving users a single in-app surface to restore purchases, manage their subscription, request refunds, and complete feedback surveys without leaving the app.
+
+  **What ships today:**
+
+  - **Customer Center scheme.** Call the new `revenuecat://center` scheme with an `external_id` parameter to present the native sheet. Layout, copy, and available actions are configured from the RevenueCat dashboard, so no client-side UI work is required.
+  - **Event callback.** Every interaction inside the sheet streams back through `window.onRevenueCatCenter(event)`. Switch on `event.event` to handle `restoreStarted`, `restoreCompleted`, `restoreFailed`, `manageSubscriptionsOpened`, `refundRequested`, `refundCompleted`, `feedbackSurveyCompleted`, `managementOptionSelected`, and `dismissed`.
+  - **iOS in-app refunds.** iOS users can now initiate refund requests directly from the sheet. The runtime emits `refundRequested` and `refundCompleted` events with `productId` and a `status` field of `success`, `userCancelled`, or `error`.
+  - **Android refund fallback.** Google Play does not allow in-app refund requests, so configure a `customUrl` management option in the RevenueCat dashboard and route Android users to a `mailto:` link or your support page from the `managementOptionSelected` event. iOS continues to use the native flow.
+  - **Fully safe restore pattern.** On `restoreCompleted`, `refundCompleted`, and `dismissed`, re-query the native store with the existing `getpurchasehistory://` scheme and re-run your entitlement check. The event payload's `activeEntitlements` array is informational, the native store query is authoritative.
+
+  Full implementation details, event field reference, and Android refund routing examples are documented in the [in-app purchases reference](/docs/in-app-purchases/reference).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native) on npm
+
+  No new rebuild is required for apps already on a recent Despia runtime. Configure the Customer Center appearance and any custom management URLs in your RevenueCat dashboard, then call the scheme from your web layer.
+</Update>
+
+<Update label="April 26, 2026" description="HealthKit - extended sleep identifier support">
+  ## Extended HealthKit sleep identifier support
+
+  HealthKit sleep reads now cover the full set of sleep analysis categories, so apps can ingest data from any HealthKit-compatible device and not just Apple Watch or iPhone sleep tracking.
+
+  Previously, sleep reads were limited to the basic in-bed and asleep categories produced by first-party Apple sleep tracking. Third-party rings, bands, and mattress sensors that sync richer stage data into the Health app had their detailed values dropped at the read layer.
+
+  **What ships today:**
+
+  - **Full stage breakdown.** Reads now return REM, core, deep, awake, and unspecified asleep values when the source device provides them, in addition to in-bed and asleep totals.
+  - **Third-party device coverage.** Any HealthKit-authorised device that writes sleep samples to the Health app is now readable through the same `despia()` sleep call, including Oura, Whoop, Withings, Eight Sleep, Fitbit, and Garmin where the user has enabled Health app sync.
+  - **Per-sample source metadata.** Each returned sample includes the originating source name and bundle identifier so the app can distinguish between devices when the user has more than one sleep tracker connected.
+  - **Backwards compatibility.** Existing integrations that only consume in-bed and asleep totals continue to work without changes. New stage fields are additive.
+
+  HealthKit permission prompts and Info.plist usage strings remain unchanged. Users who previously granted sleep read permission do not need to re-authorise.
+
+  **Example lookup:**
+
+  ```js
+  if (isDespiaIOS) {
+      const data  = await despia('readhealthkit://HKCategoryTypeIdentifierSleepAnalysis?days=7', ['healthkitResponse'])
+      const sleep = data.healthkitResponse.HKCategoryTypeIdentifierSleepAnalysis
+  }
+  ```
+
+  Each record returns `startDate`, `endDate`, `value`, and `label`, where `label` is one of `inBed`, `awake`, `asleep`, `core`, `deep`, or `rem`. See [Apple Health - Sleep data](/health-data/apple-health#sleep-data) for the full response schema.
+
+  No dashboard configuration changes, rebuild steps, or integration code changes are required. The expanded data is returned automatically on the next read.
+</Update>
+
+<Update label="April 21, 2025" description="NPM package - updated docs">
+  ## Updated NPM package documentation
+
+  The [despia-native](https://www.npmjs.com/package/despia-native) npm package page now links to the new documentation at [setup.despia.com](https://setup.despia.com), replacing the legacy npm.despia.com content.
+
+  No integration changes are required. The SDK API is unchanged.
+</Update>
+
+<Update label="April 18, 2026" description="Notifications - critical alerts support">
+  ## Critical alerts
+
+  Despia now supports critical alerts, allowing notifications to break through Do Not Disturb and silent mode on both Android and iOS.
+
+  **What ships today:**
+
+  - **Android.** Critical alerts work out of the box with no additional configuration required.
+  - **iOS.** Critical alerts require the Critical Alerts entitlement from Apple. Once granted, enable them in the Despia dashboard under App - Integrations - OneSignal - Critical Alerts, then rebuild a new version in Despia to activate the capability.
+
+  Android apps require no additional steps. iOS apps require the Apple entitlement and a dashboard configuration change followed by a rebuild.
+</Update>
+
+<Update label="April 18, 2026" description="PowerSync - schema configuration in db.connect()">
+  ## PowerSync schema configuration
+
+  `db.connect()` now accepts a `schema` parameter that tells the sync engine which tables and columns to map from your backend. Previously, schema configuration had to be inferred or handled separately outside the connect call.
+
+  **What ships today:**
+
+  - **Schema definition in connect.** Pass a `schema` object directly to `db.connect()` alongside `fetchToken` and `url`. Each key is a table name, each value declares the columns and optional indexes for that table.
+  - **Column type mapping.** Columns are typed as `'text'`, `'integer'`, or `'real'`, mapping directly to SQLite affinity types.
+  - **Optional indexes.** Each table accepts an optional `indexes` map of index name to an array of column names, allowing the sync engine to optimise queries at the schema level.
+  - **Updated TypeScript types.** `ConnectOptions` now includes `schema: PowerSyncSchema` as a required field. The `PowerSyncSchema` type is exported directly from `@despia/powersync`.
+
+  ```typescript
+  await db.connect({
+      fetchToken: async () => {
+          const res = await fetch('/api/powersync-token')
+          const { token } = await res.json()
+          return token
+      },
+      url: 'https://YOUR_POWERSYNC_INSTANCE',
+      schema: {
+          users: {
+              columns: {
+                  id: 'integer',
+                  email: 'text',
+              },
+          },
+          todos: {
+              columns: {
+                  id: 'integer',
+                  title: 'text',
+                  done: 'integer',
+              },
+              indexes: {
+                  byDone: ['done'],
+              },
+          },
+      },
+  })
+  ```
+
+  Full documentation is available in the [PowerSync introduction](/local-database/introduction) and [API reference](/local-database/reference).
+
+  **Packages:**
+
+  - [`@despia/powersync@1.1.0`](https://www.npmjs.com/package/@despia/powersync)
+
+  Update the package to `1.1.0` and add a `schema` object to any existing `db.connect()` calls. No dashboard or backend changes are required.
+</Update>
+
+<Update label="April 10, 2026" description="Apple Health - realtime observer and webhook delivery">
+  ## Apple Health realtime observer
+
+  HealthKit now supports live data observation. Subscribe to any health or workout identifier and receive a webhook POST to your server whenever the data changes, with background delivery that persists across app restarts.
+
+  **What ships today:**
+
+  - **Observer registration.** Call `healthkit://observe` with a comma-separated list of identifiers, a delivery frequency, and a server URL. Despia registers a native `HKObserverQuery` for each type and enables background delivery via iOS background task APIs.
+  - **Webhook delivery.** On every HealthKit update, Despia fetches the latest day of data for the changed type and POSTs it to your server as JSON with `event`, `userId`, `timestamp`, and `data` fields.
+  - **Configurable frequency.** Set `frequency` to `immediate`, `hourly`, `daily`, or `weekly` to control how aggressively the OS wakes the app to deliver updates.
+  - **Observer persistence.** Active observers are saved to device storage and restored automatically when the app restarts - no re-registration required.
+  - **Observer state.** `despia.observingHealthKit` reflects the current array of active identifier strings. It updates after every `observe` or `unobserve` call.
+  - **Selective stop.** Call `healthkit://unobserve?types=all` to stop all observers, or pass specific identifiers to stop individual types.
+  - **User identification.** Append your own user ID as a query parameter on the `server` URL (e.g. `?user=abc123`) to route webhook events directly to the right user record on your server without device ID mapping.
+
+  See the [Apple Health documentation](/health-data/apple-health) for the full API reference, webhook payload shape, and code examples.
+
+  No dashboard configuration changes or rebuild steps are required. Update `despia-native` to the latest version to access the new scheme.
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+</Update>
+
+<Update label="April 07, 2026" description="GPS Location - movement-based high-accuracy tracking">
+  ## Movement-based location tracking
+
+  The `location://` scheme now accepts a `movement` parameter that fires an additional GPS update whenever the device moves a set distance, independent of the time-based `buffer` interval.
+
+  **What changes:**
+
+  - **Distance-triggered updates.** Set `movement` to a distance in centimetres to receive a GPS point every time the device crosses that threshold. Use `movement=100` for 1-metre precision, suited to running, cycling, and navigation use cases.
+  - **Combined buffer and movement.** `buffer` and `movement` run simultaneously. `movement` drives updates as the user moves, and `buffer` acts as a heartbeat fallback when the device is stationary or movement updates are sparse.
+  - **Same location object shape.** Movement-triggered points are delivered to `window.onLocationChange`, stored in the local session, and POSTed to the `server` endpoint using the same object shape as time-based points. No handling changes are required.
+
+  To enable high-accuracy tracking, pass both parameters:
+
+  ```js
+  despia("location://?buffer=60&movement=100")
+  ```
+
+  Filter for precise fixes using `horizontalAccuracy` before calculating distances - discard any point where the value exceeds `10`.
+
+  No dashboard configuration changes are required for foreground use. Background tracking requires the Background Location addon to be enabled in your Despia dashboard.
+</Update>
+
+<Update label="April 05, 2026" description="HealthKit - workout identifiers that provide quantities">
+  ## HealthKit workout quantity identifiers
+
+  Despia HealthKit now supports workout identifiers that provide quantity data, allowing apps to read and write typed quantity samples associated with workout activity types.
+
+  **What ships today:**
+
+  - **Workout quantity identifiers.** Apps can now reference quantity-type identifiers tied to specific workout activities, such as active energy burned, distance, step count, and other measurable outputs produced during a workout session.
+  - **Quantity type resolution.** The SDK resolves each workout identifier to its underlying `HKQuantityType` automatically, so apps receive correctly typed samples without manual type mapping.
+
+  No dashboard configuration changes or integration code changes are required to enable this. Rebuild your app to pick up the updated HealthKit identifier support.
+</Update>
+
+<Update label="March 30, 2026" description="Auth - Apple Sign In via Apple JS SDK">
+  ## Apple Sign In
+
+  Despia now supports Sign In with Apple using the Apple JS SDK across iOS, Android, and web, with platform-aware behaviour and full documentation.
+
+  **What ships today:**
+
+  - **iOS native - native Face ID sheet.** On iOS, the Apple JS SDK with `usePopup: true` opens the native Face ID / Apple ID sheet directly inside WKWebView. No `oauth://` bridge is needed on iOS. The `id_token` is returned to your JavaScript callback with no page redirect, which avoids the blank white screen that causes App Store rejection when using a redirect-based flow.
+  - **Android native - oauth:// bridge.** On Android, the `oauth://` bridge opens Chrome Custom Tabs for the Apple OAuth flow. `public/native-callback.html` receives the `id_token` and `code` in the URL hash and fires the deeplink to close the tab. The `oauth/` prefix in the deeplink is required.
+  - **Web - Apple JS SDK popup.** On web, the Apple JS SDK popup returns the `id_token` directly to your JavaScript callback. No redirect flow is used.
+  - **Two response mode options for Android.** The `fragment` mode redirects the browser directly to `native-callback.html` with `#id_token` in the hash - no backend POST handler needed. The `form_post` mode sends `code`, `id_token`, `state`, and `user` (name and email JSON, first login only) to your backend, which validates and redirects to `native-callback.html` with a session token.
+  - **Plain HTML callback file.** `public/native-callback.html` is recommended over a React component for the callback page. React Router can strip the `#id_token` hash fragment on route change, causing tokens to disappear. The plain HTML file bypasses React Router entirely and reads the hash directly from the browser. Chrome Custom Tabs hides the URL bar, so the `.html` extension is never visible to users.
+  - **React, Vue, Vanilla JS, and HTML auth page examples.** All auth page examples include the `searchParams` dependency array fix to handle the already-mounted page problem, where the deeplink updates the URL without remounting the component and the token handler never re-runs.
+
+  Apple Sign In requires a Services ID configured in the Apple Developer Console with your domain and return URL registered. The client secret JWT generated from your `.p8` private key expires after 6 months - set a reminder to regenerate it before expiry or Apple Sign In will silently stop working.
+
+  Full documentation is available at [Apple Sign In](/native-features/oauth/apple)
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  A rebuild is required. No dashboard configuration changes are required beyond enabling the Apple JS SDK script tag and configuring your Apple Services ID credentials in your backend auth provider.
+</Update>
+
+<Update label="March 28, 2026" description="Analytics - AppsFlyer attribution and event tracking">
+  ## AppsFlyer integration
+
+  Despia now includes a full AppsFlyer integration for install attribution, deep linking, in-app event tracking, and creator affiliate link support on both iOS and Android.
+
+  **What ships today:**
+
+  - **Install attribution.** The native AppsFlyer SDK is initialised automatically at launch on both iOS and Android. Attribution data is captured at install time, cached on-device, and injected into your web layer on every page load via `despia.appsFlyerAttribution`, `despia.appsFlyerReferrer`, and `despia.appsFlyerUID`. No setup code required.
+  - **Normalised referrer string.** `despia.appsFlyerReferrer` provides a clean source string on every load - values like `tiktok_ad`, `facebook_organic`, `google_ad`, and `organic` - ready to use for onboarding personalisation and funnel branching without any parsing.
+  - **Deep linking.** When a user opens the app via a campaign or creator OneLink URL, Despia resolves the deep link natively and navigates the WebView to the correct path automatically. `deep_link_value` maps directly to a route in your web app. No navigation code required from the web layer for fresh launches.
+  - **Re-engagement callback.** For users who already have the app installed and tap a campaign link while the app is open, Despia calls `window.onAppsFlyerDeepLink(data)` with the full click event payload so your app can respond without a full page reload.
+  - **Creator and affiliate links.** Deep link params support `deep_link_sub1` through `deep_link_sub5` for creator codes and affiliate IDs. Each creator can receive a unique OneLink URL. Attribution, commission tracking, and welcome personalisation are available from the same payload.
+  - **Event bridge.** In-app events are forwarded from your web layer to the native AppsFlyer SDK via `despia("appsflyer://log_event?...")`. Standard `af_` prefixed events map automatically to Meta and TikTok conversion events in their dashboards. Custom events appear in the AppsFlyer dashboard for funnel and retention analysis.
+  - **User identification.** `set_user_id`, `set_email`, and `set_phone` are all supported. Emails and phone numbers are hashed with SHA256 automatically before transmission.
+  - **GDPR consent.** `set_consent` accepts `is_gdpr` and `has_consent` params and passes them directly to the AppsFlyer SDK consent API.
+  - **On-demand data retrieval.** Both `get_uid` and `get_attribution` support an await pattern - `await despia("appsflyer://get_uid", ["appsFlyerUID"])` - for cases where you need the value immediately in the same execution flow.
+  - **Ad revenue tracking.** Coming soon - `despia("appsflyer://log_ad_revenue?...")` will allow impression-level revenue reporting back to AppsFlyer from Meta, TikTok, and AdMob to enable LTV and ROAS reporting per acquisition channel.
+
+  Configuration is handled entirely in the Despia dashboard with no native code changes required. Go to **Despia > App > Settings > Integrations > AppsFlyer** to enter your dev key, Apple App ID, OneLink URLs, and ad platform credentials. Despia configures Universal Links on iOS and App Links on Android automatically from the values you enter.
+
+  Full documentation is available at [AppsFlyer](/analytics/appsflyer).
+
+  **Packages:**
+
+  - [despia-native](https://www.npmjs.com/package/despia-native)
+
+  A rebuild is required after enabling the integration in the dashboard. No other integration code changes are required beyond calling the bridge methods documented above.
+</Update>
+
+<Update label="March 26, 2026" description="Local CDN - new query method to fetch all cached items">
+  ## Local CDN - query all cached files
+
+  A new `localcdn://query` method is available on the Local CDN API, returning every cached file in a single call without requiring individual IDs.
+
+  Previously, retrieving cached file metadata required passing a known list of index IDs to `localcdn://read`. There was no way to get a full inventory of the cache without tracking IDs separately in application state.
+
+  **What ships today:**
+
+  - **localcdn://query.** Calling `await despia('localcdn://query', ['cdnItems'])` returns the full `cdnItems` array containing every file currently in the local cache, across all folders.
+  - **Same response schema.** Each item in the returned array follows the existing response schema - `index`, `index_full`, `local_cdn`, `local_path`, `cdn`, `size`, `status`, and `created_at` - identical to `localcdn://read` output.
+
+  Full reference documentation is available on the [Local CDN reference page](/local-cdn/reference).
+
+  No dashboard configuration changes or rebuild steps are required. Update `despia-native` to the latest version to access the new method.
+</Update>
+
+<Update label="March 22, 2026" description="Local Server - generally available in beta">
+  ## Local server
+
+  Despia now ships a local server for iOS and Android. Your web build downloads to the device on first launch and is served from an on-device HTTP server at `http://localhost`. From that point on, the app boots with zero network latency and works completely offline.
+
+  **What ships today:**
+
+  - **On-device HTTP server.** Assets are served from `http://localhost`, not `file://` or a custom scheme. BrowserRouter, Vue Router, and any routing library that expects a real HTTP origin work without modification.
+  - **First-launch hydration.** On first open, Despia fetches your web build from your existing hosting (Netlify, Vercel, AWS, or anything else) and caches it on the device. No migration required.
+  - **OTA updates.** On startup, Despia fetches `despia/local.json` and compares the `deployed_at` timestamp with the cached value. If it has changed, the new build downloads in the background and applies on next launch. No app store review needed for HTML, CSS, JavaScript, image, or font changes.
+  - **`@despia/local` build plugin.** Available for Vite, Webpack, Rollup, Nuxt, SvelteKit, Astro, Remix, esbuild, and any build system via a `postbuild` CLI hook. The plugin scans your output directory after each build and generates `despia/local.json` automatically.
+  - **`despia-version-guard`.** A companion package for gating web UI features behind a minimum native runtime version. Supports React, Vue, Angular, Svelte, and Vanilla JS.
+
+  **Store compliance.** The local server downloads web content only (HTML, CSS, JS, images, fonts). No native code or executables are downloaded after submission. The approach follows patterns established by Expo and is compliant with Apple App Store Guideline 3.3.2 and the Google Play Malicious Behavior Policy.
+
+  **This feature is in final beta.** To request access, email [offlinemode@despia.com](mailto:offlinemode@despia.com).
+
+  **Documentation:** [Local Server Introduction](/local-server/introduction) and [Reference](/local-server/reference).
+
+  **Packages:**
+
+  - [`@despia/local`](https://www.npmjs.com/package/@despia/local) — build plugin
+  - [`despia-native`](https://www.npmjs.com/package/despia-native) — native SDK and JavaScript bridge
+</Update>

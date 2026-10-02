@@ -1,0 +1,410 @@
+---
+title: "Gyroscope"
+icon: "compass"
+description: "Read live angular velocity from the device's gyroscope plus magnetic heading from the compass on a single channel, with a magnitude threshold for filtering low-motion noise."
+---
+
+Read the device's gyroscope alongside its magnetic compass on a single channel. Every gyro reading carries the latest cached heading, so the same callback drives motion-driven UI, shake-to-action gestures, AR overlays, fitness apps, and compass or Qibla needles. Pass a magnitude threshold to filter out low-motion noise, or pass `0` to receive every sample. No permission prompt, no setup.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Call `gyroscope://start` to begin emitting readings and `gyroscope://stop` to end the session. While tracking is active, every gyro reading above the magnitude threshold is delivered to `window.onGyroscopeChange` in real time, and each reading carries the most recent magnetic heading. State persists across soft close and reopen, so if the user backgrounds the app and relaunches, tracking resumes with the same threshold and the callback keeps firing.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onGyroscopeChange = function (data) {
+    if (data.status === 'error') {
+        console.warn('Gyro or compass unavailable on this device')
+        return
+    }
+    if (data.status === 'calibration_required') {
+        showCalibrationHint()
+        return
+    }
+    rotateThing(data.x, data.y, data.z)
+    if (data.heading >= 0) {
+        rotateNeedle(data.heading)
+    }
+}
+
+if (isDespia && !despia.gyroscopeActive) {
+    despia('gyroscope://start?threshold=90')
+}
+```
+
+To stop:
+
+```javascript
+despia('gyroscope://stop')
+```
+
+---
+
+## Parameters
+
+`gyroscope://start` accepts the following query parameter.
+
+| Parameter | Required | Description |
+| :-- | :-- | :-- |
+| `threshold` | Yes | Magnitude threshold in degrees per second. A reading fires only when `√(x² + y² + z²)` is at or above this value. Use `0` to receive every sample, `90` for roughly a quarter-rotation per second, higher values for shake-style gestures. The threshold gates the gyro stream, and heading rides along on every emitted sample. |
+
+`gyroscope://stop` takes no parameters.
+
+---
+
+## Live updates with window.onGyroscopeChange
+
+Define `window.onGyroscopeChange` before calling `gyroscope://start` so the first reading is not missed. Native invokes this for every event, success, error, and calibration prompt. Discriminate on `data.status` before reading any other field.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onGyroscopeChange = function (data) {
+    if (data.status === 'error') {
+        showFallbackUI()
+        return
+    }
+
+    if (data.status === 'calibration_required') {
+        showCalibrationHint()
+        return
+    }
+
+    // Angular velocity in radians per second
+    const { x, y, z, heading, headingAccuracy, timestamp } = data
+
+    // Magnitude across all three axes
+    const mag = Math.sqrt(x * x + y * y + z * z)
+
+    if (mag > 8) {
+        triggerShakeAction()
+    } else {
+        applyTilt(x, y)
+    }
+
+    // Heading is -1 until the compass produces its first fix
+    if (heading >= 0) {
+        rotateNeedle(heading)
+    }
+}
+
+if (isDespia && !despia.gyroscopeActive) {
+    despia('gyroscope://start?threshold=0')
+}
+```
+
+When the app reopens during an active session, the runtime keeps invoking `window.onGyroscopeChange` with fresh readings as soon as your handler is reattached. No extra wiring needed.
+
+---
+
+## Reading object
+
+Every reading delivered to `window.onGyroscopeChange` has the following shape on success.
+
+```json
+{
+    "status": "success",
+    "x": 0.012,
+    "y": -0.004,
+    "z": 0.231,
+    "heading": 127.4,
+    "headingAccuracy": 5.0,
+    "timestamp": 1712000000000
+}
+```
+
+| Field | Description | Usage |
+| :-- | :-- | :-- |
+| `status` | `"success"` for valid readings, `"error"` if the sensor is unavailable, `"calibration_required"` when the magnetometer needs recalibrating | Branch on this before reading other fields |
+| `x` | Angular velocity around the X axis in radians per second. Pitch | Tilt detection, AR overlays |
+| `y` | Angular velocity around the Y axis in radians per second. Roll | Side-tilt detection |
+| `z` | Angular velocity around the Z axis in radians per second. Yaw | Spin and turn detection |
+| `heading` | Magnetic heading in degrees. `0` is north, `90` east, `180` south, `270` west. `-1` when the compass has not yet produced a fix | Compass needles, Qibla pointers, navigation arrows |
+| `headingAccuracy` | Heading uncertainty in degrees, lower is better. `-1` when unknown. Treat anything under roughly `15` as a good fix | Show or hide the needle, surface a calibration hint |
+| `timestamp` | Unix epoch in milliseconds when the reading was sampled | Debouncing, rate limiting downstream calls |
+
+The error payload has only `status` and `error`. The current error code is `"unavailable"`, returned on devices that do not expose a gyroscope or magnetometer.
+
+```json
+{
+    "status": "error",
+    "error": "unavailable"
+}
+```
+
+The calibration payload has only `status`. Heading continues to stream while in this state, but `headingAccuracy` will be poor until the user moves the device through a figure-8 motion.
+
+```json
+{
+    "status": "calibration_required"
+}
+```
+
+<Info>
+  `heading` is magnetic north. For true north (used for accurate navigation and Qibla pointing), apply the local magnetic declination on the JavaScript side using the user's own latitude and longitude. The native layer does not require location permission to deliver heading.
+</Info>
+
+---
+
+## Tracking state
+
+Use `despia.gyroscopeActive` to reflect the current tracking state in your UI. It is set to `true` when `gyroscope://start` is called and `false` when `gyroscope://stop` is called. The flag survives soft close and reopen, so your boot code can decide whether to resume or skip without guessing.
+
+```javascript
+if (despia.gyroscopeActive) {
+    // sensor is running, show the live readout and stop button
+} else {
+    // sensor is idle, show the start button
+}
+```
+
+You can also read the flag explicitly after a control call by passing `['gyroscopeActive']` as the second argument.
+
+```javascript
+const data = await despia('gyroscope://start?threshold=90', ['gyroscopeActive'])
+const isOn = data.gyroscopeActive  // true once tracking has started
+```
+
+The same pattern works after `stop` to confirm the sensor was released.
+
+```javascript
+const data = await despia('gyroscope://stop', ['gyroscopeActive'])
+const isOn = data.gyroscopeActive  // false
+```
+
+`despia.gyroscopeActive` does not flip to `true` if the device returns the `unavailable` error, since tracking never actually started. The flag stays `false` and your UI can fall back accordingly.
+
+Idempotent calls are safe. Calling `start` while already started, or `stop` while already stopped, re-asserts the flag without disrupting the current session.
+
+---
+
+## Resume after soft close
+
+When the user backgrounds the app and reopens it, the runtime restores the gyroscope session automatically using the last threshold. The pattern below boots straight into the live readout if a session was already running, otherwise shows the start button.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onGyroscopeChange = function (data) {
+    if (data.status !== 'success') return
+    updateReadout(data)
+}
+
+if (isDespia && despia.gyroscopeActive) {
+    showLiveReadoutUI()
+} else {
+    showStartButton()
+}
+```
+
+To opt out of resume, call `gyroscope://stop` explicitly when the user finishes their session, not just when they navigate away from the screen.
+
+---
+
+## Shake-to-action gesture
+
+A common pattern is detecting a sharp shake and firing a one-shot action. Set a high threshold so the native layer filters out everyday motion and you only see real shakes in JavaScript.
+
+```javascript
+let lastShake = 0
+
+window.onGyroscopeChange = function (data) {
+    if (data.status !== 'success') return
+    if (data.timestamp - lastShake < 1000) return
+
+    lastShake = data.timestamp
+    refreshFeed()
+}
+
+if (isDespia && !despia.gyroscopeActive) {
+    despia('gyroscope://start?threshold=600')
+}
+```
+
+`threshold=600` filters out everything but deliberate shakes, and the JavaScript-side debounce prevents a single shake from triggering the action twice.
+
+---
+
+## Tilt-controlled UI
+
+For continuous control like a tilt-to-pan or parallax effect, use `threshold=0` so every sample reaches your callback, and clamp the values yourself.
+
+```javascript
+window.onGyroscopeChange = function (data) {
+    if (data.status !== 'success') return
+
+    // Convert rad/s to a clamped tilt value
+    const tiltX = Math.max(-1, Math.min(1, data.x / 3))
+    const tiltY = Math.max(-1, Math.min(1, data.y / 3))
+
+    parallaxLayer.style.transform = `translate(${tiltX * 20}px, ${tiltY * 20}px)`
+}
+
+if (isDespia && !despia.gyroscopeActive) {
+    despia('gyroscope://start?threshold=0')
+}
+```
+
+Stop the sensor as soon as the screen unmounts to avoid keeping the gyroscope active for the rest of the session.
+
+```javascript
+useEffect(() => {
+    if (!isDespia) return
+    despia('gyroscope://start?threshold=0')
+
+    return () => {
+        if (isDespia) despia('gyroscope://stop')
+    }
+}, [])
+```
+
+---
+
+## Compass needle
+
+Drive a needle directly from the magnetic heading. Rotate the needle counter to the device heading so it always points to magnetic north relative to the screen. Use `threshold=0` so heading updates flow on every gyro tick.
+
+```javascript
+window.onGyroscopeChange = function (data) {
+    if (data.status !== 'success') return
+    if (data.heading < 0) return
+
+    needle.style.transform = `rotate(${-data.heading}deg)`
+
+    // Optional, hide the needle while the fix is poor
+    needle.style.opacity = data.headingAccuracy < 0 || data.headingAccuracy > 25 ? 0.3 : 1
+}
+
+if (isDespia && !despia.gyroscopeActive) {
+    despia('gyroscope://start?threshold=0')
+}
+```
+
+---
+
+## True north and Qibla pointer
+
+For navigation or Qibla apps, convert the magnetic heading to true heading using the local declination, then point the needle at any target bearing using the user's own coordinates. No native location permission is involved, the page supplies the lat/lon it already has.
+
+```javascript
+const MECCA_LAT = 21.4225
+const MECCA_LNG = 39.8262
+
+function toRad(d) { return d * Math.PI / 180 }
+function toDeg(r) { return r * 180 / Math.PI }
+
+function bearingTo(lat1, lng1, lat2, lng2) {
+    const dLng = toRad(lng2 - lng1)
+    const y = Math.sin(dLng) * Math.cos(toRad(lat2))
+    const x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2))
+            - Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng)
+    return (toDeg(Math.atan2(y, x)) + 360) % 360
+}
+
+window.onGyroscopeChange = function (data) {
+    if (data.status === 'calibration_required') {
+        showCalibrationHint()
+        return
+    }
+    if (data.status !== 'success' || data.heading < 0) return
+
+    // declination from your own model or table, positive east, negative west
+    const declination = getLocalDeclination(userLat, userLng)
+    const trueHeading = (data.heading + declination + 360) % 360
+    const qibla = bearingTo(userLat, userLng, MECCA_LAT, MECCA_LNG)
+
+    needle.style.transform = `rotate(${qibla - trueHeading}deg)`
+}
+
+if (isDespia && !despia.gyroscopeActive) {
+    despia('gyroscope://start?threshold=0')
+}
+```
+
+---
+
+## Calibration prompts
+
+iOS occasionally reports that the magnetometer needs recalibrating, typically after the device has been near a magnet or moved between very different magnetic environments. The runtime emits a `calibration_required` status. Heading continues to stream during this state but `headingAccuracy` stays poor until the user waves the device through a figure-8 motion.
+
+```javascript
+window.onGyroscopeChange = function (data) {
+    if (data.status === 'calibration_required') {
+        // Show a transient hint, "Move your phone in a figure-8"
+        calibrationOverlay.hidden = false
+        return
+    }
+
+    if (data.status === 'success' && data.headingAccuracy >= 0 && data.headingAccuracy < 15) {
+        calibrationOverlay.hidden = true
+    }
+
+    // ...handle the rest
+}
+```
+
+The hint can be dismissed automatically as soon as `headingAccuracy` drops back into the good range.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

@@ -1,0 +1,358 @@
+---
+title: "Age Assurance"
+description: "Read the age range the operating system already holds for your user, with a three-state age gate that works the same on iOS and Android."
+icon: "shield-check"
+---
+
+Read the age range the operating system already holds for your user, without asking anyone for a birthdate. iOS and Android both answer with an age band, 13 to 15, 16 to 17, 18 and over, plus how that age was established, so you can gate mature content, unlock adult-only features, or soften an experience for a minor from a single call. The same code works on both platforms and returns the same shape, and on a build or device that cannot answer it says so instead of guessing.
+
+<Info>
+  Age assurance is a software dependency, not a runtime toggle. The native SDKs are linked into your binary at build time, so enabling it in Despia does nothing until you ship a new build with an increased version code. It also needs configuration in the Apple and Google accounts you own. Until all three are done, every call answers `status: "unavailable"`, which is safe to ship but is not an answer. See Enabling age assurance below.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Assign `window.onAgeAssuranceResult`, then fire `ageassurance://check`. The operating system shows its own consent sheet the first time and the verdict arrives at your callback. Nothing throws and nothing rejects: every outcome, including every failure, arrives as a verdict you read the same way.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onAgeAssuranceResult = function (verdict) {
+    if (verdict.gates["18"] === true) {
+        showAdultContent()
+    }
+}
+
+if (isDespia) {
+    despia('ageassurance://check?id=checkout-gate&gates=13,18')
+}
+```
+
+`gates` is a comma-separated list of up to three ages you want answered, and it defaults to `13,16,18`. Ask for the ages you actually gate on, since anything else comes back as unknown rather than as a guess. `id` is echoed back on the verdict as `requestId` so you can tell two requests apart, and accepts letters, digits, `_`, `.` and `-` up to 128 characters.
+
+---
+
+## Reading the verdict
+
+Branch on `status` first. It tells you what kind of answer you got, and `ok` is a shorthand for the two statuses where you learned nothing about the user.
+
+```javascript
+window.onAgeAssuranceResult = function (verdict) {
+    switch (verdict.status) {
+        case 'shared':                showByBand(verdict);  break
+        case 'declined':              askForDateOfBirth();  break
+        case 'verification_required': offerVerification();  break
+        case 'not_applicable':        showEverything();     break
+        case 'unavailable':
+        case 'error':                 askForDateOfBirth();  break
+    }
+}
+```
+
+```json
+{
+    "ok": true,
+    "status": "shared",
+    "provider": "apple",
+    "platform": "ios",
+    "ageLower": 13,
+    "ageUpper": 15,
+    "assurance": "guardian_declared",
+    "gates": { "13": true, "18": false },
+    "requestId": "checkout-gate",
+    "platformExtras": { "source": "guardianDeclared" },
+    "error": null
+}
+```
+
+<ParamField path="shared" type="object">
+  The user shared a band. Carries `ageLower` and `ageUpper` as whole years, either of which can be `null` for an open-ended band, plus `assurance` and a computed `gates` map. This is the only status where `gates` can answer anything other than `null`.
+</ParamField>
+
+<ParamField path="declined" type="object">
+  The user saw the sheet and chose not to share. `ok` is `true` because this is a real answer, not a failure. Every gate is `null` and there is no band. Fall back to your own gating.
+</ParamField>
+
+<ParamField path="verification_required" type="object">
+  Android only. Google holds no usable signal until the user completes verification with Play. Fire `ageassurance://resolve` to send them into that flow.
+</ParamField>
+
+<ParamField path="not_applicable" type="object">
+  iOS only. Apple reports this user is not subject to age checks at all, which is knowledge rather than absence. Treat it as an adult account unless your own policy says otherwise.
+</ParamField>
+
+<ParamField path="unavailable" type="object">
+  No provider could answer. `ok` is `false` and `error.code` says why: `os_unsupported`, `not_configured`, `no_play_services`, `no_result`, or a Play condition this install cannot recover from. Use your own gating.
+</ParamField>
+
+<ParamField path="error" type="object">
+  The call itself failed. `ok` is `false`. `error.code` is stable and machine-readable, `error.message` is advisory text for your logs. Common codes are `invalid_gates`, `too_many_gates`, `unsupported_action`, `network_error`, and `timeout`.
+</ParamField>
+
+---
+
+## Awaiting a verdict instead of a callback
+
+Name the global you want read back and the call resolves once the verdict lands there. Every answer is written to `window.ageAssuranceVerdict`, so that is the key to watch.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    const data    = await despia('ageassurance://last?id=resume-1', ['ageAssuranceVerdict'])
+    const verdict = data.ageAssuranceVerdict
+
+    if (verdict && verdict.gates["18"] === true) {
+        showAdultContent()
+    }
+}
+```
+
+Use this for the calls that never prompt, `ageassurance://last` and `ageassurance://forget`. The watch gives up after 30 seconds, and a `check` on a cold cache waits on a human reading a system consent sheet, which can take longer than that. Anything that prompts belongs on the callback above, which fires whenever the answer arrives no matter how long the user takes.
+
+Fire one command at a time and wait for the answer before issuing the next.
+
+---
+
+## Reading a gate without under-gating a minor
+
+Each key in `gates` is one of three values, and the third one is the point of the whole design. `true` means the band's floor clears that age. `false` means its ceiling falls below it. `null` means the age falls inside the band and the operating system genuinely did not answer that question.
+
+```javascript
+window.onAgeAssuranceResult = function (verdict) {
+    // Band 13 to 16 answers: 13 true, 15 null, 18 false
+    if (verdict.gates["18"] === true) {
+        showAdultContent()
+    } else {
+        showRestrictedExperience()
+    }
+}
+```
+
+Test for `=== true` before you unlock anything, and never treat `null` as `false` or as `true`. A user in a 13 to 16 band asked about 15 gets `null`, and reading that as "not old enough" over-restricts them while reading it as "old enough" hands adult content to a minor. That second mistake is the one that costs an app its store listing. Keys serialize as strings, so use `verdict.gates["18"]`, and note that a gate falling between two of your configured Android bands can only ever answer `null`.
+
+---
+
+## Knowing how the age was established
+
+`assurance` tells you how much weight the answer carries, so you can require a stronger signal for the things that need one.
+
+```javascript
+window.onAgeAssuranceResult = function (verdict) {
+    const strongEnoughForPayments =
+        verdict.assurance === 'verified_estimated' ||
+        verdict.assurance === 'verified_strong'
+}
+```
+
+| Value | Meaning |
+| :-- | :-- |
+| `self_declared` | The user stated their own age |
+| `guardian_declared` | A parent or guardian set it on a supervised account |
+| `verified_estimated` | Verified by the platform through estimation |
+| `verified_strong` | Verified by the platform against a document or equivalent |
+| `unknown` | The platform reported something this build does not classify; the raw value is in `platformExtras` |
+
+---
+
+## Checking availability before you prompt
+
+Branch on what the build reports, never on the operating system version or the user agent. These are plain globals, so reading them costs nothing and never prompts. The SDK proxies property reads through to `window`, so `despia.ageAssuranceAvailable` and `window.ageAssuranceAvailable` are the same value.
+
+```javascript
+import despia from 'despia-native'
+
+despia.ageAssuranceAvailable   // is there a provider on this build and this device
+despia.ageAssuranceProvider    // "apple", "google" or "none"
+despia.ageAssuranceReason      // why it is unavailable, "" when it is not
+despia.ageAssuranceFeatures    // ["check", "resolve", "last"]
+despia.ageAssuranceVerdict     // the most recent verdict, or null
+```
+
+| Global | Type | Description |
+| :-- | :-- | :-- |
+| `ageAssuranceAvailable` | boolean | `true` when a provider can answer on this build and this device. `false` on any build without the addon, and on iOS below 26.2. |
+| `ageAssuranceProvider` | string | `"apple"`, `"google"`, or `"none"` when nothing can answer. |
+| `ageAssuranceReason` | string | Why `available` is `false`: `os_unsupported`, `not_configured` or `no_play_services`. Empty string whenever a provider is present. |
+| `ageAssuranceFeatures` | array | The provider-backed hosts this build supports. Grows over time, so test it rather than the platform. |
+| `ageAssuranceVerdict` | object or null | Updated in place on every verdict. `null` until the first answer and after a `forget`. |
+
+`ageAssuranceFeatures` names the provider-backed hosts, so `forget` is not in it: it works on every build, with or without a provider.
+
+These globals exist only in your top-level page. An `<iframe>` never receives them, and an `ageassurance://` call from one is refused without prompting. A framed widget that needs the verdict gets it from the top-level page through `postMessage`.
+
+---
+
+## Clearing the verdict on logout
+
+The verdict is held for the life of the app process, which is what stops a page reload prompting the user again. Nothing expires it, so on logout or an account switch, clear it yourself.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('ageassurance://forget')
+}
+```
+
+That drops the retained verdict on the native side and sets `ageAssuranceVerdict` back to `null`. It works with or without a provider present and it never prompts. Without it, the next person to sign in on that device can read the previous user's age range.
+
+---
+
+## Handling verification on Android
+
+Google can answer `verification_required`, meaning the user has to complete verification with Play before any signal exists. Firing `ageassurance://resolve` re-runs the flow and lets Play present its own verification screens.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onAgeAssuranceResult = function (verdict) {
+    if (verdict.status === 'verification_required' &&
+        despia.ageAssuranceFeatures.includes('resolve')) {
+        despia('ageassurance://resolve?id=verify-1&gates=18')
+        return
+    }
+
+    if (verdict.gates["18"] === true) {
+        showAdultContent()
+    }
+}
+
+if (isDespia) {
+    despia('ageassurance://check?id=verify-1&gates=18')
+}
+```
+
+There is no iOS counterpart, because a declined range on iOS is simply declined and there is nowhere to send the user. On iOS `resolve` is absent from `ageAssuranceFeatures` and firing it answers `error` with `unsupported_action`, so test `ageAssuranceFeatures` before you offer the option. The callback above re-enters on the second verdict, so guard on `status` to avoid looping.
+
+---
+
+## Enabling age assurance
+
+Age assurance links native SDKs into your app, so it is enabled at build time rather than at runtime. The toggle, the store-side configuration, and a fresh build are all required before any real signal arrives.
+
+<Steps>
+  <Step title="Enable the addon in Despia">
+    Open your app in the Despia Editor, go to **App**, then **Addons**, and turn on **Age Assurance**.
+  </Step>
+  <Step title="Enable the Apple capability">
+    Open [Certificates, Identifiers and Profiles](https://developer.apple.com/account/resources/identifiers/list), select the identifier matching your app's bundle ID, and enable **Declared Age Range** under Capabilities. If it is not in the list, open the **Capability Requests** tab on the same identifier and request it.
+  </Step>
+  <Step title="Regenerate your provisioning profile">
+    Open [Profiles](https://developer.apple.com/account/resources/profiles/list), edit the profile your app builds with, save it, and download the result. A profile created before the capability existed does not carry it, and the build switches the feature off rather than failing to sign.
+  </Step>
+  <Step title="Accept the Play Age Signals terms">
+    In [Google Play Console](https://play.google.com/console), open your app, then **Policy and programs**, then **App content**. Find **Age signals** and accept the terms.
+  </Step>
+  <Step title="Choose your Android age bands">
+    On the same Age signals page, set the minimum ages your app needs, up to three, for example 13, 16 and 18. Match them to the ages you actually gate on: a gate that falls between two configured bands can only ever answer `null`.
+  </Step>
+  <Step title="Rebuild with an increased version code">
+    Increase your version code, then trigger a fresh build in Despia and ship it. The native SDKs are compiled into the binary, so the addon has no effect on any build made before you turned it on.
+  </Step>
+</Steps>
+
+<Warning>
+  Turning the addon on without shipping a new build changes nothing, and it fails silently. Your existing app keeps answering `status: "unavailable"` with `reason: "not_configured"`, with no error and no warning anywhere, because the code that talks to Apple and Google is not in that binary. The same is true if you reuse a version code: the store rejects or ignores the upload and your users stay on the old build. Increase the version code, rebuild, and confirm on the new install that `despia.ageAssuranceAvailable` is `true` before you rely on any verdict.
+</Warning>
+
+---
+
+## Coverage on each platform
+
+|  | iOS | Android |
+| :-- | :-- | :-- |
+| Source | Apple Declared Age Range | Google Play Age Signals |
+| Minimum OS | iOS 26.2 | Android 6.0 |
+| Realistic device coverage today | Small | Near total |
+| Where bands are set | At call time, from your `gates` | In Play Console, up to three ages |
+| Verification flow | None | `ageassurance://resolve` |
+
+Below iOS 26.2 there is no such API to call, so `available` is `false` with `reason: "os_unsupported"` and your own gating has to carry the user. The iOS Simulator always answers `unavailable`, so testing the real flow needs a physical device on iOS 26.2 or later. Android reaches effectively every device you ship to, which makes it the platform where this feature does most of its work today.
+
+Because Apple shapes its band from the ages you pass at call time and Google returns bands you configured in Play Console, the same user can produce different `ageLower` and `ageUpper` values on each platform. The `gates` map is the part that means the same thing everywhere, which is why it is what you should branch on.
+
+---
+
+## Verifying the result on your server
+
+Everything your web app receives is client-side and can be forged by anyone who can run code in the page. Treat the verdict as a signal that shapes the experience, never as proof.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.onAgeAssuranceResult = function (verdict) {
+    fetch('/api/age-gate', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(verdict)
+    })
+}
+
+if (isDespia) {
+    despia('ageassurance://check?id=server-gate&gates=18')
+}
+```
+
+For anything load-bearing, a legal obligation, a payment, or a content restriction you would have to defend, echo the verdict to your backend and pair it with a platform attestation, App Attest on iOS or Play Integrity on Android. That is what tells your server the verdict came from a genuine install of your app rather than from a script.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

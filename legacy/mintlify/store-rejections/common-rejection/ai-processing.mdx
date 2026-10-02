@@ -1,0 +1,342 @@
+---
+title: "AI Processing"
+description: "Your app was rejected because it processes user data with AI without proper consent. Here's how to implement Apple's required AI consent flow."
+icon: "align-left"
+---
+
+## What are AI processing consent rejections?
+
+**Apple requires explicit consent before processing user data with AI**
+
+Apps that send user data to AI models (ChatGPT, Claude, custom models, etc.) must get explicit user consent before processing. This is a newer Apple requirement that catches many developers off guard.
+
+Common rejection messages:
+
+- "Your app does not obtain user consent before processing data with AI"
+- "The app sends user content to AI services without clear disclosure"
+- "Users must be informed and consent to AI processing of their data"
+
+These rejections require implementing a consent flow before resubmission.
+
+---
+
+## Why this happens
+
+**AI processing is a privacy-sensitive operation**
+
+Apple treats sending user data to AI services as a significant privacy event. Users must understand and agree to this before it happens.
+
+Common mistakes:
+
+- Sending user input to AI APIs without any consent prompt
+- Burying AI disclosure in terms of service
+- No clear indication that AI is processing user data
+- Consent obtained on web but not persisted in native app
+
+---
+
+## How to fix it
+
+### Use native confirm dialogs
+
+**Despia intercepts JavaScript confirm() and shows native iOS UI**
+
+When your app runs on iOS, Despia automatically converts JavaScript `confirm()` dialogs into native system dialogs with the liquid glass design. The confirm events work exactly like standard JavaScript.
+
+```javascript
+// This shows a native iOS dialog on iPhone/iPad
+const userConsented = confirm(
+  'This app uses AI to process your input. Your data will be sent to our AI service for analysis. Do you agree to AI processing?'
+);
+
+if (userConsented) {
+  // User tapped "OK" - proceed with AI
+  processWithAI(userInput);
+} else {
+  // User tapped "Cancel" - don't use AI
+  showAlternativeFlow();
+}
+```
+
+On iOS devices, this displays Apple's native confirmation dialog. On Android and web, it shows the standard confirm dialog.
+
+**Important:** `confirm()` blocks all JavaScript and CSS execution while the dialog is open. Call it after animations complete to avoid UI stutter. Don't trigger it during page transitions, loading states, or while animations are running.
+
+```javascript
+// Wrong - may cause stutter
+pageTransition.start();
+const consent = confirm('Do you agree?'); // Blocks during animation
+
+// Right - wait for animations to complete
+await pageTransition.finished;
+const consent = confirm('Do you agree?'); // Clean UI state
+```
+
+---
+
+### Persist consent with Storage Vault
+
+**Store consent across sessions and reinstalls**
+
+Don't ask users every time. Use the Storage Vault to remember their choice. Consent persists even if the user uninstalls and reinstalls the app.
+
+```javascript
+import despia from 'despia-native';
+
+async function checkAIConsent() {
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isAppleDevice = userAgent.includes('despia-iphone') || userAgent.includes('despia-ipad');
+  
+  if (!isAppleDevice) {
+    // Not iOS - handle consent differently or skip
+    return true;
+  }
+  
+  // Check if user already consented
+  try {
+    const data = await despia('readvault://?key=aiConsent', ['aiConsent']);
+    
+    if (data.aiConsent === 'true') {
+      // Already consented in a previous session
+      return true;
+    }
+  } catch (error) {
+    // No consent stored yet - first time
+  }
+  
+  // Show native consent dialog
+  const userConsented = confirm(
+    'This app uses AI to process your input. Your data will be sent to our AI service for analysis. Do you agree to AI processing?'
+  );
+  
+  if (userConsented) {
+    // Store consent permanently
+    await despia('setvault://?key=aiConsent&value=true&locked=false');
+    return true;
+  }
+  
+  return false;
+}
+```
+
+See: [Storage Vault](https://setup.despia.com/lovable/native-features/storage-vault)
+
+---
+
+### Implement before any AI call
+
+**Gate all AI features behind consent check**
+
+Call the consent check before any AI processing. This ensures users always consent before their data is sent to AI services.
+
+```javascript
+import despia from 'despia-native';
+
+// Wrap your AI function
+async function askAI(userInput) {
+  const hasConsent = await checkAIConsent();
+  
+  if (!hasConsent) {
+    // User declined - show message or alternative
+    alert('AI features are disabled. You can enable them in Settings.');
+    return null;
+  }
+  
+  // User consented - proceed with AI call
+  const response = await fetch('/api/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ input: userInput })
+  });
+  
+  return response.json();
+}
+```
+
+---
+
+### Allow users to change their mind
+
+**Add a way to revoke consent in Settings**
+
+Apple expects users to be able to withdraw consent. Add an option in your Settings screen.
+
+```javascript
+import despia from 'despia-native';
+
+async function revokeAIConsent() {
+  await despia('setvault://?key=aiConsent&value=false&locked=false');
+  alert('AI processing has been disabled. You will be asked again next time.');
+}
+
+async function getAIConsentStatus() {
+  try {
+    const data = await despia('readvault://?key=aiConsent', ['aiConsent']);
+    return data.aiConsent === 'true';
+  } catch {
+    return false;
+  }
+}
+
+// In your Settings component
+function AISettingsToggle() {
+  const [enabled, setEnabled] = useState(false);
+  
+  useEffect(() => {
+    getAIConsentStatus().then(setEnabled);
+  }, []);
+  
+  const handleToggle = async () => {
+    if (enabled) {
+      await revokeAIConsent();
+      setEnabled(false);
+    } else {
+      const consented = await checkAIConsent();
+      setEnabled(consented);
+    }
+  };
+  
+  return (
+    <button onClick={handleToggle}>
+      AI Processing: {enabled ? 'Enabled' : 'Disabled'}
+    </button>
+  );
+}
+```
+
+---
+
+### Complete implementation example
+
+**Full consent flow with persistence**
+
+```javascript
+import despia from 'despia-native';
+
+// Check platform
+const isAppleNative = () => {
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes('despia-iphone') || ua.includes('despia-ipad');
+};
+
+// Check stored consent
+const getStoredConsent = async () => {
+  if (!isAppleNative()) return null;
+  
+  try {
+    const data = await despia('readvault://?key=aiConsent', ['aiConsent']);
+    return data.aiConsent === 'true';
+  } catch {
+    return null; // Not yet asked
+  }
+};
+
+// Store consent
+const storeConsent = async (consented) => {
+  if (!isAppleNative()) return;
+  await despia(`setvault://?key=aiConsent&value=${consented}&locked=false`);
+};
+
+// Main consent check
+const ensureAIConsent = async () => {
+  // Check if already consented
+  const stored = await getStoredConsent();
+  
+  if (stored === true) {
+    return true; // Already consented
+  }
+  
+  if (stored === false) {
+    return false; // Previously declined
+  }
+  
+  // First time - show native dialog
+  const consented = confirm(
+    'This app uses AI to analyze your input and provide intelligent responses. ' +
+    'Your data will be processed by our AI service. ' +
+    'You can change this setting anytime in the app settings.\n\n' +
+    'Do you agree to AI processing of your data?'
+  );
+  
+  // Store the choice
+  await storeConsent(consented);
+  
+  return consented;
+};
+
+// Use in your AI feature
+const handleAIRequest = async (input) => {
+  const hasConsent = await ensureAIConsent();
+  
+  if (!hasConsent) {
+    return {
+      error: true,
+      message: 'AI processing requires your consent. Enable it in Settings.'
+    };
+  }
+  
+  // Proceed with AI
+  return await callAIService(input);
+};
+```
+
+---
+
+## What to include in the consent message
+
+**Be clear and specific**
+
+Apple wants users to understand what they're agreeing to.
+
+**Include:**
+
+- That AI will process their data
+- What data will be sent (input, content, etc.)
+- That they can change the setting later
+- General purpose (analysis, responses, recommendations)
+
+**Good example:**
+
+> "This app uses AI to analyze your input and provide intelligent responses. Your data will be processed by our AI service. You can change this setting anytime in Settings. Do you agree to AI processing?"
+
+**Bad example:**
+
+> "Enable smart features?"
+
+---
+
+## Quick checklist
+
+1. Consent dialog shown before any AI processing
+2. Dialog called after animations complete (avoid UI stutter)
+3. Dialog clearly mentions AI and data processing
+4. Consent stored in Storage Vault (persists across sessions)
+5. Users can revoke consent in Settings
+6. AI features blocked when consent is false
+7. Check for `despia-iphone` or `despia-ipad` user agent
+8. Standard `confirm()` used (Despia shows native UI)
+
+---
+
+## Common rejection reasons
+
+| Rejection                  | Fix                                                    |
+| :------------------------- | :----------------------------------------------------- |
+| "No AI consent obtained"   | Add consent check before any AI calls                  |
+| "Consent not clear"        | Update dialog text to explicitly mention AI processing |
+| "No way to revoke consent" | Add toggle in Settings screen                          |
+| "Consent not persisted"    | Use Storage Vault to remember choice                   |
+
+---
+
+## Still stuck?
+
+If you keep getting rejected for AI consent issues:
+
+1. Review your consent dialog text - is it clear about AI processing?
+2. Verify consent check runs before every AI API call
+3. Test the full flow: fresh install → consent prompt → AI feature → reinstall → no prompt
+4. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Your rejection notice in full
+   - Screenshot of your consent dialog
+   - Description of your AI features

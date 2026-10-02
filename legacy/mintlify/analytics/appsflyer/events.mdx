@@ -1,0 +1,472 @@
+---
+title: "Events"
+description: "Log standard and custom in-app events from your web layer. Standard af_ events map automatically to Meta and TikTok conversion events."
+icon: "bolt"
+---
+
+Events fired from your web layer are intercepted natively and logged through the AppsFlyer SDK in real time. Standard `af_` prefixed events map automatically to Meta and TikTok conversion events based on your dashboard partner configuration. Custom events appear only in AppsFlyer for funnel and retention analysis.
+
+<Info>
+  `event_values` must always be a JSON stringified and URI encoded object. Always use `encodeURIComponent(JSON.stringify(...))`. Event names are case-sensitive, lowercase alphanumeric characters and underscores only. There is a limit of 300 unique event names per day.
+</Info>
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## The log\_event command
+
+Fire any in-app event by passing an event name and a URI-encoded JSON object of values. Pass `{}` when there are no values.
+
+```javascript
+const values = { af_registration_method: "email" }
+despia("appsflyer://log_event?event_name=af_complete_registration&event_values=" + encodeURIComponent(JSON.stringify(values)))
+```
+
+<ParamField path="event_name" type="string" required>
+  A standard `af_*` event or your own custom name. Lowercase alphanumeric and underscores only, case-sensitive.
+</ParamField>
+
+<ParamField path="event_values" type="string" required>
+  A URL-encoded JSON object of event parameters. Wrap with `encodeURIComponent(JSON.stringify(...))`. Keep values flat: strings, numbers, and booleans.
+</ParamField>
+
+---
+
+## Standard AF Events
+
+These events use the `af_` prefix and map automatically to Meta and TikTok conversion events. Use them for any action you want to optimize ad campaigns against.
+
+| Event | When to log it | Maps to |
+| --- | --- | --- |
+| `af_complete_registration` | Account created | Meta `CompleteRegistration`, TikTok `CompleteRegistration` |
+| `af_login` | User logs in | Login |
+| `af_purchase` | Payment completed | Meta `Purchase`, TikTok `CompletePayment` |
+| `af_start_trial` | Free trial started | Meta `StartTrial`, TikTok `Subscribe` |
+| `af_subscribe` | Paid subscription started | Meta `Subscribe`, TikTok `Subscribe` |
+| `af_add_to_cart` | Item added to cart | Meta `AddToCart`, TikTok `AddToCart` |
+| `af_initiated_checkout` | Checkout started | Meta `InitiateCheckout`, TikTok `InitiateCheckout` |
+| `af_content_view` | Product or content page viewed | Meta `ViewContent`, TikTok `ViewContent` |
+| `af_search` | Search performed | Meta `Search`, TikTok `Search` |
+| `af_share` | Content shared | AppsFlyer only |
+| `af_invite` | Invite or referral sent | AppsFlyer only |
+| `af_tutorial_completion` | Onboarding or tutorial finished | Meta `CompleteTutorial` |
+| `af_level_achieved` | Progression milestone | Meta `AchieveLevel`, TikTok `AchieveLevel` |
+
+### af\_complete\_registration
+
+Records when a user completes sign up.
+
+```javascript
+const registration = {
+    af_registration_method: "email"
+}
+despia("appsflyer://log_event?event_name=af_complete_registration&event_values=" + encodeURIComponent(JSON.stringify(registration)))
+```
+
+<ParamField path="af_registration_method" type="string">
+  Sign up method used, e.g. `"email"`, `"facebook"`, `"google"`, `"apple"`.
+</ParamField>
+
+### af\_login
+
+Records when a user logs in.
+
+```javascript
+const login = {
+    af_registration_method: "facebook"
+}
+despia("appsflyer://log_event?event_name=af_login&event_values=" + encodeURIComponent(JSON.stringify(login)))
+```
+
+<ParamField path="af_registration_method" type="string">
+  Login method used, e.g. `"email"`, `"facebook"`, `"google"`, `"apple"`.
+</ParamField>
+
+### af\_purchase
+
+Records a purchase and associates revenue. The most important event for ROAS optimization.
+
+```javascript
+const purchase = {
+    af_revenue: 9.99,
+    af_currency: "USD",
+    af_content_id: "pro_plan",
+    af_content_type: "subscription",
+    af_quantity: 1,
+    af_order_id: "order_abc123"
+}
+despia("appsflyer://log_event?event_name=af_purchase&event_values=" + encodeURIComponent(JSON.stringify(purchase)))
+```
+
+<ParamField path="af_revenue" type="number" required>
+  Total purchase amount, counted as real revenue in AppsFlyer. No commas, currency signs, or text. Up to 5 decimal places. Use negative values for refunds.
+</ParamField>
+
+<ParamField path="af_currency" type="string" required>
+  3-character ISO 4217 code, e.g. `"USD"`, `"EUR"`, `"AED"`. Defaults to `"USD"` if omitted.
+</ParamField>
+
+<ParamField path="af_content_id" type="string">
+  ID of the purchased item or product, e.g. `"pro_plan"`, `"sku_123"`.
+</ParamField>
+
+<ParamField path="af_content_type" type="string">
+  Category of the purchased item, e.g. `"subscription"`, `"course"`, `"item"`.
+</ParamField>
+
+<ParamField path="af_quantity" type="number">
+  Number of items purchased.
+</ParamField>
+
+<ParamField path="af_order_id" type="string">
+  Your internal order ID, used for deduplication.
+</ParamField>
+
+<Warning>
+  Do not send `af_revenue` if you have an ROI360 subscription and use the purchase connector. It causes duplicate revenue reporting in your dashboard.
+</Warning>
+
+### af\_start\_trial
+
+Records the start of a free trial.
+
+```javascript
+const trial = {
+    af_price: 0,
+    af_currency: "USD"
+}
+despia("appsflyer://log_event?event_name=af_start_trial&event_values=" + encodeURIComponent(JSON.stringify(trial)))
+```
+
+<ParamField path="af_price" type="number">
+  Price of the trial. Use `af_price`, not `af_revenue`. `af_price` is not counted as revenue and is the correct parameter for Meta's `StartTrial` mapping.
+</ParamField>
+
+<ParamField path="af_currency" type="string">
+  3-character ISO 4217 code. Defaults to `"USD"` if omitted.
+</ParamField>
+
+### af\_subscribe
+
+Records a paid subscription purchase.
+
+```javascript
+const subscription = {
+    af_price: 9.99,
+    af_currency: "USD",
+    af_content_id: "pro_monthly"
+}
+despia("appsflyer://log_event?event_name=af_subscribe&event_values=" + encodeURIComponent(JSON.stringify(subscription)))
+```
+
+<ParamField path="af_price" type="number">
+  Subscription price per period. Not counted as revenue. Add `af_revenue` if you also want to record this as revenue in AppsFlyer.
+</ParamField>
+
+<ParamField path="af_currency" type="string">
+  3-character ISO 4217 code. Defaults to `"USD"` if omitted.
+</ParamField>
+
+<ParamField path="af_content_id" type="string">
+  ID of the subscription plan, e.g. `"pro_monthly"`, `"annual_plan"`.
+</ParamField>
+
+### af\_add\_to\_cart
+
+Records when a user adds an item to their cart.
+
+```javascript
+const addToCart = {
+    af_content_id: "item_42",
+    af_content_type: "clothing",
+    af_price: 19.99,
+    af_currency: "USD",
+    af_quantity: 1
+}
+despia("appsflyer://log_event?event_name=af_add_to_cart&event_values=" + encodeURIComponent(JSON.stringify(addToCart)))
+```
+
+<ParamField path="af_content_id" type="string">
+  ID of the item added to cart.
+</ParamField>
+
+<ParamField path="af_content_type" type="string">
+  Category of the item.
+</ParamField>
+
+<ParamField path="af_price" type="number">
+  Price of the individual item. Not counted as revenue.
+</ParamField>
+
+<ParamField path="af_currency" type="string">
+  3-character ISO 4217 code. Defaults to `"USD"` if omitted.
+</ParamField>
+
+<ParamField path="af_quantity" type="number">
+  Quantity added to cart.
+</ParamField>
+
+### af\_initiated\_checkout
+
+Records when a user begins the checkout flow.
+
+```javascript
+const checkout = {
+    af_revenue: 29.99,
+    af_currency: "USD",
+    af_num_items: 2,
+    af_content_id: "cart_checkout"
+}
+despia("appsflyer://log_event?event_name=af_initiated_checkout&event_values=" + encodeURIComponent(JSON.stringify(checkout)))
+```
+
+<ParamField path="af_revenue" type="number">
+  Total cart value at checkout. Counted as revenue if included.
+</ParamField>
+
+<ParamField path="af_currency" type="string">
+  3-character ISO 4217 code. Defaults to `"USD"` if omitted.
+</ParamField>
+
+<ParamField path="af_num_items" type="number">
+  Total number of items in the cart.
+</ParamField>
+
+<ParamField path="af_content_id" type="string">
+  Identifier for the checkout session or cart.
+</ParamField>
+
+### af\_content\_view
+
+Records when a user views a piece of content.
+
+```javascript
+const contentView = {
+    af_content_id: "product_123",
+    af_content_type: "product"
+}
+despia("appsflyer://log_event?event_name=af_content_view&event_values=" + encodeURIComponent(JSON.stringify(contentView)))
+```
+
+<ParamField path="af_content_id" type="string">
+  ID of the content viewed, e.g. a product ID, profile ID, or article ID.
+</ParamField>
+
+<ParamField path="af_content_type" type="string">
+  Category of the content, e.g. `"product"`, `"article"`, `"collection"`.
+</ParamField>
+
+<ParamField path="af_price" type="number">
+  Price associated with the content if applicable.
+</ParamField>
+
+<ParamField path="af_currency" type="string">
+  3-character ISO 4217 code. Defaults to `"USD"` if omitted.
+</ParamField>
+
+### af\_search
+
+Records a search event.
+
+```javascript
+const search = {
+    af_search_string: "running shoes"
+}
+despia("appsflyer://log_event?event_name=af_search&event_values=" + encodeURIComponent(JSON.stringify(search)))
+```
+
+<ParamField path="af_search_string" type="string">
+  The search query entered by the user.
+</ParamField>
+
+### af\_share
+
+Records when a user shares content.
+
+```javascript
+const share = {
+    channel: "instagram"
+}
+despia("appsflyer://log_event?event_name=af_share&event_values=" + encodeURIComponent(JSON.stringify(share)))
+```
+
+<ParamField path="channel" type="string">
+  Platform shared to, e.g. `"instagram"`, `"whatsapp"`, `"twitter"`.
+</ParamField>
+
+### af\_invite
+
+Records when a user sends an invite or referral.
+
+```javascript
+const invite = {
+    channel: "sms"
+}
+despia("appsflyer://log_event?event_name=af_invite&event_values=" + encodeURIComponent(JSON.stringify(invite)))
+```
+
+<ParamField path="channel" type="string">
+  Channel the invite was sent through, e.g. `"sms"`, `"email"`, `"whatsapp"`.
+</ParamField>
+
+### af\_tutorial\_completion
+
+Records when a user completes a tutorial or onboarding step.
+
+```javascript
+const tutorial = {
+    af_success: true,
+    af_tutorial_name: "step_2"
+}
+despia("appsflyer://log_event?event_name=af_tutorial_completion&event_values=" + encodeURIComponent(JSON.stringify(tutorial)))
+```
+
+<ParamField path="af_success" type="boolean">
+  Whether the tutorial was completed successfully.
+</ParamField>
+
+<ParamField path="af_tutorial_name" type="string">
+  Name or identifier of the tutorial step.
+</ParamField>
+
+### af\_level\_achieved
+
+Records when a user reaches a new level.
+
+```javascript
+const level = {
+    af_level: 5
+}
+despia("appsflyer://log_event?event_name=af_level_achieved&event_values=" + encodeURIComponent(JSON.stringify(level)))
+```
+
+<ParamField path="af_level" type="number">
+  The level number achieved.
+</ParamField>
+
+---
+
+## Custom Events
+
+Custom events do not map to Meta or TikTok automatically, but appear in your AppsFlyer dashboard for funnel and retention analysis. Name them using lowercase alphanumeric characters and underscores, and keep the parameter set stable so dashboards stay queryable.
+
+```javascript
+const onboardingStep = {
+    step: 1,
+    name: "select_interests"
+}
+despia("appsflyer://log_event?event_name=onboarding_step&event_values=" + encodeURIComponent(JSON.stringify(onboardingStep)))
+```
+
+A few more examples, each fired the same way:
+
+```javascript
+despia("appsflyer://log_event?event_name=profile_created&event_values=" + encodeURIComponent(JSON.stringify({ method: "email" })))
+
+despia("appsflyer://log_event?event_name=subscription_start&event_values=" + encodeURIComponent(JSON.stringify({ plan: "pro", trial: true, price: 9.99 })))
+
+despia("appsflyer://log_event?event_name=referral_sent&event_values=" + encodeURIComponent(JSON.stringify({ code: "REF123", channel: "whatsapp" })))
+
+despia("appsflyer://log_event?event_name=streak_achieved&event_values=" + encodeURIComponent(JSON.stringify({ days: 7 })))
+
+despia("appsflyer://log_event?event_name=video_completed&event_values=" + encodeURIComponent(JSON.stringify({ video_id: "v1", duration_s: 180 })))
+
+despia("appsflyer://log_event?event_name=feature_used&event_values=" + encodeURIComponent(JSON.stringify({ feature: "dark_mode" })))
+```
+
+<Info>
+  To postback a custom event to Meta or TikTok, map it manually in **Configuration \> Integrated Partners \> \[Partner\] \> In-App Events**. Standard `af_` events are mapped automatically.
+</Info>
+
+---
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="What is the difference between af_price and af_revenue?">
+    `af_revenue` is counted as real revenue in AppsFlyer and reported in your dashboard and raw data. Use it for actual purchases. `af_price` is a monetary value that is not counted as revenue. Use it for events like `af_add_to_cart` or `af_start_trial` where you want to pass a price but not record revenue. For Meta's `StartTrial` mapping specifically, use `af_price`, not `af_revenue`.
+  </Accordion>
+
+  <Accordion title="Do I need to map events in the AppsFlyer dashboard?">
+    For standard `af_` events, AppsFlyer maps them automatically to Meta and TikTok. For custom events you need to add them manually in **Configuration \> Integrated Partners \> \[Partner\] \> In-App Events** if you want them postbacked to partners.
+  </Accordion>
+
+  <Accordion title="Can I send multiple items in a single purchase event?">
+    Yes. Use `af_content_list` with a stringified array of IDs and `af_content` with a stringified array of objects, each containing `id` and `quantity`. Do not include `af_content_id` in the same event when using `af_content_list`.
+  </Accordion>
+
+  <Accordion title="How do I record a refund or cancellation?">
+    Fire an event with a negative `af_revenue` value and a custom event name like `cancel_purchase`:
+
+    ```javascript
+    const refund = {
+        af_revenue: -9.99,
+        af_currency: "USD",
+        af_content_id: "pro_plan"
+    }
+    despia("appsflyer://log_event?event_name=cancel_purchase&event_values=" + encodeURIComponent(JSON.stringify(refund)))
+    ```
+  </Accordion>
+
+  <Accordion title="Do events work offline?">
+    Yes. The native SDK queues events on the device and sends them when connectivity returns.
+  </Accordion>
+
+  <Accordion title="Do I need to identify the user first?">
+    No, but events logged after `set_user_id` are tied to your internal user ID in raw-data exports. Identify as early as you can, see [User Identity](/analytics/appsflyer/identity).
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

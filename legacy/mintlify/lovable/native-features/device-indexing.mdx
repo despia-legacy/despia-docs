@@ -1,0 +1,104 @@
+---
+title: "Device Indexing"
+icon: "eye"
+description: "Access the unique device identifier of native mobile devices in your Lovable application."
+---
+
+<Danger>
+  **Despia uses Apple’s IDFV for device indexing, which resets when all apps from the same developer are uninstalled. Persistent identity across installs is coming soon through Despia’s new Identity Vault and requires integration with Despia’s ATT Manager for Apple compliance.**
+</Danger>
+
+<iframe src="https://www.youtube.com/embed/eVEN5fH60ow" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Access the unique device identifier of native mobile devices in your application using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  1. Import the Despia SDK in your component
+  2. Access the unique device identifier using `despia.uuid`
+  3. Display the device ID in your UI
+  4. Send the device ID to your backend to link with user accounts
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia SDK provides access to a unique device identifier through `despia.uuid`. This persistent ID helps you track devices, prevent account sharing, and manage user sessions across your mobile application.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Get Device ID**
+
+Access the Device ID from the `despia.uuid` variable:
+
+```javascript
+// Simple example - show device ID and sync with user
+const deviceId = despia.uuid;
+
+// Display in UI
+<p>Device: {deviceId}</p>
+
+// Sync with backend when user logs in
+fetch('/api/sync-device', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    userId: user.id,
+    deviceId: deviceId,
+    timestamp: new Date().toISOString()
+  })
+});
+```
+
+## **Backend Integration**
+
+```javascript
+// /api/sync-device endpoint
+export default async function handler(req, res) {
+  const { userId, deviceId, timestamp } = req.body;
+  
+  try {
+    // Store the device-user association in your database
+    await db.collection('user_devices').doc(deviceId).set({
+      userId,
+      deviceId,
+      lastSeen: timestamp,
+      createdAt: timestamp
+    }, { merge: true });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to sync device' });
+  }
+}
+```
+
+## **Resources**
+
+- [NPM Package](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of device identification into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

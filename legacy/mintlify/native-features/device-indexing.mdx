@@ -1,0 +1,186 @@
+---
+title: "Device Indexing"
+icon: "eye"
+description: "Read the device's unique identifier through despia.uuid to track installs, link sessions, and prevent account sharing across your mobile app."
+---
+
+<iframe src="https://www.youtube.com/embed/eVEN5fH60ow" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Note>
+
+`despia.uuid` returns a stable identifier for the device (Apple's IDFV on iOS, Android's installation ID on Android). It is available synchronously, so you can read it without awaiting anything, and it stays constant for the lifetime of the install.
+
+<Warning>
+  This identifier is **not** persistent across reinstalls. On iOS the IDFV resets when all apps from the same developer are uninstalled. On Android the ID changes when the app is uninstalled and reinstalled. If you need an identifier that survives reinstalls (subscription entitlements, paid feature unlocks, anti-abuse), use [Despia Storage Vault](/native-features/storage-vault) instead. Storage Vault is backed by iCloud Key Value Store on iOS and Android Key/Value Backup on Android, so values persist through full uninstall/reinstall cycles and even sync across all devices signed into the same Apple ID or Google account.
+</Warning>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Read `despia.uuid` directly. The value is injected by the native runtime before your JavaScript executes, so it is available on first render with no loading state.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+const deviceId = isDespia ? despia.uuid : null
+```
+
+The `null` fallback in the browser keeps your code from throwing during web preview. Always handle the `null` case downstream rather than assuming the value exists.
+
+---
+
+## When to use UUID vs Storage Vault
+
+These two features sound similar but solve different problems. Pick based on what happens when the user reinstalls or switches devices.
+
+| Need | Use | Survives reinstall | Survives device switch |
+| :-- | :-- | :-- | :-- |
+| Track active sessions, link a logged-in user to their current device, basic analytics | `despia.uuid` | No | No |
+| Persist subscription state, paid unlocks, account recovery hooks, anti-abuse | [Storage Vault](/native-features/storage-vault) | Yes | Yes (same Apple ID / Google account) |
+| Anonymous device fingerprinting for fraud detection | `despia.uuid` plus a hashed Storage Vault entry | Yes (Vault half) | Yes (Vault half) |
+
+Reach for `despia.uuid` when "the device the user is currently on" is the question. Reach for Storage Vault when "the same person, regardless of which device they are on" needs to remain identifiable, since Vault values sync via iCloud Key Value Store and Android Key/Value Backup automatically.
+
+---
+
+## Read and sync with your backend
+
+Read the UUID once on app start, then send it to your backend alongside the authenticated user ID so you can build a device-to-user mapping.
+
+```javascript
+import despia from 'despia-native'
+
+async function syncDevice(user) {
+    const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+    if (!isDespia) return
+
+    await fetch('/api/sync-device', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            userId: user.id,
+            deviceId: despia.uuid,
+            timestamp: new Date().toISOString(),
+        }),
+    })
+}
+```
+
+In React, run the sync inside `useEffect` once the user is authenticated, so it does not fire on every render.
+
+```jsx
+import { useEffect } from 'react'
+import despia from 'despia-native'
+
+function DeviceSync({ user }) {
+    useEffect(() => {
+        if (!user) return
+        if (!navigator.userAgent.toLowerCase().includes('despia')) return
+
+        fetch('/api/sync-device', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: user.id,
+                deviceId: despia.uuid,
+                timestamp: new Date().toISOString(),
+            }),
+        })
+    }, [user])
+
+    return null
+}
+```
+
+---
+
+## Backend storage
+
+Store the device-to-user mapping with the device ID as the primary key, not the user ID. One user can have multiple devices, but each device should map to one current user. Use `merge: true` (or your database equivalent) so subsequent syncs update the timestamp without overwriting other fields.
+
+```javascript
+// /api/sync-device
+export default async function handler(req, res) {
+    const { userId, deviceId, timestamp } = req.body
+
+    if (!userId || !deviceId) {
+        return res.status(400).json({ error: 'Missing userId or deviceId' })
+    }
+
+    try {
+        await db.collection('user_devices').doc(deviceId).set({
+            userId,
+            deviceId,
+            lastSeen: timestamp,
+            createdAt: timestamp,
+        }, { merge: true })
+
+        res.status(200).json({ success: true })
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to sync device' })
+    }
+}
+```
+
+For account-sharing detection, query by `userId` and look at how many distinct `deviceId` values appear in a rolling window. For paid feature unlocks tied to the device, query by `deviceId` and confirm the linked `userId` matches the request's authenticated user.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

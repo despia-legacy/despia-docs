@@ -1,0 +1,376 @@
+---
+title: "In-App Purchases"
+description: "Your app was rejected for issues with in-app purchases. Here's what went wrong and how to fix it."
+icon: "align-left"
+---
+
+## What are IAP rejections?
+
+**Apple and Google have strict rules for payments**
+
+Any app that sells digital goods or services must use the platform's native billing system. Apple takes 30% (15% for small businesses). Google takes the same. There's no way around this for digital content.
+
+Common rejection messages:
+
+- "Your app uses a payment mechanism other than in-app purchase"
+- "The app does not include a restore purchases mechanism"
+- "In-app purchase products are not available for purchase"
+- "The purchase flow does not complete successfully"
+
+These rejections block your app until fixed.
+
+---
+
+## Why this happens
+
+**Payment rules are non-negotiable**
+
+App stores reject apps that try to bypass their billing systems or implement purchases incorrectly.
+
+Common mistakes:
+
+- Using Stripe or web checkout for digital goods
+- Linking to external payment pages
+- Missing restore purchases button
+- Products not configured in App Store Connect or Google Play Console
+- Sandbox testing not working
+- No way to access paid features after purchase
+- Mentioning prices without using StoreKit/Play Billing
+
+---
+
+## How to fix it
+
+### Use RevenueCat for native payments
+
+**Despia integrates with RevenueCat for App Store and Google Play billing**
+
+RevenueCat handles the complexity of native purchases across both platforms. You configure products once and Despia displays native paywalls.
+
+```javascript
+import despia from 'despia-native';
+
+// Launch native paywall
+despia('revenuecat://launchPaywall?external_id=user_123&offering=default');
+```
+
+The paywall displays your configured products with native UI. Users purchase through Apple or Google's billing system. RevenueCat tracks entitlements.
+
+See: [RevenueCat Paywalls](https://setup.despia.com/lovable/native-features/paywalls)
+
+---
+
+### Configure products correctly
+
+**Products must exist in both App Store Connect and Google Play Console**
+
+Before your app can sell anything, you need to create the products in each store's developer console.
+
+**For iOS (App Store Connect):**
+
+1. Go to App Store Connect \> Your App \> In-App Purchases
+2. Create products (subscriptions or one-time purchases)
+3. Add pricing and descriptions
+4. Submit for review
+
+**For Android (Google Play Console):**
+
+1. Go to Google Play Console \> Your App \> Monetize \> Products
+2. Create in-app products or subscriptions
+3. Add pricing and descriptions
+4. Activate the products
+
+**Then in RevenueCat:**
+
+1. Add your App Store and Play Store apps
+2. Import products from both stores
+3. Create offerings that group products
+4. Configure entitlements for access control
+
+Products must be approved and active before your app can sell them.
+
+---
+
+### Implement restore purchases
+
+**This is required by both Apple and Google**
+
+Users who reinstall your app or switch devices must be able to restore their purchases. Without a restore button, your app will be rejected.
+
+```tsx
+import despia from 'despia-native';
+
+// Restore purchases and get purchase history
+const data = await despia('getpurchasehistory://', ['restoredData']);
+const purchases = data.restoredData;
+
+// Check for active entitlements
+const activePurchases = purchases.filter(p => p.isActive);
+const hasPremium = activePurchases.some(p => p.entitlementId === 'premium');
+
+if (hasPremium) {
+  // Grant premium access
+  unlockPremiumFeatures();
+}
+```
+
+**Response includes:**
+
+```json
+[
+  {
+    "transactionId": "1000000987654321",
+    "productId": "com.app.premium.monthly",
+    "type": "subscription",
+    "entitlementId": "premium",
+    "isActive": true,
+    "willRenew": true,
+    "purchaseDate": "2024-01-15T14:32:05Z",
+    "expirationDate": "2024-02-15T14:32:05Z",
+    "store": "app_store"
+  }
+]
+```
+
+See: [Restore Purchases](https://setup.despia.com/lovable/native-features/restore-purchase)
+
+**Where to place the restore button:**
+
+- Settings screen (most common)
+- Paywall screen
+- Account or profile screen
+- Onboarding flow for returning users
+
+Make it easy to find. Reviewers will look for it.
+
+---
+
+### Use web payments only for web
+
+**Stripe on web, RevenueCat on native**
+
+If your app also runs as a web PWA, you can use Stripe there. But the native app must use in-app purchases.
+
+Use user agent detection to show the right payment flow:
+
+```tsx
+import despia from 'despia-native';
+
+function PurchaseButton({ userId, offering }) {
+  const isNative = navigator.userAgent.toLowerCase().includes('despia');
+
+  const handlePurchase = () => {
+    if (isNative) {
+      // Native: Use RevenueCat
+      despia(`revenuecat://launchPaywall?external_id=${userId}&offering=${offering}`);
+    } else {
+      // Web: Use Stripe
+      window.location.href = '/api/create-checkout-session';
+    }
+  };
+
+  return (
+    <button onClick={handlePurchase}>
+      {isNative ? 'Subscribe' : 'Subscribe with Card'}
+    </button>
+  );
+}
+```
+
+See: [User Agent Detection](https://setup.despia.com/lovable/native-features/user-agent)
+
+**Never do this in native apps:**
+
+- Link to web checkout pages
+- Show Stripe payment forms
+- Mention "pay on our website"
+- Display credit card input fields
+
+Apple and Google will reject these immediately.
+
+---
+
+### Handle purchase webhooks
+
+**Verify purchases on your backend**
+
+Client-side purchase confirmation is not enough. Users can manipulate app state. Always verify purchases server-side using RevenueCat webhooks.
+
+We've created easy-to-follow templates for handling RevenueCat webhooks correctly. The official docs can be confusing, so we simplified it.
+
+See: [RevenueCat Webhooks Template](https://setup.despia.com/best-practices/backend/revenue-cat/webhooks)
+
+**Basic webhook handler:**
+
+```javascript
+// Backend webhook handler (example: Supabase Edge Function)
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+
+serve(async (req) => {
+  const event = await req.json();
+  
+  // RevenueCat sends events for purchases, renewals, cancellations
+  switch (event.type) {
+    case 'INITIAL_PURCHASE':
+    case 'RENEWAL':
+      // Grant access
+      await grantEntitlement(event.app_user_id, event.product_id);
+      break;
+    
+    case 'CANCELLATION':
+    case 'EXPIRATION':
+      // Revoke access
+      await revokeEntitlement(event.app_user_id, event.product_id);
+      break;
+  }
+  
+  return new Response('ok');
+});
+```
+
+**For subscription status checks, use cron jobs:**
+
+Webhooks can fail or be delayed. Use scheduled jobs to periodically sync subscription status with RevenueCat's API.
+
+See: [RevenueCat Cron Jobs Template](https://setup.despia.com/best-practices/backend/revenue-cat/cron-jobs)
+
+---
+
+### Handle the purchase callback
+
+**Update UI after successful purchase**
+
+The Despia runtime calls `onRevenueCatPurchase()` when a purchase completes on the client side. Use this to update your UI, but always verify with your backend.
+
+```javascript
+// Define global callback
+window.onRevenueCatPurchase = async (purchaseData) => {
+  console.log('Purchase completed:', purchaseData);
+  
+  // Start polling backend for verification
+  const verified = await pollForPurchaseVerification(userId);
+  
+  if (verified) {
+    // Update UI
+    setIsPremium(true);
+    showSuccessMessage('Welcome to Premium!');
+  }
+};
+```
+
+**Do not grant access based solely on client callback.** Always wait for webhook verification on your backend.
+
+---
+
+### Test in sandbox mode
+
+**Both platforms have testing environments**
+
+Before submitting, verify purchases work in sandbox mode.
+
+**iOS Sandbox Testing:**
+
+1. Create sandbox tester in App Store Connect
+2. Sign out of App Store on device
+3. Make purchase in app (will prompt for sandbox login)
+4. Subscriptions renew quickly (monthly = 5 minutes)
+
+**Android Test Tracks:**
+
+1. Add license testers in Google Play Console
+2. Upload to internal testing track
+3. Install via Play Store (not sideload)
+4. Purchases use test cards
+
+**Common sandbox issues:**
+
+- Products not showing: Check product IDs match exactly
+- Purchase fails: Verify sandbox user is set up correctly
+- Subscription doesn't renew: Sandbox renewals have different timing
+- "Cannot connect to App Store": Network or configuration issue
+
+---
+
+### Price display rules
+
+**Never hardcode prices**
+
+Prices vary by region and can change. Always fetch prices from the store.
+
+**Wrong:**
+
+```html
+<button>Subscribe for $9.99/month</button>
+```
+
+**Right:**
+
+Let RevenueCat paywall display prices, or fetch them dynamically. The native paywall handles this automatically with localized pricing.
+
+**Also avoid:**
+
+- Mentioning prices in screenshots
+- Hardcoding currency symbols
+- Showing prices that don't match the store
+
+---
+
+## Quick checklist
+
+**Configuration:**
+
+1. Products created in App Store Connect
+2. Products created in Google Play Console
+3. Products imported into RevenueCat
+4. Offerings configured in RevenueCat
+5. Entitlements mapped to products
+
+**Implementation:**
+
+ 6. Paywall launches with `revenuecat://launchPaywall`
+ 7. Restore purchases button exists and works
+ 8. `getpurchasehistory://` called on app launch
+ 9. Webhook endpoint handles RevenueCat events (use our [template](https://setup.despia.com/best-practices/backend/revenue-cat/webhooks))
+10. Cron job syncs subscription status (use our [template](https://setup.despia.com/best-practices/backend/revenue-cat/cron-jobs))
+11. Access granted only after backend verification
+
+**Platform rules:**
+
+12. No Stripe/web payments in native app
+13. No links to external payment pages
+14. No hardcoded prices
+15. No mention of "pay on website"
+
+**Testing:**
+
+16. Sandbox purchases complete successfully
+17. Restore purchases finds previous purchases
+18. Entitlements unlock correct features
+19. Subscription renewal works in sandbox
+
+---
+
+## Common rejection reasons
+
+| Rejection                   | Fix                                                  |
+| :-------------------------- | :--------------------------------------------------- |
+| "Uses external payment"     | Replace Stripe with RevenueCat in native             |
+| "No restore purchases"      | Add restore button calling `getpurchasehistory://`   |
+| "Products not available"    | Check App Store Connect / Play Console configuration |
+| "Purchase doesn't complete" | Test in sandbox, check product IDs                   |
+| "Doesn't unlock features"   | Verify entitlement checks after purchase             |
+
+---
+
+## Still stuck?
+
+If you keep getting rejected:
+
+1. Test purchases in sandbox mode on a real device
+2. Verify products are approved in both stores
+3. Check RevenueCat dashboard for errors
+4. Contact support: [support@despia.com](mailto:support@despia.com) with:
+   - Your rejection notice in full
+   - Screenshot of your paywall
+   - RevenueCat product configuration
+   - Whether sandbox testing works

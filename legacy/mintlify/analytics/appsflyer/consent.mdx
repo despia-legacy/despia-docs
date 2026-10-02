@@ -1,0 +1,118 @@
+---
+title: "Consent"
+description: "Forward GDPR and DMA consent choices from your cookie banner to the native AppsFlyer SDK."
+icon: "shield-check"
+---
+
+Forward the user's cookie-banner choice to the AppsFlyer SDK's consent API for DMA compliance. The values control how AppsFlyer processes the user's data and shares it with ad partners.
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## set\_consent
+
+<Tabs>
+  <Tab title="User Accepted">
+    ```javascript
+    despia("appsflyer://set_consent?is_gdpr=true&has_consent=true")
+    ```
+  </Tab>
+  <Tab title="User Declined">
+    ```javascript
+    despia("appsflyer://set_consent?is_gdpr=true&has_consent=false")
+    ```
+  </Tab>
+  <Tab title="Non-GDPR Region">
+    ```javascript
+    despia("appsflyer://set_consent?is_gdpr=false&has_consent=true")
+    ```
+  </Tab>
+</Tabs>
+
+<ParamField path="is_gdpr" type="boolean" required>
+  Whether the user is subject to GDPR (EU, EEA, and UK users).
+</ParamField>
+
+<ParamField path="has_consent" type="boolean" required>
+  The user's choice from your consent banner. On iOS this single flag drives both AppsFlyer consent dimensions: data usage and ads personalization.
+</ParamField>
+
+---
+
+## When to call it
+
+<Steps>
+  <Step title="On every launch, as soon as the choice is known">
+    Consent applies to the current SDK session. If you already have a stored choice, forward it immediately on page load, otherwise forward it the moment the user answers your banner.
+  </Step>
+  <Step title="Before identity and events">
+    Send consent before `set_user_id`, `set_email`, `set_phone`, and any `log_event` calls so nothing is processed against the user's choice.
+  </Step>
+  <Step title="Again whenever the user changes their mind">
+    If the user updates their preference in your settings screen, call `set_consent` again with the new values.
+  </Step>
+</Steps>
+
+---
+
+## iOS: App Tracking Transparency
+
+Consent and ATT are separate layers, and Despia handles the second one for you. On iOS the AppsFlyer SDK waits up to 60 seconds for the user to answer the ATT prompt before finalizing install attribution. If the user denies ATT, AppsFlyer operates without the IDFA regardless of what you pass in `set_consent`.
+
+<Info>
+  `set_consent` is about privacy regulation (GDPR and DMA). ATT is about the device identifier. You need both to be in order. Despia manages the ATT flow natively, your web layer only supplies `set_consent`.
+</Info>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

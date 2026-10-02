@@ -1,0 +1,104 @@
+---
+title: "Quick Actions"
+description: "Create native mobile application shortcuts that allow users to access specific workflows in your Lovable app without even opening it."
+icon: "align-left"
+---
+
+<iframe src="https://www.youtube.com/embed/UDbmAj5yWso" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Despia Setup" icon="screwdriver">
+  Configure the native shortcut in your Despia project:
+
+  1. **Navigate to Add-ons** → **Hard Coded** → **Quick Actions**
+  2. Click **Add New** to create a shortcut
+  3. **Name your shortcut** (e.g., "Don't Leave", "Track Macros", "Scan Invoice")
+  4. **Select an icon** that represents the action
+  5. **Leave the Quick Link field empty** (some apps need a redirect URL)
+  6. In the **JavaScript editor**, call your defined window function inside the commented section:
+
+     ```javascript
+     window.dontLeave() // This function will be defined as a globale function in your web app to trigger a workflow
+     ```
+  7. **Save your changes**
+  8. Go to **Publish App** → **Rebuild iOS App** (shortcuts are native components, so rebuilding is required)
+
+  <Danger>
+    Note: Replace `dontLeave` with your chosen function name. You can create multiple shortcuts by repeating this process.
+  </Danger>
+</Card>
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Define a `window.{WORKFLOW-NAME}` function globally that if called shows a popup asking the user to provide feedback.
+
+  <Note>
+    The function `window.{WORKFLOW-NAME}()` (your custom function name) will be invoked by the Despia Native Runtime when the user taps the shortcut and does NOT need to be explicitly called from your Web App Code. **Simply define it globally on the window object, and Despia will automatically call it when the corresponding shortcut is activated.**
+  </Note>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+
+  **Customize the prompt:**
+
+  - Replace `{WORKFLOW-NAME}` with your function name (must match what you defined in Despia)
+  - Replace the action description with your desired behavior:
+    - "opens the macro tracking form" for `window.trackMacros`
+    - "opens the camera to scan an invoice" for `window.scanInvoice`
+    - "displays a reward popup offering 15 free coins" for `window.unlockCoins`
+</Card>
+
+**How it works:** Despia's Quick Actions feature provides native iOS shortcut functionality that calls global JavaScript functions in your Lovable app. When a user long-presses your app icon and taps a shortcut, Despia's native runtime automatically invokes the corresponding `window.functionName()` you've defined. No manual function calls are needed - simply define the global function and Despia handles the rest.
+
+## Installation
+
+**No NPM package installation required** for this feature.
+
+Shortcuts work by defining global window functions that Despia's native runtime calls automatically.
+
+## Usage
+
+### 1. Define the Global Function
+
+In your Lovable app, define a global window function:
+
+```javascript
+// Define your global function
+window.dontLeave = function() {
+    // Show popup, open form, or trigger any workflow
+    // This will be called automatically by Despia
+}
+```
+
+### 2. Configure in Despia Editor
+
+In the Despia Quick Actions JavaScript editor, define the code to call the function:
+
+```javascript
+// Inside the self-executing function
+window.dontLeave()
+```
+
+### 3. Expected Behavior
+
+When the user taps the shortcut:
+
+```javascript
+// Despia automatically calls:
+window.dontLeave()
+
+// Your function executes:
+// - Shows feedback popup
+// - Opens tracking form
+// - Triggers camera
+// - Any custom workflow
+```
+
+**Important:** The function `window.{WORKFLOW-NAME}` (your custom function name) will be invoked by the Despia Native Runtime when the user taps the shortcut and does not need to be explicitly called from your Web App Code. Simply define it globally on the window object, and Despia will automatically call it when the corresponding shortcut is activated.
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native screenshot capture capabilities into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

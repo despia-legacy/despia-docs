@@ -1,0 +1,80 @@
+---
+title: "Logic"
+description: "Business rules, data handling, API integrations, state management, routing - all web layer. They ship via OTA, silently, with no review and no rebuild."
+icon: "gear"
+---
+
+## Ship logic changes via OTA
+
+Any change to your app's JavaScript, including API calls, data transformations, authentication flows, routing, state management, and third-party SDK integrations, is a web layer change. Deploy it via OTA. Users receive it on next launch without any action on their part.
+
+This includes native features exposed through the Despia JS SDK. The native capability is compiled into the binary. The code that calls it lives in your web layer, so it updates over the air like everything else.
+
+## Despia's defaults cover more than you think
+
+Despia declares a broad set of permissions and capabilities in every binary by default: camera, microphone, contacts, location, and more. For the vast majority of logic changes that interact with those capabilities, the native side is already declared. You do not need a new binary to add a feature that uses the camera, reads contacts, or accesses location if Despia has already declared those permissions.
+
+This makes casual OTA deployments significantly more flexible. The cases that genuinely require a new binary are new native SDK integrations, not new uses of capabilities that are already declared.
+
+## Adding web analytics or tracking tools
+
+You can add tools like PostHog, Segment, or Mixpanel via OTA at any time. No binary change needed. However, if any of these tools share data with advertisers, Apple's App Tracking Transparency (ATT) framework requires prior user consent, and that consent must be declared in the binary.
+
+<Tip>
+  If there is any chance you will add tracking tools after submission, declare ATT upfront in the binary. Store consent server-side so future OTA deployments can check it before initialising any analytics.
+</Tip>
+
+## Use OTA for critical fixes without hesitation
+
+If something is genuinely broken and the existing experience is unacceptable without a fix, ship it via OTA. Stores are not punitive when the reasoning is sound. If you can explain it clearly and it serves the user, it is defensible.
+
+Both Apple and Google explicitly permit OTA updates to the web layer of hybrid apps. A critical bug fix is the clearest possible use case.
+
+## Know when logic changes need a binary
+
+Most logic lives in the web layer and ships via OTA. A small set of changes require a new binary because they touch the native side.
+
+| Change                                            | Where it lives | How it ships         |
+| ------------------------------------------------- | -------------- | -------------------- |
+| New API call or data transformation               | Web layer      | OTA                  |
+| New authentication flow (web-based)               | Web layer      | OTA                  |
+| Adding PostHog or Segment                         | Web layer      | OTA                  |
+| New permissions (location, camera, notifications) | Native binary  | App store submission |
+| New native SDK (payments, biometrics)             | Native binary  | App store submission |
+| Changing entitlements                             | Native binary  | App store submission |
+
+If a logic change requires a new permission or a new native SDK, it is a binary change. See [Despia Editor Changes](/best-practices/despia-editor-changes).
+
+## Gate logic that depends on a new binary version
+
+If you are deploying web logic that calls a native API added in a recent binary, check the version before executing it.
+
+```js
+import despia from 'despia-native';
+
+function compareVersions(v1, v2) {
+  const a = v1.split('.').map(Number);
+  const b = v2.split('.').map(Number);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const diff = (a[i] || 0) - (b[i] || 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+const MINIMUM_VERSION = '2.0.0';
+
+if (compareVersions(despia.bundleNumber, MINIMUM_VERSION) >= 0) {
+  initiateNewPaymentFlow();
+} else {
+  fallbackToLegacyFlow();
+}
+```
+
+<Warning>
+  Always ship and approve the new binary before deploying the web layer that depends on it.
+</Warning>
+
+## Test logic changes the same way you test UI changes
+
+Deploy, force close the app, reopen, confirm. Display a build timestamp during development. If changes are not appearing, check CDN cache and confirm the app was fully closed rather than backgrounded.

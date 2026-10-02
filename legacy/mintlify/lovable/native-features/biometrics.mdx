@@ -1,0 +1,135 @@
+---
+title: "Biometrics"
+icon: "fingerprint"
+description: "Add Face ID, Touch ID, and device passcode authentication to secure sensitive features in your Lovable application."
+---
+
+<Note>
+  **Biometric Authentication’s second version is coming soon, enabling you to securely store tokens and attach them to native biometric data. This allows for complete authentication flows across the stack through our new Identity Vault system.**
+</Note>
+
+<iframe src="https://www.youtube.com/embed/6a0cZRuuLaY" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native biometric authentication functionality using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  1. Define callback functions that will be called by the SDK like this:
+
+     <Note>
+       The functions `onBioAuthSuccess()`, `onBioAuthFailure(errorCode, errorMessage)`, and `onBioAuthUnavailable()` will be invoked by the Despia Native Runtime and need not be explicitly called from your Web App Code. Simply assume their existence when the User Agent includes “despia“.
+     </Note>
+     ```javascript
+     function onBioAuthSuccess() {
+         if (navigator.userAgent.includes("despia")) {
+             console.log("Biometric authentication successful");
+             // Handle successful authentication
+         }
+     }
+     
+     function onBioAuthFailure(errorCode, errorMessage) {
+         if (navigator.userAgent.includes("despia")) {
+             console.log("Biometric authentication failed:", errorCode, errorMessage);
+             // Handle authentication failure
+         }
+     }
+     
+     function onBioAuthUnavailable() {
+         if (navigator.userAgent.includes("despia")) {
+             console.log("Biometric authentication unavailable");
+             // Handle when biometric auth is not available
+         }
+     }
+     ```
+  2. Trigger biometric authentication using `despia('bioauth://')`
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia SDK provides native bridge functionality for biometric authentication through callback-based async method calls. The SDK automatically detects available biometric methods (Face ID, Touch ID, or device passcode) and presents the appropriate authentication interface.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+**1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+**2. Set Up Biometric Authentication**
+
+Define callback functions and trigger authentication:
+
+```javascript
+// Step 1: Define your callback functions
+function onBioAuthSuccess() {
+    if (navigator.userAgent.includes("despia")) {
+        console.log("Biometric authentication successful");
+        // Handle successful authentication
+        // Redirect user, unlock features, etc.
+    }
+}
+
+function onBioAuthFailure(errorCode, errorMessage) {
+    if (navigator.userAgent.includes("despia")) {
+        console.log("Biometric authentication failed:", errorCode, errorMessage);
+        // Handle authentication failure
+        // Show error message, fallback to password, etc.
+    }
+}
+
+function onBioAuthUnavailable() {
+    if (navigator.userAgent.includes("despia")) {
+        console.log("Biometric authentication unavailable");
+        // Handle when biometric auth is not available
+        // Fallback to alternative authentication method
+    }
+}
+
+// Step 2: Trigger biometric authentication
+despia('bioauth://');
+```
+
+## Authentication States
+
+The biometric authentication returns three possible states through callbacks:
+
+- **"success"**: Authentication successful - user verified
+- **"failure"**: Authentication failed - user not verified (includes error code and message)
+- **"unavailable"**: Biometric not available on device - fallback required
+
+## Security Considerations
+
+**Client-Side vs Server-Side**
+
+This implementation provides **client-side security** as a complementary layer:
+
+- **Protects against** casual unauthorized access
+- **Not a replacement** for server-side authentication
+- **Should be combined** with existing authentication systems (Xano, Supabase, etc.)
+- **Does not protect against** sophisticated attacks or code injection
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native biometric authentication into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

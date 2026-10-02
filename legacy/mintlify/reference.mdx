@@ -1,0 +1,400 @@
+---
+title: "Reference"
+icon: "code"
+description: "Full API reference for Terra health data in Despia: client-side schemes, injected globals, event payloads, and backend responsibilities."
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Methods
+
+### Link a health source
+
+Links a source and kicks off an initial sync to your Terra destination. For Apple Health, `session` is a server-minted Terra auth token. For OAuth providers, it is a Terra Connect widget URL. The call is idempotent: if the user is already connected under the same `user_id`, the permission sheet is skipped and the runtime resyncs instead.
+
+```javascript
+// Apple Health, token minted server-side
+despia(`terra://connect?user_id=${encodeURIComponent(userId)}&session=${encodeURIComponent(token)}`)
+
+// OAuth provider, widget URL built server-side
+despia(`terra://connect?session=${encodeURIComponent(widgetUrl)}`)
+
+// Resync only, user already connected
+despia(`terra://connect?user_id=${encodeURIComponent(userId)}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `user_id` | Yes (token and resync paths) | Your stable per-user ID. Becomes Terra's `referenceId` and is persisted for silent launch resyncs. Accepts `reference_id` as an alias. |
+| `session` | Conditional | Server-generated. A Terra auth token string for Apple Health, or an `https://` Terra Connect widget URL for OAuth providers. Required on first link, optional on resync. |
+| `backfill_days` | No | Days of HealthKit history to backfill on this connect, persisted for future resyncs. Defaults to the last value supplied, then `7`. Accepts `days` as an alias. |
+| `ignored_sources` | No | Comma-separated bundle IDs to exclude from Apple Health reads, e.g. `com.whoop.app,com.garmin.connect.mobile`. Dedupes when the same wearable feeds both Apple Health and an OAuth provider. Persisted and reapplied on launch. Empty value clears it. |
+
+After a successful connect the `user_id` is persisted and the runtime resyncs on every launch. Calling with a different `user_id` re-binds the SDK. Emits `connected`, then `sync_started`, then `synced`. `despia.terraConnected` and `despia.terraProvider` update in place.
+
+---
+
+### Force a destination resync
+
+Triggers an immediate resync to your destination for the currently linked user, without re-prompting. Use it for pull-to-refresh, a refresh after returning from the OAuth widget, or a manual retry. No-op if no user is connected, in which case it emits an `error`.
+
+```javascript
+despia('terra://sync')
+despia('terra://sync?backfill_days=30')
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `backfill_days` | No | Override the backfill window for this sync only. Falls back to the last value supplied, then `7`. Accepts `days` as an alias. |
+
+Emits `sync_started` then `synced`, and mirrors live progress to `despia.terraSync`. A second call while `despia.terraSync.inProgress` is `true` is deduplicated against the in-flight sync.
+
+---
+
+### Request HealthKit permission
+
+Pops the HealthKit permission sheet at a moment you choose, without committing to a `session` or a full connect. Useful for priming permissions during onboarding.
+
+```javascript
+despia(`terra://permissions?user_id=${encodeURIComponent(userId)}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `user_id` | Yes | Terra `referenceId` used to initialise the SDK before showing the sheet. Accepts `reference_id` as an alias. |
+
+iOS only shows the sheet once per data type per install. If the user previously denied access, this returns `granted: true` silently and you must send them to `terra://settings` to re-grant. Emits a `permissions` event carrying `granted` and `message`.
+
+---
+
+### Read health data inline
+
+Reads current HealthKit state and delivers it to `window.onTerraEvent`. This is an inline read for your UI, it does not push to your destination. Requires a prior successful connect.
+
+```javascript
+// Last 7 days, default resources
+despia('terra://data?query=weekly')
+
+// Specific resources for an explicit range
+const start = Date.parse('2026-04-01')
+const end   = Date.parse('2026-05-01')
+despia(`terra://data?resources=nutrition,activity&start=${start}&end=${end}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `query` | No | Preset window: `daily` (since start of today), `weekly` (last 7 days), `hourly` (last hour). Defaults to `daily`. Ignored when `start` is supplied. |
+| `resources` | No | Comma-separated whitelist: `daily`, `activity`, `sleep`, `body`, `nutrition`, `menstruation`, `athlete`. Defaults to `daily,activity,sleep,body`. Unknown values are dropped. `athlete` is a profile snapshot and ignores `start`/`end`. |
+| `start` | No | Window start as a millisecond epoch. Takes precedence over `query` when supplied. |
+| `end` | No | Window end as a millisecond epoch. Defaults to `Date.now()` when omitted. |
+
+The `data` event carries `results` (keyed by resource), `succeeded`, and `failed` (`{ resource, message }` per failure). Use `failed` for partial-state UI rather than blocking on one resource error.
+
+---
+
+### Disconnect
+
+Clears the runtime's local connection state: the persisted `user_id`, the connected flag, any `ignored_sources`, and the manager. It does not deauthenticate on Terra's side, your backend handles that via the REST API.
+
+```javascript
+despia('terra://disconnect')
+```
+
+Takes no parameters. Emits `disconnected`. `despia.terraConnected` becomes `false`, `despia.terraUserId` and `despia.terraProvider` clear, and `despia.terraSync` resets to defaults. iOS has no programmatic Apple Health revoke, the user does that in Settings.
+
+---
+
+### Open permission settings
+
+Opens iOS Settings on the app's HealthKit permission page so a user who denied access can re-grant it. Use it as the action behind a permission-denied prompt. iOS only.
+
+```javascript
+despia('terra://settings')
+```
+
+Takes no parameters and emits no event.
+
+---
+
+## Full client-side setup
+
+```javascript
+import despia from 'despia-native'
+
+// Assign the callback once, before any terra:// call
+window.onTerraEvent = function (evt) {
+    switch (evt.type) {
+        case 'ready':     if (evt.connected) renderDashboard(); break
+        case 'connected': showConnectedState(evt);             break
+        case 'synced':    onSyncComplete(evt);                 break
+        case 'data':      renderInlineData(evt.results);       break
+        case 'error':     console.error(evt.command, evt.message); break
+    }
+}
+
+async function initTerra(userId) {
+    // Only inside Despia, with Terra enabled and HealthKit on device
+    if (!despia.terraAvailable) return
+
+    // Debounce, skip if a sync is running or finished in the last minute
+    if (despia.terraSync && despia.terraSync.inProgress) return
+    if (despia.terraSync && despia.terraSync.lastSuccessAt &&
+        Date.now() - despia.terraSync.lastSuccessAt < 60_000) return
+
+    if (!despia.terraConnected) {
+        const token = await myBackend.getTerraAuthToken({ reference_id: userId })
+        despia(`terra://connect?user_id=${encodeURIComponent(userId)}&session=${encodeURIComponent(token)}`)
+    } else {
+        despia(`terra://connect?user_id=${encodeURIComponent(userId)}`)
+    }
+}
+
+// Call on every authenticated load
+initTerra(currentUser.id)
+```
+
+---
+
+## Reading current state
+
+The native runtime injects five globals on the `despia` object before any web code runs, and keeps them live by updating them in place on every state change. No reload is needed to read fresh values.
+
+```javascript
+despia.terraAvailable   // boolean, SDK compiled in, Dev ID set, HealthKit available
+despia.terraConnected   // boolean, Apple Health linked on this device
+despia.terraUserId      // string, Terra-issued user id for Apple Health ("" if none)
+despia.terraProvider    // string, "healthkit" when connected, else ""
+despia.terraSync        // object, live destination-sync metadata
+```
+
+| Global | Type | Description |
+| --- | --- | --- |
+| `despia.terraAvailable` | boolean | `true` when the SDK is compiled in, `terraDevId` is set, and HealthKit is available on the device. `undefined` in a plain browser. |
+| `despia.terraConnected` | boolean | `true` after a successful Apple Health connect. Updates in place when connection state changes. |
+| `despia.terraUserId` | string | Terra-issued user id. This is not the `user_id` you supplied (that is your `referenceId`). Empty string when not connected. |
+| `despia.terraProvider` | string | `"healthkit"` when Apple Health is connected, else `""`. OAuth providers report through the `connected` event, not this global. |
+| `despia.terraSync` | object | Live sync metadata. Fields: `status` (`idle` \| `syncing` \| `synced`), `inProgress` (boolean), `days`, `source` (`connect` \| `launch_resync` \| `null`), `startedAt`, `finishedAt`, `durationMs`, `lastSuccessAt`. All time fields are ms epoch. Resets on `terra://disconnect`. |
+
+`terraConnected`, `terraUserId`, and `terraProvider` track the Apple Health connection only. While `despia.terraSync.status` is `syncing`, compute live elapsed time as `Date.now() - despia.terraSync.startedAt`.
+
+---
+
+## Handling events
+
+`window.onTerraEvent` is optional but recommended. Assign it before your first `terra://` call. The runtime calls it on every state change, each carrying a `type` you branch on. The `ready` event fires on every page load, so it is a reliable bootstrap point.
+
+```javascript
+window.onTerraEvent = function (evt) {
+    switch (evt.type) {
+        case 'ready':            break // evt.available, evt.connected, evt.userId
+        case 'connected':        break // evt.via, plus healthkit or widget fields
+        case 'sync_started':     break // evt.days, evt.source
+        case 'synced':           break // evt.days, evt.source, evt.durationMs, evt.succeeded, evt.failed
+        case 'data':             break // evt.query, evt.resources, evt.results, evt.succeeded, evt.failed
+        case 'permissions':      break // evt.granted, evt.message
+        case 'disconnected':     break
+        case 'widget_cancelled': break
+        case 'error':            break // evt.command, evt.message
+    }
+}
+```
+
+| Event | Fires when | Key fields |
+| --- | --- | --- |
+| `ready` | Every page load | `available`, `connected`, `userId` |
+| `connected` | Apple Health link or OAuth widget completes | `via` (`"healthkit"` \| `"widget"`), plus per-path fields below |
+| `sync_started` | A destination sync begins | `days`, `source` (`connect` \| `launch_resync` \| `sync`) |
+| `synced` | A destination sync completes | `days`, `source`, `durationMs`, `succeeded`, `failed` |
+| `data` | `terra://data` returns | `query`, `resources`, `startMs`, `endMs`, `results`, `succeeded`, `failed` |
+| `permissions` | `terra://permissions` resolves | `granted` (boolean), `message` |
+| `disconnected` | `terra://disconnect` clears state | none |
+| `widget_cancelled` | User dismisses the OAuth sheet | none |
+| `error` | A command fails | `command`, `message` |
+
+A `connected` event from Apple Health and from the OAuth widget carry different fields:
+
+```jsonc
+// via: "healthkit"
+{
+    "type":             "connected",
+    "via":              "healthkit",
+    "provider":         "healthkit",
+    "alreadyConnected": false,        // true when this call only resynced
+    "userId":           "terra-user-abc123",
+    "referenceId":      "your-user-id-456"
+}
+```
+
+```jsonc
+// via: "widget"
+{
+    "type":        "connected",
+    "via":         "widget",
+    "resource":    "FITBIT",          // the provider Terra connected
+    "userId":      "terra-fitbit-789",
+    "referenceId": "your-user-id-456",
+    "params":      {}                 // extra query params Terra appended to the redirect
+}
+```
+
+A completed sync reports per-resource success and failure so partial syncs still resolve as `synced`, never `error`:
+
+```jsonc
+{
+    "type":       "synced",
+    "days":       7,
+    "source":     "connect",
+    "durationMs": 1240,
+    "succeeded":  ["daily", "activity", "sleep"],
+    "failed":     [{ "resource": "nutrition", "message": "No data available" }]
+}
+```
+
+An inline read returns data keyed by resource, plus the same `succeeded` and `failed` shape:
+
+```jsonc
+{
+    "type":      "data",
+    "query":     "weekly",
+    "resources": ["daily", "activity"],
+    "startMs":   1746057600000,
+    "endMs":     1746662400000,
+    "results":   {
+        "daily":    { "calories": 2100, "steps": 8400 },
+        "activity": { "duration_seconds": 3600, "calories": 450 }
+    },
+    "succeeded": ["daily", "activity"],
+    "failed":    []
+}
+```
+
+<Info>
+  `error` carries a `command` (the scheme that failed) and an advisory `message`. The most common causes are calling `terra://sync` or `terra://data` before a successful connect, passing a malformed required parameter, or handing in a `session` token that Terra rejected.
+</Info>
+
+---
+
+## Backend responsibilities
+
+The Terra REST API is called only by your backend. The Terra API key never reaches the device.
+
+### Mint an Apple Health auth token
+
+For a first-time Apple Health link, your backend calls Terra's auth endpoint and returns the token to the web app, which passes it to `terra://connect` as `session`.
+
+```javascript
+// Server-side
+const res = await fetch('https://api.tryterra.co/v2/auth/generateAuthToken', {
+    method: 'POST',
+    headers: {
+        'x-api-key': process.env.TERRA_API_KEY,
+        'dev-id':    process.env.TERRA_DEV_ID,
+    },
+})
+const { token } = await res.json()
+return token // hand to the web app
+```
+
+### Build an OAuth widget session
+
+For OAuth providers, create a Terra Connect widget session with `auth_success_redirect` set to your app's deep link using host `terra`. Terra appends `user_id`, `reference_id`, and `resource` to that redirect so your backend can record the connection.
+
+```javascript
+// Server-side
+const res = await fetch('https://api.tryterra.co/v2/auth/generateWidgetSession', {
+    method: 'POST',
+    headers: {
+        'x-api-key':    process.env.TERRA_API_KEY,
+        'dev-id':       process.env.TERRA_DEV_ID,
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        reference_id:          userId,
+        auth_success_redirect: 'myapp://terra',
+        providers:             'FITBIT,GARMIN,OURA,WHOOP',
+    }),
+})
+const { url } = await res.json()
+return url // hand to the web app
+```
+
+### Deauthenticate on logout
+
+`terra://disconnect` clears local device state only. On logout, your backend must call Terra's deauthentication endpoint for the user to fully revoke the connection.
+
+### Receive data at your destination
+
+Configure a destination webhook in the Terra dashboard. Terra pushes health data to it on every sync, including background delivery. Validate the Terra signature header on each request before processing the payload.
+
+---
+
+## Not exposed
+
+| Capability | Reason |
+| --- | --- |
+| Programmatic Apple Health revoke | iOS exposes no revoke API. Use `terra://settings` to send the user to device Settings. |
+| Terra REST calls from the client | The API key must never reach the device. All REST calls go through your backend. |
+| Per-provider OAuth globals | OAuth connections flow server-side through Terra. Only Apple Health state appears in the `despia.terra*` globals; providers report through the `connected` event with `via: "widget"`. |
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Terra Dashboard" icon="gauge" href="https://tryterra.co">
+    Configure your application and destination webhook
+  </Card>
+
+  <Card title="Terra API Docs" icon="book" href="https://docs.tryterra.co">
+    Terra REST API and webhook payload reference
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

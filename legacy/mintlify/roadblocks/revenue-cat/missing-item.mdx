@@ -1,0 +1,411 @@
+---
+title: "Missing Item"
+description: "Your paywall is empty or checkout isn't working. Products aren't loading. Here's how to debug it."
+icon: "octagon-xmark"
+---
+
+## What is this error?
+
+When RevenueCat can't fetch your products, nothing works. Paywalls show empty, direct checkout fails, and users can't purchase anything.
+
+You might see this in your debug logs:
+
+<Warning>
+  **There's a problem with your configuration. None of the products registered in the RevenueCat dashboard could be fetched from the [Play Store/App Store].**
+</Warning>
+
+This means RevenueCat knows what products you configured, but the store on the device can't find them. The issue is almost always a configuration mismatch somewhere in the chain. This affects both paywall UI and direct product purchases the same way.
+
+---
+
+## How it works
+
+Understanding the flow helps you debug:
+
+1. You configure products in App Store Connect or Google Play Console
+2. You add those same product IDs to RevenueCat dashboard
+3. RevenueCat SDK asks RevenueCat API for product IDs
+4. SDK asks the device's store for actual product details
+5. Store returns product info (or nothing if misconfigured)
+
+If any step has a mismatch, products won't load.
+
+---
+
+## Despia configuration
+
+**Before debugging anything else, verify your Despia setup.**
+
+### Use live API keys only
+
+**Despia only supports live RevenueCat API keys. Test keys will crash the app.**
+
+In RevenueCat, you have two types of API keys:
+
+- **Live keys** (use these) - Work in production and sandbox testing
+- **Test keys** (do not use) - Will crash Despia apps
+
+Live keys work for both production purchases and sandbox testing. You don't need test keys.
+
+### 1. Add RevenueCat API keys in Despia dashboard
+
+Go to Despia Dashboard \> Your App \> Settings \> RevenueCat and add:
+
+- **iOS API Key** - Live key starting with `appl_`
+- **Android API Key** - Live key starting with `goog_`
+
+These keys connect your native app to your RevenueCat project. Use live keys from RevenueCat Dashboard \> API Keys (not test keys).
+
+### 2. Rebuild the app after changes
+
+**RevenueCat keys are baked into the native app at build time.**
+
+If you:
+
+- Added or changed RevenueCat API keys
+- Changed your RevenueCat project
+- Switched between RevenueCat projects
+
+You must rebuild the app in Despia for both iOS and Android.
+
+### 3. Install the latest build
+
+After rebuilding, make sure you're testing with the new version:
+
+**iOS:**
+
+- Delete the old app from your device
+- Install the new build from TestFlight
+
+**Android:**
+
+- Uninstall the old app
+- Go to Google Play Console \> Testing \> Internal testing
+- Copy the internal testing link
+- Open the link on your test device and install from the Play Store
+
+**Common mistake:** Testing with an old app version that has outdated or missing RevenueCat keys.
+
+### 4. Verify the keys are correct
+
+Double-check you copied the right keys:
+
+1. RevenueCat Dashboard \> Your Project \> API Keys
+2. Copy the **live** iOS key (starts with `appl_`)
+3. Copy the **live** Android key (starts with `goog_`)
+4. Paste into Despia Dashboard \> Settings \> RevenueCat
+5. Rebuild both platforms
+6. Test on fresh installs
+
+**Do not use test keys.** Live keys work for sandbox testing.
+
+---
+
+## iOS troubleshooting
+
+### 1. Check App Store Connect agreements
+
+**The most common cause of missing products on iOS.**
+
+Go to App Store Connect \> Agreements, Tax, and Banking. Verify:
+
+- Paid Applications Agreement is signed
+- Banking details are complete
+- Tax forms are submitted
+
+If you recently renewed your Apple Developer Program or signed new agreements, wait 24 hours for propagation.
+
+---
+
+### 2. Verify Apple Developer Program is active
+
+Go to [developer.apple.com](http://developer.apple.com) and check:
+
+- Membership is active (not expired)
+- Valid payment method on file
+- Auto-renew is enabled
+
+If your membership expired and you renewed it, agreements need to be re-accepted.
+
+---
+
+### 3. Add In-App Purchase Key
+
+RevenueCat needs your In-App Purchase Key to fetch products and validate purchases.
+
+**To create it:**
+
+1. App Store Connect \> Users and Access \> Integrations \> In-App Purchase
+2. Generate a new key
+3. Download the .p8 file (you can only download once)
+4. Note the Key ID and Issuer ID
+
+**To add it to RevenueCat:**
+
+1. RevenueCat Dashboard \> Your Project \> iOS App
+2. Upload the .p8 file
+3. Enter Key ID and Issuer ID
+
+---
+
+### 4. Check product status in App Store Connect
+
+Products must be in the correct state:
+
+| Status             | Can fetch? |
+| :----------------- | :--------- |
+| Ready to Submit    | Yes        |
+| Approved           | Yes        |
+| Waiting for Review | No         |
+| In Review          | No         |
+| Missing Metadata   | No         |
+| Rejected           | No         |
+
+**First in-app purchase?** You must submit it with a new app version. You cannot submit products separately without the app.
+
+---
+
+### 5. Verify product identifiers match exactly
+
+Product IDs are case-sensitive. Check that the ID in RevenueCat matches App Store Connect exactly.
+
+**In App Store Connect:** App \> In-App Purchases \> Your Product \> Product ID
+
+**In RevenueCat:** Products \> Your Product \> App Store Product Identifier
+
+Common mistakes:
+
+- Extra spaces
+- Different capitalization
+- Typos in either place
+
+---
+
+### 6. Verify Bundle ID matches
+
+The Bundle ID must match in three places:
+
+1. App Store Connect \> Your App \> Bundle ID
+2. RevenueCat Dashboard \> Your App \> Bundle ID
+3. Despia Dashboard \> Your App \> Bundle ID
+
+This is case-sensitive.
+
+---
+
+### 7. Check API key platform
+
+RevenueCat uses different API keys for iOS and Android. If you add the wrong key in Despia, products won't load.
+
+**In Despia Dashboard \> Settings \> RevenueCat:**
+
+- iOS field should have a key starting with `appl_`
+- Android field should have a key starting with `goog_`
+
+Despia automatically configures the correct key for each platform when you build. Just make sure you put the right key in the right field.
+
+---
+
+### 8. Test on a physical device
+
+**Simulators cannot fetch products from the live App Store.**
+
+Simulators only work with StoreKit Configuration files (local testing). To test real products:
+
+1. Use a physical iPhone or iPad
+2. Sign in with a Sandbox Apple Account (not your real account)
+3. Go to Settings \> App Store \> Sandbox Account
+
+---
+
+### 9. Wait after release
+
+New products can take up to 24 hours to propagate after:
+
+- First app release with IAP
+- Adding new products to an existing app
+- Changing product configuration
+
+---
+
+## Android troubleshooting
+
+### 1. Check Google Play Console agreements
+
+Go to Google Play Console \> Settings \> Developer account \> Account details.
+
+Verify:
+
+- Developer agreement accepted
+- Payments profile set up
+- Bank account verified
+
+---
+
+### 2. Publish on a testing track
+
+**Google requires your app to be published before products can be fetched.**
+
+Even for testing, you need to upload your app to a testing track. Internal testing is fastest.
+
+**To set up internal testing:**
+
+1. Google Play Console \> Your App \> Testing \> Internal testing
+2. Create a release and upload your app bundle
+3. Add testers (your email)
+4. Roll out the release
+5. Copy the internal testing link to install on your device
+
+Products cannot be fetched from an unpublished app.
+
+---
+
+### 3. Add yourself as a licensed tester
+
+Licensed testers can make test purchases without being charged.
+
+**To add:**
+
+1. Google Play Console \> Settings \> License testing
+2. Add your Google account email
+3. Set license response to "RESPOND_NORMALLY"
+
+Use the same Google account that's signed in on your test device.
+
+---
+
+### 4. Verify product identifiers match exactly
+
+Product IDs are case-sensitive. Check that the ID in RevenueCat matches Google Play Console exactly.
+
+**In Google Play Console:** Monetize \> Products \> Subscriptions (or In-app products) \> Product ID
+
+**In RevenueCat:** Products \> Your Product \> Play Store Product Identifier
+
+---
+
+### 5. Verify package name matches
+
+The package name must match in three places:
+
+1. Google Play Console \> Your App \> Package name
+2. RevenueCat Dashboard \> Your App \> Package Name
+3. Despia Dashboard \> Your App \> Package Name
+
+This is case-sensitive.
+
+---
+
+### 6. Check API key platform
+
+Make sure you added the Android API key in the Android field in Despia.
+
+**In Despia Dashboard \> Settings \> RevenueCat:**
+
+- Android field should have a key starting with `goog_`
+- iOS field should have a key starting with `appl_`
+
+Despia automatically configures the correct key for each platform when you build.
+
+---
+
+### 7. Test on a physical device
+
+Emulators have limited store functionality. Use a physical Android device with:
+
+- Google Play Store installed
+- Signed in with your licensed tester account
+- App installed from internal testing link (Play Console \> Testing \> Internal testing)
+
+---
+
+### 8. Check product status
+
+Products must be Active in Google Play Console:
+
+| Status   | Can fetch? |
+| :------- | :--------- |
+| Active   | Yes        |
+| Inactive | No         |
+
+Make sure your subscription or in-app product is activated.
+
+---
+
+### 9. Wait after release
+
+New products can take up to 24 hours to propagate after:
+
+- First app release with IAP
+- Adding new products
+- Changing product configuration
+- Publishing to a new track
+
+---
+
+## Quick checklist
+
+### Despia setup (do this first)
+
+1. RevenueCat API keys added in Despia Dashboard \> Settings \> RevenueCat
+2. Using **live keys only** (not test keys, which will crash the app)
+3. iOS key starts with `appl_`, Android key starts with `goog_`
+4. App rebuilt after adding/changing keys
+5. Latest build installed on test device
+
+### iOS
+
+1. Paid Applications Agreement signed
+2. Apple Developer Program active
+3. In-App Purchase Key added to RevenueCat
+4. Products in "Ready to Submit" or "Approved" state
+5. Product IDs match exactly (case-sensitive)
+6. Bundle ID matches in all three places
+7. Using iOS API key in Despia (starts with `appl_`)
+8. Testing on physical device with Sandbox account
+
+### Android
+
+1. Google Play Console agreements signed
+2. App published on internal or closed testing track
+3. Added as licensed tester
+4. Products are Active
+5. Product IDs match exactly (case-sensitive)
+6. Package name matches in all three places
+7. Using Android API key in Despia (starts with `goog_`)
+8. Testing on physical device via internal testing link
+
+## Common error messages
+
+| Error                                  | Likely cause                                    |
+| :------------------------------------- | :---------------------------------------------- |
+| App crashes on launch                  | Using RevenueCat test keys instead of live keys |
+| "No products registered"               | RevenueCat dashboard has no products            |
+| "Products not found in store"          | Product IDs don't match or store not configured |
+| "Invalid API key"                      | Wrong platform API key or missing key in Despia |
+| "App not found"                        | Bundle ID / Package name mismatch               |
+| "Offerings are empty"                  | Products exist but can't be fetched from store  |
+| "RevenueCat not configured"            | API keys not added in Despia dashboard          |
+| Products work in old build but not new | Keys changed but app not rebuilt                |
+
+---
+
+## Still stuck?
+
+If you've checked everything:
+
+1. Double-check product IDs character by character
+2. Wait 24 hours (propagation delays are real)
+3. Try a different physical device
+4. Check RevenueCat status page for outages
+5. Contact RevenueCat support with your app ID and debug logs
+
+---
+
+## Related documentation
+
+- [Despia RevenueCat Setup](https://setup.despia.com/lovable/native-features/revenuecat)
+- [RevenueCat Troubleshooting Guide](https://www.revenuecat.com/docs/troubleshooting)
+- [Apple Sandbox Testing](https://www.revenuecat.com/docs/test-and-launch/sandbox/apple-app-store)
+- [Google Play Testing](https://www.revenuecat.com/docs/test-and-launch/sandbox/google-play-store)
+- [In-App Purchases Rejection Guide](https://setup.despia.com/roadblocks/app-review/in-app-purchases)

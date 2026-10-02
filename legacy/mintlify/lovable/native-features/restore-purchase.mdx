@@ -1,0 +1,185 @@
+---
+title: "Restore Purchase"
+description: "Restore and retrieve a user's complete purchase history from Apple App Store and Google Play Store using the Despia SDK."
+icon: "recycle"
+---
+
+<iframe src="https://www.youtube.com/embed/N5KsbfD8wqU" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add restore purchases functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Retrieve purchase history by calling: `despia("getpurchasehistory://", ["restoredData"])`
+
+  This will query the native app stores and return all purchases associated with the current device/account, including active subscriptions, expired subscriptions, and one-time purchases.
+
+  The response array includes objects with :
+
+  - `transactionId` - unique identifier for this specific transaction
+  - `originalTransactionId` - identifier linking to the original purchase (useful for subscription renewals)
+  - `productId` - the product identifier configured in App Store Connect / Google Play Console
+  - `type` - either `"subscription"` or `"product"` (one-time purchase)
+  - `entitlementId` - the entitlement/access level this purchase grants
+  - `isActive` - boolean indicating if the purchase currently grants access
+  - `willRenew` - boolean indicating if a subscription will auto-renew
+  - `purchaseDate` - ISO timestamp of the most recent transaction
+  - `originalPurchaseDate` - ISO timestamp of the initial purchase
+  - `expirationDate` - ISO timestamp when access expires (null for lifetime purchases)
+  - `store` - either `"app_store"` or `"play_store"`
+  - `country` - user's country code
+  - `environment` - `"production"` or `"sandbox"`
+  - `receipt` - the raw receipt data for server-side validation
+
+  Use this to implement "Restore Purchases" buttons required by App Store guidelines, and to verify user entitlements on app launch.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+## How it Works
+
+Despia queries the native platform's billing system to retrieve all purchases associated with the current user's App Store or Google Play account. This includes active subscriptions, expired subscriptions, consumables, and non-consumable (lifetime) purchases. The data is normalized into a consistent format across both iOS and Android platforms.
+
+## Installation
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## Usage
+
+### 1. Import the SDK
+
+```javascript
+import despia from 'despia-native';
+```
+
+### 2. Retrieve Purchase History
+
+```javascript
+const data = await despia("getpurchasehistory://", ["restoredData"]);
+const purchases = data.restoredData;
+console.log(purchases);
+```
+
+### 3. Example Response (iOS)
+
+```json
+[
+    {
+        "transactionId": "1000000987654321",
+        "originalTransactionId": "1000000123456789",
+        "productId": "com.app.premium.monthly",
+        "type": "subscription",
+        "entitlementId": "premium",
+        "externalUserId": "abc123",
+        "isAnonymous": false,
+        "isActive": true,
+        "willRenew": true,
+        "purchaseDate": "2024-01-15T14:32:05Z",
+        "originalPurchaseDate": "2023-06-20T09:15:33Z",
+        "expirationDate": "2024-02-15T14:32:05Z",
+        "store": "app_store",
+        "country": "USA",
+        "receipt": "MIIbngYJKoZIhvcNAQcCoIIbajCCG2YCAQExDzAN...",
+        "environment": "production"
+    },
+    {
+        "transactionId": "1000000555555555",
+        "originalTransactionId": "1000000555555555",
+        "productId": "com.app.removeads",
+        "type": "product",
+        "entitlementId": "no_ads",
+        "externalUserId": "abc123",
+        "isAnonymous": false,
+        "isActive": true,
+        "willRenew": false,
+        "purchaseDate": "2023-12-01T08:00:00Z",
+        "originalPurchaseDate": "2023-12-01T08:00:00Z",
+        "expirationDate": null,
+        "store": "app_store",
+        "country": "USA",
+        "receipt": "MIIbngYJKoZIhvcNAQcCoIIbajCCG2YCAQExDzAN...",
+        "environment": "production"
+    }
+]
+```
+
+### 4. Example Response (Android)
+
+```json
+[
+    {
+        "transactionId": "GPA.3372-4150-9088-12345",
+        "originalTransactionId": "GPA.3372-4150-9088-12345",
+        "productId": "com.app.premium.monthly",
+        "type": "subscription",
+        "entitlementId": "premium",
+        "externalUserId": "abc123",
+        "isAnonymous": false,
+        "isActive": true,
+        "willRenew": true,
+        "purchaseDate": "2024-01-15T14:32:05Z",
+        "originalPurchaseDate": "2023-06-20T09:15:33Z",
+        "expirationDate": "2024-02-15T14:32:05Z",
+        "store": "play_store",
+        "country": "US",
+        "receipt": "kefhajglhaljhfajkfajk.AO-J1OxBnT3hAjkl5FjpKc9...",
+        "environment": "production"
+    },
+    {
+        "transactionId": "GPA.3372-4150-9088-67890",
+        "originalTransactionId": "GPA.3372-4150-9088-67890",
+        "productId": "com.app.removeads",
+        "type": "product",
+        "entitlementId": "no_ads",
+        "externalUserId": "abc123",
+        "isAnonymous": false,
+        "isActive": true,
+        "willRenew": false,
+        "purchaseDate": "2023-12-01T08:00:00Z",
+        "originalPurchaseDate": "2023-12-01T08:00:00Z",
+        "expirationDate": null,
+        "store": "play_store",
+        "country": "US",
+        "receipt": "minodkpfokbofclncmaa.AO-J1Oy2fXpTml7rKxE3vNc9...",
+        "environment": "production"
+    }
+]
+```
+
+### 5. Check Active Entitlements
+
+```tsx
+const data = await despia("getpurchasehistory://", ["restoredData"]);
+const purchases = data.restoredData;
+
+// Filter for active purchases only
+const activePurchases = purchases.filter(p => p.isActive);
+
+// Check if user has premium access
+const hasPremium = activePurchases.some(p => p.entitlementId === "premium");
+
+if (hasPremium) {
+    // Grant premium features
+}
+```
+
+## Resources
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## Lovable Integration
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native purchase restoration into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

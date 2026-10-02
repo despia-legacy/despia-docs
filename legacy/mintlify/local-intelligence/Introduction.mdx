@@ -1,0 +1,252 @@
+---
+title: "Introduction"
+description: "Run language models on-device in hybrid apps with one function call. Private by default, offline after first download, zero per-token cost."
+icon: "circle-info"
+---
+
+<Info>
+  This beta feature is currently unavailable. We are moving off a dependency that is no longer open source and onto our own local AI infrastructure, so that every Despia user gets a fully open source, license-compliant experience.
+</Info>
+
+<br />Despia Local AI brings real on-device language model inference to your Despia app. Models load via the device's native AI acceleration stack (Metal, Core ML, and the Apple Neural Engine on iOS; GPU, NNAPI, and the CPU fast-path on Android). Prompts never leave the device, inference is free at any scale, and every feature keeps working in airplane mode.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-intelligence
+    ```
+
+    ```bash pnpm
+    pnpm add despia-intelligence
+    ```
+
+    ```bash yarn
+    yarn add despia-intelligence
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import intelligence from 'despia-intelligence';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-intelligence/index.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import intelligence from 'https://cdn.jsdelivr.net/npm/despia-intelligence/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Why we built this
+
+Most apps that ship an AI feature pipe every prompt to somebody else's server. You pay per token. You wait for a network round-trip. You run a backend proxy to hide your API key. You renegotiate your privacy policy.
+
+That is the right tradeoff for a ChatGPT clone. It is the wrong tradeoff for the AI features people actually want to ship: summarising a note, classifying a tag, rewriting a paragraph, extracting JSON from a form, drafting a reply suggestion.
+
+We wanted on-device AI that works the way web developers expect: import a package, call a function, get tokens back. No API keys to guard. No backend proxy. No bill-shock. So we built `despia-intelligence`, a JavaScript bridge from your web code to the device's native AI hardware. Models live in native memory. Inference runs on the Neural Engine, GPU, or NNAPI. Tokens stream back to your handler.
+
+---
+
+## Cross-platform by design
+
+Despia Local AI is built for both iOS and Android through a unified JavaScript SDK.
+
+Write your code once. It works identically on both platforms. No iOS-specific workarounds. No Android edge cases. The API is fully standardized so you can focus on building your app instead of handling platform differences.
+
+```javascript
+import intelligence from 'despia-intelligence'
+
+// Same code. Both platforms.
+intelligence.run({
+  type:   'text',
+  model:  'qwen3-0.6b',
+  prompt: 'Summarise this article.',
+  stream: true,
+}, {
+  stream:   (chunk) => output.textContent = chunk,
+  complete: (text)  => save(text),
+})
+```
+
+Under the hood, Despia handles the platform-specific acceleration paths so your JavaScript stays clean and portable.
+
+---
+
+## Fully on-device. No cloud dependencies.
+
+Despia Local AI runs entirely on the device. There is no cloud component, no proprietary inference backend, no API gateway sitting between you and your users.
+
+**Private by default.** Prompts, user text, and generated tokens never leave the device. Nothing to log, retain, or train on.
+
+**Use any model.** Open-weights text models from Qwen, Liquid LFM, Google Gemma, and Tencent Youtu are downloaded on demand from Hugging Face into the Despia container. New models ship over the air without an SDK upgrade.
+
+**No per-token fees.** Unlike cloud LLM APIs that charge per token, Despia Local AI has zero runtime costs. Run as many completions as the device can handle. Scale to millions of users without inference costs scaling with them.
+
+**Works offline completely.** Once a model is downloaded, the entire system operates without any network connectivity. No license checks, no heartbeats, no server dependencies.
+
+---
+
+## How it works
+
+Gate calls behind `intelligence.runtime.ok` so the same code works in a desktop browser preview. Make sure the model is installed, then fire `intelligence.run()` with your params and a handler.
+
+```javascript
+import intelligence from 'despia-intelligence'
+
+if (!intelligence.runtime.ok) return
+
+intelligence.run({
+  type:   'text',
+  model:  'qwen3-0.6b',
+  prompt: 'Summarise this article in three sentences.',
+  system: 'Be concise.',
+  stream: true,
+}, {
+  stream:   (chunk) => output.textContent = chunk, // full accumulated text
+  complete: (text)  => save(text),
+  error:    (err)   => console.error(err.code, err.message),
+})
+```
+
+The `stream` callback receives the full accumulated text on every tick, not a delta. Replace the DOM content rather than appending. The `complete` callback receives the final response string when generation finishes.
+
+If the model is not yet on the device, download it first. Downloads continue in the background even when the app is closed, using `NSURLSession` on iOS and `WorkManager` on Android.
+
+```javascript
+intelligence.models.download('qwen3-0.6b', {
+  onStart:    ()    => showDownloadUI(),
+  onProgress: (pct) => bar.style.width = pct + '%',
+  onEnd:      ()    => hideDownloadUI(),
+  onError:    (err) => showError(err),
+})
+```
+
+---
+
+## Background and return
+
+Inference sessions do not survive the WebView being suspended by the OS. The SDK handles this for you. When the user hits home, opens another app, and comes back, every in-flight job re-fires automatically with the same params and the same handler. Any number of concurrent jobs all resume.
+
+Just write your code as if backgrounding does not exist. No `visibilitychange`, no `pagehide`, no manual state to serialise.
+
+---
+
+## Available models
+
+Pick by size first, quality second. Smaller models load faster, use less RAM, and work on older devices. Larger models give higher quality at the cost of latency and memory.
+
+| Model | Size | Family | Strengths | Tier |
+| --- | --- | --- | --- | --- |
+| `lfm2.5-350m` | 350M | Liquid LFM2.5 | Ultra-fast, tiny memory footprint | Any |
+| `qwen3-0.6b` | 600M | Alibaba Qwen3 | Balanced default | Any |
+| `lfm2-700m` | 700M | Liquid LFM2 | Low-latency general chat | Any |
+| `gemma-3-1b-it` | 1B | Google Gemma 3 | Strong instruction tuning | Modern |
+| `lfm2.5-1.2b-instruct` | 1.2B | Liquid LFM2.5 | Structured instructions | Modern |
+| `lfm2.5-1.2b-thinking` | 1.2B | Liquid LFM2.5 | Chain-of-thought reasoning | Modern |
+| `qwen3-1.7b` | 1.7B | Alibaba Qwen3 | Stronger reasoning | Modern |
+| `youtu-llm-2b` | 2B | Tencent Youtu | Multilingual (CN/EN) | Modern |
+| `lfm2-2.6b` | 2.6B | Liquid LFM2 | Higher-quality general chat | Modern to Flagship |
+| `gemma-3n-e4b-it` | 4B effective | Google Gemma 3n | Mobile-optimised | Flagship |
+| `lfm2-8b-a1b` | 8B MoE (1B active) | Liquid LFM2 | Highest quality on-device | Flagship |
+
+All models are published in `int4` (smaller, faster) and `int8` (higher quality) quantizations. The runtime picks the quantization based on device capability. Small text models land around 200 to 400 MB (int4); medium text models 600 MB to 1.2 GB. Prompt users to download on Wi-Fi.
+
+<Info>
+  Discover what is actually installable on the current runtime via `intelligence.models.available()`. New models ship over the air from Hugging Face and do not require an SDK upgrade.
+</Info>
+
+---
+
+## Use cases
+
+<CardGroup cols={2}>
+  <Card title="Privacy-Sensitive AI" icon="shield">
+    Medical notes, personal journals, legal documents. Input never leaves the device. Naturally HIPAA and GDPR aligned.
+  </Card>
+
+  <Card title="Offline-First Experiences" icon="plane">
+    Travel apps, field service tools, low-signal environments. After first download, everything works in airplane mode.
+  </Card>
+
+  <Card title="Low-Latency Interactions" icon="bolt">
+    Autocomplete, inline rewrites, tone adjusters. First token in tens of milliseconds with no network hop.
+  </Card>
+
+  <Card title="Cost-Bound Features" icon="dollar-sign">
+    Per-token billing makes some features economically impossible. Free at any scale on-device.
+  </Card>
+</CardGroup>
+
+---
+
+## Frequently asked questions
+
+<AccordionGroup>
+  <Accordion title="Does this work offline?">
+    Yes. Once a model is downloaded, inference runs without any network connection. Works in airplane mode, on a plane, in a tunnel.
+  </Accordion>
+
+  <Accordion title="How large are the models?">
+    Small models (350M to 700M parameters, int4) are typically 200 to 400 MB. Medium models (1 to 2B parameters, int4) are 600 MB to 1.2 GB. Prompt users to download on Wi-Fi.
+  </Accordion>
+
+  <Accordion title="Do downloads continue if the user closes the app?">
+    Yes. Downloads continue in the background using native OS background transfer APIs (`NSURLSession` on iOS, `WorkManager` on Android). When the app reopens, the global `downloadEnd` event fires for any model that completed in the background.
+  </Accordion>
+
+  <Accordion title="Do I need to handle backgrounding for inference?">
+    No. The SDK auto-resumes every active inference job when the user returns. Do not wire up `visibilitychange`, `pagehide`, or `beforeunload` for inference yourself.
+  </Accordion>
+
+  <Accordion title="Can I run multiple models at the same time?">
+    Each inference job uses one model. Multiple concurrent jobs across the same or different models are supported. On devices with limited RAM, prefer sequential inference for large models.
+  </Accordion>
+
+  <Accordion title="Is this App Store compliant?">
+    Yes. Downloading model weights follows the same pattern as navigation apps downloading map tiles or audio apps downloading content. No native code is downloaded post-install.
+  </Accordion>
+
+  <Accordion title="Does this replace Apple Intelligence?">
+    No. Apple Intelligence and Despia Local AI serve different purposes and can coexist in the same app. Despia Local AI runs on both iOS and Android, does not require iOS 26\+, and does not require Apple Intelligence to be enabled by the user.
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-intelligence">
+    despia-intelligence
+  </Card>
+
+  <Card title="Reference" icon="code" href="/local-intelligence/reference">
+    Full API: `run`, `models`, `runtime`, events
+  </Card>
+
+  <Card title="GitHub" icon="github" href="https://github.com/despia/despia-intelligence">
+    Source on GitHub
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

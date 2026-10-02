@@ -1,0 +1,136 @@
+---
+title: "Identity"
+description: "Tie attribution and events to your own user IDs, pass hashed email and phone for audience matching, and read the AppsFlyer device ID."
+icon: "fingerprint"
+---
+
+Identity commands connect AppsFlyer's device-level attribution to your own user model. Everything here is forwarded to the native SDK. Email and phone are SHA256-hashed on the device before transmission, so raw PII never leaves the app.
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## set\_user\_id
+
+Call as soon as the user signs up or logs in. All subsequent events carry your internal user ID across AppsFlyer, Meta, and TikTok reporting, and raw-data exports become joinable with your own database.
+
+```javascript
+const userId = "user_123"
+despia("appsflyer://set_user_id?customer_user_id=" + encodeURIComponent(userId))
+```
+
+<ParamField path="customer_user_id" type="string" required>
+  Your internal, stable user identifier. Avoid emails or anything that changes.
+</ParamField>
+
+---
+
+## set\_email
+
+Passes the user's email for audience matching. The value is normalized and SHA256-hashed natively before it is sent.
+
+```javascript
+const email = "user@example.com"
+despia("appsflyer://set_email?email=" + encodeURIComponent(email))
+```
+
+<Info>
+  Lowercase and trim the email in your web layer before sending. Hashes only match across systems when the input is normalized identically everywhere.
+</Info>
+
+---
+
+## set\_phone
+
+Passes the user's phone number, SHA256-hashed natively and attached to the user's event data as `phone_hash`.
+
+```javascript
+const phone = "+15550001234"
+despia("appsflyer://set_phone?phone=" + encodeURIComponent(phone))
+```
+
+<Info>
+  Send phone numbers in E.164 format (`+<country code><number>`, no spaces or dashes) so hashes are consistent.
+</Info>
+
+---
+
+## get\_uid
+
+Reads the AppsFlyer device ID. It is already injected on every page load as `despia.appsFlyerUID`. Use the await pattern when you need a guaranteed-fresh value inline:
+
+```javascript
+const data = await despia("appsflyer://get_uid", ["appsFlyerUID"])
+const uid = data.appsFlyerUID
+// e.g. store next to the user record for server-to-server events
+await fetch("/api/users/me/af-uid", { method: "POST", body: uid })
+```
+
+---
+
+## Recommended order
+
+<Steps>
+  <Step title="Consent first">
+    Forward the user's cookie-banner choice with [set\_consent](/analytics/appsflyer/consent) before identifying or logging anything.
+  </Step>
+  <Step title="Identify at signup or login">
+    `set_user_id`, then `set_email` and `set_phone` if you have them.
+  </Step>
+  <Step title="Log events">
+    Everything from here on is tied to the user. See [Events](/analytics/appsflyer/events).
+  </Step>
+</Steps>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

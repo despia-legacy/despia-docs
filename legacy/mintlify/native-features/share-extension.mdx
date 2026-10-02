@@ -1,0 +1,246 @@
+---
+title: "Share Extension"
+description: "Receive content shared into your app from other apps via the system share sheet, delivered through a single global callback that fires when your app launches with a shared payload."
+icon: "file-import"
+---
+
+<iframe src="https://www.youtube.com/embed/KtYBtKJY4l0" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is defining the global `onSharedDataReceived` callback before the runtime tries to invoke it.
+</Note>
+
+Share Extension is the inbound counterpart to the system share sheet. When a user shares an image from Photos, a link from Safari, or text from Notes into your app, the OS launches your app and the Despia runtime calls `window.onSharedDataReceived(value, type)` with the shared payload. Three content types are supported: `image` (as a data URL), `url` (as a string), and `text` (as a string). Video is not currently supported.
+
+This is the opposite direction from [Share Dialog](/native-features/share-dialog) and [File Sharing](/native-features/file-sharing), which both _send_ content out of your app. Share Extension _receives_ content sent in from other apps.
+
+---
+
+## Apple Developer and Despia setup
+
+Share Extension on iOS runs as a separate App Extension target with its own bundle identifier. The extension and your core app communicate through an App Group, which is the iOS sandbox-shared storage mechanism that lets two bundles read and write the same files. You configure the bundle ID and App Group in Apple Developer, then enable the target in the Despia Editor and rebuild.
+
+<Steps>
+  <Step title="Sign in to Apple Developer">
+    Go to [developer.apple.com](https://developer.apple.com) and sign in with the Apple Developer account that owns your app's primary bundle ID. Navigate to **Certificates, Identifiers & Profiles \> Identifiers**.
+  </Step>
+  <Step title="Create the App Group">
+    Click the **\+** button next to Identifiers, choose **App Groups**, and click **Continue**. Use a description like `MyApp Share Target` and the identifier `group.com.despia.myapp.sharetarget`. Click **Continue**, then **Register**. The `sharetarget` suffix is the official Despia naming, do not invent your own.
+  </Step>
+  <Step title="Add the App Group to your core app bundle ID">
+    Back in **Identifiers**, find your core app (e.g. `com.despia.myapp`), click into it, and check **App Groups**. Click **Edit**, select the `group.com.despia.myapp.sharetarget` group you just created, then **Continue** and **Save**. This links your core app to the shared storage.
+  </Step>
+  <Step title="Create the Share Extension bundle ID">
+    Click **\+** under Identifiers again, choose **App IDs**, then **App**. Use a description like `MyApp Share Extension` and the bundle ID `com.despia.myapp.ShareExtensionTarget` (your core bundle ID with `.ShareExtensionTarget` appended). This exact naming is what Despia provisions during the build, do not change it.
+  </Step>
+  <Step title="Add the App Group to the Share Extension bundle ID">
+    Scroll down to **Capabilities**, check **App Groups**, click **Edit**, and select the same `group.com.despia.myapp.sharetarget` group. Click **Continue** and **Save**. Both bundles now share the same group, which is how the extension passes data to your core app.
+  </Step>
+  <Step title="Enable Share Extension in the Despia Editor">
+    Open the Despia Editor and go to **App \> Targets \> Share into App**. Toggle the integration on, then paste in:
+
+    - **Share Extension Bundle ID**: `com.despia.myapp.ShareExtensionTarget`
+    - **App Group ID**: `group.com.despia.myapp.sharetarget`
+
+    Both values must match exactly what you registered in Apple Developer.
+  </Step>
+  <Step title="Rebuild your app">
+    Trigger a fresh build from the Despia Editor. The extension target has to be compiled into your app binary and signed with the matching provisioning profile, so this cannot be applied over-the-air. After the build finishes, your app appears in the system share sheet whenever a user shares an image, URL, or text from another app.
+  </Step>
+</Steps>
+
+<Warning>
+  Bundle IDs and App Group identifiers in the Despia Editor must match exactly what you registered in Apple Developer. A typo in either place causes the extension to fail provisioning silently, and the build either does not appear in the share sheet at all or crashes when the user tries to share into it. Copy and paste, do not retype.
+</Warning>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Define `window.onSharedDataReceived` as a global function before the runtime needs to invoke it. The runtime calls this function with two arguments: the shared value and a string indicating the type (`'image'`, `'url'`, or `'text'`).
+
+```javascript
+window.onSharedDataReceived = function (value, type) {
+    switch (type) {
+        case 'image':
+            handleSharedImage(value)  // value is a data URL
+            break
+        case 'url':
+            handleSharedUrl(value)    // value is a URL string
+            break
+        case 'text':
+            handleSharedText(value)   // value is plain text
+            break
+    }
+}
+```
+
+The callback is global because the native runtime invokes it by name. Defining it inside a module scope or closure will not work, the runtime cannot reach it. Always attach to `window` directly.
+
+---
+
+## The three content types
+
+| Type | Value shape | Common sources |
+| :-- | :-- | :-- |
+| `image` | Data URL, e.g. `data:image/jpeg;base64,/9j/4AAQ...` | Photos app, Camera Roll, image previews from other apps |
+| `url` | URL string, e.g. `https://example.com/article` | Safari, Chrome, social apps sharing a link |
+| `text` | Plain text string | Notes, Messages, any app sharing selected text |
+
+Image data is delivered as a base64 data URL, which means it can be displayed immediately as an `<img src>` without going through any decoding step. To send the bytes to your backend, convert the data URL to a Blob first and post it as multipart form data, since most servers reject base64-in-JSON for large files.
+
+```javascript
+async function dataUrlToBlob(dataUrl) {
+    const res = await fetch(dataUrl)
+    return res.blob()
+}
+```
+
+---
+
+## Define the callback before the runtime invokes it
+
+The order of operations matters. The runtime invokes `onSharedDataReceived` very early, sometimes before your React app has even mounted, so the callback has to be defined as soon as possible. The simplest pattern is to attach it once at the top level of your entry point.
+
+```javascript
+// entry.js or main.tsx, before any framework mounts
+window.onSharedDataReceived = function (value, type) {
+    // queue the data so the rest of the app can pick it up later
+    window.__pendingShare = { value, type }
+}
+
+// then mount your framework normally
+import { createRoot } from 'react-dom/client'
+import App from './App'
+createRoot(document.getElementById('root')).render(<App />)
+```
+
+Inside your app, read the queued share data on first render and clear it once handled.
+
+```jsx
+import { useEffect, useState } from 'react'
+
+function ShareReceiver() {
+    const [share, setShare] = useState(null)
+
+    useEffect(() => {
+        if (window.__pendingShare) {
+            setShare(window.__pendingShare)
+            window.__pendingShare = null
+        }
+
+        // also handle shares that arrive after the component mounts
+        // (e.g. user shares again while the app is already open)
+        window.onSharedDataReceived = (value, type) => {
+            setShare({ value, type })
+        }
+    }, [])
+
+    if (!share) return null
+
+    if (share.type === 'image') {
+        return <img src={share.value} alt="Shared image" />
+    }
+    if (share.type === 'url') {
+        return <a href={share.value}>Open shared link</a>
+    }
+    if (share.type === 'text') {
+        return <pre>{share.value}</pre>
+    }
+
+    return null
+}
+```
+
+The two-stage pattern (queue at startup, drain in component) is the most common implementation gotcha for this feature. Without the queue, shares that arrive before your framework has mounted simply vanish.
+
+---
+
+## Save a shared image to your backend
+
+Convert the data URL to a Blob and upload it as multipart form data. Most storage backends reject base64-encoded JSON for large files, so the Blob path is what scales.
+
+```javascript
+window.onSharedDataReceived = async function (value, type) {
+    if (type !== 'image') return
+
+    const res  = await fetch(value)
+    const blob = await res.blob()
+
+    const formData = new FormData()
+    formData.append('file', blob, 'shared.jpg')
+
+    await fetch('/api/uploads', { method: 'POST', body: formData })
+}
+```
+
+For text and URL shares, post the value as JSON since both are small.
+
+```javascript
+window.onSharedDataReceived = async function (value, type) {
+    if (type === 'image') return  // handled above
+
+    await fetch('/api/shares', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value, type }),
+    })
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

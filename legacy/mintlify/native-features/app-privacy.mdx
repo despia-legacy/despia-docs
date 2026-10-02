@@ -1,0 +1,170 @@
+---
+title: "App Privacy"
+icon: "eye-slash"
+description: "Read the user's tracking consent status synchronously through despia.trackingDisabled to gate analytics and ad-tracking behavior."
+---
+
+<iframe src="https://www.youtube.com/embed/F3t0gIbY26k" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Note>
+
+`despia.trackingDisabled` is a synchronous boolean reflecting the user's response to the App Tracking Transparency (ATT) prompt on iOS and the equivalent consent flow on Android. Read it on app load, gate analytics and ad SDKs accordingly, and optionally sync it to your backend for compliance auditing.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Read `despia.trackingDisabled` directly. The value is injected by the native runtime before your JavaScript executes, so it is available on first render with no loading state. The value is `true` when the user has denied tracking consent, `false` when they have allowed it.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+const trackingDisabled = isDespia ? despia.trackingDisabled : true
+```
+
+The `true` fallback in the browser is the conservative choice. If you cannot determine consent, assume the user has denied tracking and behave accordingly. This keeps your analytics and ad SDKs from firing during web preview where no consent prompt has happened.
+
+---
+
+## Gate analytics and ad SDKs
+
+Wrap any tracking-dependent initialization behind the consent check. Most analytics SDKs expose either an `enable`/`disable` toggle or a "do not track" mode, use those rather than skipping initialization entirely so you can flip the switch later if the user changes their mind in iOS Settings.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+const trackingDisabled = isDespia ? despia.trackingDisabled : true
+
+if (!trackingDisabled) {
+    // user consented, run full analytics
+    initAnalytics({ idfa: true, behavioral: true })
+} else {
+    // user denied, run privacy-preserving analytics only
+    initAnalytics({ idfa: false, behavioral: false, anonymous: true })
+}
+```
+
+Do not gate out _all_ analytics behind this check. Aggregated, non-identifying telemetry (crash reports, performance metrics, anonymized error logs) is generally allowed under both ATT and GDPR. The check is for _user-level_ tracking, not for everything.
+
+---
+
+## Sync consent status to your backend
+
+For compliance audits and to keep server-side behavior aligned with the user's choice, post the consent status when the user logs in or on every app start. Store it keyed by user ID, with a timestamp so you have an audit trail of when the user's consent was last verified.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+async function syncPrivacy(user) {
+    if (!isDespia) return
+
+    await fetch('/api/sync-privacy', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            userId: user.id,
+            trackingDisabled: despia.trackingDisabled,
+            timestamp: new Date().toISOString(),
+        }),
+    })
+}
+```
+
+```javascript
+// /api/sync-privacy
+export default async function handler(req, res) {
+    const { userId, trackingDisabled, timestamp } = req.body
+
+    if (!userId) return res.status(400).json({ error: 'Missing userId' })
+
+    try {
+        await db.collection('user_privacy').doc(userId).set({
+            userId,
+            trackingDisabled,
+            lastChecked: timestamp,
+            createdAt: timestamp,
+        }, { merge: true })
+
+        res.status(200).json({ success: true })
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to sync privacy status' })
+    }
+}
+```
+
+`merge: true` (or your database equivalent) preserves the original `createdAt` while updating `trackingDisabled` and `lastChecked` on every sync, so you can see when consent was first recorded and when it was last verified.
+
+---
+
+## Disabling the ATT prompt entirely
+
+If your app does not need tracking and you want to skip the ATT prompt altogether, declare that intent in the Despia Editor under **App \> Settings \> Disable Tracking Declaration** and toggle it on. After enabling, rebuild the app and resubmit to the App Store. The new build will not display the ATT prompt at launch, and `despia.trackingDisabled` will always return `true` for those users.
+
+This is the right choice for apps that do not run ad SDKs and do not pass user identifiers across third-party services. Disabling the declaration improves the first-launch experience by removing one extra system prompt, and it reduces the surface area for App Store review questions about tracking practices.
+
+<Warning>
+  Toggling the Disable Tracking Declaration setting requires a fresh build and a new App Store submission. The change cannot be applied over-the-air, and existing installs will continue using the previous behavior until they update. Plan the toggle around your normal release cadence.
+</Warning>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

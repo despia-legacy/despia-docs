@@ -1,0 +1,172 @@
+---
+title: "Share Dialog"
+description: "Open the native share sheet pre-populated with a text message and URL, letting users send the combination to any app, contact, or service installed on their device."
+icon: "share-from-square"
+---
+
+<iframe src="https://www.youtube.com/embed/P1pMZvdu89s" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call with a properly encoded message and URL.
+</Note>
+
+`shareapp://` opens the native share sheet pre-populated with a text message and a URL. The user picks a destination (Messages, WhatsApp, Mail, AirDrop, Twitter, LinkedIn, Notes, anything that registered a share extension) and the OS routes the content into that app. Use this for sharing referral links, social posts, snippets of text with a deep link, or anything where you want a single payload of message plus URL going out together.
+
+For sharing files (PDFs, images, video, archives), use [File Sharing](/native-features/file-sharing) instead. Share Dialog is text-and-URL only.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Two query parameters: the message text and the URL. The runtime opens the share sheet with both pre-filled. The destination app decides how to render them, some apps combine the message and URL into one block of text, others put them in separate fields.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    const message = 'Check out this app'
+    const url     = 'https://myapp.com/invite/abc123'
+
+    despia(`shareapp://message?=${encodeURIComponent(message)}&url=${encodeURIComponent(url)}`)
+}
+```
+
+Always wrap user-facing strings with `encodeURIComponent`. Without it, any `&`, `=`, or `#` in your message will break the parser and the share sheet will open with truncated or empty content.
+
+---
+
+## Scheme parameters
+
+| Parameter | Value | Notes |
+| :-- | :-- | :-- |
+| `message` | The text to include in the shared payload | Wrap with `encodeURIComponent`. Keep it short, some platforms truncate at 280 characters or less |
+| `url` | The URL to attach to the share | Wrap with `encodeURIComponent`. Most platforms generate a preview from the URL's Open Graph tags, so make sure your link target has good `og:title`, `og:description`, and `og:image` values |
+
+```javascript
+function shareWithReferralCode(text, slug, code) {
+    if (!isDespia) return
+
+    const message = encodeURIComponent(text)
+    const url     = encodeURIComponent(`https://myapp.com/${slug}?ref=${code}`)
+
+    despia(`shareapp://message?=${message}&url=${url}`)
+}
+
+shareWithReferralCode('Just hit a 30-day streak on this habit tracker', 'invite', 'user_123')
+```
+
+---
+
+## Share from a button
+
+The natural pattern is a "Share" button next to content that has a public URL. Tap, share sheet opens, user picks where to send it.
+
+```jsx
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function ShareButton({ message, url, label = 'Share' }) {
+    function share() {
+        if (!isDespia) return
+
+        const m = encodeURIComponent(message)
+        const u = encodeURIComponent(url)
+
+        despia(`shareapp://message?=${m}&url=${u}`)
+    }
+
+    return <button onClick={share}>{label}</button>
+}
+```
+
+Use this on referral CTAs, social-share prompts after a milestone, or anywhere you want the user to send something to a friend in their preferred app. The native share sheet beats trying to detect installed apps and rendering custom buttons for each one, since the OS already knows which apps the user has and how they prefer to share.
+
+---
+
+## Browser fallback
+
+In a regular browser the SDK call is a no-op behind the `isDespia` guard. If you also want to handle web users, fall back to the Web Share API (supported in Safari and most mobile browsers) and to a clipboard copy as a last resort.
+
+```javascript
+async function share(message, url) {
+    if (isDespia) {
+        despia(`shareapp://message?=${encodeURIComponent(message)}&url=${encodeURIComponent(url)}`)
+        return
+    }
+
+    if (navigator.share) {
+        try {
+            await navigator.share({ text: message, url })
+        } catch {
+            // user cancelled, do nothing
+        }
+        return
+    }
+
+    // last resort, copy to clipboard
+    await navigator.clipboard.writeText(`${message} ${url}`)
+    alert('Copied to clipboard')
+}
+```
+
+The same code now ships from a Despia build, a Safari preview, and a desktop browser without any per-platform branching above this function.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

@@ -1,0 +1,72 @@
+---
+title: "Offline Push"
+description: "Send instant local notifications to users with customizable messages, titles, and timing through your Lovable mobile app."
+icon: "bell"
+---
+
+<iframe src="https://www.youtube.com/embed/7k-DRdjRrWU" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add local push notification functionality to my app using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  Create a local push notification system that uses Despia URLs like: `despia(sendlocalpushmsg://push.send?s=${seconds}=msg!${message}&!#${title}&!#${url})` to schedule and send local notifications to users.
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** Despia acts as a bridge between your Lovable app and native mobile notification systems. When triggered, Despia schedules local notifications through the device's native notification API, allowing you to send timed messages, reminders, and updates directly to users even when the app is closed.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Send Local Push Notification**
+
+Define your notification parameters:
+
+```javascript
+const seconds = 5;
+const title = "Quick Reminder";
+const message = "Don't forget to save!";
+const url = "https://myapp.com/save";
+```
+
+Call the `despia()` function with a Local Push Command:
+
+```javascript
+despia(`sendlocalpushmsg://push.send?s=${seconds}=msg!${message}&!#${title}&!#${url}`)
+```
+
+## **Remote Push Notifications**
+
+For server-sent remote push notifications (like marketing campaigns, real-time updates, or notifications sent from your backend), use our OneSignal integration instead: [**https://lovable.despia.com/default-guide/native-features/onesignal**](https://lovable.despia.com/default-guide/native-features/onesignal)
+
+## **Resources**
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native local push notifications into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

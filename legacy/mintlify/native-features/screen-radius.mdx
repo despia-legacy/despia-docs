@@ -1,0 +1,187 @@
+---
+title: "Screen Radius"
+description: "Read the device's physical screen corner radius and use it to build inner UI elements with perfectly concentric rounded corners."
+icon: "bezier-curve"
+---
+
+The Despia runtime measures the device's hardware screen corner radius at page load and exposes it to your web app as a JavaScript value and a CSS variable. Use it to make modals, sheets, cards, and overlays curve in lockstep with the physical bezel.
+
+<Info>
+  This feature requires no scheme call. The runtime injects `despia.screenRadius` and the `--screen-radius` CSS variable automatically at page load on every supported device.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Two values are injected before your stylesheets and scripts run. `window.screenRadius` is a JavaScript number in CSS pixels representing the device's top-left corner radius. `--screen-radius` is the same value exposed as a CSS variable with a `px` unit, scoped to the document root.
+
+The radius resolves to `0` on devices without rounded screens, on older OS versions, and in non-Despia environments, so any code that consumes the value degrades cleanly without runtime checks.
+
+```javascript
+const radius = despia.screenRadius || 0
+console.log(radius) // 47.33 on iPhone 14 Pro, 0 in a desktop browser
+```
+
+```css
+.element {
+  border-radius: var(--screen-radius, 0px);
+}
+```
+
+---
+
+## Concentric inner corners with calc()
+
+When an inner element sits inset from the screen edge, its corner radius must shrink by the same inset to stay concentric with the bezel. Combine the variable with `calc()` and the inset distance.
+
+```css
+.modal {
+  margin: 8px;
+  border-radius: calc(var(--screen-radius, 0px) - 8px);
+}
+
+.bottom-sheet {
+  margin: 0 12px 12px;
+  border-radius: calc(var(--screen-radius, 0px) - 12px);
+}
+```
+
+The `0px` fallback is non-negotiable. Without it, the `calc()` resolves to `calc(- 8px)` in a non-Despia browser and the rule is rejected, leaving the corner unrounded. With the fallback, the math evaluates to `-8px`, CSS clamps that to `0px`, and the element renders square in browser previews while curving correctly inside the app.
+
+---
+
+## Edge-pinned elements
+
+For elements pinned to one edge of the screen, such as a top sheet, a docked toolbar, or a status banner, apply the calc only to the corners that touch the bezel and use a fixed radius for the inner corners.
+
+```css
+.top-sheet {
+  margin: 0 8px;
+  border-top-left-radius:     calc(var(--screen-radius, 0px) - 8px);
+  border-top-right-radius:    calc(var(--screen-radius, 0px) - 8px);
+  border-bottom-left-radius:  16px;
+  border-bottom-right-radius: 16px;
+}
+
+.bottom-toolbar {
+  margin: 0 8px 8px;
+  border-top-left-radius:     16px;
+  border-top-right-radius:    16px;
+  border-bottom-left-radius:  calc(var(--screen-radius, 0px) - 8px);
+  border-bottom-right-radius: calc(var(--screen-radius, 0px) - 8px);
+}
+```
+
+---
+
+## Reading the value in JavaScript
+
+Gate any logic that depends on a real measurement behind the canonical platform check, and always default to `0` when the value is missing.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+const radius = isDespia ? (despia.screenRadius || 0) : 0
+
+if (radius > 0) {
+  // Size a UI element proportional to the bezel curve
+  document.querySelector('.avatar').style.borderRadius = `${radius / 2}px`
+}
+```
+
+The value is identical on iOS and Android, both exposed in CSS pixels, so feature code does not need to branch by platform. Use `isDespiaIOS` or `isDespiaAndroid` only if a downstream calculation in your app already depends on platform-specific tuning.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+const isDespiaAndroid = isDespia &&
+    navigator.userAgent.toLowerCase().includes('android')
+```
+
+---
+
+## Combining with safe areas
+
+Concentric corners and safe area insets stack naturally. The element's horizontal margin drives the corner math because the bezel curve meets the element on its left and right edges, while the top and bottom safe areas push the element inward without changing the geometry the corners are tracking.
+
+```css
+.fullscreen-card {
+  margin-top:    calc(8px + var(--safe-area-top,    env(safe-area-inset-top,    0px)));
+  margin-bottom: calc(8px + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+  margin-left:   8px;
+  margin-right:  8px;
+  border-radius: calc(var(--screen-radius, 0px) - 8px);
+}
+```
+
+If the horizontal margin is zero (the element runs flush to the bezel on the sides), the inner radius equals the screen radius exactly.
+
+```css
+.full-bleed-sheet {
+  margin: 0;
+  border-radius: var(--screen-radius, 0px);
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

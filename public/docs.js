@@ -333,6 +333,122 @@
     tabs[next].focus();
   });
 
+  // ── page actions: "Copy page" copies the page's markdown sibling ────────────
+  // The sibling is the page's own path plus .md (/ -> /index.md), the same bytes
+  // the "View as Markdown" row opens. The label confirms for two seconds.
+  function mdUrl() {
+    var path = location.pathname.replace(/\/+$/, "");
+    return (path === "" ? "/index" : path) + ".md";
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(text);
+    return new Promise(function (resolve, reject) {
+      var area = document.createElement("textarea");
+      area.value = text;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.opacity = "0";
+      document.body.appendChild(area);
+      area.select();
+      var ok = false;
+      try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+      document.body.removeChild(area);
+      if (ok) resolve(); else reject(new Error("copy refused"));
+    });
+  }
+  document.addEventListener("click", function (event) {
+    var copy = event.target.closest && event.target.closest(".doc-actions-copy");
+    if (copy === null || copy === undefined) return;
+    fetch(mdUrl()).then(function (res) { return res.ok ? res.text() : Promise.reject(new Error(String(res.status))); })
+      .then(copyText)
+      .then(function () {
+        var bar = document.querySelector(".doc-actions-bar .doc-actions-copy");
+        if (bar === null) return;
+        var label = bar.querySelector(".doc-actions-label");
+        bar.classList.add("is-copied");
+        if (label !== null) label.textContent = "Copied";
+        setTimeout(function () { bar.classList.remove("is-copied"); if (label !== null) label.textContent = "Copy page"; }, 2000);
+      })
+      .catch(function () { /* nothing copied: the View as Markdown row still works */ });
+  });
+
+  // ── overlay panels (space switcher, page actions) close on outside click / Escape
+  // The DSX toggles own the open state; this layer only taps the toggle for the user.
+  function closePanels(except) {
+    [[".doc-switcher-panel", ".doc-switcher-btn"], [".doc-actions-menu", ".doc-actions-more"]].forEach(function (pair) {
+      var panel = document.querySelector(pair[0]);
+      if (panel === null || panel === except) return;
+      var toggle = document.querySelector(pair[1]);
+      if (toggle !== null) toggle.click();
+    });
+  }
+  document.addEventListener("click", function (event) {
+    var t = event.target;
+    if (!t.closest) return;
+    if (t.closest(".doc-switcher-panel, .doc-switcher-btn, .doc-actions-menu, .doc-actions-more")) return;
+    closePanels(null);
+  }, true);
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closePanels(null);
+  });
+
+  // ── Ask AI: the Despia Support widget, docs mode, loaded on first use ───────
+  // Origin: <meta name="despia-support-origin"> (dsx.config.json web.head), else
+  // https://support.despia.com. The script loads once, on the first tap, never
+  // before; <despia-support mode="docs"> mounts when the element is defined. A
+  // missing script or element leaves the button inert (aria-disabled), no error face.
+  var support = { state: "idle", el: null };
+  function supportOrigin() {
+    var meta = document.querySelector('meta[name="despia-support-origin"]');
+    var origin = meta !== null ? meta.getAttribute("content") : "";
+    return (origin || "https://support.despia.com").replace(/\/+$/, "");
+  }
+  function currentSpace() {
+    var root = document.querySelector('[class*="doc-space-"]');
+    var m = root !== null ? /doc-space-([a-z]+)/.exec(root.className) : null;
+    return m !== null ? m[1] : "modern";
+  }
+  function inertAsk() {
+    support.state = "unavailable";
+    document.querySelectorAll(".doc-ask-btn").forEach(function (b) {
+      b.setAttribute("aria-disabled", "true");
+      b.setAttribute("title", "The assistant is not reachable right now");
+    });
+  }
+  function openWidget() {
+    if (support.el === null) {
+      support.el = document.createElement("despia-support");
+      support.el.setAttribute("mode", "docs");
+      support.el.setAttribute("origin", supportOrigin());
+      document.body.appendChild(support.el);
+    }
+    support.el.setAttribute("space", currentSpace());
+    support.el.setAttribute("page", location.href);
+    if (typeof support.el.open === "function") support.el.open();
+    else support.el.setAttribute("open", "true");
+  }
+  document.addEventListener("click", function (event) {
+    var ask = event.target.closest && event.target.closest(".doc-ask-btn");
+    if (ask === null || ask === undefined || support.state === "unavailable") return;
+    if (support.state === "ready") { openWidget(); return; }
+    if (support.state === "loading") return;
+    support.state = "loading";
+    var script = document.createElement("script");
+    script.src = supportOrigin() + "/widget.js";
+    script.async = true;
+    var timer = setTimeout(inertAsk, 8000);
+    script.onerror = function () { clearTimeout(timer); inertAsk(); };
+    script.onload = function () {
+      if (!window.customElements) { clearTimeout(timer); inertAsk(); return; }
+      window.customElements.whenDefined("despia-support").then(function () {
+        clearTimeout(timer);
+        support.state = "ready";
+        openWidget();
+      });
+    };
+    document.head.appendChild(script);
+  });
+
   var refreshQueued = false;
   function refresh() {
     refreshQueued = false;

@@ -1,0 +1,114 @@
+---
+title: "MCP Server"
+description: "Ship true native features for your web-native apps faster and with more precision using the Despia MCP."
+icon: "folder-tree"
+---
+
+The Despia Documentation MCP provides AI code builders with documentation and context about the `despia-native` npm package.
+
+**MCP URL:** `https://setup.despia.com/mcp`
+
+---
+
+## **Web-Based AI Builders (Lovable, Bolt, v0, etc.)**
+
+If your tool supports MCP, just paste the URL:
+
+```
+https://setup.despia.com/mcp
+```
+
+Look for "Add MCP" or "MCP Settings" in your builder.
+
+**No MCP support?** Copy/paste the relevant feature pages from [**<u>setup.despia.com</u>**](http://setup.despia.com) directly into your builder's chat.
+
+---
+
+## **Cursor**
+
+Add to `~/.cursor/mcp.json`:
+
+```
+Copy{
+  "mcpServers": {
+    "despia": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+    }
+  }
+}
+```
+
+Restart Cursor.
+
+---
+
+## **VS Code**
+
+Add to `.vscode/mcp.json`:
+
+```
+Copy{
+  "servers": {
+    "despia": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+    }
+  }
+}
+```
+
+---
+
+## **Windsurf**
+
+Settings → Plugins → Add MCP Server:
+
+```
+Copy{
+  "mcpServers": {
+    "despia": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+    }
+  }
+}
+```
+
+---
+
+## **Claude Desktop**
+
+Add to `claude_desktop_config.json`:
+
+- Mac: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+
+```
+Copy{
+  "mcpServers": {
+    "despia": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://setup.despia.com/mcp"]
+    }
+  }
+}
+```
+
+---
+
+## **Requirements (Local Tools Only)**
+
+- Node.js v18+
+
+---
+
+## **What It Does**
+
+The MCP gives your AI assistant knowledge about:
+
+- How to use `despia-native`
+- Available native features (push notifications, biometrics, widgets, etc.)
+- Correct syntax and implementation patterns
+
+Your AI can then write correct Despia code without you explaining the API.

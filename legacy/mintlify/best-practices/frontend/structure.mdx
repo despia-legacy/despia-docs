@@ -1,0 +1,693 @@
+---
+title: "Structure"
+icon: "frame"
+description: "Essential patterns for building production-ready mobile applications with Despia. Learn how to structure root frames, handle device boundaries, implement scroll containers, and optimize touch interactions for native performance."
+---
+
+## Overview
+
+Despia provides an optimized native runtime environment using WKWebView (iOS) and Android WebView (Android), with integrated GPU acceleration, caching mechanisms, and native SDK interfaces.
+
+Your application's structural architecture (frame composition, scroll behavior, and element interactions) is determined by your codebase implementation.
+
+This guide documents structural patterns and best practices for building production-ready applications on the Despia platform.
+
+---
+
+## Root Frame Structure
+
+### Foundation Architecture
+
+Applications require a root frame element that establishes the viewport boundaries and contains all structural components.
+
+```html
+<body>
+  <div class="app-root">
+    <div class="safe-area-top"></div>
+    
+    <header class="app-header">
+      <!-- Fixed header -->
+    </header>
+    
+    <main class="app-content">
+      <!-- Scrollable content -->
+    </main>
+    
+    <footer class="app-footer">
+      <!-- Fixed footer -->
+    </footer>
+    
+    <div class="safe-area-bottom"></div>
+  </div>
+</body>
+```
+
+### Implementation
+
+```css
+/* Root frame - establishes viewport boundaries */
+.app-root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Safe area frames - handle device boundaries */
+.safe-area-top {
+  flex-shrink: 0;
+  height: var(--safe-area-top, env(safe-area-inset-top, 0));
+}
+
+.safe-area-bottom {
+  flex-shrink: 0;
+  height: var(--safe-area-bottom, env(safe-area-inset-bottom, 0));
+}
+
+/* Header frame - fixed positioning */
+.app-header {
+  flex-shrink: 0;
+  padding: 1rem;
+}
+
+/* Content frame - scrollable container */
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 1rem;
+  
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.app-content::-webkit-scrollbar {
+  display: none;
+}
+
+/* Footer frame - fixed positioning */
+.app-footer {
+  flex-shrink: 0;
+  padding: 1rem;
+}
+```
+
+**Key Requirements:**
+
+- Use `position: fixed` for root frame (do not use `height: 100vh`)
+- Include dedicated safe area spacer elements
+- Header and footer use `flex-shrink: 0` (non-scrolling)
+- Content area uses `flex: 1` and `overflow-y: auto` (scrollable)
+- Apply `scrollbar-width: none` for native appearance
+
+---
+
+## Device Boundaries
+
+### Safe Area Variables
+
+The Despia runtime automatically injects CSS variables for device-specific boundary insets (notches, status bars, home indicators).
+
+```css
+.element {
+  padding-top: var(--safe-area-top);
+  padding-bottom: var(--safe-area-bottom);
+}
+```
+
+### PWA Fallback Implementation
+
+When deployed as a PWA, Despia-specific variables are unavailable. Implement fallback values using standard environment variables.
+
+```css
+.element {
+  /* Despia variable → standard env() → default value */
+  padding-top: var(--safe-area-top, env(safe-area-inset-top, 0));
+  padding-bottom: var(--safe-area-bottom, env(safe-area-inset-bottom, 0));
+}
+```
+
+### Viewport Configuration
+
+Required meta tag configuration:
+
+```html
+<meta 
+  name="viewport" 
+  content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+>
+```
+
+The `viewport-fit=cover` attribute enables safe area inset functionality. Omitting this attribute will prevent proper device boundary handling.
+
+---
+
+## Spacing System
+
+### Unit Standards
+
+All spacing values (padding, margin, gaps) must use `rem` units to ensure consistent scaling and accessibility compliance.
+
+```css
+/* Correct implementation */
+.card {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  gap: 0.75rem;
+  border-radius: 0.5rem;
+}
+
+/* Incorrect - pixel values */
+.card {
+  padding: 16px;
+  margin-bottom: 24px;
+}
+```
+
+**Standard Spacing Scale:**
+
+- `0.5rem` = 8px
+- `1rem` = 16px
+- `1.5rem` = 24px
+- `2rem` = 32px
+- `2.75rem` = 44px
+
+---
+
+## Interactive Elements
+
+### Touch Target Requirements
+
+Interactive elements must meet minimum size requirements for reliable touch interaction: 2.75rem × 2.75rem (44px × 44px).
+
+```css
+.button, .tap-target, .icon-button {
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+```
+
+**Spacing Requirements:**
+
+Maintain minimum spacing between interactive elements to prevent accidental activation.
+
+```css
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+```
+
+---
+
+## Scroll Containers
+
+### Container-Based Scrolling
+
+Implement scrolling through dedicated container elements. Scrolling the body element interferes with fixed positioning, pull-to-refresh functionality, and safe area handling.
+
+```css
+/* Disable body scrolling */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Dedicated scroll containers */
+.scroll-container {
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  
+  /* Hide scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+```
+
+### Pull-to-Refresh Prevention
+
+```html
+body {
+  overscroll-behavior-y: none;
+}
+```
+
+**Note:** For accessibility requirements, use `scrollbar-width: thin` instead of `none`.
+
+---
+
+## Form Elements
+
+### Input Sizing Standards
+
+Apply minimum font size of 1rem to all form inputs for readability and consistency.
+
+```css
+input, textarea, select {
+  font-size: 1rem;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 0.5rem;
+}
+```
+
+**Note:** The Despia runtime automatically prevents zoom-on-focus behavior.
+
+### Virtual Keyboard Adaptation
+
+The virtual keyboard reduces the available viewport height. Applications using the fixed frame structure automatically adapt to keyboard appearance without additional configuration.
+
+**Optional Keyboard Detection:**
+
+For custom keyboard-aware behavior:
+
+```javascript
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    const isKeyboardVisible = 
+      window.visualViewport.height < window.innerHeight * 0.75;
+    
+    document.body.classList.toggle('keyboard-visible', isKeyboardVisible);
+  });
+}
+```
+
+---
+
+## Element Behavior
+
+### Text Selection
+
+The Despia runtime automatically prevents text selection across your application to provide a native app experience. This prevents users from accidentally selecting UI elements during interactions.
+
+**Enabling Text Selection:**
+
+For specific elements that should allow text selection (paragraphs, articles, code blocks), add the `selectable="true"` attribute:
+
+```html
+<p selectable="true">This text can be selected by users.</p>
+
+<div selectable="true">
+  <h2>Article Title</h2>
+  <p>Users can select and copy this content.</p>
+</div>
+
+<code selectable="true">
+  const example = "selectable code";
+</code>
+```
+
+### Touch Feedback Implementation
+
+Provide visual feedback for touch interactions:
+
+```css
+.button {
+  transition: opacity 0.1s ease;
+}
+
+.button:active {
+  opacity: 0.7;
+}
+
+/* Alternative: transform-based feedback (improved performance) */
+.button:active {
+  transform: scale(0.95);
+}
+```
+
+---
+
+## Complete Implementation Example
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta 
+    name="viewport" 
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"
+  >
+  <title>Despia App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    
+    /* Root frame structure */
+    .app-root {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+    }
+    
+    /* Safe area frames */
+    .safe-area-top {
+      flex-shrink: 0;
+      height: var(--safe-area-top, env(safe-area-inset-top, 0));
+    }
+    
+    .safe-area-bottom {
+      flex-shrink: 0;
+      height: var(--safe-area-bottom, env(safe-area-inset-bottom, 0));
+    }
+    
+    /* Header frame */
+    .app-header {
+      flex-shrink: 0;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    /* Content scroll container */
+    .app-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      padding: 1rem;
+      
+      /* Hide scrollbar */
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    
+    .app-content::-webkit-scrollbar {
+      display: none;
+    }
+    
+    /* Footer frame */
+    .app-footer {
+      flex-shrink: 0;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-top: 1px solid #ddd;
+    }
+    
+    /* Interactive elements */
+    .button {
+      min-height: 2.75rem;
+      padding: 0 1.5rem;
+      font-size: 1rem;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: opacity 0.1s;
+    }
+    
+    .button:active {
+      opacity: 0.7;
+    }
+    
+    /* Form elements */
+    input, textarea {
+      font-size: 1rem;
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-root">
+    <div class="safe-area-top"></div>
+    
+    <header class="app-header">
+      <h1>My App</h1>
+    </header>
+    
+    <main class="app-content">
+      <p selectable="true">This content can be selected and copied by users.</p>
+      <button class="button">Interactive Button</button>
+    </main>
+    
+    <footer class="app-footer">
+      <button class="button">Action</button>
+    </footer>
+    
+    <div class="safe-area-bottom"></div>
+  </div>
+</body>
+</html>
+```
+
+---
+
+## Common Implementation Errors
+
+### Using height: 100vh for Root Frame
+
+```css
+/* Incorrect implementation */
+.container {
+  height: 100vh;
+}
+```
+
+**Issue:** Mobile browser UI elements (address bars, toolbars) dynamically alter viewport dimensions, causing layout instability and content overflow.
+
+**Resolution:** Use `position: fixed` for root frame elements.
+
+---
+
+### Enabling Body Element Scrolling
+
+```css
+/* Incorrect implementation */
+body {
+  overflow-y: auto;
+}
+```
+
+**Issue:** Body scrolling conflicts with fixed positioning, pull-to-refresh behavior, and safe area handling.
+
+**Resolution:** Implement dedicated scroll containers only.
+
+---
+
+### Omitting Safe Area Spacer Elements
+
+```html
+<!-- Incorrect implementation -->
+<div class="app-root">
+  <header>...</header>
+</div>
+```
+
+**Issue:** Content is obscured by device notches, status bars, and home indicators.
+
+**Resolution:** Include safe area spacer divs in frame structure.
+
+---
+
+### Using Pixel Units for Spacing
+
+```css
+/* Incorrect implementation */
+.card {
+  padding: 16px;
+  margin: 24px;
+}
+```
+
+**Issue:** Fixed pixel values do not scale proportionally and reduce accessibility.
+
+**Resolution:** Use rem units for all spacing values.
+
+---
+
+### Undersized Interactive Elements
+
+```css
+/* Incorrect implementation */
+.icon-button {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+```
+
+**Issue:** Elements below minimum touch target size result in poor user experience.
+
+**Resolution:** Maintain minimum 2.75rem (44px) dimensions for interactive elements.
+
+---
+
+### Incorrect Viewport Configuration
+
+```html
+<!-- Incorrect implementation -->
+<meta name="viewport" content="viewport-fit=contain">
+```
+
+**Issue:** Safe area insets are not applied correctly.
+
+**Resolution:** Use `viewport-fit=cover` attribute.
+
+---
+
+### Missing PWA Fallback Values
+
+```css
+/* Incorrect implementation */
+.header {
+  padding-top: var(--safe-area-top);
+}
+```
+
+**Issue:** Despia-specific CSS variables are unavailable in PWA deployment mode.
+
+**Resolution:** Include standard environment variable fallbacks:
+
+```css
+.header {
+  padding-top: var(--safe-area-top, env(safe-area-inset-top, 0));
+}
+```
+
+---
+
+## Validation Checklist
+
+Before deployment:
+
+- Root frame uses fixed positioning (not `100vh`)
+- Safe area spacer divs included
+- Body element has overflow hidden (no scrolling)
+- Content containers handle scrolling
+- All spacing uses rem units
+- Interactive elements meet 2.75rem minimum size
+- Scrollbars hidden on scroll containers
+- Despia variables include PWA fallbacks
+- Tested in Despia iOS runtime
+- Tested in Despia Android runtime
+- Tested in PWA mode (fallbacks functional)
+- Verified on devices with notches
+- Keyboard behavior validated
+- Orientation changes handled (portrait and landscape)
+
+---
+
+## API Reference
+
+### Despia Runtime Features
+
+The following features are automatically provided by the Despia runtime:
+
+- Input zoom prevention
+- Text selection prevention (native app behavior)
+- Native webview optimization (WKWebView on iOS, Android WebView on Android)
+- Performance optimization and caching
+- Native SDK integrations
+
+### Selectable Attribute
+
+Enable text selection on specific elements:
+
+```html
+<!-- Make element content selectable -->
+<div selectable="true">
+  <p>Users can select and copy this text.</p>
+</div>
+```
+
+### Root Frame Pattern
+
+```css
+.app-root {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+```
+
+### Safe Area Pattern
+
+```css
+.safe-area-top {
+  flex-shrink: 0;
+  height: var(--safe-area-top, env(safe-area-inset-top, 0));
+}
+
+.safe-area-bottom {
+  flex-shrink: 0;
+  height: var(--safe-area-bottom, env(safe-area-inset-bottom, 0));
+}
+```
+
+### Scroll Container Pattern
+
+```css
+.scroll-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scroll-container::-webkit-scrollbar {
+  display: none;
+}
+```
+
+### Spacing Values
+
+| rem Value | Pixel Equivalent | Use Case        |
+| :-------- | :--------------- | :-------------- |
+| 0.5rem    | 8px              | Tight spacing   |
+| 1rem      | 16px             | Default spacing |
+| 1.5rem    | 24px             | Medium spacing  |
+| 2rem      | 32px             | Large spacing   |
+
+### Element Sizing Standards
+
+- Interactive elements: `min-width: 2.75rem; min-height: 2.75rem` (44px)
+- Form inputs: `font-size: 1rem; padding: 0.75rem`
+- Interactive element spacing: `gap: 0.5rem` minimum
+
+### Required Meta Configuration
+
+```html
+<meta name="viewport" 
+  content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+```

@@ -1,0 +1,220 @@
+---
+title: "Service Workers"
+description: "Run your web app's service worker inside the native app so cached pages and assets keep serving when the device has no connection."
+icon: "wifi-slash"
+---
+
+Give your app a working offline mode using the service worker your web app already ships. Cached documents, assets, and API responses continue to serve when the device drops off the network, and everything is driven by standard web APIs, so there are no build tools, no native offline layer, and no plugin to install. This is the lowest-effort path to offline support in Despia, and it works the same on iOS and Android.
+
+<Info>
+  Enabling offline support does not create a service worker for you. The runtime only allows the one your web app registers to install and take control. If your site has no service worker, or has one that is misconfigured, nothing is cached and an offline launch fails with the native network error page.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Once offline support is enabled, the native runtime lets your service worker register, install, and serve fetch events exactly as it does in the browser. You keep full control over what is precached, what is served from cache, and what falls back when the network is unreachable. Nothing about the registration changes: the same file that powers your PWA in Safari and Chrome is the one that powers the app.
+
+```javascript
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+}
+```
+
+The worker file has to be served over HTTPS from a scope that covers every route the app can open. A worker at `/assets/sw.js` cannot control `/dashboard`, so keep the file at the root unless you are also sending a `Service-Worker-Allowed` header.
+
+---
+
+## Enable offline support in the Despia Editor
+
+<Steps>
+  <Step title="Open your app settings">
+    In the Despia Editor, go to **App \> Settings \> Offline Support**.
+  </Step>
+  <Step title="Select PWA">
+    Set the offline support mode to **PWA**. This tells the runtime to allow service worker registration and cache storage inside the app.
+  </Step>
+  <Step title="Increase the version code">
+    Bump the version code before building so the new binary is treated as a new release by the stores and by testers who already have the app installed.
+  </Step>
+  <Step title="Rebuild the app">
+    Trigger a fresh native build and install it on a device.
+  </Step>
+</Steps>
+
+<Warning>
+  Offline support is a native runtime setting, so it only exists in builds produced after the toggle was flipped. If you enable it and keep testing the previous binary, service worker registration is silently ignored, caches stay empty, and every offline launch fails with the network error page even though the setting reads as on in the Editor.
+</Warning>
+
+---
+
+## Prove the service worker works before blaming the runtime
+
+Almost every reported offline failure is a service worker that never cached anything. You can confirm this without Despia in the loop, because a service worker that fails in a browser PWA will fail identically in the app.
+
+<Steps>
+  <Step title="Install your site as a PWA">
+    Open your production URL in Safari or Chrome on a physical device and add it to the home screen.
+  </Step>
+  <Step title="Launch it and wait">
+    Open the installed PWA and give it around ten seconds so the worker can install, activate, and populate its caches.
+  </Step>
+  <Step title="Disable Wi-Fi and cellular separately">
+    Turn both radios off individually in system settings. Do not use airplane mode: some devices keep Wi-Fi active in airplane mode, so the test passes for the wrong reason.
+  </Step>
+  <Step title="Reopen the PWA">
+    If you see a browser level error such as "Safari cannot open the page because it is not connected to the internet", your service worker is not serving cached content.
+  </Step>
+</Steps>
+
+A failure here is a service worker problem, not a runtime problem, and the fix belongs in your web app. Once the PWA survives the same test offline, the app built from it will too.
+
+---
+
+## Recache on every online launch so updates still land
+
+A worker that caches once and then always answers from cache will pin users to whatever version was current the first time they opened the app. Over the air updates appear to stop arriving, and if a cached document references assets that no longer exist, the app opens to a white page. Serve from the network first while online, write every successful response back into the cache, and fall back to the cache only when the request fails.
+
+```javascript
+const CACHE = 'app-v1'
+
+// routes that must be openable offline, including dynamic ones
+const PRECACHE = [
+    '/',
+    '/offline.html',
+    '/dashboard',
+    '/assets/app.css',
+    '/assets/app.js'
+]
+
+self.addEventListener('install', event => {
+    self.skipWaiting()
+    event.waitUntil(
+        caches.open(CACHE).then(cache => cache.addAll(PRECACHE))
+    )
+})
+
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys()
+            .then(keys => Promise.all(
+                keys.filter(key => key !== CACHE).map(key => caches.delete(key))
+            ))
+            .then(() => self.clients.claim())
+    )
+})
+
+self.addEventListener('fetch', event => {
+    if (event.request.method !== 'GET') return
+
+    event.respondWith(
+        fetch(event.request)
+            .then(response => {
+                const copy = response.clone()
+                caches.open(CACHE).then(cache => cache.put(event.request, copy))
+                return response
+            })
+            .catch(() =>
+                caches.match(event.request)
+                    .then(hit => hit || caches.match('/offline.html'))
+            )
+    )
+})
+```
+
+Change the `CACHE` constant on every release. The `activate` handler deletes every cache that does not match the current name, which is what clears out stale documents and lets `skipWaiting` plus `clients.claim` hand control to the new worker immediately instead of waiting for every tab to close.
+
+Precache the routes users actually land on, not just the root. If your app generates paths at runtime, cache those responses as they are visited rather than listing them, and make sure `/offline.html` renders something useful, because it is the last thing standing between a dropped request and a blank screen.
+
+---
+
+## Persist login state for offline sessions
+
+Authentication calls hit the network, so any login screen that waits on a token request will hang or fail once the device is offline. Store the session locally with normal web APIs and read from that store when the app opens without a connection, then revalidate as soon as the network returns.
+
+```javascript
+function loadSession() {
+    try {
+        return JSON.parse(localStorage.getItem('session'))
+    } catch {
+        return null
+    }
+}
+
+async function boot() {
+    const session = loadSession()
+
+    if (!navigator.onLine) {
+        return session ? renderApp(session) : renderOfflineNotice()
+    }
+
+    const fresh = await refreshSession()
+    localStorage.setItem('session', JSON.stringify(fresh))
+    renderApp(fresh)
+}
+
+window.addEventListener('online', boot)
+boot()
+```
+
+`localStorage` is fine for a token and a small user object. Use IndexedDB for anything larger, such as cached lists, drafts, or queued writes that need to be replayed when the connection returns. Both are standard browser APIs and behave the same inside the app.
+
+Treat a cached session as a rendering hint, not as proof of authorization. Anything sensitive should still be verified server side on the next successful request, and any write made offline should be queued and retried rather than assumed to have landed.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

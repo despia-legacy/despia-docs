@@ -1,0 +1,184 @@
+---
+title: "App Settings"
+description: "Open your app's native settings page directly so users can re-grant push notification, location, or camera permissions they previously denied."
+icon: "gear"
+---
+
+<iframe src="https://www.youtube.com/embed/hbr3nlHVqQc" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Note>
+
+`settingsapp://` deep-links the user straight into your app's permissions page in the iOS Settings app or the Android Settings app. From there they can flip notifications, location, camera, microphone, contacts, photos, or any other permission they previously denied. This is the only path to re-grant a permission after the first denial, since iOS and Android refuse to re-prompt within the app.
+
+<Info>
+  Useful for re-engaging users who declined push permission on first launch. iOS only allows the system push prompt to show once, but you can build any number of in-app prompts that link out to this settings page, letting users opt into notifications later through a UI you control.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+`settingsapp://` is fire-and-forget. The runtime hands the URL to the OS, which opens its native Settings app on your app's permissions page. Your app moves to the background while the user is in Settings, and resumes where they left off when they switch back.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('settingsapp://')
+}
+```
+
+The user has to tap to come back to your app, the OS does not return them automatically when they finish toggling a setting. Plan your UI around that round trip rather than assuming the change is instant.
+
+---
+
+## Re-prompt for push notifications
+
+The most common use is recovering from a "Don't Allow" tap on the iOS push prompt. Apple only shows the system prompt once per install, so any subsequent ask has to be a custom UI that links out to Settings. The pattern: detect that push is disabled, surface a friendly prompt, link to Settings on tap.
+
+```jsx
+import { useEffect, useState } from 'react'
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function PushPrompt() {
+    const [pushEnabled, setPushEnabled] = useState(true)
+
+    useEffect(() => {
+        if (!isDespia) return
+
+        async function check() {
+            const result = await despia('checkNativePushPermissions://', ['nativePushEnabled'])
+            setPushEnabled(result.nativePushEnabled)
+        }
+
+        check()
+    }, [])
+
+    if (pushEnabled) return null
+
+    return (
+        <div className="banner">
+            <p>Turn on notifications to never miss a message</p>
+            <button onClick={() => despia('settingsapp://')}>
+                Open Settings
+            </button>
+        </div>
+    )
+}
+```
+
+The `checkNativePushPermissions://` scheme returns whether push is currently enabled, so you only show the banner when it would actually do something. See the [OneSignal reference](/native-features/onesignal/reference) for the full check-then-prompt flow.
+
+---
+
+## Re-prompt for any other permission
+
+The same pattern works for every permission your app uses. Detect that the permission was denied, explain what the feature does in your own words, then link to Settings. This works for location, camera, microphone, contacts, photos, calendar, and any other permission iOS or Android exposes.
+
+```jsx
+function CameraPermissionPrompt({ onSettingsOpened }) {
+    function openSettings() {
+        if (isDespia) {
+            despia('settingsapp://')
+            onSettingsOpened?.()
+        }
+    }
+
+    return (
+        <div>
+            <p>Camera access is required to scan barcodes. Enable it in Settings to continue.</p>
+            <button onClick={openSettings}>Open Settings</button>
+        </div>
+    )
+}
+```
+
+Pair the call with an `onSettingsOpened` handler so you know to re-check the permission when the app returns to the foreground. The user might toggle the permission and come back, or they might not, and your UI should react to either outcome.
+
+---
+
+## Re-check permissions when the app returns
+
+Use the page visibility API to re-check permissions when the user returns from Settings. The browser fires `visibilitychange` when the WebView regains focus, which is exactly when you want to re-evaluate whether the permission was granted.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function watchPermissionChanges(onChange) {
+    if (!isDespia) return
+
+    document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible') {
+            const result = await despia('checkNativePushPermissions://', ['nativePushEnabled'])
+            onChange(result.nativePushEnabled)
+        }
+    })
+}
+```
+
+In React, attach the listener inside `useEffect` and return a cleanup function so it does not leak between mounts.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

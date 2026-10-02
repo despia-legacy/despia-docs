@@ -1,0 +1,162 @@
+---
+title: "In-App Rating"
+description: "Show the operating system's native star rating prompt inside your app, or send users straight to the store review composer."
+icon: "star"
+---
+
+Ask users to rate your app using the operating system's own star prompt, presented as a sheet inside your app so the session is never interrupted and nothing navigates away. The prompt is drawn, rate-limited, and dismissed entirely by the OS, which means a rating costs the user a single tap. For users who want to leave written feedback instead, a separate variant opens the store's review composer for your listing.
+
+<Info>
+  The operating system decides whether the native prompt actually appears. It is capped to a small number of displays per user per year and is silently suppressed once that budget is spent. Treat the call as a request, not a guarantee, and never block a flow or show a confirmation on the assumption that the user saw it.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+`rateapp://` is fire and forget. There is no return value and no callback, so the call resolves immediately whether or not the OS chose to render anything. The host portion of the URL selects which of the two behaviours you want.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('rateapp://')
+}
+```
+
+| Scheme | Behaviour |
+| :-- | :-- |
+| `rateapp://` | Presents the native star rating prompt as a sheet inside your app |
+| `rateapp://rating` | Identical to the bare scheme, use whichever reads better in your code |
+| `rateapp://review` | Leaves your app and opens the store's write-review composer for your listing |
+
+The store URL behind `rateapp://review` resolves to your own listing automatically from the build configuration, so there is no parameter to pass and no ID to hardcode.
+
+---
+
+## Ask for a rating after a positive moment
+
+The native prompt performs best when it lands immediately after a user has finished something they wanted to finish, and worst when it interrupts them mid-task. Fire it at the end of a successful flow, once the confirming UI is already on screen.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+async function completeOrder(cart) {
+    const order = await submitOrder(cart)
+
+    showOrderConfirmation(order)
+
+    if (isDespia && order.status === 'confirmed') {
+        despia('rateapp://')
+    }
+
+    return order
+}
+```
+
+Because the OS silently swallows the request once the yearly budget is spent, calling it on every single completion is wasteful rather than harmful. Track your own counter and only spend the request on users who have already shown positive engagement, for example a third completed order or a seventh session, so the limited number of displays goes to the people most likely to leave a high rating.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function maybeRequestRating() {
+    const completed = Number(localStorage.getItem('ordersCompleted') || 0) + 1
+    localStorage.setItem('ordersCompleted', String(completed))
+
+    if (isDespia && completed === 3) {
+        despia('rateapp://')
+    }
+}
+```
+
+---
+
+## Open the review composer for written feedback
+
+`rateapp://review` is the only variant that leaves your app. It opens the store listing with the write-review composer already focused, which is what you want behind an explicit "Write a review" button, never as an automatic prompt.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+document.querySelector('#write-review').addEventListener('click', () => {
+    if (isDespia) {
+        despia('rateapp://review')
+    }
+})
+```
+
+Users are sent to the store app and have to come back on their own, so save this for a settings screen or a feedback page where leaving is the expected outcome. If a user has just told you something is wrong, route them to your support form instead. Sending an unhappy user to the composer is the fastest way to collect a one star review.
+
+---
+
+## Verify the prompt during development
+
+Development builds installed straight from a debug run always render the prompt, with no rate limiting, so this is where you confirm your trigger logic fires at the right moment. Builds distributed through TestFlight behave differently: the request is accepted and then discarded without drawing anything, which looks identical to a broken integration.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    console.log('requesting native rating prompt')
+    despia('rateapp://')
+}
+```
+
+A prompt that never appears in a TestFlight build is expected behaviour and not a bug. Verify the trigger with a log line or your analytics event, and confirm the prompt itself renders in a development build.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

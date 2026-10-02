@@ -1,0 +1,137 @@
+---
+title: "Ad Revenue"
+description: "Report impression-level ad revenue per network to AppsFlyer for LTV and ROAS reporting per acquisition channel."
+icon: "chart-line"
+---
+
+Report impression-level ad revenue back to AppsFlyer each time an ad is shown to the user. AppsFlyer attributes the revenue to the campaign that acquired the user, so you can see which channels drive the most revenue, not just the most installs.
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## log\_ad\_revenue
+
+Fire `log_ad_revenue` with the per-impression value your ad network reports.
+
+<Tabs>
+  <Tab title="Meta / Facebook">
+    ```javascript
+    const metaRevenue = {
+        ad_platform: "facebook",
+        currency: "USD",
+        revenue: 0.008,
+        ad_type: "interstitial",
+        ad_unit_id: "your_unit_id"
+    }
+    despia("appsflyer://log_ad_revenue?" + new URLSearchParams(metaRevenue).toString())
+    ```
+  </Tab>
+  <Tab title="TikTok">
+    ```javascript
+    const tiktokRevenue = {
+        ad_platform: "tiktok",
+        currency: "USD",
+        revenue: 0.005,
+        ad_type: "banner",
+        ad_unit_id: "your_unit_id"
+    }
+    despia("appsflyer://log_ad_revenue?" + new URLSearchParams(tiktokRevenue).toString())
+    ```
+  </Tab>
+  <Tab title="AdMob">
+    ```javascript
+    const admobRevenue = {
+        ad_platform: "admob",
+        currency: "USD",
+        revenue: 0.012,
+        ad_type: "rewarded",
+        ad_unit_id: "ca-app-pub-xxx/yyy"
+    }
+    despia("appsflyer://log_ad_revenue?" + new URLSearchParams(admobRevenue).toString())
+    ```
+  </Tab>
+</Tabs>
+
+<ParamField path="ad_platform" type="string" required>
+  Ad network name. Accepted values: `"facebook"`, `"tiktok"`, `"admob"`.
+</ParamField>
+
+<ParamField path="currency" type="string" required>
+  3-character ISO 4217 currency code, e.g. `"USD"`, `"EUR"`, `"AED"`. Defaults to `"USD"` if omitted.
+</ParamField>
+
+<ParamField path="revenue" type="number" required>
+  Revenue amount for this single ad impression. No commas or currency signs.
+</ParamField>
+
+<ParamField path="ad_type" type="string">
+  Type of ad served: `"banner"`, `"interstitial"`, `"rewarded"`, `"native"`.
+</ParamField>
+
+<ParamField path="ad_unit_id" type="string">
+  Your ad unit ID from the ad network.
+</ParamField>
+
+<Info>
+  AdMob and Google revenue is reported to AppsFlyer under Google AdMob mediation. Facebook and TikTok revenue is reported with the platform name under custom mediation. Both appear correctly in AppsFlyer's ad revenue reporting.
+</Info>
+
+---
+
+## Best practices
+
+Log at impression level, one call per ad shown, with the eCPM-derived per-impression value your ad network reports. Do not batch or sum impressions in your web layer, AppsFlyer's LTV models expect individual impressions. Keep `ad_unit_id` stable per placement so you can break revenue down by placement later.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

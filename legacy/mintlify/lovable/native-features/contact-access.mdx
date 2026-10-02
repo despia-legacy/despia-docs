@@ -1,0 +1,87 @@
+---
+title: "Contact Access"
+icon: "user-large"
+description: "Retrieve and display contact information from users' devices within your Lovable application."
+---
+
+<iframe src="https://www.youtube.com/embed/ZvLjcAqitW8" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native contact access functionality to retrieve users' device contacts including names and phone numbers using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  1. Request contact permission using `despia("requestcontactpermission://")`
+  2. Read contacts using `await despia('readcontacts://', ['contacts'])` which returns a JSON object with contact names as keys and phone number arrays as values
+  3. When accessing the data, use "dot notation" like `.contacts` to retrieve the contact data in a JSON object format. Here is an example of the structure returned:
+
+  ```json
+  {
+    "John Appleseed": [
+      "+12345678910"
+    ],
+    "Ann Wilson": [
+      "+12345678910"
+    ]
+  }
+  ```
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia SDK provides native bridge functionality to access device contacts through async method calls. First request permission, then read contacts data which returns as a JSON object with contact names as keys and arrays of phone numbers as values.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Request Permission and Read Contacts**
+
+Access Native Device Contacts and process them:
+
+```javascript
+// Request permission first
+await despia("requestcontactpermission://");
+
+// Read contacts data
+const contactsData = await despia('readcontacts://', ['contacts']);
+console.log(contactsData.contacts); // Access "contacts" variable set as object key, from the "contactsData" const
+
+// Expected output format:
+{
+  "John Appleseed": [
+    "+12345678910"
+  ],
+  "Ann Wilson": [
+    "+12345678910"
+  ]
+}
+```
+
+## **Resources**
+
+- [NPM Package](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native contact access into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

@@ -1,0 +1,93 @@
+---
+title: "Editor"
+description: "Changes made in the Despia editor affect the native binary. They require a rebuild and a new submission to the App Store and Google Play."
+icon: "code-branch"
+---
+
+## Understand what a Despia editor change means
+
+Every change you make in Despia that affects the native binary, including adding an SDK, updating permissions, changing entitlements, and modifying the bundle version, produces a new binary that must go through store review. There is no way to ship a native binary change via OTA.
+
+Plan these changes carefully. Once submitted, you are waiting on Apple or Google.
+
+## Always increment the bundle version
+
+Every time you submit a new binary, increment the bundle version in **Despia \> Settings \> Versioning**. This is how your web layer knows which native capabilities are available on a given device and how `despia.bundleNumber` gates features correctly.
+
+Use `MAJOR.MINOR.PATCH` format. Increment `PATCH` for small native fixes, `MINOR` for new native integrations, `MAJOR` for significant platform changes.
+
+<Warning>
+  Do not reuse a version number. Do not submit a new binary without incrementing first.
+</Warning>
+
+## Batch native changes where practical
+
+Every binary submission costs review time, typically 24-72 hours on iOS and faster on Android. If you know two native integrations are coming in the same release window, combine them into a single binary submission rather than two sequential ones.
+
+This is especially worth doing early in development when you are still adding foundational SDKs.
+
+## Submit the binary before deploying the web layer that depends on it
+
+This is the most common mistake. The correct deployment order is:
+
+<Steps>
+  <Step title="Make the change in Despia">
+    
+  </Step>
+  <Step title="Increment the bundle version">
+    
+  </Step>
+  <Step title="Submit to App Store / Google Play">
+    
+  </Step>
+  <Step title="Wait for approval">
+    
+  </Step>
+  <Step title="Deploy the web layer via OTA">
+    
+  </Step>
+  <Step title="Gate the new UI or logic with VersionGuard">
+    
+  </Step>
+</Steps>
+
+Deploying step 5 before step 4 completes means users on the old binary encounter web code that calls a native API that does not exist on their device.
+
+## Use VersionGuard to manage the transition window
+
+After a binary update ships, there is always a period where some users are on the new binary and some are still on the old one. Gate any web UI or logic that depends on the new binary behind a version check so both groups get a coherent experience.
+
+```jsx
+import { VersionGuard } from 'despia-version-guard';
+
+<VersionGuard min_version="2.0.0" fallback={<LegacyPayments />}>
+  <NewPaymentsFlow />
+</VersionGuard>
+```
+
+Once the old binary version is sufficiently deprecated, you can remove the guard.
+
+## Write clear review notes for non-obvious capabilities
+
+Both stores provide a reviewer notes field. Use it whenever your binary includes something that requires context: a permission that is not obviously connected to app functionality, a native SDK that might raise questions, or a capability that requires a test account to exercise.
+
+Reviewers have limited time. A brief, clear explanation of why a capability is present is almost always better than leaving it unexplained.
+
+## Test on a real device before submitting
+
+Simulators and emulators miss issues that real devices catch. Test the new native capability on at least one physical iOS device and one physical Android device before submitting. Test on an older device if your users are likely to run older OS versions.
+
+## Keep a version history
+
+Track what native capabilities were added in each binary version. This makes it straightforward to know which `min_version` to use in VersionGuard, debug issues reported by users on specific versions, and decide when a legacy code path can safely be removed.
+
+A simple comment in your codebase is enough:
+
+```js
+// v2.0.0 - added Stripe payments SDK
+// v2.1.0 - added biometric vault
+// v3.0.0 - added RevenueCat
+const PAYMENTS_VERSION = '2.0.0';
+const BIOMETRICS_VERSION = '2.1.0';
+const SUBSCRIPTIONS_VERSION = '3.0.0';
+```

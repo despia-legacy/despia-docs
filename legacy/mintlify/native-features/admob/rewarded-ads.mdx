@@ -1,0 +1,259 @@
+---
+title: "Rewarded Ads"
+description: "Display a native AdMob rewarded video ad through Despia and grant in-app rewards only when the user completes the view."
+icon: "trophy"
+---
+
+<iframe src="https://www.youtube.com/embed/hr9N6CkO1yM" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Note>
+
+Trigger a native AdMob rewarded video through Despia, and grant your in-app reward only when the user watches to completion. The native runtime calls a global `updateRewardedStatus(status)` function on your page when the ad ends. A status of `'true'` means the user finished the ad and earned the reward, anything else means they skipped, dismissed, or the ad failed to play.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+`displayrewardedad://` is fire-and-forget on the request side. The native runtime loads the configured Rewarded Ad Unit ID, plays the video, and then calls your global `updateRewardedStatus(status)` function with the result. Define the callback as a global before triggering the ad, and only grant the reward when `status === 'true'`.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('displayrewardedad://')
+}
+```
+
+---
+
+## AdMob and Despia setup
+
+Configure AdMob, then connect it to Despia. The steps go in order, each one feeds the next.
+
+<Steps>
+  <Step title="Create a Google AdMob account">
+    Go to [admob.google.com](https://admob.google.com) and sign in with your Google account, or create one. Complete the Account setup wizard with your country, time zone, and payment profile under **Payments \> Settings**. AdMob will not pay out without a verified payment profile.
+  </Step>
+  <Step title="Add your iOS app to AdMob">
+    In AdMob, go to **Apps \> Add app**, choose **iOS**, then either search for your app on the App Store or select **No, my app isn't listed in a supported app store yet** and enter the name manually. AdMob issues an App ID in the format `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY`. Note the tilde, this is the App ID, not an Ad Unit ID.
+  </Step>
+  <Step title="Add your Android app to AdMob">
+    Repeat **Apps \> Add app**, this time choosing **Android**. AdMob requires a separate app entry per platform, each one gets its own AdMob App ID.
+  </Step>
+  <Step title="Create a Rewarded Ad Unit per platform">
+    For each app, go to **Apps \> \[your app\] \> Ad units \> Create ad unit**, choose **Rewarded** (not Interstitial or Banner), name it something descriptive like `App Rewarded`, set the reward amount and item label that AdMob shows to advertisers (these are not the actual reward you grant in your app, just metadata for advertisers), and click **Create**. AdMob issues an Ad Unit ID in the format `ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY` (note the slash, not the tilde from the App ID). Repeat for the Android app.
+  </Step>
+  <Step title="Configure GDPR and CCPA consent in AdMob">
+    In AdMob, go to **Privacy & messaging \> GDPR**, create a consent message, and target all EU and UK traffic. Repeat under **CCPA** for California traffic. Without these, AdMob will not serve personalized ads to those regions and your fill rate drops sharply.
+  </Step>
+  <Step title="Enable AdMob in the Despia Editor">
+    Open the Despia Editor and go to **App \> Integrations \> AdMob**. Toggle the integration on, then paste each ID into its matching field:
+
+    - **iOS App ID** (with `~`)
+    - **Android App ID** (with `~`)
+    - **iOS Rewarded Ad Unit ID** (with `/`)
+    - **Android Rewarded Ad Unit ID** (with `/`)
+  </Step>
+  <Step title="Rebuild your app">
+    Trigger a fresh build from the Despia Editor. The Mobile Ads SDK has to be compiled into the app binary, so this cannot be applied over-the-air. Configure once, rebuild once, and the bridge is active for the life of the build.
+  </Step>
+</Steps>
+
+<Warning>
+  Skipping the rebuild leaves Rewarded Ads inactive even if the toggle reads enabled. The call to `despia('displayrewardedad://')` resolves silently and your callback never fires. If ads stop showing after editing settings, rebuild before opening a support ticket.
+</Warning>
+
+---
+
+## Define the rewarded callback
+
+The native runtime calls `window.updateRewardedStatus(status)` when the ad finishes. Define this function as a global before the user can trigger the ad. The status arrives as a string, never as a boolean, so compare against `'true'` exactly.
+
+Validate `navigator.userAgent` inside the callback as well. A malicious page in a regular browser cannot trigger the native ad, but it can still call `updateRewardedStatus('true')` directly from the JavaScript console or an injected script. The user agent check makes that route useless.
+
+```javascript
+window.updateRewardedStatus = function (status) {
+    const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+    if (!isDespia) return
+
+    if (status === 'true') {
+        grantReward()
+    }
+    // any other status: ad was skipped, dismissed, or failed, do nothing
+}
+
+function grantReward() {
+    // your in-app reward logic, e.g. add 100 coins, refill lives, unlock content
+}
+```
+
+In React, attach the callback inside `useEffect` so it survives re-renders without being redefined on every render.
+
+```jsx
+import { useEffect, useState } from 'react'
+import despia from 'despia-native'
+
+export default function WatchAdButton() {
+    const [coins, setCoins] = useState(0)
+
+    useEffect(() => {
+        window.updateRewardedStatus = (status) => {
+            if (!navigator.userAgent.toLowerCase().includes('despia')) return
+            if (status === 'true') {
+                setCoins(c => c + 100)
+            }
+        }
+    }, [])
+
+    function watchAd() {
+        if (navigator.userAgent.toLowerCase().includes('despia')) {
+            despia('displayrewardedad://')
+        }
+    }
+
+    return (
+        <button onClick={watchAd}>
+            Watch ad for 100 coins ({coins} total)
+        </button>
+    )
+}
+```
+
+---
+
+## Prevent abuse with daily limits
+
+Rewarded ads are a target for abuse because each completion is real money to the user. Cap the number of ads any one user can watch per day, both to protect your AdMob account standing (Google flags publishers with abnormal completion ratios) and to keep your reward economy intact.
+
+For low-value rewards (extra lives, bonus hints, cosmetic unlocks), `localStorage` is enough. For higher-value rewards (premium currency, paid features, leaderboard advantages), validate completions on your backend before crediting the account.
+
+```javascript
+const DAILY_LIMIT = 5
+const STORAGE_KEY = 'rewardedAdsToday'
+
+function canWatchAd() {
+    const today = new Date().toISOString().slice(0, 10)
+    const data  = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+
+    if (data.date !== today) return true
+    return (data.count || 0) < DAILY_LIMIT
+}
+
+function recordAdWatched() {
+    const today = new Date().toISOString().slice(0, 10)
+    const data  = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')
+    const next  = data.date === today
+        ? { date: today, count: (data.count || 0) + 1 }
+        : { date: today, count: 1 }
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+}
+
+window.updateRewardedStatus = function (status) {
+    if (!navigator.userAgent.toLowerCase().includes('despia')) return
+
+    if (status === 'true' && canWatchAd()) {
+        recordAdWatched()
+        grantReward()
+    }
+}
+```
+
+<Warning>
+  `localStorage` can be cleared by the user, so it is not a security boundary, only a convenience cap. For any reward worth real money, record completions in a database keyed to the authenticated user account and rate-limit there.
+</Warning>
+
+---
+
+## Testing your integration
+
+Before going to production, swap your real Rewarded Ad Unit ID for a Google test Ad Unit ID in the Despia Editor. Test units always serve a placeholder ad and always trigger the callback with `status === 'true'`, so you can verify both the trigger and the reward path without risking your account standing.
+
+The current Google test Rewarded Ad Unit IDs are `ca-app-pub-3940256099942544/5224354917` for Android and `ca-app-pub-3940256099942544/1712485313` for iOS. Paste these into the Rewarded Ad Unit ID fields, rebuild, and confirm both the test ad displays and your `grantReward()` runs. Swap back to your real Ad Unit IDs before submitting the build to the stores.
+
+<Warning>
+  Never serve real ads in development or QA builds. AdMob detects clicks from non-public traffic and can suspend your account for invalid activity. Use the test Ad Unit IDs above for any build you do not intend to ship.
+</Warning>
+
+---
+
+## Policy compliance
+
+AdMob has stricter rules for rewarded ads than for any other format. The user must opt in, the reward must be promised before the ad starts, and the experience must not be required to use the app. Three rules in particular catch publishers off guard:
+
+The reward must be optional. Locking core app functionality behind a rewarded ad (forcing every user to watch one to use the app at all) violates AdMob policy. Rewarded ads exist to give users a way to earn something extra, not to gate the basic product.
+
+The reward shown in your UI must match what you actually grant. If the button says "Watch ad for 100 coins" and you only give 50, that is misleading users and is grounds for suspension.
+
+Do not show the rewarded ad unprompted. The user must tap a button or otherwise affirmatively request the ad. Auto-playing rewarded ads on screen entry violates policy.
+
+<Warning>
+  AdMob audits rewarded ad implementations more aggressively than other formats because the value exchange is direct. Forcing rewarded ads, mismatched rewards, or auto-playing them can result in account suspension or revenue clawback. The Despia SDK does not enforce these rules, placement and copy are your responsibility.
+</Warning>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+
+  <Card title="AdMob test Ad Unit IDs" icon="circle-info" href="https://developers.google.com/admob/android/test-ads">
+    Google's official test units for development
+  </Card>
+
+  <Card title="AdMob program policies" icon="shield-halved" href="https://support.google.com/admob/answer/6128543">
+    Placement and content policy reference
+  </Card>
+</CardGroup>

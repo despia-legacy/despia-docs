@@ -1,0 +1,471 @@
+---
+title: "Bluetooth"
+icon: "bluetooth"
+tag: "v4"
+hidden: true
+---
+
+<Danger>
+  **This feature is only available at request - get free access by emailing us at [ble@despia.com](mailto:ble@despia.com)**
+</Danger>
+
+\
+Drive a full BLE central stack from JavaScript, scan for peripherals, connect to them, discover services and characteristics, read and write values, and subscribe to notifications. Connection state and notification data are delivered through global `window` callbacks, with automatic persistence and replay when the app is backgrounded or closed.
+
+<Info>
+  Foreground BLE works out of the box. Background scanning, background connections, and background notifications require the Bluetooth addon to be enabled in **Despia Editor \> App \> Addons**, followed by a fresh native build.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Commands are dispatched through `despia()`. Results, events, and data come back through global `window` callbacks that you define before issuing any command. The native side never buffers foreground events, so a callback defined after the event fires misses that event.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    window.onBleDevice = device => {
+        console.log('found:', device.name, device.id, device.rssi)
+    }
+
+    window.onBleScanEnd = () => {
+        console.log('scan complete')
+    }
+
+    despia('bluetooth://scan?duration=10000')
+}
+```
+
+The first BLE call triggers the iOS Bluetooth permission prompt. After the user responds, the bridge sets `window.bluetoothActive` to `true` on grant and fires `onBleState` with the current power state.
+
+---
+
+## Permission and power state
+
+Permission is exposed as `window.bluetoothActive` (boolean). Power and permission combined come through `onBleState`, which fires on every change without polling, including mid-session permission revoke from the system Settings app.
+
+```javascript
+window.onBleState = s => {
+    // s.state: 'on' | 'off' | 'unauthorized' | 'unsupported'
+    if (s.state === 'on')           enableScanUI()
+    if (s.state === 'off')          showTurnOnBluetoothHint()
+    if (s.state === 'unauthorized') showPermissionDeniedUI()
+    if (s.state === 'unsupported')  hideBleFeatures()
+}
+
+function bleReady() {
+    return window.bluetoothActive === true
+}
+
+if (isDespia) despia('bluetooth://state')
+```
+
+`scan` and `connect` issued while the radio is off are deferred internally and run automatically once Bluetooth is powered on. Every other command silently no-ops if its precondition is not met (read before connect, write before discover, etc).
+
+---
+
+## Scanning for devices
+
+Filter by service UUID rather than by name, iOS does not always include the advertised name. Pass a comma-separated UUID list, omit it to scan everything. Bound every scan with a `duration` (milliseconds) so it stops automatically.
+
+```javascript
+const HR_SERVICE = '180d'
+
+window.onBleDevice = device => {
+    // device.id is the opaque peripheral UUID, not a MAC address
+    // device.services may be empty even when the device has services
+    addToList(device.id, device.name, device.rssi)
+}
+
+window.onBleScanEnd = () => {
+    setScanningUI(false)
+}
+
+if (isDespia) {
+    despia(`bluetooth://scan?services=${HR_SERVICE}&duration=10000`)
+}
+
+// stop early
+function cancelScan() {
+    if (isDespia) despia('bluetooth://stopscan')
+}
+```
+
+A new `scan` clears the previous scan's discovered-device cache. iOS suspends scanning in the background, so always keep scans short and foreground.
+
+---
+
+## Connecting and discovering services
+
+Pass the `id` from an `onBleDevice` event into `connect`. After `connected` fires, call `discover` to retrieve the full service and characteristic tree. Use the `properties` array on each characteristic to decide between read, write, and subscribe.
+
+```javascript
+let deviceId = null
+
+window.onBleConnect = e => {
+    if (e.state === 'connected') {
+        despia(`bluetooth://discover?id=${encodeURIComponent(e.id)}`)
+    } else if (e.state === 'failed') {
+        console.error('connect failed:', e.error)   // 'timeout' | 'unknown device' | system error
+    } else if (e.state === 'disconnected') {
+        console.warn('disconnected:', e.error)
+    }
+}
+
+window.onBleDiscovered = tree => {
+    tree.services.forEach(svc => {
+        svc.characteristics.forEach(chr => {
+            if (chr.properties.includes('notify')) {
+                subscribe(svc.uuid, chr.uuid)
+            }
+        })
+    })
+}
+
+function connect(id) {
+    deviceId = id
+    if (isDespia) {
+        despia(`bluetooth://connect?id=${encodeURIComponent(id)}&timeout=10000`)
+    }
+}
+
+function disconnect() {
+    if (isDespia && deviceId) {
+        despia(`bluetooth://disconnect?id=${encodeURIComponent(deviceId)}`)
+    }
+}
+```
+
+Pass `auto_connect=true` to have the bridge re-issue the connection automatically after an unexpected disconnect. An explicit `disconnect` clears this.
+
+```javascript
+despia(`bluetooth://connect?id=${encodeURIComponent(id)}&auto_connect=true&timeout=10000`)
+```
+
+---
+
+## Reading and writing characteristics
+
+A `read` resolves to `onBleData` with `source: 'read'`. Writes accept three payload formats, pick exactly one, the bridge never guesses. Precedence if more than one is supplied is `text` then `hex` then `value`.
+
+| Format | Parameter | Example |
+| :-- | :-- | :-- |
+| UTF-8 plain string | `text` | `text=Hello%20world` |
+| Hex string, tolerates `:-` spaces and optional `0x` | `hex` | `hex=DE%3AAD%3ABE%3AEF` |
+| Base64, the binary contract | `value` | `value=3q2%2B7w%3D%3D` |
+
+```javascript
+const SVC = '12345678-1234-1234-1234-1234567890ab'
+const CHR = 'abcd1234-ab12-cd34-ef56-abcdef123456'
+
+window.onBleData = p => {
+    if (p.source === 'read') {
+        // p.value is base64, p.valueHex is upper-case hex
+        const bytes = Uint8Array.from(atob(p.value), c => c.charCodeAt(0))
+        console.log('read bytes:', bytes)
+    }
+}
+
+window.onBleWriteComplete = w => {
+    console.log(w.success ? 'sent' : `write error: ${w.error}`)
+}
+
+function readChar(id) {
+    despia(`bluetooth://read?id=${encodeURIComponent(id)}&service=${SVC}&char=${CHR}`)
+}
+
+function writeText(id, text) {
+    despia(
+        `bluetooth://write?id=${encodeURIComponent(id)}` +
+        `&service=${SVC}&char=${CHR}` +
+        `&text=${encodeURIComponent(text)}` +
+        `&with_response=false`
+    )
+}
+```
+
+Write with response acknowledges only after the peripheral confirms. Write without response fires `onBleWriteComplete` immediately on dispatch, BLE has no transport-level ack for this mode, so `success: true` confirms the bytes left the radio, not that the peripheral received them. If the characteristic does not support write-with-response, the bridge falls back automatically.
+
+---
+
+## Subscribing to notifications
+
+Notifications are the only event source that survives the app being backgrounded or terminated. Subscribe after `connected`, and define a handler that works for both live events and replayed ones.
+
+```javascript
+const HR_SVC = '0000180d-0000-1000-8000-00805f9b34fb'
+const HR_CHR = '00002a37-0000-1000-8000-00805f9b34fb'
+
+function handleHeartRate(p) {
+    const bytes = Uint8Array.from(atob(p.value), c => c.charCodeAt(0))
+    const bpm   = bytes[1]
+    renderBpm(bpm, p.background, p.timestamp)
+}
+
+window.onBleData = p => {
+    if (p.source === 'notification') handleHeartRate(p)
+}
+
+function subscribeHeartRate(id) {
+    despia(
+        `bluetooth://subscribe?id=${encodeURIComponent(id)}` +
+        `&service=${HR_SVC}&char=${HR_CHR}`
+    )
+}
+
+function unsubscribeHeartRate(id) {
+    despia(
+        `bluetooth://unsubscribe?id=${encodeURIComponent(id)}` +
+        `&service=${HR_SVC}&char=${HR_CHR}`
+    )
+}
+```
+
+---
+
+## Background delivery and replay
+
+When the app is not active, `window.onBleX` callbacks do not fire live. The bridge persists every event to disk (capped at the most recent 500, oldest dropped) and replays them in FIFO order through `window.onBleEvent` on the next app activation. Each replayed payload carries `background: true` and `event: '<original callback name>'`.
+
+```javascript
+function handleHeartRate(p) {
+    const bytes = Uint8Array.from(atob(p.value), c => c.charCodeAt(0))
+    renderBpm(bytes[1], p.background, p.timestamp)
+}
+
+// foreground path
+window.onBleData = p => {
+    if (p.source === 'notification') handleHeartRate(p)
+}
+
+// replay path, fires on next app activation for everything that happened while away
+window.onBleEvent = e => {
+    if (e.event === 'onBleData' && e.source === 'notification') handleHeartRate(e)
+    if (e.event === 'onBleConnect') updateConnectionUI(e)
+}
+```
+
+Make handlers idempotent and key them off `id`, `char`, and `timestamp`, an event captured right at the foreground-to-background boundary can occasionally surface through both paths.
+
+Always implement `onBleEvent` if anything that happens while backgrounded matters to your app. Scanning generally does not progress in the background on iOS, connections and notifications do once the Bluetooth addon is enabled.
+
+---
+
+## Backend mirroring with server POST
+
+Pass `server=<url>` to `connect` and `subscribe` to have the bridge POST every connection-state change and every notification to your backend as JSON. This runs independently of the web layer and continues to fire when the app is backgrounded or closed, so your server receives data even when no callback can run.
+
+```javascript
+const SERVER = 'https://api.example.com/ble'
+
+function startMonitoring(id) {
+    despia(
+        `bluetooth://connect?id=${encodeURIComponent(id)}` +
+        `&auto_connect=true` +
+        `&server=${encodeURIComponent(SERVER)}`
+    )
+}
+
+window.onBleConnect = e => {
+    if (e.state === 'connected') {
+        despia(
+            `bluetooth://subscribe?id=${encodeURIComponent(e.id)}` +
+            `&service=${HR_SVC}&char=${HR_CHR}` +
+            `&server=${encodeURIComponent(SERVER)}`
+        )
+    }
+}
+```
+
+Two payload shapes hit your endpoint, both as `application/json` POSTs:
+
+```json
+{
+  "event": "ble_data",
+  "deviceId": "E2C56DB5-...",
+  "service": "0000180d-0000-1000-8000-00805f9b34fb",
+  "characteristic": "00002a37-0000-1000-8000-00805f9b34fb",
+  "value": "Bkg=",
+  "valueHex": "0648",
+  "timestamp": 1747391284.523,
+  "background": true,
+  "battery": 83
+}
+```
+
+```json
+{
+  "event": "ble_state",
+  "deviceId": "E2C56DB5-...",
+  "state": "disconnected",
+  "timestamp": 1747391284.523,
+  "background": true,
+  "battery": 83,
+  "error": "The connection has timed out unexpectedly."
+}
+```
+
+`battery` is the device battery as an integer 0 to 100, or `-1` if unavailable. Reads are intentionally not mirrored, only notifications and connection-state changes. The iOS POST is fire-and-forget with no retry, treat it as best-effort telemetry rather than a guaranteed-delivery channel and rely on the in-app event plus replay for correctness.
+
+---
+
+## RSSI and signal strength
+
+```javascript
+window.onBleRssi = r => {
+    updateSignalBars(r.id, r.rssi)   // r.rssi is dBm, negative
+}
+
+function pollRssi(id) {
+    if (isDespia) despia(`bluetooth://rssi?id=${encodeURIComponent(id)}`)
+}
+```
+
+---
+
+## End-to-end, ESP32 text display
+
+Scan filtered by service, connect to the first matching peripheral, discover, write a UTF-8 string without response.
+
+```javascript
+const SVC = '12345678-1234-1234-1234-1234567890ab'
+const CHR = 'abcd1234-ab12-cd34-ef56-abcdef123456'
+let deviceId = null
+
+window.onBleDevice = d => {
+    if (d.name === 'PDLOC-SCREEN' && !deviceId) {
+        deviceId = d.id
+        despia('bluetooth://stopscan')
+        despia(`bluetooth://connect?id=${encodeURIComponent(deviceId)}&timeout=10000`)
+    }
+}
+
+window.onBleConnect = e => {
+    if (e.id !== deviceId) return
+    if (e.state === 'connected') {
+        despia(`bluetooth://discover?id=${encodeURIComponent(deviceId)}`)
+    } else if (e.state === 'failed') {
+        console.error('connect failed:', e.error)
+    }
+}
+
+window.onBleDiscovered = () => {
+    send('ROAD=Cliftmont Avenue|BLOCK=3500 block')
+}
+
+window.onBleWriteComplete = w => {
+    console.log(w.success ? 'sent' : `write error: ${w.error}`)
+}
+
+function send(text) {
+    despia(
+        `bluetooth://write?id=${encodeURIComponent(deviceId)}` +
+        `&service=${SVC}&char=${CHR}` +
+        `&text=${encodeURIComponent(text)}` +
+        `&with_response=false`
+    )
+}
+
+if (isDespia) {
+    despia(`bluetooth://scan?services=${SVC}&duration=15000`)
+}
+```
+
+---
+
+## Editor setup for background BLE
+
+Foreground scan, connect, read, write, and subscribe work without any Editor configuration. Enable the addon when you need notifications or connections to survive the app being backgrounded or closed.
+
+<Steps>
+  <Step title="Enable the Bluetooth addon">
+    Open the Despia Editor, go to **App → Addons**, and toggle **Bluetooth** on.
+  </Step>
+  <Step title="Rebuild the native app">
+    Trigger a fresh build from the Despia Editor and reinstall on device. The addon is compiled into the binary, it cannot be applied over the air.
+  </Step>
+  <Step title="Verify background delivery">
+    Connect to a peripheral with `auto_connect=true`, subscribe to a notifying characteristic, background the app, then trigger a notification from the peripheral. On next app open, `onBleEvent` should replay the queued events with `background: true`.
+  </Step>
+</Steps>
+
+<Warning>
+  Skipping the rebuild is the most common silent failure. The Editor toggle appears enabled, foreground BLE still works, but notifications stop arriving the moment the app is backgrounded and `onBleEvent` returns an empty queue on next open. Any change to the Bluetooth addon, the integration credentials, or any other Editor setting requires a fresh native build to take effect.
+</Warning>
+
+---
+
+## UUID formats and case
+
+Three input formats are accepted, 16-bit (`180d`), 32-bit (8 hex), and 128-bit dashed (`12345678-1234-1234-1234-1234567890ab`). Other shapes cause the command to silently no-op. UUIDs returned in callback payloads are always lower-cased 128-bit strings, compare case-insensitively. `valueHex` is the one exception, it is upper-case hex.
+
+---
+
+## Gotchas
+
+- `id` is an opaque per-iOS-device UUID, not a MAC address, and can change across reinstalls. Re-scan to obtain a fresh `id` rather than hard-coding it.
+- Always define `window.onBleX` callbacks before issuing any command. There is no foreground buffering.
+- Always call `discover` before `read`, `write`, or `subscribe`. Pre-discovery calls no-op.
+- Write-without-response `success: true` confirms dispatch, not delivery. Use write-with-response or an application-level ack when correctness matters.
+- iOS auto-negotiates ATT MTU on connect, small writes (tens of bytes) are fine. Chunk at the application layer for payloads beyond roughly 180 bytes.
+- Server POST from iOS is fire-and-forget. Treat it as best-effort and rely on the in-app event plus replay for guaranteed delivery.
+- Always bound `scan` with `duration` or call `stopscan`. An unbounded scan drains the battery.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

@@ -1,0 +1,1209 @@
+---
+title: "Animations"
+icon: "waves-sine"
+description: "CSS animation first. Scroll-driven CSS for drawers, sheets, parallax, and page transitions. JS fallback only where CSS is not supported."
+---
+
+## Philosophy
+
+CSS animations run on the compositor thread. They stay smooth under Low Power Mode, thermal throttling, and every other constraint a mobile device can throw at them. JavaScript animations run on the main thread and compete with everything else the app is doing.
+
+The hierarchy is:
+
+1. **CSS scroll-driven** (`animation-timeline`) for anything swipe-driven - drawers, sheets, parallax, page stacks, carousels. Zero JS per frame. Compositor-only.
+2. **CSS transitions and keyframes** for everything else - tap feedback, modals, toasts, loaders. Still compositor-safe on `transform` and `opacity`.
+3. **JS `requestAnimationFrame`** only when CSS cannot express the result, and only as a fallback when scroll-driven is not supported.
+
+Only animate `transform` and `opacity`. Everything else triggers layout or paint on the main thread.
+
+---
+
+## Touch Interaction Feedback
+
+The input is always touch. Use `:active`, never `:hover`.
+
+`:active` fires on press and clears on release. `:hover` fires on tap and sticks with nothing to clear it.
+
+```css
+.button {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+.button:active {
+  transform: scale(0.95);
+  opacity: 0.8;
+}
+
+.card {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+.card:active {
+  transform: scale(0.98);
+  opacity: 0.85;
+}
+```
+
+If a component also renders in a browser, guard `:hover` with an input capability query. Screen width tells you nothing about input type.
+
+```css
+@media (hover: hover) and (pointer: fine) {
+  .card:hover {
+    transform: translateY(-0.25rem);
+  }
+}
+```
+
+---
+
+## CSS Transitions
+
+```css
+/* Tap feedback */
+.button { transition: transform 0.1s ease; }
+
+/* State changes */
+.card   { transition: transform 0.3s ease; }
+
+/* Large entrances */
+.modal  { transition: opacity 0.4s ease, transform 0.4s ease; }
+```
+
+| Use case | Duration |
+| :--- | :--- |
+| Tap feedback | 0.1s to 0.15s |
+| Standard state change | 0.2s to 0.3s |
+| Large movements | 0.3s to 0.5s |
+| Maximum | 0.6s |
+
+```css
+.enter  { transition-timing-function: cubic-bezier(0.0,  0.0,  0.2, 1); }
+.exit   { transition-timing-function: cubic-bezier(0.4,  0.0,  1,   1); }
+.bounce { transition-timing-function: cubic-bezier(0.68, -0.55, 0.265, 1.55); }
+```
+
+---
+
+## CSS Keyframe Animations
+
+```css
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(1rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.element {
+  animation: fadeIn 0.4s ease forwards;
+  will-change: transform, opacity;
+}
+```
+
+```css
+animation-fill-mode: forwards;  /* hold end state */
+animation-fill-mode: both;      /* hold start before delay, end after */
+```
+
+---
+
+## Will-Change
+
+Add `will-change: transform` to `position: fixed` or `position: sticky` elements before they animate. Remove it after.
+
+```css
+.drawer  { will-change: transform; }
+```
+
+```js
+element.addEventListener('animationend', () => {
+  element.style.willChange = 'auto';
+}, { once: true });
+```
+
+Never apply `will-change` globally. Each declaration allocates a compositor layer.
+
+---
+
+## Scroll-Driven Animations
+
+For any swipe-driven UI, scroll-driven CSS is the preferred approach. The scroll position drives the animation directly on the compositor. No JS per frame, no touch event listeners, smooth under every power state.
+
+### WebView Compatibility
+
+| API | Available |
+| :--- | :--- |
+| CSS `animation-timeline: scroll()` | Yes |
+| CSS `animation-timeline: view()` | Yes |
+| `new ScrollTimeline()` in JS | No - throws ReferenceError |
+| `new ViewTimeline()` in JS | No - throws ReferenceError |
+
+### Browser Support and Fallbacks
+
+`animation-timeline` requires Chromium 115+ / Safari 18+. Use `@supports` to layer it on top of a working CSS fallback.
+
+**Write the fallback first, enhance inside `@supports`:**
+
+```css
+/* Fallback - works everywhere */
+.drawer {
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+.drawer.is-open {
+  transform: translateX(0);
+}
+
+/* Enhancement - scroll-driven where supported */
+@supports (animation-timeline: scroll()) {
+  .drawer {
+    transition: none;
+    animation: drawer-in linear both;
+    animation-timeline: scroll(nearest inline);
+    animation-range: 0% 50%;
+  }
+}
+```
+
+**Always start items visible for scroll-reveal.** If `animation-timeline: view()` is unsupported, items stay at `opacity: 0` forever.
+
+```css
+/* Baseline - visible */
+.list-item { opacity: 1; transform: translateY(0); }
+
+/* Enhancement - animate in */
+@supports (animation-timeline: scroll()) {
+  .list-item {
+    opacity: 0;
+    transform: translateY(1rem);
+    animation: fadeInUp 0.4s ease forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+}
+
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+```
+
+**Branch in JS with `CSS.supports()`:**
+
+```js
+const supportsScrollTimeline = CSS.supports('animation-timeline: scroll()');
+
+function initDrawer(sceneEl, drawerEl) {
+  if (supportsScrollTimeline) {
+    initScrollDriver(sceneEl, drawerEl);
+  } else {
+    initClassToggle(drawerEl);
+  }
+}
+
+function initScrollDriver(sceneEl, drawerEl) {
+  const driver  = sceneEl.querySelector('.scroll-driver');
+  const openPos = driver.scrollWidth / 2;
+
+  sceneEl.querySelector('#menuBtn').addEventListener('click', () =>
+    driver.scrollTo({ left: openPos, behavior: 'smooth' }));
+
+  sceneEl.querySelector('#scrim').addEventListener('click', () =>
+    driver.scrollTo({ left: 0, behavior: 'smooth' }));
+
+  onScrollSettled(driver, () => {
+    const open = driver.scrollLeft >= openPos * 0.9;
+    drawerEl.classList.toggle('is-open', open);
+  });
+}
+
+function initClassToggle(drawerEl) {
+  document.getElementById('menuBtn').addEventListener('click', () =>
+    drawerEl.classList.add('is-open'));
+  document.getElementById('scrim').addEventListener('click', () =>
+    drawerEl.classList.remove('is-open'));
+}
+```
+
+**Support matrix:**
+
+| Environment | `animation-timeline` support |
+| :--- | :--- |
+| WKWebView - iOS 18+ | Yes |
+| WKWebView - iOS 17 and below | No - use `@supports` fallback |
+| Android WebView - Chrome 115+ | Yes |
+| Android WebView - older | No - use `@supports` fallback |
+
+### The Hidden Scroller Pattern
+
+The base technique for all swipe-driven UI. An invisible scroll container captures gestures. Its scroll position becomes the CSS timeline for the content below.
+
+```
+User swipes > invisible scroller moves > CSS timeline drives your UI
+```
+
+No `touchstart`. No `touchmove`. No `requestAnimationFrame`. Native scroll engine handles physics, momentum, and snap.
+
+```html
+<div class="scene">
+  <div class="animated-panel">...</div>
+  <div class="scroll-driver" id="driver">
+    <div class="scroll-driver-inner"></div>
+  </div>
+</div>
+```
+
+```css
+.scene { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+.scroll-driver {
+  position: absolute; inset: 0;
+  overflow-x: scroll; overflow-y: hidden;
+  scrollbar-width: none;
+  z-index: 20;
+  -webkit-overflow-scrolling: touch;
+}
+.scroll-driver::-webkit-scrollbar { display: none; }
+.scroll-driver-inner { width: 200%; height: 1px; }
+```
+
+```css
+.animated-panel {
+  animation: enter linear both;
+  animation-timeline: scroll(nearest inline);
+  animation-range: 0% 50%;
+  will-change: transform;
+}
+@keyframes enter {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+```
+
+### Programmatic Open and Close
+
+```js
+const driver  = document.getElementById('driver');
+const openPos = driver.scrollWidth / 2;
+
+function open()  { driver.scrollTo({ left: openPos, behavior: 'smooth' }); }
+function close() { driver.scrollTo({ left: 0,       behavior: 'smooth' }); }
+```
+
+### scrollend
+
+`scrollend` fires once when scrolling settles. Update state here, not on every pixel.
+
+```js
+driver.addEventListener('scrollend', () => {
+  const isOpen = driver.scrollLeft >= openPos * 0.9;
+  document.body.dataset.drawer = isOpen ? 'open' : 'closed';
+});
+```
+
+Fallback for iOS 16.3 and below:
+
+```js
+function onScrollSettled(el, callback, delay = 100) {
+  if ('onscrollend' in el) {
+    el.addEventListener('scrollend', callback);
+  } else {
+    let t;
+    el.addEventListener('scroll', () => {
+      clearTimeout(t);
+      t = setTimeout(callback, delay);
+    }, { passive: true });
+  }
+}
+```
+
+---
+
+## Scroll-Driven Patterns
+
+### Side Drawer
+
+```html
+<div class="drawer-scene">
+  <aside class="drawer" id="drawer">
+    <div class="drawer-inner">...</div>
+  </aside>
+  <div class="drawer-scrim" id="scrim"></div>
+  <div class="scroll-driver" id="drawerDriver">
+    <div class="scroll-driver-inner"></div>
+  </div>
+</div>
+```
+
+```css
+/* Light mode tokens */
+:root {
+  --drawer-bg:     #ffffff;
+  --drawer-text:   #111111;
+  --drawer-border: rgba(0, 0, 0, 0.08);
+  --drawer-scrim:  rgba(0, 0, 0, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --drawer-bg:     #1c1c1e;
+    --drawer-text:   #f2f2f7;
+    --drawer-border: rgba(255, 255, 255, 0.1);
+    --drawer-scrim:  rgba(0, 0, 0, 0.65);
+  }
+}
+
+.drawer-scene { position: relative; width: 100%; height: 100%; overflow: hidden; }
+
+.drawer {
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  width: 80vw; max-width: 320px;
+  background: var(--drawer-bg);
+  color: var(--drawer-text);
+  border-right: 1px solid var(--drawer-border);
+  will-change: transform;
+  animation: drawer-in linear both;
+  animation-timeline: scroll(nearest inline);
+  animation-range: 0% 50%;
+}
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+.drawer-inner {
+  padding-top: var(--safe-area-top);
+  height: 100%;
+  overflow-y: auto;
+}
+
+.drawer-scrim {
+  position: fixed; inset: 0;
+  background: var(--drawer-scrim);
+  opacity: 0;
+  pointer-events: none;
+  animation: scrim-in linear both;
+  animation-timeline: scroll(nearest inline);
+  animation-range: 0% 50%;
+}
+@keyframes scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+```
+
+```js
+const driver  = document.getElementById('drawerDriver');
+const openPos = driver.scrollWidth / 2;
+
+document.getElementById('menuBtn').addEventListener('click', () =>
+  driver.scrollTo({ left: openPos, behavior: 'smooth' }));
+
+document.getElementById('scrim').addEventListener('click', () =>
+  driver.scrollTo({ left: 0, behavior: 'smooth' }));
+
+driver.addEventListener('scrollend', () => {
+  const open = driver.scrollLeft >= openPos * 0.9;
+  driver.setAttribute('aria-expanded', open);
+  document.body.classList.toggle('nav-open', open);
+});
+```
+
+### Bottom Sheet (Gesture-Driven)
+
+```css
+.sheet-driver {
+  position: absolute; inset: 0;
+  overflow-y: scroll; overflow-x: hidden;
+  scrollbar-width: none;
+  z-index: 20;
+  -webkit-overflow-scrolling: touch;
+}
+.sheet-driver-inner { height: 200%; width: 1px; }
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 60vh;
+  border-radius: 16px 16px 0 0;
+  background: var(--surface);
+  will-change: transform;
+  animation: sheet-up linear both;
+  animation-timeline: scroll(nearest block);
+  animation-range: 0% 50%;
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+```
+
+```js
+const driver  = document.getElementById('sheetDriver');
+const openPos = driver.scrollHeight / 2;
+
+function openSheet()  { driver.scrollTo({ top: openPos, behavior: 'smooth' }); }
+function closeSheet() { driver.scrollTo({ top: 0,       behavior: 'smooth' }); }
+
+onScrollSettled(driver, () => {
+  const open = driver.scrollTop >= openPos * 0.9;
+  document.body.dataset.sheet = open ? 'open' : 'closed';
+});
+```
+
+### Detent Sheet (Multiple Snap Points)
+
+A sheet that snaps to peek, half, and full open.
+
+```css
+.detent-driver {
+  position: absolute; inset: 0;
+  overflow-y: scroll; overflow-x: hidden;
+  scrollbar-width: none;
+  scroll-snap-type: y mandatory;
+  z-index: 30;
+  -webkit-overflow-scrolling: touch;
+}
+.detent-driver::-webkit-scrollbar { display: none; }
+.detent-driver-inner { height: 300%; width: 1px; }
+
+.detent-sheet {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: 90vh;
+  background: var(--surface);
+  border-radius: 12px 12px 0 0;
+  will-change: transform;
+  animation: detent-rise linear both;
+  animation-timeline: scroll(nearest block);
+  animation-range: 0% 100%;
+}
+@keyframes detent-rise {
+  0%   { transform: translateY(calc(90vh - 3rem)); }
+  33%  { transform: translateY(60%); }
+  100% { transform: translateY(0); }
+}
+
+.detent-handle {
+  width: 2.5rem; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0.75rem auto;
+}
+```
+
+```js
+const driver = document.getElementById('detentDriver');
+const PEEK   = driver.scrollHeight * 0.33;
+const OPEN   = driver.scrollHeight;
+
+function openPeek() { driver.scrollTo({ top: PEEK, behavior: 'smooth' }); }
+function openFull() { driver.scrollTo({ top: OPEN, behavior: 'smooth' }); }
+function close()    { driver.scrollTo({ top: 0,    behavior: 'smooth' }); }
+```
+
+### Full-Screen Page Swipe Stack
+
+Full-screen vertical snap-scroll. Each page scales up as it enters and scales down as it exits.
+
+```css
+.page-stack {
+  height: 100dvh;
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+.page-stack::-webkit-scrollbar { display: none; }
+
+.stack-page {
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  will-change: transform, opacity;
+  animation: stack-page-anim linear both;
+  animation-timeline: view(block);
+  animation-range: cover 0% cover 100%;
+}
+@keyframes stack-page-anim {
+  0%   { transform: scale(0.94) translateY(4%);  opacity: 0.5; }
+  30%  { transform: scale(1)    translateY(0);   opacity: 1;   }
+  70%  { transform: scale(1)    translateY(0);   opacity: 1;   }
+  100% { transform: scale(0.92) translateY(-2%); opacity: 0.4; }
+}
+```
+
+```js
+function goToPage(index) {
+  document.querySelectorAll('.stack-page')[index]
+    .scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+```
+
+### Parallax Hero with Fading Title
+
+```css
+.hero { position: relative; height: 60vh; overflow: hidden; }
+
+.hero-bg {
+  position: absolute;
+  inset: -20%;
+  background: url('hero.jpg') center / cover no-repeat;
+  will-change: transform;
+  animation: hero-parallax linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 0vh 60vh;
+}
+@keyframes hero-parallax {
+  from { transform: translateY(0); }
+  to   { transform: translateY(25%); }
+}
+
+.hero-title {
+  will-change: transform, opacity;
+  animation: hero-title-out linear both;
+  animation-timeline: scroll(root block);
+  animation-range: 0vh 40vh;
+}
+@keyframes hero-title-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-2rem); }
+}
+```
+
+### Large Title Navigation Bar
+
+Bar title and border fade in as the large title scrolls away.
+
+```css
+.nav-bar {
+  position: sticky; top: 0;
+  height: 44px;
+  background: var(--surface);
+  border-bottom: 1px solid transparent;
+  z-index: 10;
+}
+
+.nav-bar-title {
+  opacity: 0;
+  animation: bar-title-in linear both;
+  animation-timeline: scroll(nearest block);
+  animation-range: 40px 80px;
+}
+@keyframes bar-title-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.nav-bar {
+  animation: bar-border-in linear both;
+  animation-timeline: scroll(nearest block);
+  animation-range: 40px 80px;
+}
+@keyframes bar-border-in {
+  from { border-color: transparent; }
+  to   { border-color: var(--border); }
+}
+
+.nav-large-title {
+  font-size: 2rem; font-weight: 700;
+  will-change: transform, opacity;
+  animation: large-title-out linear both;
+  animation-timeline: scroll(nearest block);
+  animation-range: 0px 70px;
+}
+@keyframes large-title-out {
+  from { opacity: 1; transform: translateY(0) scale(1); }
+  to   { opacity: 0; transform: translateY(-0.5rem) scale(0.85); }
+}
+```
+
+### Swipe Card Stack
+
+```css
+.card-stack {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.card-stack::-webkit-scrollbar { display: none; }
+
+.card {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  will-change: transform, opacity;
+  animation: card-anim linear both;
+  animation-timeline: view(inline);
+  animation-range: cover 0% cover 100%;
+}
+@keyframes card-anim {
+  0%   { transform: scale(0.88) translateX(12%);  opacity: 0.4; }
+  33%  { transform: scale(1)    translateX(0);    opacity: 1;   }
+  66%  { transform: scale(1)    translateX(0);    opacity: 1;   }
+  100% { transform: scale(0.88) translateX(-12%); opacity: 0.4; }
+}
+```
+
+### Scroll-Reveal List
+
+```css
+/* Baseline - visible on unsupported browsers */
+.list-item { opacity: 1; transform: translateY(0); }
+
+@supports (animation-timeline: scroll()) {
+  .list-item {
+    opacity: 0;
+    transform: translateY(1rem);
+    animation: fadeInUp 0.4s ease forwards;
+    animation-timeline: view();
+    animation-range: entry 0% entry 35%;
+  }
+  .list-item:nth-child(1) { animation-delay: 0s; }
+  .list-item:nth-child(2) { animation-delay: 0.1s; }
+  .list-item:nth-child(3) { animation-delay: 0.2s; }
+  .list-item:nth-child(4) { animation-delay: 0.3s; }
+}
+
+@keyframes fadeInUp {
+  to { opacity: 1; transform: translateY(0); }
+}
+```
+
+### Strip Viewer
+
+Horizontal snap viewer for comics, onboarding, or photo strips. Progress bar requires no JS.
+
+```html
+<div class="strip" id="strip">
+  <div class="strip-page"><img src="page-01.jpg" alt="Page 1"></div>
+  <div class="strip-page"><img src="page-02.jpg" alt="Page 2"></div>
+</div>
+<span id="counter">1 / 12</span>
+<div class="strip-progress"></div>
+```
+
+```css
+.strip {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  width: 100%; height: 100%;
+}
+.strip::-webkit-scrollbar { display: none; }
+
+.strip-page {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  animation: page-focus linear both;
+  animation-timeline: view(inline);
+  animation-range: cover 0% cover 100%;
+}
+@keyframes page-focus {
+  0%   { opacity: 0.2; transform: scale(0.92); }
+  33%  { opacity: 1;   transform: scale(1); }
+  66%  { opacity: 1;   transform: scale(1); }
+  100% { opacity: 0.2; transform: scale(0.92); }
+}
+
+.strip-page img {
+  max-width: 100%; max-height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.strip-progress {
+  position: fixed; bottom: 0; left: 0;
+  height: 2px; width: 100%;
+  background: var(--accent);
+  transform-origin: left;
+  animation: progress linear both;
+  animation-timeline: scroll(nearest inline);
+}
+@keyframes progress {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+```
+
+```js
+const strip = document.getElementById('strip');
+const total = strip.querySelectorAll('.strip-page').length;
+
+onScrollSettled(strip, () => {
+  const current = Math.round(strip.scrollLeft / strip.offsetWidth) + 1;
+  document.getElementById('counter').textContent = `${current} / ${total}`;
+});
+
+function goToPage(n) {
+  strip.scrollTo({ left: (n - 1) * strip.offsetWidth, behavior: 'smooth' });
+}
+```
+
+### Carousel with Indicator Dots
+
+```css
+.carousel {
+  display: flex;
+  overflow-x: scroll;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+.carousel::-webkit-scrollbar { display: none; }
+.carousel-panel { flex: 0 0 100%; scroll-snap-align: start; }
+
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  border: none;
+  transition: background 0.2s, transform 0.2s;
+}
+.dot.active { background: var(--accent); transform: scale(1.3); }
+```
+
+```js
+const carousel = document.getElementById('carousel');
+const dots     = document.querySelectorAll('.dot');
+
+dots.forEach(dot => {
+  dot.addEventListener('click', () =>
+    carousel.scrollTo({
+      left: parseInt(dot.dataset.index) * carousel.offsetWidth,
+      behavior: 'smooth'
+    })
+  );
+});
+
+onScrollSettled(carousel, () => {
+  const i = Math.round(carousel.scrollLeft / carousel.offsetWidth);
+  dots.forEach((d, j) => d.classList.toggle('active', i === j));
+});
+```
+
+### Context Menu Entrance
+
+Scales up from the tap point. Removes itself from DOM on dismiss.
+
+```css
+.context-menu {
+  position: fixed;
+  background: var(--surface);
+  border-radius: 14px;
+  min-width: 200px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  transform-origin: var(--origin-x, 50%) var(--origin-y, 0%);
+  animation: context-in 0.22s cubic-bezier(0.34, 1.36, 0.64, 1) forwards;
+  will-change: transform, opacity;
+}
+@keyframes context-in {
+  from { transform: scale(0.7); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+.context-menu.is-dismissing {
+  animation: context-out 0.16s ease-in forwards;
+}
+@keyframes context-out {
+  from { transform: scale(1);    opacity: 1; }
+  to   { transform: scale(0.85); opacity: 0; }
+}
+
+.context-item {
+  display: block; width: 100%;
+  padding: 0.75rem 1rem;
+  background: none; border: none;
+  font-size: 1rem; color: var(--text); text-align: left;
+  transition: background 0.1s ease;
+}
+.context-item:active { background: var(--surface2); }
+.context-item--destructive { color: #ef4444; }
+```
+
+```js
+function showContextMenu(x, y) {
+  const menu = document.getElementById('contextMenu');
+  const vw = window.innerWidth, vh = window.innerHeight;
+
+  menu.style.left = `${x}px`;
+  menu.style.top  = `${y}px`;
+  menu.style.setProperty('--origin-x', `${(x / vw * 100).toFixed(1)}%`);
+  menu.style.setProperty('--origin-y', `${(y / vh * 100).toFixed(1)}%`);
+
+  document.body.appendChild(menu);
+  void menu.offsetHeight;
+  menu.classList.remove('is-dismissing');
+}
+
+function dismissContextMenu() {
+  const menu = document.getElementById('contextMenu');
+  if (!menu) return;
+  menu.classList.add('is-dismissing');
+  menu.addEventListener('animationend', () => menu.remove(), { once: true });
+}
+
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('contextMenu');
+  if (menu && !menu.contains(e.target)) dismissContextMenu();
+});
+```
+
+### Tab Bar with Sliding Indicator
+
+```css
+.tab-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(56px + var(--safe-area-bottom));
+  padding-bottom: var(--safe-area-bottom);
+  display: flex; align-items: stretch;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+}
+
+.tab {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: none; border: none;
+  transition: opacity 0.1s ease;
+}
+.tab:active { opacity: 0.6; }
+.tab-label  { font-size: 0.625rem; color: var(--text-faint); }
+.tab[aria-selected="true"] .tab-label { color: var(--accent); }
+
+.tab-indicator {
+  position: absolute; top: 6px;
+  width: 44px; height: 30px;
+  background: var(--accent-subtle, rgba(0, 122, 255, 0.12));
+  border-radius: 10px;
+  will-change: transform;
+  transition: transform 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+}
+```
+
+```js
+const tabBar    = document.getElementById('tabBar');
+const indicator = document.getElementById('tabIndicator');
+const tabs      = tabBar.querySelectorAll('.tab');
+
+function updateIndicator(tab) {
+  const barRect = tabBar.getBoundingClientRect();
+  const tabRect = tab.getBoundingClientRect();
+  const centerX = tabRect.left + tabRect.width / 2 - barRect.left;
+  indicator.style.transform = `translateX(${centerX - 22}px)`;
+}
+
+updateIndicator(tabs[0]);
+
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.setAttribute('aria-selected', 'false'));
+    tab.setAttribute('aria-selected', 'true');
+    updateIndicator(tab);
+  });
+});
+```
+
+### Notification Banner
+
+Slides down from the top, auto-dismisses, removes from DOM on exit.
+
+```css
+.alert-banner {
+  position: fixed; top: 0; left: 1rem; right: 1rem;
+  margin-top: var(--safe-area-top);
+  background: var(--surface);
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14);
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  z-index: 100;
+  will-change: transform, opacity;
+  transform: translateY(calc(-100% - var(--safe-area-top) - 1rem));
+}
+.alert-banner.is-entering {
+  animation: banner-in 0.45s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+.alert-banner.is-exiting {
+  animation: banner-out 0.3s cubic-bezier(0.4, 0.0, 1, 1) forwards;
+}
+@keyframes banner-in {
+  from { transform: translateY(calc(-100% - var(--safe-area-top) - 1rem)); opacity: 0.6; }
+  to   { transform: translateY(0.5rem); opacity: 1; }
+}
+@keyframes banner-out {
+  from { transform: translateY(0.5rem); opacity: 1; }
+  to   { transform: translateY(calc(-100% - var(--safe-area-top) - 1rem)); opacity: 0; }
+}
+```
+
+```js
+function showBanner(durationMs = 4000) {
+  const banner = document.getElementById('alertBanner');
+  document.body.appendChild(banner);
+  void banner.offsetHeight;
+  banner.classList.add('is-entering');
+
+  const t = setTimeout(() => dismissBanner(), durationMs);
+  banner.addEventListener('click', () => { clearTimeout(t); dismissBanner(); });
+}
+
+function dismissBanner() {
+  const banner = document.getElementById('alertBanner');
+  if (!banner) return;
+  banner.classList.remove('is-entering');
+  banner.classList.add('is-exiting');
+  banner.addEventListener('animationend', () => banner.remove(), { once: true });
+}
+```
+
+---
+
+## DOM Lifecycle
+
+Keep off-screen elements out of the DOM. Remove them after exit animations. Animate them in after inserting.
+
+### Remove After Exit
+
+```js
+function dismiss(el) {
+  el.classList.add('is-exiting');
+  el.addEventListener('transitionend', () => el.remove(), { once: true });
+}
+```
+
+### Animate In After Insert
+
+Inserting and immediately adding the active class in the same tick skips the transition. Force a reflow between the two.
+
+```js
+function show(el) {
+  document.body.appendChild(el);
+  void el.offsetHeight; // flush styles
+  el.classList.add('is-open');
+}
+```
+
+### Full Lifecycle
+
+```js
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = message;
+  document.body.appendChild(toast);
+
+  void toast.offsetHeight;
+  toast.classList.add('is-visible');
+
+  setTimeout(() => {
+    toast.classList.remove('is-visible');
+    toast.classList.add('is-exiting');
+    toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+  }, 3000);
+}
+```
+
+---
+
+## Modal and Sheet Animations
+
+### Fade and Scale
+
+```css
+.modal-overlay { opacity: 0; transition: opacity 0.3s ease; }
+.modal-overlay.open { opacity: 1; }
+
+.modal-content {
+  opacity: 0;
+  transform: scale(0.9) translateY(-1rem);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.modal-content.open { opacity: 1; transform: scale(1) translateY(0); }
+```
+
+### Slide from Bottom (Class-Toggled)
+
+For sheets that do not need gesture tracking. Use the Hidden Scroller Pattern when gesture progress matters.
+
+```css
+.sheet {
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+.sheet.open { transform: translateY(0); }
+```
+
+---
+
+## Page Transitions
+
+```css
+.page {
+  position: absolute; width: 100%;
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.0, 0.0, 0.2, 1);
+}
+.page.active  { transform: translateX(0); }
+.page.exiting { transform: translateX(-100%); }
+```
+
+---
+
+## Common Patterns
+
+### Button Tap Feedback
+
+```css
+.button { transition: transform 0.1s ease; }
+.button:active { transform: scale(0.95); }
+```
+
+### Toggle Switch
+
+```css
+.toggle {
+  width: 3rem; height: 1.5rem;
+  background: #ccc; border-radius: 1.5rem;
+  position: relative;
+  transition: background 0.3s ease;
+}
+.toggle.active { background: #007bff; }
+
+.toggle-handle {
+  width: 1.25rem; height: 1.25rem;
+  background: white; border-radius: 50%;
+  position: absolute; top: 0.125rem; left: 0.125rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+.toggle.active .toggle-handle { transform: translateX(1.5rem); }
+```
+
+### Loading Skeleton
+
+```css
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-sweep 1.5s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+  0%   { background-position:  200% 0; }
+  100% { background-position: -200% 0; }
+}
+```
+
+### Spinner
+
+```css
+.spinner {
+  width: 2.5rem; height: 2.5rem;
+  border: 0.25rem solid #f0f0f0;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+```
+
+---
+
+## JS Fallback Animations
+
+Use `requestAnimationFrame` only when CSS cannot express the result - physics simulations, canvas, procedural effects - or as a fallback for `animation-timeline` on unsupported browsers.
+
+```js
+function animate(element, from, to, duration) {
+  const start = performance.now();
+
+  function step(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const eased    = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    element.style.transform = `translateX(${from + (to - from) * eased}px)`;
+    if (progress < 1) requestAnimationFrame(step);
+  }
+
+  requestAnimationFrame(step);
+}
+```
+
+Read all layout values before writing. Interleaved reads and writes force repeated reflows.
+
+```js
+// Wrong
+elements.forEach(el => { el.style.transform = `translateX(${el.offsetWidth * 0.5}px)`; });
+
+// Correct
+const offsets = elements.map(el => el.offsetWidth * 0.5);
+requestAnimationFrame(() => {
+  elements.forEach((el, i) => { el.style.transform = `translateX(${offsets[i]}px)`; });
+});
+```
+
+---
+
+## Accessibility
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+```
+
+Wrap scroll-driven keyframes so items do not get stuck invisible on reduced motion:
+
+```css
+@media (prefers-reduced-motion: no-preference) {
+  .drawer {
+    animation: drawer-in linear both;
+    animation-timeline: scroll(nearest inline);
+    animation-range: 0% 50%;
+  }
+  @keyframes drawer-in {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(0); }
+  }
+}
+.drawer         { transform: translateX(-100%); transition: none; }
+.drawer.is-open { transform: translateX(0); }
+```
+
+---
+
+## Platform Notes
+
+**iOS (WKWebView)**
+- JS animations throttle to ~30fps under Low Power Mode
+- CSS scroll-driven animations are not throttled by Low Power Mode
+- `transform` and `opacity` stay smooth across all power states
+- Avoid animating `box-shadow` - triggers paint every frame
+
+**Android (WebView)**
+- Test on mid-range hardware (4GB RAM)
+- Be conservative with simultaneous animations
+
+---
+
+## Quick Reference
+
+```
+Always safe:   transform, opacity
+Never animate: width, height, top, left, margin, padding
+Avoid in scroll-driven: box-shadow, filter, backdrop-filter
+```
+
+**Checklist**
+- CSS scroll-driven first for drawers, sheets, parallax, page stacks
+- `@supports (animation-timeline: scroll())` fallback for all scroll-driven CSS
+- Start scroll-reveal items visible so they do not get stuck on unsupported browsers
+- `:active` for touch feedback, never `:hover`
+- `will-change` only on actively animating elements, remove after
+- `{ passive: true }` on all scroll listeners
+- State updates in `scrollend`, not per pixel
+- Remove elements from DOM after exit animations
+- `void el.offsetHeight` between insert and animate-in
+- Wrap scroll-driven keyframes in `prefers-reduced-motion: no-preference`
+- Test on mid-range Android and under iOS Low Power Mode

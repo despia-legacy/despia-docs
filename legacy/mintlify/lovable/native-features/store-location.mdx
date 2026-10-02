@@ -1,0 +1,105 @@
+---
+title: "Store Location"
+description: "Access the user's current store location for location-based services, regional content, and localized experiences in your Lovable application."
+icon: "globe"
+---
+
+<iframe src="https://www.youtube.com/embed/jRK3xfWqi0w" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Access the user's current store location for location-based services and regional content in your application using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  1. Import the Despia SDK in your component
+  2. Access the store location using `despia.storeLocation`
+  3. Display the store location in your UI
+  4. Use the location data for regional content and localized features
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the "despia-native" npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia Store Location SDK enables your application to access the user's current store location to provide location-based services, regional content, and localized experiences. This lightweight solution runs entirely client-side through `despia.storeLocation`, requiring no server-side setup or configuration.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Get Store Location**
+
+Access the store location from the `despia.storeLocation` variable:
+
+```tsx
+// Simple example - show store location and checkout button
+const storeLocation = despia.storeLocation;
+
+// Display in UI
+<div>
+  <p>Your Store Location: {storeLocation}</p>
+  
+  {storeLocation === 'USA' && (
+    <button onClick={handleWebPayment}>
+      Checkout with Web Payment
+    </button>
+  )}
+</div>
+
+// Handle web payment for US users
+const handleWebPayment = () => {
+  // Process web payment
+  console.log('Processing US web payment');
+};
+```
+
+### **Backend Integration**
+
+This is merely an illustration; your implementation may differ.
+
+```javascript
+// "/api/store-location" endpoint
+export default async function handler(req, res) {
+  const { userId, storeLocation, timestamp } = req.body;
+  
+  try {
+    // Store the location data in your database
+    await db.collection('user_locations').doc(userId).set({
+      userId,
+      storeLocation,
+      lastChecked: timestamp,
+      createdAt: timestamp
+    }, { merge: true });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to sync store location' });
+  }
+}
+```
+
+## **Resources**
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+### **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native file sharing capabilities into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

@@ -1,0 +1,175 @@
+---
+title: "Offline Push"
+description: "Schedule a local notification on the device with a title, body, deep link, and delay in seconds, fully offline and triggered without a server round-trip."
+icon: "bell"
+---
+
+<iframe src="https://www.youtube.com/embed/7k-DRdjRrWU" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call with the scheme parameters.
+</Note>
+
+`sendlocalpushmsg://` schedules a local notification on the device after a delay you specify in seconds. The OS surfaces the notification even if your app is closed, and tapping it opens the URL you passed in. Everything happens client-side, no server, no network call, no OneSignal account required.
+
+<Info>
+  This feature is fully supported and a good fit for short-lived, contextual reminders that the user just set themselves (a 10-minute timer, a "remember to drink water in 2 hours" tap). For anything else, especially anything where your backend is the source of truth (scheduled marketing, transactional alerts, time-zone-aware drip sequences), use [OneSignal](/native-features/onesignal/reference) instead. OneSignal's `send_after` and `delayed_option: timezone` parameters cover the same scheduling space with the durability and observability of server-sent push.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+The scheme packs four values into a single URL: delay in seconds, message body, title, and deep-link URL. The runtime registers the notification with the OS scheduler and returns immediately. There is no return value and no callback when the notification fires.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('sendlocalpushmsg://push.send?s=5=msg!Don't forget to save&!#Quick reminder&!#https://myapp.com/save')
+}
+```
+
+The format is fixed: `s=` followed by the delay, `=msg!` followed by the body, `&!#` followed by the title, `&!#` followed by the deep-link URL. The unusual delimiters exist so the scheme parser can tell the four fields apart even when their values contain spaces or punctuation.
+
+---
+
+## Scheme parameters
+
+| Parameter | Position in URL | What it carries |
+| :-- | :-- | :-- |
+| Delay | `s={n}` | Seconds until the notification fires. Use `0` for immediate, larger values for scheduled |
+| Message | `=msg!{body}` | The notification body text the user reads |
+| Title | `&!#{title}` | The notification title shown above the body |
+| Deep link | `&!#{url}` | The URL to open in the WebView when the user taps the notification |
+
+Encode any user-supplied values with `encodeURIComponent` to avoid breaking the parser when the message or title contains `&`, `#`, `!`, or `=`.
+
+```javascript
+function scheduleReminder(seconds, title, body, url) {
+    if (!isDespia) return
+
+    const t = encodeURIComponent(title)
+    const b = encodeURIComponent(body)
+    const u = encodeURIComponent(url)
+
+    despia(`sendlocalpushmsg://push.send?s=${seconds}=msg!${b}&!#${t}&!#${u}`)
+}
+
+scheduleReminder(60, 'Stretch break', 'Time to stand up', 'https://myapp.com/wellness')
+```
+
+---
+
+## Schedule a self-set reminder
+
+The natural fit for offline push is a reminder the user just set themselves. The interaction is one-shot, the delay is short, and the user already knows what's coming, so a server is unnecessary.
+
+```jsx
+import { useState } from 'react'
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function TimerButton() {
+    const [minutes, setMinutes] = useState(10)
+
+    function startTimer() {
+        if (!isDespia) return
+
+        const seconds = minutes * 60
+        const body    = encodeURIComponent(`Your ${minutes}-minute timer is up`)
+        const title   = encodeURIComponent('Timer')
+        const url     = encodeURIComponent('https://myapp.com/timer')
+
+        despia(`sendlocalpushmsg://push.send?s=${seconds}=msg!${body}&!#${title}&!#${url}`)
+    }
+
+    return (
+        <div>
+            <input
+                type="number"
+                value={minutes}
+                onChange={e => setMinutes(Number(e.target.value))}
+            />
+            <button onClick={startTimer}>Start {minutes}-minute timer</button>
+        </div>
+    )
+}
+```
+
+---
+
+## When to reach for OneSignal instead
+
+Offline push is the right tool when the user just set the reminder, the delay is short, and missing the notification would not break anything. Reach for [OneSignal](/native-features/onesignal/reference) when any of the following apply:
+
+| Need | Why offline push falls short | What OneSignal gives you |
+| :-- | :-- | :-- |
+| Schedule from your backend | Offline push only fires from a JavaScript call inside the app | `send_after` parameter on the REST API, scheduled server-side |
+| Deliver at a specific local time across time zones | Seconds-based delays drift relative to the user's clock | `delayed_option: 'timezone'` plus `delivery_time_of_day` |
+| Send to users who do not have the app open | The app has to run for the schedule to register | Cloud-delivered, no app launch required |
+| Cancel or update a notification after scheduling | No cancel API, the notification fires regardless of app state changes | Notification IDs returned by the REST API for later cancellation |
+| Audit which users received which notifications | Fully client-side, no record exists outside the device | Full delivery analytics in the OneSignal dashboard |
+| Target by tag, segment, or behavior | Each call is per-device with no targeting layer | `filters` and `included_segments` for behavioral targeting |
+
+For anything where your backend should be the source of truth, OneSignal is worth the integration cost. Offline push is best kept to user-initiated, in-the-moment reminders.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

@@ -1,0 +1,403 @@
+---
+title: "Reference"
+icon: "code"
+description: "Full API reference for OneSignal push notifications in Despia: client-side schemes, backend payload options, deep linking fields, segmentation, and critical alerts."
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Methods
+
+## Methods
+
+### Register for push (custom setups only)
+
+Despia requests push permission and registers the device with OneSignal automatically at app launch. You do not need to call this. It is only available if you have disabled auto-registration in the Despia dashboard and want to trigger the permission prompt at a specific point in your own flow.
+
+```javascript
+// Only for custom setups with auto-registration disabled
+despia('registerpush://')
+```
+
+---
+
+### Link user ID
+
+Associates the device with your user. Call this on every authenticated app load, immediately after you confirm the user is logged in. This is how OneSignal knows which device to deliver a notification to when you send it.
+
+```javascript
+despia(`setonesignalplayerid://?user_id=${userId}`)
+```
+
+| Parameter | Required | Description |
+| --- | --- | --- |
+| `user_id` | Yes | Your user's ID from your own database. This becomes the `external_id` in OneSignal. |
+
+The value you pass here is what you include in `include_external_user_ids` when sending notifications from your backend.
+
+---
+
+### Check push permission status
+
+Check whether the user has push notifications enabled on their device. Use this to show an in-app prompt directing them to their settings if they have not granted permission.
+
+```javascript
+const result = await despia('checkNativePushPermissions://', ['nativePushEnabled'])
+
+if (result.nativePushEnabled) {
+    // Push is enabled , proceed normally
+} else {
+    // Push is disabled , show a prompt explaining why notifications matter
+    // and offer a button to open device settings
+    despia('settingsapp://')
+}
+```
+
+| Return key | Type | Description |
+| --- | --- | --- |
+| `nativePushEnabled` | boolean | `true` if the user has granted push permission, `false` if denied or not yet requested |
+
+A good pattern is to check on every app load and show a non-intrusive banner when push is disabled, rather than blocking the user. `settingsapp://` opens the device settings page for your app where the user can enable notifications directly.
+
+---
+
+## Full client-side setup
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+async function initNotifications(userId) {
+    if (!isDespia) return
+
+    // Link device to your user , call on every authenticated load
+    despia(`setonesignalplayerid://?user_id=${userId}`)
+}
+
+// Call on every authenticated load
+initNotifications(currentUser.id)
+```
+
+---
+
+## Backend: send a notification
+
+Send notifications from your backend using OneSignal's REST API. Use `include_external_user_ids` to target specific users by the same ID you passed to `setonesignalplayerid://`.
+
+```javascript
+// POST /api/notifications/send
+async function sendPushNotification(userId, title, message, data = {}) {
+    const response = await fetch('https://onesignal.com/api/v1/notifications', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+        },
+        body: JSON.stringify({
+            app_id:                    process.env.ONESIGNAL_APP_ID,
+            include_external_user_ids: [userId],
+            headings:                  { en: title },
+            contents:                  { en: message },
+        }),
+    })
+    return response.json()
+}
+```
+
+### Send to multiple users
+
+```javascript
+await sendPushNotification(
+    ['user_123', 'user_456', 'user_789'],
+    'New message',
+    'You have a new message waiting'
+)
+
+// change include_external_user_ids to an array of user IDs
+```
+
+### Send to all users
+
+```javascript
+const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+    },
+    body: JSON.stringify({
+        app_id:            process.env.ONESIGNAL_APP_ID,
+        included_segments: ['All'],
+        headings:          { en: 'Title' },
+        contents:          { en: 'Message to all users' },
+    }),
+})
+```
+
+---
+
+## Notification payload options
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `app_id` | string | Your OneSignal App ID |
+| `include_external_user_ids` | string\[\] | Target specific users by your user ID |
+| `included_segments` | string\[\] | Target a segment, e.g. `["All"]`, `["Active Users"]` |
+| `headings` | object | Title per language, e.g. `{ en: "Title" }` |
+| `contents` | object | Body per language, e.g. `{ en: "Message" }` |
+| `data` | object | Custom key-value data delivered with the notification. Supports `url`, `path`, and `metadata` (see routing section below). |
+| `send_after` | string | Schedule delivery, e.g. `"2026-01-01T09:00:00Z"` |
+| `delayed_option` | string | `"timezone"` to deliver at a specific local time |
+| `delivery_time_of_day` | string | Time for timezone delivery, e.g. `"9:00AM"` |
+| `ios_critical_alert` | number | Set to `1` to send a critical alert on iOS. Requires the Critical Alerts entitlement and must be enabled in Despia before use. |
+
+---
+
+## Deep linking and routing from a notification
+
+The `data` object supports three fields for routing and state delivery. All are optional and can be combined freely.
+
+| Key | Type | Behavior |
+| --- | --- | --- |
+| `url` | string | **Legacy.** Full URL or relative path. Triggers a full WebView navigation/reload. Use only when a reload is actually needed. |
+| `path` | string | A route like `/account/orders?status=open#123`. Despia updates the URL via `pushState` and fires `popstate`. No reload, no extra code needed in your web app. |
+| `metadata` | any JSON | Arbitrary state object delivered to `window.onNotificationEvent`. Use it to restore app state on open. |
+
+### Sending a path from your backend
+
+```javascript
+body: JSON.stringify({
+    app_id:                    process.env.ONESIGNAL_APP_ID,
+    include_external_user_ids: [userId],
+    headings:                  { en: 'Your order shipped' },
+    contents:                  { en: 'Tap to track it' },
+    data: {
+        path: '/account/orders/4567?tab=tracking#timeline',
+    },
+})
+```
+
+Despia applies the path via the History API on notification tap. Most SPA routers react to the `popstate` event and navigate automatically, no additional code required on the web side.
+
+### `window.onNotificationEvent` (optional)
+
+If your router does not react to a synthetic `popstate`, or you need to act on `metadata`, define `window.onNotificationEvent` at the top of your entry bundle. The host app calls it on every notification tap after applying the URL change.
+
+```javascript
+// Only needed if your router ignores popstate, or you use metadata
+window.onNotificationEvent = function (payload) {
+    // payload.type === "open"
+    // payload.path?     -> "/account/orders/4567?tab=tracking#timeline"
+    // payload.url?      -> present only if data.url was sent
+    // payload.metadata? -> object (REST API) or string (dashboard) or absent
+
+    if (payload.path) {
+        router.navigate(payload.path)
+    }
+    if (payload.metadata) {
+        const meta = typeof payload.metadata === 'string'
+            ? JSON.parse(payload.metadata)
+            : payload.metadata
+        restoreState(meta)
+    }
+}
+```
+
+Payload shape:
+
+```jsonc
+{
+    "type":     "open",         // always "open" for a click
+    "path":     "/...",         // only if data.path was sent
+    "url":      "https://...",  // only if data.url was sent
+    "metadata": { ... }         // only if data.metadata was sent
+}
+```
+
+<Info>
+  If you set `metadata` via the OneSignal dashboard Additional Data fields, the value arrives as a string and must be `JSON.parse`d. If you send `metadata` as a real JSON object via the REST API `data` field, the handler receives an object directly. `path` and `url` are always strings.
+</Info>
+
+### Timing
+
+| App state when notification is tapped | When the URL updates and `onNotificationEvent` fires |
+| --- | --- |
+| Foreground (web app already loaded) | Immediately. `path` changes with no reload. |
+| Background (resumed) | When the WebView is presented, after the page is ready. |
+| Killed / cold start | Native buffers the payload and applies it once the page finishes loading. |
+| `data.url` push (any state) | After the forced reload completes. |
+
+The event is delivered once per tap and then cleared.
+
+---
+
+## Critical alerts
+
+Critical alerts bypass Do Not Disturb and silent mode on the user's device.
+
+### iOS
+
+iOS requires the Critical Alerts entitlement from Apple. Request it at [developer.apple.com/contact/request/notifications-critical-alerts-entitlement](https://developer.apple.com/contact/request/notifications-critical-alerts-entitlement). Apple reviews requests manually and approval can take several weeks.
+
+When submitting the request, you need to enable the entitlement on two bundle IDs, your core app bundle ID and your OneSignal Service Extension bundle ID. For example, if your app bundle ID is `com.despia.myapp`, add both:
+
+- `com.despia.myapp`
+- `com.despia.myapp.OneSignalNotificationServiceExtension`
+
+Once Apple approves the request, enable critical alerts in **Despia \> App \> Integrations \> OneSignal \> Critical Alerts** and rebuild a new version in Despia. After the rebuild, set `ios_critical_alert` to `1` in your payload.
+
+```javascript
+// Backend: send a critical alert on iOS
+const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+    },
+    body: JSON.stringify({
+        app_id:                    process.env.ONESIGNAL_APP_ID,
+        include_external_user_ids: [userId],
+        headings:                  { en: 'Urgent alert' },
+        contents:                  { en: 'Message body' },
+        ios_critical_alert:        1,
+    }),
+})
+```
+
+### Android
+
+No dashboard configuration or rebuild is required. Set `priority` to `10` and `android_channel_id` to a high-importance channel in your OneSignal payload.
+
+To get your channel ID, go to **OneSignal \> Settings \> Messaging \> Android Categories** and create a new category with importance set to **Urgent**. OneSignal will generate a channel ID for that category, copy it and use it as `android_channel_id` in your payload.
+
+```javascript
+// Backend: send a critical alert on Android
+const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+    },
+    body: JSON.stringify({
+        app_id:                    process.env.ONESIGNAL_APP_ID,
+        include_external_user_ids: [userId],
+        headings:                  { en: 'Urgent alert' },
+        contents:                  { en: 'Message body' },
+        priority:                  10,
+        android_channel_id:        'YOUR_CHANNEL_ID', // from OneSignal > Settings > Messaging > Android Categories
+    }),
+})
+```
+
+### Both platforms
+
+To send a single critical alert that works on both Android and iOS, combine the fields in one payload.
+
+```javascript
+// Backend: send a critical alert on Android and iOS
+const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+    },
+    body: JSON.stringify({
+        app_id:                    process.env.ONESIGNAL_APP_ID,
+        include_external_user_ids: [userId],
+        headings:                  { en: 'Urgent alert' },
+        contents:                  { en: 'Message body' },
+        priority:                  10,
+        android_channel_id:        'YOUR_CHANNEL_ID',
+        ios_critical_alert:        1,
+    }),
+})
+```
+
+---
+
+## Segmentation
+
+Beyond `include_external_user_ids`, OneSignal supports segments based on user behaviour. Set tags on users to create custom segments.
+
+```javascript
+// Backend: add a tag to a user
+await fetch(`https://onesignal.com/api/v1/apps/${appId}/users/${externalUserId}`, {
+    method: 'PUT',
+    headers: { 'Authorization': `Basic ${restApiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tags: { plan: 'premium', last_purchase: '2026-01-01' } }),
+})
+```
+
+```javascript
+// Send to all users with plan=premium tag
+body: JSON.stringify({
+    app_id:   process.env.ONESIGNAL_APP_ID,
+    filters:  [{ field: 'tag', key: 'plan', relation: '=', value: 'premium' }],
+    headings: { en: 'Premium member offer' },
+    contents: { en: 'Exclusive deal just for you' },
+})
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="OneSignal Dashboard" icon="bell" href="https://onesignal.com">
+    Configure your push notification app
+  </Card>
+
+  <Card title="Create Notification API" icon="book" href="https://documentation.onesignal.com/reference/create-notification">
+    Full OneSignal REST API reference
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

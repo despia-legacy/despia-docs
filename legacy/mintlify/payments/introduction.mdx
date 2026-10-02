@@ -1,0 +1,132 @@
+---
+title: "Introduction"
+icon: "circle-info"
+description: "App Store and Google Play billing via RevenueCat, plus Stripe for physical goods and real-world services."
+---
+
+Despia offers two payment integrations because Apple and Google require different rails for different kinds of purchases. This is not a preference between competing tools, it is platform policy. Pick the right one based on what the customer is actually buying.
+
+<Note>
+  Both integrations use the same `despia-native` SDK, the same `navigator.userAgent.toLowerCase().includes('despia')` detection, and the same fire-and-listen callback pattern. The only thing that changes is which scheme you fire and which callback you listen for. Many apps end up using both, scoped to their respective categories.
+</Note>
+
+---
+
+## Which integration to use
+
+| What the customer is buying | Use this | Example apps |
+| --- | --- | --- |
+| Digital content consumed inside the app: subscriptions, memberships, premium tiers, coins, credits, in-app currency, ad removal, level unlocks, feature flags | [RevenueCat](/native-features/revenuecat/introduction) | Netflix, Spotify, Duolingo, Calm, MyFitnessPal Premium |
+| Physical goods, real-world services, marketplace transactions: delivery, ride-hailing, ticketing, bookings, professional services | [Stripe](/payments/stripe/introduction) | Amazon, Uber, DoorDash, Airbnb, Angie's List, OpenTable |
+
+The rule of thumb works in one line. **If what the user buys unlocks anything inside the app, use RevenueCat. If it arrives at a doorstep, is performed by a human, or is fulfilled outside the app, use Stripe.**
+
+This is not flexible. Apple's App Store Review Guidelines section 3.1.3 requires digital goods to use In-App Purchase. Google Play's payments policy says the same. Routing digital goods through Stripe (or any external payment system) gets the app rejected on submission and removed if discovered post-launch. Routing physical goods through In-App Purchase is also rejected, since Apple and Google neither want to take 30% of a pizza nor have the dispute infrastructure for one.
+
+---
+
+## RevenueCat for digital goods
+
+RevenueCat wraps Apple In-App Purchase and Google Play Billing into a single SDK. Despia bridges that SDK to your web layer so you can trigger native paywalls, take subscriptions, check entitlements, and open the native Customer Center through `despia()`. Entitlements like `premium` or `no_ads` are configured once in the RevenueCat dashboard and resolve identically on iOS and Android.
+
+```javascript
+// Launch a paywall
+despia(`revenuecat://launchPaywall?external_id=${userId}&offering=default`)
+
+// Check entitlements
+const data   = await despia('getpurchasehistory://', ['restoredData'])
+const active = (data.restoredData ?? []).filter(p => p.isActive)
+if (active.some(p => p.entitlementId === 'premium')) unlockPremium()
+```
+
+Apple and Google take their standard 15 to 30 percent cut of every transaction. RevenueCat is free up to a monthly tracked revenue threshold, then a percentage fee applies on top of the platform fees.
+
+<Card title="RevenueCat Introduction" icon="cat" href="/payments/revenuecat/introduction">
+  Full setup walkthrough, paywall flows, entitlement checks, Customer Center, and webhook reconciliation.
+</Card>
+
+---
+
+## Stripe for physical goods and services
+
+Stripe gives you the native PaymentSheet (cards, Apple Pay, Google Pay, Link) and CustomerSheet (saved card management) inside your app. Your backend creates a Payment Intent with the amount, currency, and customer, your page forwards the resulting client secret into `despia()`, and the customer pays without ever leaving the WebView. Stripe takes its standard processing fee (typically 2.9% \+ 30 cents in the US, varying by region) and that is the entire cost. Apple and Google do not take a cut of physical-goods transactions.
+
+```javascript
+// Take a payment
+const { publishable_key, client_secret } = await res.json()
+despia(`stripe://payment?publishable_key=${publishable_key}&payment_intent_client_secret=${client_secret}`)
+
+// Manage saved cards
+despia(`stripe://manage?publishable_key=${publishable_key}&customer_id=${customer_id}&ephemeral_key_secret=${ephemeral_key_secret}`)
+```
+
+Stripe gives you full control over the charge flow including custom amounts, multi-currency, marketplace splits via Stripe Connect, refunds, disputes, and webhook reconciliation. Use it for anything that ships, gets performed, or is fulfilled outside the app.
+
+<Card title="Stripe Introduction" icon="credit-card" href="/payments/stripe/introduction">
+  Full setup walkthrough, the Payment Sheet, saved cards, the native CustomerSheet, styling, and webhook reconciliation.
+</Card>
+
+---
+
+## Using both
+
+Most apps need only one of the two. Some need both, when they sell both digital and physical things from the same app.
+
+A fitness app might sell premium workout content (digital, RevenueCat) and branded merchandise (physical, Stripe). A creator platform might sell a subscription to access exclusive videos (digital, RevenueCat) and let users tip creators for live events that get streamed and recorded in the real world. A marketplace app might charge a platform subscription for sellers (digital, RevenueCat) and process the actual goods transactions (physical, Stripe).
+
+When using both, scope each integration to its category and never cross them. Subscriptions go through RevenueCat. Physical orders go through Stripe. The user experience is naturally separated by what they tap to buy, so the routing is rarely ambiguous in practice.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+// Premium subscription, RevenueCat
+function subscribeToPremium() {
+    if (isDespia) {
+        despia(`revenuecat://launchPaywall?external_id=${userId}&offering=premium`)
+    }
+}
+
+// Physical merchandise order, Stripe
+async function checkoutCart() {
+    const res = await fetch('/api/create-payment-intent', { method: 'POST' })
+    const { publishable_key, client_secret } = await res.json()
+
+    if (isDespia) {
+        despia(`stripe://payment?publishable_key=${publishable_key}&payment_intent_client_secret=${client_secret}`)
+    }
+}
+```
+
+The two callbacks (`window.onRevenueCatPurchase` for RevenueCat, `window.stripeEvent` for Stripe) are independent and can both be defined on the same page without interfering with each other.
+
+---
+
+## Compliance recap
+
+The split between the two integrations is enforced by the platforms, not by Despia. Submitting an app that uses Stripe for digital goods results in rejection at review, with Apple citing guideline 3.1.3 and Google citing the Play payments policy. Submitting an app that uses In-App Purchase for physical goods or real-world services is also rejected, since the platforms only allow IAP for digital content consumed inside the app.
+
+If you are unsure which category a specific feature falls into, the test is: **does the user receive value that lives inside the app, or does something happen in the real world?** A "buy 100 coins" button creates value inside the app, so RevenueCat. A "book a cleaner for Saturday" button creates value in the real world, so Stripe. A "buy this shirt" button puts a physical item on a truck, so Stripe. A "remove ads forever" button changes app behavior, so RevenueCat.
+
+When the answer is genuinely ambiguous (rare), open a support ticket before submitting. Getting this wrong delays your launch by a review cycle at minimum.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native, the SDK used for both integrations
+  </Card>
+
+  <Card title="App Review Guidelines 3.1.3" icon="apple" href="https://developer.apple.com/app-store/review/guidelines/#payments">
+    Apple's payments policy and the digital vs physical distinction
+  </Card>
+
+  <Card title="Google Play Payments Policy" icon="google-play" href="https://support.google.com/googleplay/android-developer/answer/9858738">
+    Google's billing policy and IAP requirements
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

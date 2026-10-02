@@ -1,0 +1,146 @@
+---
+title: "PK Pass"
+icon: "barcode"
+description: "Add passes to a user's device wallet directly from your web app."
+---
+
+`wallet://pkpass` presents the native wallet sheet pre-loaded with a `.pkpass` file hosted at any publicly reachable HTTPS URL. The user taps to confirm and the pass lands in their wallet. Your app receives a callback for every outcome.
+
+<Info>
+  The `url` parameter must be a publicly fetchable HTTPS URL. Data URLs (`data:...`), blob URLs (`blob:...`), and `file://` paths are not accepted - the runtime fetches the resource over the network and will fail silently if it cannot reach it.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Register `window.onWalletEvent` before triggering the call. The callback fires once with the outcome - always define it first so no payload is missed.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    window.onWalletEvent = (payload) => {
+        console.log(payload.action, payload.status, payload.error ?? '')
+    }
+
+    const passUrl = 'https://cdn.example.com/passes/user123/boarding.pkpass'
+    despia(`wallet://pkpass?url=${encodeURIComponent(passUrl)}`)
+}
+```
+
+---
+
+## Callback payloads
+
+The callback receives a single object. `status` is always present. `error` is only set when `status` is `"failed"`.
+
+| `action` | `status` | `error` | Meaning |
+| :-- | :-- | :-- | :-- |
+| `add` | `presented` | - | The wallet sheet appeared on screen. |
+| `add` | `dismissed` | - | The user dismissed the sheet without adding the pass. |
+| `add` | `failed` | `missing_or_invalid_url` | The `url` param was absent or malformed. |
+| `add` | `failed` | `cannot_add_passes` | The device cannot add passes. |
+| `add` | `failed` | `download_failed: <msg>` | The runtime could not fetch the `.pkpass` file. |
+| `add` | `failed` | `invalid_pass` | The file was fetched but is not a valid pass. |
+| `add` | `failed` | `invalid_pass: <msg>` | The file is invalid, with a reason from the system. |
+| `add` | `failed` | `no_presenter` | No view controller was available to present the sheet. |
+| `unknown` | `failed` | `unknown_command: <host>` | An unrecognised `wallet://` host was used. |
+
+---
+
+## Handle each outcome
+
+Branch on `status` and `error` to give the user accurate feedback.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    window.onWalletEvent = (payload) => {
+        if (payload.status === 'presented') return
+
+        if (payload.status === 'dismissed') {
+            console.log('User dismissed the wallet sheet.')
+            return
+        }
+
+        if (payload.status === 'failed') {
+            if (payload.error === 'missing_or_invalid_url') {
+                console.error('Pass URL is missing or malformed.')
+            } else if (payload.error === 'cannot_add_passes') {
+                console.error('This device cannot add passes.')
+            } else if (payload.error?.startsWith('download_failed')) {
+                console.error('Could not download the pass:', payload.error)
+            } else if (payload.error?.startsWith('invalid_pass')) {
+                console.error('The pass file is invalid:', payload.error)
+            } else if (payload.error === 'no_presenter') {
+                console.error('No presenter available.')
+            }
+        }
+    }
+
+    despia(`wallet://pkpass?url=${encodeURIComponent('https://cdn.example.com/passes/membership/user123.pkpass')}`)
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

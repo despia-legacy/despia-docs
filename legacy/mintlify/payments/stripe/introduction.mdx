@@ -1,0 +1,230 @@
+---
+title: "Introduction"
+icon: "circle-info"
+description: "Native Stripe PaymentSheet and CustomerSheet in your web app via the Despia SDK."
+---
+
+Native iOS and Android Stripe payments fully bridged to your web layer. Take payments, let returning customers reuse saved cards, manage payment methods through Stripe's native CustomerSheet, and brand the sheet to match your app using `despia()`, with no native code and no native Stripe SDK to configure.
+
+<Danger>
+  **Stripe is for physical goods and real-world services only.** Marketplaces, delivery, ride-hailing, ticketing, bookings, and similar are allowed. Digital goods consumed inside the app (credits, coins, in-app currency, subscriptions, memberships, premium tiers, ad removal, level unlocks) must use Apple In-App Purchase and Google Play Billing through [RevenueCat](/native-features/revenuecat/introduction). Apple and Google reject apps that accept payment for digital goods through Stripe or any other external payment system. The rule of thumb: if what the user buys is delivered to a doorstep, performed by a human, or fulfilled outside the app, Stripe is allowed. If it unlocks anything inside the app, use RevenueCat.
+</Danger>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Stripe and Despia setup
+
+Configure Stripe, wire up your backend, then rebuild the Despia app to include the native sheet. The steps go in order, each one feeds the next.
+
+<Steps>
+  <Step title="Create a Stripe account">
+    Go to [stripe.com](https://stripe.com) and sign up, or sign in with an existing account. Stripe is free to set up. You only pay per successful transaction, so account creation does not block early development. New accounts start in test mode by default, which is what you want until you are ready to take real charges.
+  </Step>
+  <Step title="Get your API keys">
+    In the Stripe Dashboard, go to **Developers \> API keys**. Copy your **Publishable key** (`pk_test_...`) and your **Secret key** (`sk_test_...`). When you activate your account for live charges, repeat for the live keys (`pk_live_...` and `sk_live_...`). The publishable key is safe to ship in your web app and gets forwarded into `despia()` calls. The secret key stays on your server and is the only thing that can create Payment Intents.
+  </Step>
+  <Step title="Enable payment methods">
+    Go to **Settings \> Payments \> Payment methods** in the Stripe Dashboard. Toggle on the methods you want to accept (cards, Apple Pay, Google Pay, Link, regional methods like SEPA or iDEAL). The native sheet shows whichever methods you enabled here that are compatible with the Payment Intent's amount, currency, and customer. There is no client-side switch for this, your dashboard configuration drives what appears.
+  </Step>
+  <Step title="Build your backend endpoints">
+    Stripe payments are server-driven. Your backend creates the Stripe objects, your web app forwards the resulting secrets into `despia()`. At minimum you need an endpoint that creates a Payment Intent and returns its `client_secret` alongside your publishable key. If you plan to support saved cards or the Manage saved cards flow, you also need an endpoint that creates an ephemeral key (and optionally a SetupIntent) for the signed-in customer. The native runtime makes no Stripe network calls of its own, so every Stripe object must be created server-side first.
+  </Step>
+  <Step title="Set up webhooks">
+    Go to **Developers \> Webhooks \> Add an endpoint** in the Stripe Dashboard. Point it at your backend (e.g. `https://yourapp.com/api/stripe/webhook`) and subscribe to at least `payment_intent.succeeded`, `payment_intent.payment_failed`, and `charge.refunded`. The `completed` event you receive in your web app is a client-side signal only. Final order fulfillment, receipts, and dispute records must come from webhooks. See [Stripe's webhook guide](https://docs.stripe.com/webhooks) for signature verification and event handling.
+  </Step>
+  <Step title="Rebuild your app">
+    Trigger a fresh build from the Despia Editor. The Stripe SDK has to be compiled into the app binary, so this cannot be applied over-the-air. After the build finishes, calls to `stripe://payment` and `stripe://manage` will function in production. No keys need to be pasted into the Despia Editor since the publishable key is passed per call in the `despia()` command.
+  </Step>
+</Steps>
+
+<Warning>
+  Skipping the rebuild leaves the Stripe native runtime out of the binary. Calls to `stripe://payment` and `stripe://manage` will fail silently with no sheet shown and no event fired. If payments stop working after editing settings, rebuild before opening a support ticket.
+</Warning>
+
+---
+
+## How it works
+
+Despia bridges your web layer to the native Stripe SDK. The web app calls `despia('stripe://payment?...')` with a publishable key and a Payment Intent client secret your backend created. The native runtime shows Stripe's prebuilt Payment Sheet on top of the WebView, the customer pays through cards, Apple Pay, Google Pay, or Link, and `window.stripeEvent` fires once with the outcome.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.stripeEvent = function (event) {
+    if (event.method !== 'paymentSheet') return
+    if (event.status === 'completed') {
+        // Confirm via your backend webhook before fulfilling the order.
+    }
+}
+
+async function pay() {
+    const res = await fetch('/api/create-payment-intent', { method: 'POST' })
+    const { publishable_key, client_secret } = await res.json()
+
+    if (isDespia) {
+        despia(`stripe://payment?publishable_key=${publishable_key}&payment_intent_client_secret=${client_secret}`)
+    }
+}
+```
+
+For users on the web app who are not in the Despia WebView, fall back to [Stripe Checkout](https://docs.stripe.com/payments/checkout) or your own hosted Stripe Elements page. The native sheet only runs inside the Despia app.
+
+<CardGroup cols={2}>
+  <Card title="Payment Sheet" icon="credit-card" href="/payments/stripe/payment">
+    Take a payment, optionally with saved cards. Theme, accent color, corner radius, all the styling options.
+  </Card>
+
+  <Card title="Webhooks" icon="webhook" href="https://docs.stripe.com/webhooks">
+    Event types, signature verification, and how to reconcile `payment_intent.succeeded` before fulfilling.
+  </Card>
+</CardGroup>
+
+---
+
+## Taking your first payment
+
+The minimum integration is two pieces: a server endpoint that creates the Payment Intent, and a page that defines `window.stripeEvent` then fires `despia('stripe://payment?...')`. Amount, currency, and customer are all decided server-side. The web app only forwards what the server returned.
+
+```javascript
+// Your server endpoint, e.g. /api/create-payment-intent
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+
+app.post('/api/create-payment-intent', async (req, res) => {
+    const intent = await stripe.paymentIntents.create({
+        amount: 1999,
+        currency: 'usd',
+        automatic_payment_methods: { enabled: true }
+    })
+
+    res.json({
+        publishable_key: process.env.STRIPE_PUBLISHABLE_KEY,
+        client_secret:   intent.client_secret
+    })
+})
+```
+
+Set `STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY` to the test pair in development and the live pair in production. Returning the publishable key from the server alongside the client secret keeps the two keys in sync, since the server is the only place that knows for certain which mode it is running in.
+
+<Warning>
+  Do not branch on `window.location.hostname` to choose between test and live keys. Despia's local server serves the production web build from `http://localhost` on the device, so a `hostname === 'localhost'` shortcut classifies every production install as test mode and the Payment Sheet never succeeds in the wild. Resolve the keys on the server, where the environment is unambiguous.
+</Warning>
+
+---
+
+## Saved cards
+
+Returning customers can reuse a previously saved card on `stripe://payment` itself by passing the optional `customer_id` and `ephemeral_key_secret` pair. Both values come from your server. The pair is all-or-nothing: pass both for saved cards, pass neither for guest checkout (the default). Passing exactly one returns a `missing param` failed event with no sheet.
+
+```javascript
+if (isDespia) {
+    despia(`stripe://payment?publishable_key=${publishable_key}&payment_intent_client_secret=${client_secret}&customer_id=${customer_id}&ephemeral_key_secret=${ephemeral_key_secret}`)
+}
+```
+
+For a dedicated "Payment methods" or wallet screen where customers can add, remove, and pick a default card without taking a payment, use `stripe://manage` to open Stripe's native CustomerSheet. The shared `window.stripeEvent` callback handles both flows. Route on `event.method`: `paymentSheet` for charges, `customerSheet` for management.
+
+See [Saved cards on payment](/payments/stripe/payment#saved-cards-on-payment) and [Manage saved cards](/payments/stripe/payment#manage-saved-cards) for the full integration.
+
+<Info>
+  The `stripe://manage` flow governs Stripe-stored cards only. App Store and Google Play subscriptions managed through [RevenueCat](/native-features/revenuecat/introduction) are not shown or controlled here. Surface "Manage cards" only on screens where Stripe is the payment rail.
+</Info>
+
+---
+
+## Reconcile via webhooks before fulfilling
+
+The `completed` status on `window.stripeEvent` is a client-side success signal. Network drops mid-confirmation, asynchronous payment methods, and refunds initiated immediately after capture all mean the client event alone is not sufficient to safely unlock the order. The source of truth is your backend, listening to Stripe webhooks.
+
+```javascript
+// Your webhook endpoint, e.g. /api/stripe/webhook
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+    const event = stripe.webhooks.constructEvent(
+        req.body,
+        req.headers['stripe-signature'],
+        process.env.STRIPE_WEBHOOK_SECRET
+    )
+
+    if (event.type === 'payment_intent.succeeded') {
+        const intent = event.data.object
+        // Unlock the order keyed off intent.id or intent.metadata.
+    }
+
+    res.json({ received: true })
+})
+```
+
+On the page, treat `completed` as a signal to ask your backend whether fulfillment is ready, not as the green light itself.
+
+```javascript
+window.stripeEvent = function (event) {
+    if (event.method !== 'paymentSheet') return
+    if (event.status === 'completed') {
+        fetch('/api/confirm-payment', { method: 'POST' })
+    }
+}
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Stripe Dashboard" icon="link" href="https://dashboard.stripe.com">
+    Configure API keys, payment methods, and webhooks
+  </Card>
+
+  <Card title="Stripe Docs" icon="book" href="https://docs.stripe.com/payments/payment-intents">
+    Payment Intents API reference and lifecycle
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

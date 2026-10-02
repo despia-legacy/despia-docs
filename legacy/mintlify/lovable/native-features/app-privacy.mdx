@@ -1,0 +1,102 @@
+---
+title: "App Privacy"
+icon: "eye-slash"
+description: "Check user privacy consent status for Apple's App Tracking Transparency (ATT), GDPR compliance, and privacy regulations in your Lovable application."
+---
+
+<iframe src="https://www.youtube.com/embed/F3t0gIbY26k" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Check user privacy consent status for Apple's App Tracking Transparency (ATT) and GDPR compliance in your application using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  1. Import the Despia SDK in your component
+  2. Access the tracking consent status using `despia.trackingDisabled`
+  3. Display the privacy status in your UI
+  4. Send the consent status to your backend to ensure compliance
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+**How it works:** The Despia Apple Privacy Status SDK enables your application to check a user's privacy consent status to ensure compliance with Apple's App Tracking Transparency (ATT), GDPR tracking requirements, and other privacy regulations. This lightweight solution helps your app adhere to App Store guidelines and user consent rules through `despia.trackingDisabled`.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usag**e
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Get Privacy Consent Status**
+
+Access the tracking consent status from the `despia.trackingDisabled` variable:
+
+```javascript
+// Simple example - show privacy status and sync with compliance
+const isTrackingDisabled = despia.trackingDisabled;
+
+// Display in UI
+<p>Tracking Disabled: {isTrackingDisabled ? 'Yes' : 'No'}</p>
+
+// Sync with backend for compliance tracking
+fetch('/api/sync-privacy', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    userId: user.id,
+    trackingDisabled: isTrackingDisabled,
+    timestamp: new Date().toISOString()
+  })
+});
+```
+
+### **Backend Integration**
+
+This is merely an illustration; your implementation may differ.
+
+```javascript
+// "/api/sync-privacy" endpoint
+export default async function handler(req, res) {
+  const { userId, trackingDisabled, timestamp } = req.body;
+  
+  try {
+    // Store the privacy consent status in your database
+    await db.collection('user_privacy').doc(userId).set({
+      userId,
+      trackingDisabled,
+      lastChecked: timestamp,
+      createdAt: timestamp
+    }, { merge: true });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to sync privacy status' });
+  }
+}
+```
+
+## **Resources**
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native background location tracking into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

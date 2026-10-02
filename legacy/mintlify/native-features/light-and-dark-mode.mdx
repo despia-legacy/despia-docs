@@ -1,0 +1,243 @@
+---
+title: "Light & Dark Mode"
+description: "Implement automatic light and dark mode using CSS prefers-color-scheme and Despia's injected safe area variables, with no JavaScript or SDK calls required."
+icon: "moon-stars"
+---
+
+Implement automatic light and dark mode using CSS custom properties and the `prefers-color-scheme` media query. The Despia runtime handles status bar text color natively through the `color-scheme` CSS property, so theming requires no SDK calls.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## Despia Editor setup
+
+Configure these values in the Despia Editor before writing CSS. The order matters, fullscreen mode and Auto-Inject Safe Area must be set together to avoid double padding.
+
+<Steps>
+  <Step title="Open Status Bar settings">
+    In the Despia Editor, navigate to **App \> Settings \> Status Bar**.
+  </Step>
+  <Step title="Enable Fullscreen Mode">
+    Toggle **Fullscreen Mode** on. This removes the native status bar background, giving CSS full control over the status bar region. Without this, you cannot extend your app's background up behind the status bar.
+  </Step>
+  <Step title="Disable Auto-Inject Safe Area">
+    Toggle **Auto-Inject Safe Area** off. With Fullscreen Mode on, you apply `--safe-area-top` and `--safe-area-bottom` yourself in CSS. Leaving Auto-Inject on as well produces double padding and broken layouts.
+  </Step>
+  <Step title="Set Light Mode status bar text color">
+    Set **Light Mode Status Bar Text Color** to **Black**. Dark text is readable over the light backgrounds your light theme uses.
+  </Step>
+  <Step title="Set Dark Mode status bar text color">
+    Set **Dark Mode Status Bar Text Color** to **White**. Light text is readable over the dark backgrounds your dark theme uses.
+  </Step>
+  <Step title="Save and rebuild">
+    Save your changes, then trigger a fresh build from the Despia Editor. Status bar settings are written into native Info.plist entries and signed into the app binary, so they cannot be applied over-the-air. After the rebuild, the CSS-side work below picks up the configuration automatically.
+  </Step>
+</Steps>
+
+<Warning>
+  Always disable Auto-Inject Safe Area when using Fullscreen Mode. Leaving it on while applying safe area insets in CSS produces double padding on every fixed or sticky element, which makes headers and footers visibly oversized on every page. Skipping the rebuild after toggling these settings leaves the previous configuration active in the binary, so the changes simply do not apply until you ship a fresh build.
+</Warning>
+
+---
+
+## How it works
+
+Fullscreen mode removes the native status bar background, giving CSS full control over that region. The `color-scheme` property tells the native container whether to render status bar text in light or dark style, switched automatically by `prefers-color-scheme`. The Despia runtime also injects `--safe-area-top` and `--safe-area-bottom` CSS variables before your app starts, so they are available synchronously with no loading state.
+
+```css
+:root {
+  --bg: #ffffff;
+  --text: #1e293b;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --text: #f8fafc;
+    color-scheme: dark;
+  }
+}
+```
+
+---
+
+## CSS color tokens
+
+Define light tokens in `:root` and override them inside the dark mode media query. Setting `color-scheme` in both blocks switches the native status bar text style automatically, with no SDK call required.
+
+```css
+/* Light mode, default */
+:root {
+  --bg: #ffffff;
+  --text: #1e293b;
+  --surface: #f1f5f9;
+  --border: #e2e8f0;
+  color-scheme: light;
+}
+
+/* Dark mode, activated automatically when the OS is in dark mode */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f172a;
+    --text: #f8fafc;
+    --surface: #1e293b;
+    --border: #334155;
+    color-scheme: dark;
+  }
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  margin: 0;
+}
+```
+
+---
+
+## Safe area handling
+
+With Fullscreen Mode enabled and Auto-Inject Safe Area disabled, your CSS owns the status bar and home indicator regions. Safe areas are insets, so they stack on top of your existing padding rather than replacing it. Always combine them with your base padding using `calc()`.
+
+The full pattern pairs the Despia runtime variable with `env(safe-area-inset-*)` as a fallback, with `0px` as the final fallback inside `env()`. The runtime variable applies inside the native container, the env value applies during web preview, and the `0px` keeps the `calc()` valid when neither is present.
+
+```css
+.header {
+  padding-top: calc(1rem + var(--safe-area-top, env(safe-area-inset-top, 0px)));
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-bottom: 1rem;
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+
+.footer {
+  padding-bottom: calc(1rem + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
+  padding-top: 1rem;
+  background-color: var(--surface);
+  border-top: 1px solid var(--border);
+}
+```
+
+---
+
+## Runtime status bar override
+
+In most cases `color-scheme` handles status bar text color automatically. For one-off runtime overrides, such as navigating to a screen with a hardcoded background that ignores your CSS tokens, the SDK exposes a direct command. Always gate the call behind an `isDespia` check so it is a no-op in the browser.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('statusbartextcolor://black')  // dark text, for light backgrounds
+    // or
+    despia('statusbartextcolor://white')  // light text, for dark backgrounds
+}
+```
+
+<Warning>
+  Use this only as a last resort. Set the correct default in the Despia Editor and let `color-scheme` handle the rest from CSS. Do not implement dark mode logic with this command, that belongs in CSS.
+</Warning>
+
+---
+
+## Manual theme toggles and animation timing
+
+If you ship a manual theme toggle that overrides the system theme (a sun/moon button independent of `prefers-color-scheme`), you need to call `statusbartextcolor://` strictly after your CSS animation finishes. Calling it during the transition, or even slightly before it begins, will fail.
+
+This is an iOS-level guard, not a Despia limitation. The SDK successfully issues the command in every case, but iOS inspects the on-screen colors at the moment the request lands. If the interface is still showing the old theme (because the animation has not started yet, or is still mid-flight), the system decides the new status bar text color would look wrong against what is currently visible and silently rejects the change. No error is thrown. The result is unreadable text, white-on-white in light mode or black-on-black in dark mode.
+
+Wait for the transition to complete, then call the SDK.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function setTheme(mode) {
+    const root = document.documentElement
+    root.classList.toggle('dark', mode === 'dark')
+
+    // Wait for the CSS transition to finish before telling iOS
+    root.addEventListener('transitionend', () => {
+        if (isDespia) {
+            despia(mode === 'dark' ? 'statusbartextcolor://white' : 'statusbartextcolor://black')
+        }
+    }, { once: true })
+}
+```
+
+If your theme change does not trigger a `transitionend` event, fall back to `setTimeout` matching your transition duration:
+
+```javascript
+function setTheme(mode) {
+    document.documentElement.classList.toggle('dark', mode === 'dark')
+
+    setTimeout(() => {
+        if (isDespia) {
+            despia(mode === 'dark' ? 'statusbartextcolor://white' : 'statusbartextcolor://black')
+        }
+    }, 300)  // match your CSS transition duration
+}
+```
+
+This timing constraint only applies when you drive the theme manually. If you rely on `color-scheme` and `prefers-color-scheme`, the native runtime handles the switch atomically with the OS theme change and there is nothing to wait for.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

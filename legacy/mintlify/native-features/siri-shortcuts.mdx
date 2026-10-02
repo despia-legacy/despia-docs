@@ -1,0 +1,194 @@
+---
+title: "Siri Shortcuts"
+icon: "circle-waveform-lines"
+description: "Register a natural language phrase as a Siri shortcut that calls a globally-defined JavaScript function in your app when spoken."
+---
+
+<iframe src="https://www.youtube.com/embed/yMerBouzAh4" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Note>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Note>
+
+<Info>
+  Siri Shortcuts is currently in beta. The SDK shape is stable but edge cases around HomePod and CarPlay invocation may change. Test on real iOS hardware before relying on this in production.
+</Info>
+
+Register a natural language phrase that the user can speak to Siri. When Siri matches the phrase, it opens your app and calls the JavaScript function you bound to the shortcut. The bridge runs through a single SDK call plus a function defined on the global scope.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Two pieces have to line up. First, define the function you want Siri to trigger as a global on `window`. Second, call `addtosiri://` with the phrase the user will speak and the name of that global function. The native runtime registers the shortcut with Siri, and when the user later speaks the phrase, your app launches and calls the function.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+window.orderCoffee = function () {
+    // your logic here, runs when Siri triggers the shortcut
+}
+
+if (isDespia) {
+    despia('addtosiri://?command=Order Coffee&jsFunction=orderCoffee()')
+}
+```
+
+The `jsFunction` value must include the trailing parentheses, since the runtime executes it as a callable expression. The function itself must be globally accessible, attaching it to `window` is the simplest way to guarantee that across bundlers.
+
+---
+
+## URL parameters
+
+The `addtosiri://` scheme takes two query parameters.
+
+| Parameter | Value | Notes |
+| :-- | :-- | :-- |
+| `command` | The natural language phrase the user will speak to Siri | Encode special characters with `encodeURIComponent`. Keep it short and distinctive, Siri matches phonetically, not semantically |
+| `jsFunction` | A global function name with trailing parens | Must exist on `window` before Siri triggers it. Include parentheses, e.g. `orderCoffee()`, not just `orderCoffee` |
+
+```javascript
+const phrase = 'Order my usual'
+despia(`addtosiri://?command=${encodeURIComponent(phrase)}&jsFunction=orderUsual()`)
+```
+
+---
+
+## Register a shortcut from a button
+
+The typical pattern is a "Add to Siri" button in your settings or onboarding flow. The user taps it, the native shortcut registration sheet appears, and the shortcut is now live on their device.
+
+```jsx
+import { useEffect } from 'react'
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function OrderCoffeeShortcut() {
+    useEffect(() => {
+        // define the global before the user can register the shortcut
+        window.orderCoffee = async () => {
+            await fetch('/api/orders', {
+                method: 'POST',
+                body: JSON.stringify({ item: 'usual' }),
+            })
+        }
+    }, [])
+
+    function addShortcut() {
+        if (isDespia) {
+            despia('addtosiri://?command=Order Coffee&jsFunction=orderCoffee()')
+        }
+    }
+
+    return <button onClick={addShortcut}>Add "Order Coffee" to Siri</button>
+}
+```
+
+Define the global inside `useEffect` rather than in the component body, so it lands on `window` on mount and is available the next time Siri launches your app, even if the component is no longer rendered.
+
+---
+
+## Pass arguments to the function
+
+The `jsFunction` value is executed as a literal expression, so you can hardcode arguments directly into it. This is useful when one shortcut should always do one specific thing.
+
+```javascript
+window.orderItem = function (item) {
+    // your logic here
+}
+
+despia('addtosiri://?command=Order a latte&jsFunction=orderItem("latte")')
+despia('addtosiri://?command=Order a black coffee&jsFunction=orderItem("black")')
+```
+
+Each shortcut registers as a separate Siri command, so the user can have several, each calling the same function with different arguments. Keep the phrases distinct enough that Siri's matching does not collapse them.
+
+---
+
+## Platform support
+
+Siri Shortcuts work anywhere Siri itself is available, with the limit that some surfaces only run a subset of shortcut types. Custom JavaScript shortcuts launch your app to run the function, so they are best for surfaces where launching the app is acceptable.
+
+| Surface | Works |
+| :-- | :-- |
+| iPhone, iPad, iPod touch | Yes |
+| Apple Watch (paired with iPhone) | Yes, opens iPhone app |
+| HomePod (linked to user account) | Yes, opens iPhone app |
+| CarPlay | Yes, for shortcuts that do not require complex UI |
+| Mac (designed for iPad apps) | Yes |
+
+Android has no Siri equivalent, the SDK call is a no-op when an Android user reaches it. The `isDespia` guard keeps it safe in browsers, but you may also want to detect platform and hide the "Add to Siri" button on Android entirely.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+const isDespiaIOS = isDespia && (
+    navigator.userAgent.toLowerCase().includes('iphone') ||
+    navigator.userAgent.toLowerCase().includes('ipad')
+)
+
+const isDespiaAndroid = isDespia &&
+    navigator.userAgent.toLowerCase().includes('android')
+
+const showSiriButton = isDespiaIOS
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

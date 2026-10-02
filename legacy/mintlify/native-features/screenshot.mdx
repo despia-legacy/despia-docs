@@ -1,0 +1,180 @@
+---
+title: "Screenshot"
+description: "Capture the visible page and save it directly to the device photo gallery through a single fire-and-forget Despia SDK call."
+icon: "border-top-left"
+---
+
+<Warning>
+  Screenshot capture is currently not optimized for React or other framework-driven apps. The native capture renders the WebView contents as the user sees them, but virtual DOM frameworks can have a frame's worth of pending work that has not yet committed to the visible layer when the call fires. For React, await the next animation frame before triggering the call so the most recent render is fully painted, see the React example below.
+</Warning>
+
+`takescreenshot://` is fire-and-forget. The native runtime captures the visible WebView contents, writes the result to the device photo gallery, and returns immediately. The user sees the standard system save confirmation. There are no parameters and no return value.
+
+This feature captures the WebView only, not the system chrome around it (status bar, home indicator, navigation bar). For a full-screen capture including system UI, the user can trigger the OS-level screenshot shortcut on their device.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Call `despia('takescreenshot://')`. The OS handles the photo permission prompt the first time the app saves an image, and subsequent calls go through silently as long as the user granted access.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('takescreenshot://')
+}
+```
+
+The save happens asynchronously on the native side. There is no callback when it finishes, so do not chain a "saved" toast immediately after the call expecting the file to be on disk by then. If you need to confirm the save before proceeding, give it a small timeout or skip the confirmation entirely (the OS already shows its own).
+
+---
+
+## Capture from a button
+
+The natural pattern is a "Save screenshot" button in the UI. Tap, capture, OS shows the system save confirmation.
+
+```jsx
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function ScreenshotButton() {
+    function capture() {
+        if (isDespia) {
+            despia('takescreenshot://')
+        }
+    }
+
+    return <button onClick={capture}>Save screenshot</button>
+}
+```
+
+If the button itself is part of what you want to capture, hide it briefly before the call. Otherwise the screenshot will include the active "Save screenshot" button, which usually is not the desired output.
+
+```jsx
+import { useState } from 'react'
+import despia from 'despia-native'
+
+function ScreenshotButton() {
+    const [hidden, setHidden] = useState(false)
+
+    async function capture() {
+        if (!isDespia) return
+
+        setHidden(true)
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+        despia('takescreenshot://')
+
+        setTimeout(() => setHidden(false), 500)
+    }
+
+    if (hidden) return null
+    return <button onClick={capture}>Save screenshot</button>
+}
+```
+
+The double `requestAnimationFrame` is what addresses the React optimization caveat at the top of this page. Hiding the button via state takes one frame to commit to the DOM, and the screenshot needs to fire on the _following_ frame to capture the state without the button. A single `requestAnimationFrame` schedules the callback for the next paint, the second one runs after that paint completes, so by the time the SDK call fires the button is genuinely off-screen.
+
+---
+
+## Capture a specific element instead of the whole view
+
+The native scheme always captures the entire WebView. To capture only one element (a card, a chart, a quote section), the practical workaround is to scroll that element into view, hide everything around it visually (overlay or `display: none`), call `takescreenshot://`, then restore the original layout.
+
+```jsx
+import { useState, useRef } from 'react'
+
+function ShareableCard({ children }) {
+    const [capturing, setCapturing] = useState(false)
+    const ref = useRef(null)
+
+    async function capture() {
+        if (!isDespia) return
+
+        ref.current?.scrollIntoView({ block: 'center' })
+        setCapturing(true)
+
+        // wait two frames, see explanation above
+        await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+        despia('takescreenshot://')
+
+        setTimeout(() => setCapturing(false), 500)
+    }
+
+    return (
+        <>
+            {capturing && <div style={{ position: 'fixed', inset: 0, background: '#fff', zIndex: 9998 }} />}
+
+            <div ref={ref} style={{ position: 'relative', zIndex: capturing ? 9999 : 'auto' }}>
+                {children}
+            </div>
+
+            {!capturing && <button onClick={capture}>Share this</button>}
+        </>
+    )
+}
+```
+
+The white overlay sits behind the target card while the screenshot fires, giving you a clean isolated capture. For pixel-perfect element-only output, render the card to a backend service that returns an image URL and use [Camera Roll](/native-features/camera-roll) to save it instead.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

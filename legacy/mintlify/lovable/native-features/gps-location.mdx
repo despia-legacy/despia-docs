@@ -1,0 +1,115 @@
+---
+title: "GPS Location"
+icon: "location-arrow"
+description: "Retrieve and monitor real-time location data from users' devices in the background within your Lovable application."
+---
+
+<Note>
+  **Our Background Location is soon getting an update, which will enable you to track users’ locations accurately even when the phone is on standby.**
+</Note>
+
+<iframe src="https://www.youtube.com/embed/4Jf3ibISfzE" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Add native background location tracking functionality to continuously monitor user location including latitude, longitude, accuracy, and other positioning data using the Despia SDK from: [**https://www.npmjs.com/package/despia-native**](https://www.npmjs.com/package/despia-native)
+
+  First, install the package: `npm install despia-native`
+
+  Then import it: `import despia from 'despia-native'`
+
+  1. Enable background location tracking using `despia("backgroundlocationon://")`
+  2. Set up location monitoring using the native `navigator.geolocation.watchPosition()` API with high accuracy enabled
+  3. When finished, disable background location using `despia("backgroundlocationoff://")` and clear the watch using `navigator.geolocation.clearWatch(watchId)`
+
+  The location data structure returned includes:
+
+  ```json
+  {
+    "latitude": null,
+    "longitude": null,
+    "accuracy": null,
+    "altitude": null,
+    "altitudeAccuracy": null,
+    "heading": null,
+    "speed": null,
+    "timestamp": null,
+    "watchId": null
+  }
+  ```
+
+  <Danger>
+    **This feature requires native capabilities which will be fully provided by the “despia-native” npm package, no additional native libraries are needed!**
+  </Danger>
+  Please follow the installation instructions for the "despia-native" npm package closely, and do not modify my instructions. Implementation as mentioned is critical.
+</Card>
+
+<Danger>
+  **Important:** Before implementing, you must go into the Despia editor, navigate to "Addons", and enable "Background Location". This will add the necessary native modules into your app to have real native background tracking and background processing capabilities.
+</Danger>
+
+**How it works:** The Despia SDK provides native bridge functionality to enable background location services through async method calls. The `despia("backgroundlocationon://")` call triggers native methods that accelerate the geolocation API for enhanced performance. First enable background location tracking, then use the native geolocation API to continuously monitor position, and finally disable tracking when complete.
+
+## **Installation**
+
+Install the Despia package from NPM:
+
+```
+npm install despia-native
+```
+
+## **Usage**
+
+### **1. Import the SDK**
+
+```javascript
+import despia from 'despia-native';
+```
+
+### **2. Enable Background Location and Monitor Position**
+
+Start background location tracking and set up continuous monitoring:
+
+```javascript
+// Enable background location tracking
+await despia("backgroundlocationon://");
+
+// Check if geolocation is supported
+if ("geolocation" in navigator) {
+    const watchId = navigator.geolocation.watchPosition(
+        position => console.log(position),
+        error => console.error("Error:", error.message),
+        { enableHighAccuracy: true }
+    );
+    
+    // Store watchId for later cleanup
+    // When ready to stop tracking:
+    
+    // Disable background location
+    await despia("backgroundlocationoff://");
+    navigator.geolocation.clearWatch(watchId);
+}
+
+// Expected location data structure:
+{
+  "latitude": null,
+  "longitude": null,
+  "accuracy": null,
+  "altitude": null,
+  "altitudeAccuracy": null,
+  "heading": null,
+  "speed": null,
+  "timestamp": null,
+  "watchId": null
+}
+```
+
+## **Resources**
+
+- [**NPM Package**](https://www.npmjs.com/package/despia-native)
+- View full NPM documentation for additional configuration options
+
+## **Lovable Integration**
+
+This SDK is optimized for Lovable's prompt-based AI builder, enabling quick integration of native background location tracking into your generated apps.
+
+For additional support or questions, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

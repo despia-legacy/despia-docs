@@ -19,6 +19,7 @@
 //  are parsed with the same do-little discipline the runtime's own parser keeps.
 //
 
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -137,6 +138,7 @@ function componentLabel(route, title) {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 function pageLabel(page) {
+  if (page.label !== undefined && page.label !== "") return page.label;
   if (PAGE_LABELS[page.route] !== undefined) return PAGE_LABELS[page.route];
   if (page.route.startsWith("/components/")) return componentLabel(page.route, page.title);
   let label = String(page.title).replace(/`/g, "");
@@ -503,6 +505,28 @@ function compileBody(page, lines, startLine, indent) {
   return nodes;
 }
 
+// ── spaces ────────────────────────────────────────────────────────────────────────────────
+// One site, four spaces, one switcher. A space owns a path prefix, a sidebar, a search scope,
+// its own llms.txt pair and an MCP `space` value. Modern keeps every path it ever had.
+const SPACES = [
+  { id: "modern", label: "Modern", prefix: "", home: "/", blurb: "Despia v4 and DSX" },
+  { id: "legacy", label: "Legacy v3", prefix: "/legacy", home: "/legacy/introduction", blurb: "despia-native and the v3 runtime" },
+  { id: "migrate", label: "Migration", prefix: "/migrate", home: "/migrate", blurb: "Move a v3 app to v4" },
+  { id: "troubleshooting", label: "Troubleshooting", prefix: "/troubleshooting", home: "/troubleshooting", blurb: "Symptom, cause, fix" },
+];
+const spaceById = Object.fromEntries(SPACES.map((s) => [s.id, s]));
+function spaceOf(route) {
+  for (const s of SPACES.slice(1)) if (route === s.prefix || route.startsWith(s.prefix + "/")) return s.id;
+  return "modern";
+}
+const site = "https://docs.despia.com";
+// The Despia Support origin (vector search + the Ask AI widget): one knob, DOCS_SUPPORT_ORIGIN,
+// read here and written to both consumers (the DocShell attribute and the web.head meta docs.js
+// reads). Empty turns vector search off; the keyword index always works.
+const supportOrigin = (process.env.DOCS_SUPPORT_ORIGIN ?? "https://support.despia.com").replace(/\/+$/, "");
+/** The markdown sibling of a route: /x/y -> /x/y.md, / -> /index.md (Mintlify's own convention). */
+const mdSibling = (route) => (route === "/" ? "/index.md" : `${route}.md`);
+
 const files = walk(contentDir);
 if (files.length === 0) {
   console.error("[docs.compile] content/ holds no markdown — nothing to build");
@@ -517,30 +541,42 @@ const pages = files.map((file) => {
   const source = readFileSync(file, "utf8");
   const { meta, body } = frontMatter(source);
   const route = meta.route ?? routeFor(file);
+  const space = meta.space ?? spaceOf(route);
   const title = meta.title ?? firstHeading(body) ?? relative(contentDir, file);
-  const section = sectionFor(route, meta);
   return {
     file,
     route,
+    space,
     title,
-    section,
+    label: meta.label,
+    section: space === "modern" ? sectionFor(route, meta) : (meta.section ?? ""),
     order: Number(meta.order ?? 1000),
     description: meta.description ?? "",
     body,
     bodyStart: source.split("\n").length - body.split("\n").length + 1,
     component: componentNameFor(route),
+    meta,
   };
-}).sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
+});
+
+// The framework's from-v3 guide, promoted: the same markdown also opens the Migration space
+// (its modern path /framework/guides/from-v3 is unchanged).
+const fromV3 = pages.find((p) => p.route === "/framework/guides/from-v3");
+if (fromV3 !== undefined) {
+  pages.push({ ...fromV3, route: "/migrate/guide", space: "migrate", section: "Migrate", order: 2,
+    label: "Step-by-step guide", component: componentNameFor("/migrate/guide"), meta: { ...fromV3.meta, canonicalOf: fromV3.route } });
+}
+pages.sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
 
 /** Hand-authored pages: real DSX documents at the Components root (never generated —
  *  this compiler owns and wipes only Components/pages). Each entry joins the route
- *  table, the nav model and the search index exactly like a compiled page; having no
- *  markdown source, they stay out of the /md siblings and the llms exports. */
+ *  table, the nav model and the search index exactly like a compiled page. */
 const handAuthored = [
   {
     route: "/system",
     component: "System",
     title: "System",
+    space: "modern",
     section: "",
     order: 2,
     description: "The design system as a living page: every element in its states.",
@@ -548,7 +584,23 @@ const handAuthored = [
   },
 ];
 
-const entries = [...pages, ...handAuthored].sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
+// The Troubleshooting index is generated (filters + cards over the articles' front matter).
+const tsArticles = pages.filter((p) => p.space === "troubleshooting");
+const generatedPages = [
+  {
+    route: "/troubleshooting",
+    component: "PageTroubleshooting",
+    title: "Troubleshooting",
+    label: "All articles",
+    space: "troubleshooting",
+    section: "",
+    order: 1,
+    description: "Symptom, cause and fix for the problems Despia developers actually hit, on v4 and on the v3 runtime.",
+    search: "troubleshooting symptom cause fix " + tsArticles.map((p) => `${p.title} ${p.meta.symptom ?? ""}`).join(" "),
+  },
+];
+
+const entries = [...pages, ...handAuthored, ...generatedPages].sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
 
 const duplicate = entries.map((p) => p.route).filter((r, i, all) => all.indexOf(r) !== i);
 if (duplicate.length > 0) {
@@ -556,84 +608,253 @@ if (duplicate.length > 0) {
   process.exit(1);
 }
 
-// ── the nav model (sections in reading rank, display labels, prev/next order) ─────────────
-const sections = [];
-for (const page of entries) {
-  const name = page.section === "" ? "Start" : page.section.replace(/(^|-)([a-z])/g, (_, __, c) => " " + c.toUpperCase()).trim();
-  let section = sections.find((s) => s.name === name);
-  if (section === undefined) { section = { name, rank: SECTION_RANK[page.section] ?? 9, pages: [] }; sections.push(section); }
-  section.pages.push({ route: page.route, title: page.title, label: pageLabel(page), section: name });
+// ── the nav model, per space ──────────────────────────────────────────────────────────────
+// A section is { name, items }; an item is a page { route, title, label } or a nested group
+// { group, items }. Modern keeps its reading-rank sections; Legacy replays docs.json's own
+// groups and order; Migration and Troubleshooting group by front-matter section.
+const navItem = (p) => ({ route: p.route, title: p.title, label: pageLabel(p) });
+const byRoute = new Map(entries.map((p) => [p.route, p]));
+const navBySpace = {};
+{
+  const sections = [];
+  for (const page of entries.filter((p) => p.space === "modern")) {
+    const name = page.section === "" ? "Start" : page.section.replace(/(^|-)([a-z])/g, (_, __, c) => " " + c.toUpperCase()).trim();
+    let section = sections.find((s) => s.name === name);
+    if (section === undefined) { section = { name, rank: SECTION_RANK[page.section] ?? 9, items: [] }; sections.push(section); }
+    section.items.push(navItem(page));
+  }
+  sections.sort((a, b) => a.rank - b.rank);
+  navBySpace.modern = sections;
 }
-sections.sort((a, b) => a.rank - b.rank);
-const flatNav = sections.flatMap((s) => s.pages);
-const neighborsOf = (route) => {
-  const at = flatNav.findIndex((p) => p.route === route);
-  return { prev: at > 0 ? flatNav[at - 1] : null, next: at >= 0 && at < flatNav.length - 1 ? flatNav[at + 1] : null };
+{
+  const navFile = join(contentDir, "legacy", "_nav.json");
+  const tree = existsSync(navFile) ? JSON.parse(readFileSync(navFile, "utf8")).tree : [];
+  const convert = (nodes) => nodes.map((n) => n.page !== undefined
+    ? (byRoute.has(n.page) ? navItem(byRoute.get(n.page)) : null)
+    : { group: n.group, items: convert(n.pages) }).filter((n) => n !== null);
+  const sections = [];
+  let loose = null;
+  for (const node of convert(tree)) {
+    if (node.group !== undefined) { sections.push({ name: node.group, items: node.items }); loose = null; continue; }
+    if (loose === null) { loose = { name: sections.length === 0 ? "Get started" : "More", items: [] }; sections.push(loose); }
+    loose.items.push(node);
+  }
+  navBySpace.legacy = sections;
+}
+for (const id of ["migrate", "troubleshooting"]) {
+  const sections = [];
+  for (const page of entries.filter((p) => p.space === id && p.meta?.nav !== "false")) {
+    const name = page.section === "" ? spaceById[id].label : page.section;
+    let section = sections.find((s) => s.name === name);
+    if (section === undefined) { section = { name, items: [] }; sections.push(section); }
+    section.items.push(navItem(page));
+  }
+  navBySpace[id] = sections;
+}
+const flatItems = (items) => items.flatMap((i) => (i.group !== undefined ? flatItems(i.items) : [i]));
+const flatNavBySpace = Object.fromEntries(Object.entries(navBySpace).map(([id, sections]) =>
+  [id, sections.flatMap((s) => flatItems(s.items).map((i) => ({ ...i, section: s.name })))]));
+const neighborsOf = (space, route) => {
+  const flat = flatNavBySpace[space] ?? [];
+  const at = flat.findIndex((p) => p.route === route);
+  return { prev: at > 0 ? flat[at - 1] : null, next: at >= 0 && at < flat.length - 1 ? flat[at + 1] : null };
 };
+const sectionNameOf = (space, route) => (flatNavBySpace[space] ?? []).find((p) => p.route === route)?.section ?? "";
 
 // ── the generated page components ─────────────────────────────────────────────────────────
+/** A shell attribute whose text could read as markup (braces, a `dsx.` reach) travels as a
+ *  page variable instead of attribute text, so the scanners never see an interpolation. */
+function shellAttr(page, name, value) {
+  const text = String(value);
+  if (!/[{}]|dsx\./i.test(text)) return `${name}="${escapeForDsxAttr(text)}"`;
+  const n = page.attrVars.push(text) - 1;
+  return `${name}="{{ dsx.variable.a${n} }}"`;
+}
+function shellAttrs(page, toc) {
+  const { prev, next } = neighborsOf(page.space, page.route);
+  page.attrVars = [];
+  const tocVar = page.attrVars.push(JSON.stringify(toc)) - 1;
+  const legacyHome = page.meta?.legacy !== undefined;
+  return [
+    shellAttr(page, "title", page.title),
+    shellAttr(page, "label", pageLabel(page)),
+    `route="${page.route}"`,
+    `space="${page.space}"`,
+    ...(supportOrigin !== "https://support.despia.com" ? [`supportOrigin="${escapeForDsxAttr(supportOrigin)}"`] : []),
+    ...(page.body !== undefined ? [`md="${mdSibling(page.route)}"`] : []),
+    shellAttr(page, "section", sectionNameOf(page.space, page.route)),
+    `toc="{{ dsx.variable.a${tocVar} }}"`,
+    ...(legacyHome && page.meta.modern ? [`modern="${escapeForDsxAttr(page.meta.modern)}"`] : []),
+    ...(prev !== null ? [`prev="${prev.route}"`, shellAttr(page, "prevLabel", prev.label)] : []),
+    ...(next !== null ? [`next="${next.route}"`, shellAttr(page, "nextLabel", next.label)] : []),
+  ].join(" ");
+}
+const varLines = (page) => [
+  ...page.mdVars.map((text, i) => `    <variable as="md${i}">return ${jseStringLiteral(text)}</variable>`),
+  ...page.attrVars.map((text, i) => `    <variable as="a${i}">return ${jseStringLiteral(text)}</variable>`),
+];
+const pageFrame = (page, extraHead, body) => `<scroll theme="{{ dsx.global.docs &amp;&amp; dsx.global.docs.theme ? dsx.global.docs.theme : '' }}" style="background: var(--dsx-background)">
+  <head>
+    <!-- GENERATED by scripts/compile.mjs${page.file ? ` from ${relative(root, page.file).split(sep).join("/")}` : ""} - edit the source, not this file. -->
+${[...varLines(page), ...extraHead].join("\n")}
+  </head>
+  <DocShell ${page.shell}>
+${body}
+  </DocShell>
+</scroll>
+`;
+
+const writeMd = (route, text) => {
+  // two addresses, one text: the Mintlify-style sibling (/x.md) and the /md/ tree (/md/x.md)
+  for (const rel of [mdSibling(route), route === "/" ? "/md/index.md" : `/md${route}.md`]) {
+    const abs = join(publicDir, ...rel.slice(1).split("/"));
+    mkdirSync(dirname(abs), { recursive: true });
+    writeFileSync(abs, text);
+  }
+};
+
 for (const page of pages) {
-  const mdRoute = page.route === "/" ? "/md/index.md" : `/md${page.route}.md`;
   const chunks = sectionize(page.body, page.bodyStart);
   const toc = chunks.filter((c) => c.level > 0).map((c) => ({ id: c.id, title: c.title, level: c.level }));
-  const { prev, next } = neighborsOf(page.route);
-  const sectionName = flatNav.find((p) => p.route === page.route)?.section ?? "";
   page.mdVars = [];
   const blocks = chunks.map((chunk) => {
     if (chunk.level === 0) return compileBody(page, chunk.lines, chunk.start, "    ").join("\n");
     const nodes = compileBody(page, chunk.lines, chunk.start, "      ");
     return `    <stack class="doc-section doc-anchor-${chunk.id}">\n${nodes.join("\n")}\n    </stack>`;
   }).filter((block) => block !== "").join("\n");
-  const vars = page.mdVars.map((text, i) =>
-    `    <variable as="md${i}">return ${jseStringLiteral(text)}</variable>`).join("\n");
-  const shellAttrs = [
-    `title="${escapeForDsxAttr(page.title)}"`,
-    `label="${escapeForDsxAttr(pageLabel(page))}"`,
-    `route="${page.route}"`,
-    `md="${mdRoute}"`,
-    `section="${escapeForDsxAttr(sectionName)}"`,
-    `toc="${escapeForDsxAttr(JSON.stringify(toc))}"`,
-    ...(prev !== null ? [`prev="${prev.route}"`, `prevLabel="${escapeForDsxAttr(prev.label)}"`] : []),
-    ...(next !== null ? [`next="${next.route}"`, `nextLabel="${escapeForDsxAttr(next.label)}"`] : []),
-  ].join(" ");
-  writeFileSync(join(generatedDir, `${page.component}.dsx`), `<scroll theme="{{ dsx.global.docs &amp;&amp; dsx.global.docs.theme ? dsx.global.docs.theme : '' }}" style="background: var(--dsx-background)">
-  <head>
-    <!-- GENERATED by scripts/compile.mjs from ${relative(root, page.file).split(sep).join("/")} - edit the markdown, not this file. -->
-${vars}
-  </head>
-  <DocShell ${shellAttrs}>
-${blocks}
-  </DocShell>
-</scroll>
-`);
-  const mdOut = join(publicDir, "md", ...(page.route === "/" ? ["index.md"] : (page.route.slice(1) + ".md").split("/")));
-  mkdirSync(dirname(mdOut), { recursive: true });
-  writeFileSync(mdOut, readFileSync(page.file));
+  page.shell = shellAttrs(page, toc);
+  writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, [], blocks));
+  writeMd(page.route, readFileSync(page.file, "utf8"));
 }
 
-// ── the generated sidebar (DocNav) ────────────────────────────────────────────────────────
-// The whole nav model as static markup: every row a real SSR'd anchor, grouped under
-// uppercase micro-labels, the active row resolved from the route attribute at render
-// time (class formula, S1). No api fetch, no client dependency.
-const navRows = sections.map((section) => {
-  const label = `  <text value="${escapeForDsxAttr(section.name)}" class="doc-nav-label"/>`;
-  const rows = section.pages.map((p) =>
-    `  <pressable href="${p.route}" on:tap="dsx.event('navigate')" class="doc-nav-link{{ dsx.attribute.route === '${p.route}' ? ' is-active' : '' }}"><text value="${escapeForDsxAttr(p.label)}" class="doc-nav-text"/></pressable>`);
-  return [label, ...rows].join("\n");
-}).join("\n");
-writeFileSync(join(generatedDir, "DocNav.dsx"), `<stack class="doc-nav" role="navigation" a11yLabel="Documentation">
+// ── the generated Troubleshooting index ───────────────────────────────────────────────────
+{
+  const page = generatedPages[0];
+  const fmtUtc = (iso) => {
+    const d = new Date(iso);
+    return Number.isNaN(d.getTime()) ? "" : `${d.toISOString().slice(0, 10)} ${d.toISOString().slice(11, 16)} UTC`;
+  };
+  const span = (a, b) => {
+    const ms = new Date(b).getTime() - new Date(a).getTime();
+    if (!(ms >= 0)) return "";
+    const h = Math.floor(ms / 3600000);
+    const m = Math.round((ms % 3600000) / 60000);
+    const days = Math.floor(h / 24);
+    const sameDay = new Date(a).toISOString().slice(0, 10) === new Date(b).toISOString().slice(0, 10);
+    const clock = days >= 1 ? `${days} d ${h % 24} h` : `${h} h ${m} min`;
+    return `${clock}${sameDay ? ", same day" : ""}`;
+  };
+  const items = tsArticles.map((p) => {
+    const packages = String(p.meta.packages ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    const platform = p.meta.platform === "legacy" ? "Legacy" : "v4";
+    const reported = p.meta.reportedAt ?? "";
+    const released = p.meta.releasedAt ?? p.meta.fixedAt ?? "";
+    return {
+      id: p.route, route: p.route, title: p.title, symptom: p.meta.symptom ?? p.description,
+      platform, packages, packagesLabel: packages.join(" · "),
+      fixed: reported !== "" && released !== "",
+      reportedLabel: reported !== "" ? fmtUtc(reported) : "",
+      releasedLabel: released !== "" ? fmtUtc(released) : "",
+      timeToFix: reported !== "" && released !== "" ? span(reported, released) : "",
+      issueUrl: p.meta.issueUrl ?? "",
+    };
+  });
+  const packageOptions = ["All packages", ...[...new Set(items.flatMap((i) => i.packages))].sort()];
+  page.body = [
+    `# Troubleshooting`, "", page.description, "",
+    ...items.map((i) => `- [${i.title}](${site}${mdSibling(i.route)}) (${i.platform}${i.packagesLabel ? `; ${i.packagesLabel}` : ""}): ${i.symptom}`),
+    "",
+  ].join("\n");
+  page.mdVars = [];
+  page.shell = shellAttrs(page, []);
+  const intro = pushMdVar(page, `# Troubleshooting\n\n${page.description} Every article is one symptom, its cause and the fix, with the platform it applies to. Filter by platform or by package.`);
+  const itemsVar = page.attrVars.push(JSON.stringify(items)) - 1;
+  // the variables carry JSON text; the formulas parse it once
+  const head = [
+    `    <variable as="platform">return 'All'</variable>`,
+    `    <variable as="pkg">return 'All packages'</variable>`,
+    `    <formula as="items" input:raw="dsx.variable.a${itemsVar}">return JSON.parse(raw)</formula>`,
+    `    <formula as="shown" input:items="dsx.formula.items" input:platform="dsx.variable.platform" input:pkg="dsx.variable.pkg">`,
+    `      return items.filter((i) => (platform === 'All' || i.platform === platform) && (pkg === 'All packages' || i.packages.includes(pkg)))`,
+    `    </formula>`,
+    `    <formula as="fixed" input:items="dsx.formula.items">return items.filter((i) => i.fixed)</formula>`,
+  ];
+  const body = [
+    `    <markdown bind="dsx.variable.md${intro}"/>`,
+    `    <hstack class="doc-ts-filters" role="group" a11yLabel="Filter articles">`,
+    `      <segmented bind="dsx.variable.platform" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
+    `      <picker bind="dsx.variable.pkg" options="${escapeForDsxAttr(packageOptions.join(","))}" label="Package" class="doc-ts-package"/>`,
+    `    </hstack>`,
+    `    <stack class="doc-ts-fixed" visible-if="dsx.formula.fixed.length > 0">`,
+    `      <text value="Fixed fast" class="doc-ts-heading"/>`,
+    `      <list bind="dsx.formula.fixed" key="id" scroll="false" class="doc-ts-fixed-list">`,
+    `        <FixedFast title="{{ dsx.this.title }}" href="{{ dsx.this.route }}" reported="{{ dsx.this.reportedLabel }}" released="{{ dsx.this.releasedLabel }}" duration="{{ dsx.this.timeToFix }}" platform="{{ dsx.this.platform }}"/>`,
+    `      </list>`,
+    `    </stack>`,
+    `    <list bind="dsx.formula.shown" key="id" scroll="false" class="doc-ts-list">`,
+    `      <pressable href="{{ dsx.this.route }}" class="doc-ts-card">`,
+    `        <hstack class="doc-ts-card-meta">`,
+    `          <text value="{{ dsx.this.platform }}" class="doc-ts-chip doc-ts-chip-{{ dsx.this.platform }}"/>`,
+    `          <text value="{{ dsx.this.packagesLabel }}" class="doc-ts-packages"/>`,
+    `        </hstack>`,
+    `        <text value="{{ dsx.this.title }}" class="doc-ts-card-title"/>`,
+    `        <text value="{{ dsx.this.symptom }}" class="doc-ts-card-symptom"/>`,
+    `      </pressable>`,
+    `    </list>`,
+    `    <text value="No article matches these filters yet." class="doc-ts-empty" visible-if="dsx.formula.shown.length === 0"/>`,
+  ].join("\n");
+  writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
+  writeMd(page.route, page.body);
+  writeFileSync(join(publicDir, "troubleshooting.json"), JSON.stringify({ articles: items }, null, 1) + "\n");
+}
+
+// The hand-authored pages have no markdown source; their sibling says what they are.
+for (const page of handAuthored) {
+  writeMd(page.route, `# ${page.title}\n\n${page.description}\n\nThis page is a live DSX document (${site}${page.route}); it has no markdown source.\n`);
+}
+
+// ── the generated sidebars (DocNav + one per space) ───────────────────────────────────────
+// Every nav as static markup: every row a real SSR'd anchor, grouped under uppercase
+// micro-labels, nested groups under quieter sub-labels, the active row resolved from the
+// route attribute at render time. DocNav picks the space's sidebar (visible-if renders
+// nothing for the other three, so a page carries one sidebar, not four).
+const navComponentOf = (id) => "DocNav" + id.charAt(0).toUpperCase() + id.slice(1);
+function navRows(items, depth) {
+  return items.flatMap((item) => {
+    if (item.group !== undefined) {
+      return [
+        `  <text value="${escapeForDsxAttr(item.group)}" class="doc-nav-sublabel doc-nav-depth-${depth}"/>`,
+        ...navRows(item.items, depth + 1),
+      ];
+    }
+    return [`  <pressable href="${item.route}" on:tap="dsx.event('navigate')" class="doc-nav-link doc-nav-depth-${depth}{{ dsx.attribute.route === '${item.route}' ? ' is-active' : '' }}"><text value="${escapeForDsxAttr(item.label)}" class="doc-nav-text"/></pressable>`];
+  });
+}
+for (const s of SPACES) {
+  const rows = (navBySpace[s.id] ?? []).map((section) =>
+    [`  <text value="${escapeForDsxAttr(section.name)}" class="doc-nav-label"/>`, ...navRows(section.items, 0)].join("\n")).join("\n");
+  writeFileSync(join(generatedDir, `${navComponentOf(s.id)}.dsx`), `<stack class="doc-nav doc-nav-${s.id}" role="navigation" a11yLabel="${escapeForDsxAttr(s.label)} documentation">
   <head>
-    <!-- GENERATED by scripts/compile.mjs (the nav model as static markup) - edit the content tree, not this file. -->
+    <!-- GENERATED by scripts/compile.mjs (the ${s.label} nav model as static markup) - edit the content tree, not this file. -->
     <attribute as="route" default="''"/>
     <event as="navigate"/>
   </head>
-${navRows}
+${rows}
+</stack>
+`);
+}
+writeFileSync(join(generatedDir, "DocNav.dsx"), `<stack class="doc-nav-host">
+  <head>
+    <!-- GENERATED by scripts/compile.mjs: the sidebar of the page's space. -->
+    <attribute as="route" default="''"/>
+    <attribute as="space" default="'modern'"/>
+    <event as="navigate"/>
+  </head>
+${SPACES.map((s) => `  <${navComponentOf(s.id)} visible-if="dsx.attribute.space === '${s.id}'" route="{{ dsx.attribute.route }}" on:navigate="dsx.event('navigate')"/>`).join("\n")}
 </stack>
 `);
 
 // ── the generated /system card wall (SystemCards) ─────────────────────────────────────────
-// The component reference as a card grid: name + one-line role per card, every card a
-// real anchor. Roles come from each reference page's front-matter description.
 const cardRoleFor = (description) => {
   const clause = String(description).replace(/\.\s*$/, "").split(": ")[0].trim();
   return clause.charAt(0).toUpperCase() + clause.slice(1);
@@ -653,50 +874,120 @@ ${cardRows}
 
 // ── the route table ───────────────────────────────────────────────────────────────────────
 const config = JSON.parse(readFileSync(join(root, "dsx.config.json"), "utf8"));
+config.siteUrl = site;
+const head = (config.web?.head ?? []).filter((row) => row.attributes?.name !== "despia-support-origin");
+config.web = { ...(config.web ?? {}), head: [...head, { tag: "meta", attributes: { name: "despia-support-origin", content: supportOrigin } }] };
 config.routes = entries.map((p) => ({
   path: p.route,
   component: `docs.${p.component}`,
-  meta: { title: p.title, ...(p.description !== "" ? { description: p.description } : {}) },
+  meta: { title: p.space === "legacy" ? `${p.title} (Despia v3)` : p.title, ...(p.description !== "" ? { description: p.description } : {}) },
 }));
 writeFileSync(join(root, "dsx.config.json"), JSON.stringify(config, null, 2) + "\n");
 
+const navJson = (sections) => sections.map((s) => ({ name: s.name, pages: flatItems(s.items).map(({ route, title, label }) => ({ route, title, label })) }));
 writeFileSync(join(publicDir, "nav.json"), JSON.stringify({
-  sections: sections.map((s) => ({ name: s.name, pages: s.pages.map(({ route, title, label }) => ({ route, title, label })) })),
+  sections: navJson(navBySpace.modern),
+  spaces: SPACES.map((s) => ({ id: s.id, label: s.label, home: s.home, sections: navJson(navBySpace[s.id] ?? []) })),
 }, null, 1) + "\n");
 
 // ── the client search index ───────────────────────────────────────────────────────────────
 writeFileSync(join(publicDir, "search-index.json"), JSON.stringify({
+  spaces: SPACES.map(({ id, label }) => ({ id, label })),
   pages: entries.map((p) => ({
     route: p.route,
     title: p.title,
     label: pageLabel(p),
-    section: p.section,
-    text: (p.body === undefined ? (p.search ?? p.description) : searchText(p.body)).slice(0, 4000),
+    space: p.space,
+    section: p.space === "modern" ? p.section : sectionNameOf(p.space, p.route),
+    text: (p.body === undefined || p.search !== undefined ? (p.search ?? p.description) : searchText(p.body)).slice(0, 4000),
   })),
-}, null, 1) + "\n");
+}) + "\n");
 
-// ── llms.txt + llms-full.txt ──────────────────────────────────────────────────────────────
-// llms speaks markdown, so it lists only markdown-backed pages (hand-authored DSX has
-// no /md sibling to link).
-const mdRoutes = new Set(pages.map((p) => p.route));
-const site = "https://docs.despia.com";
+// ── llms.txt + llms-full.txt: a root index, and a pair per space ──────────────────────────
+// The root /llms.txt lists the spaces, then the Modern pages (it has always listed them);
+// /llms-full.txt stays Modern in full. Each other space has /<space>/llms.txt + llms-full.txt.
+const mdPages = (space) => entries.filter((p) => p.space === space && p.body !== undefined);
+const llmsList = (space) => (navBySpace[space] ?? []).flatMap((s) => {
+  const rows = flatItems(s.items).filter((i) => byRoute.get(i.route)?.body !== undefined);
+  return rows.length === 0 ? [] : [`## ${s.name}`, "", ...rows.map((i) => `- [${i.title}](${site}${mdSibling(i.route)})`), ""];
+});
+const llmsFull = (space) => mdPages(space).map((p) => `# ${p.title}\n(${site}${p.route})\n\n${p.body}`).join("\n\n---\n\n");
 writeFileSync(join(publicDir, "llms.txt"), [
   "# Despia documentation",
   "",
-  "> Documentation for Despia, the web-optional native runtime: one set of DSX documents",
-  "> rendered as native iOS, native Android, an installable PWA and a server-rendered site.",
+  "> Documentation for Despia: Modern (v4, DSX: one set of documents rendered as native iOS, native",
+  "> Android, an installable PWA and a server-rendered site), Legacy (v3, despia-native), Migration",
+  "> (v3 to v4) and Troubleshooting.",
   "",
-  "Every page serves its raw markdown at the sibling path under /md/.",
+  "Every page serves its raw markdown at its own path plus `.md` (and under /md/). The MCP server at",
+  `${site}/mcp takes a \`space\` argument (modern, legacy, migrate, troubleshooting, all).`,
   "",
-  ...sections.filter((s) => s.pages.some((p) => mdRoutes.has(p.route))).flatMap((s) => [
-    `## ${s.name}`,
-    "",
-    ...s.pages.filter((p) => mdRoutes.has(p.route))
-      .map((p) => `- [${p.title}](${site}${p.route === "/" ? "/md/index.md" : `/md${p.route}.md`})`),
-    "",
-  ]),
+  "## Spaces",
+  "",
+  ...SPACES.map((s) => s.id === "modern"
+    ? `- [Modern](${site}/llms.txt): this file; full text at ${site}/llms-full.txt`
+    : `- [${s.label}](${site}${s.prefix}/llms.txt): ${s.blurb}; full text at ${site}${s.prefix}/llms-full.txt`),
+  `- [Migration map (JSON)](${site}/migrate-map.json): every v3 feature and its v4 package or API`,
+  "",
+  ...llmsList("modern"),
 ].join("\n"));
-writeFileSync(join(publicDir, "llms-full.txt"),
-  pages.map((p) => `# ${p.title}\n(${site}${p.route})\n\n${p.body}`).join("\n\n---\n\n"));
+writeFileSync(join(publicDir, "llms-full.txt"), llmsFull("modern"));
+for (const s of SPACES.slice(1)) {
+  mkdirSync(join(publicDir, s.prefix.slice(1)), { recursive: true });
+  writeFileSync(join(publicDir, s.prefix.slice(1), "llms.txt"), [
+    `# Despia documentation: ${s.label}`,
+    "",
+    `> ${s.blurb}. Part of ${site} (index: ${site}/llms.txt).`,
+    "",
+    ...llmsList(s.id),
+  ].join("\n"));
+  writeFileSync(join(publicDir, s.prefix.slice(1), "llms-full.txt"), llmsFull(s.id));
+}
 
-console.log(`[docs.compile] ${pages.length} page(s) + ${handAuthored.length} hand-authored → Components/pages (+ DocNav, SystemCards), routes, nav, search index, md copies, llms.txt`);
+// ── the sitemap: every space, every page, with lastmod ────────────────────────────────────
+// lastmod is the page's own date: front matter (legacy: the live v3 sitemap's date), else the
+// last commit that touched the source (this repo, or the front door for synced framework
+// pages), else this repo's HEAD date.
+function gitDates(cwd, args) {
+  const dates = new Map();
+  try {
+    const log = execFileSync("git", ["log", "--format=@%cI", "--name-only", ...args], { cwd, encoding: "utf8", maxBuffer: 64 << 20, stdio: ["ignore", "pipe", "ignore"] });
+    let at = "";
+    for (const line of log.split("\n")) {
+      if (line.startsWith("@")) at = line.slice(1);
+      else if (line !== "" && !dates.has(line)) dates.set(line, at);
+    }
+  } catch { /* not a checkout: no dates */ }
+  return dates;
+}
+const repoDates = gitDates(root, ["--", "content", "Components"]);
+const syncedDatesFile = join(contentDir, "framework", "_lastmod.json");
+const syncedDates = existsSync(syncedDatesFile) ? JSON.parse(readFileSync(syncedDatesFile, "utf8")) : {};
+let headDate = "";
+try { headDate = execFileSync("git", ["log", "-1", "--format=%cI"], { cwd: root, encoding: "utf8" }).trim(); } catch { headDate = new Date().toISOString(); }
+const lastmodOf = (p) => {
+  if (p.meta?.lastmod) return p.meta.lastmod;
+  if (p.file !== undefined) {
+    const rel = relative(root, p.file).split(sep).join("/");
+    if (repoDates.has(rel)) return repoDates.get(rel);
+    const synced = syncedDates[relative(join(contentDir, "framework"), p.file).split(sep).join("/")];
+    if (synced !== undefined) return synced;
+  }
+  if (p.component !== undefined && repoDates.has(`Components/${p.component}.dsx`)) return repoDates.get(`Components/${p.component}.dsx`);
+  return headDate;
+};
+const xmlEsc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+writeFileSync(join(publicDir, "sitemap.xml"), [
+  `<?xml version="1.0" encoding="UTF-8"?>`,
+  `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+  ...entries.filter((p) => p.meta?.canonicalOf === undefined).map((p) => `  <url><loc>${xmlEsc(site + p.route)}</loc><lastmod>${xmlEsc(lastmodOf(p))}</lastmod></url>`),
+  `</urlset>`,
+  "",
+].join("\n"));
+
+// ── the canonical table (assemble.mjs stamps <link rel="canonical"> from it) ──────────────
+writeFileSync(join(publicDir, "canonical.json"), JSON.stringify(Object.fromEntries(entries.map((p) =>
+  [p.route, site + (p.meta?.canonicalOf ?? p.route)]))) + "\n");
+
+const counts = SPACES.map((s) => `${s.id} ${entries.filter((p) => p.space === s.id).length}`).join(", ");
+console.log(`[docs.compile] ${entries.length} route(s) (${counts}) → Components/pages (+ DocNav per space, SystemCards), routes, nav, search index, md siblings, llms per space, sitemap`);

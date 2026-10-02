@@ -1,0 +1,299 @@
+---
+title: "Introduction"
+icon: "circle-info"
+description: "Send targeted push notifications to specific users even when your app is closed, using the native OneSignal SDK bundled at runtime."
+---
+
+Send targeted push notifications to specific users even when your app is closed. Despia includes the native OneSignal SDK at runtime. You link your users to their devices with two function calls, then send notifications from your backend using OneSignal's REST API.
+
+<Info>
+  OneSignal is moving away from Player IDs toward `external_id`, your own user ID from your database. Despia supports this. Pass your logged-in user's ID via `setonesignalplayerid://` and use `include_external_user_ids` when sending from your backend.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+Despia registers the device with OneSignal automatically when the app launches. You link that device to your user by calling `setonesignalplayerid://` with your user's ID on every authenticated app load. OneSignal stores the mapping. When you want to send a notification, your backend calls OneSignal's REST API with `include_external_user_ids` targeting that user ID.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+// Call on every authenticated load
+if (isDespia) {
+    despia(`setonesignalplayerid://?user_id=${userId}`)
+}
+```
+
+You can check whether the user has push notifications enabled and prompt them to turn it on if not:
+
+```javascript
+const result = await despia('checkNativePushPermissions://', ['nativePushEnabled'])
+
+if (!result.nativePushEnabled) {
+    // User has denied or not yet granted permission
+    // Link them to their device settings to enable it
+    despia('settingsapp://')
+}
+```
+
+```javascript
+// Backend: send a notification to a specific user
+const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic YOUR_REST_API_KEY',
+    },
+    body: JSON.stringify({
+        app_id:                     'YOUR_ONESIGNAL_APP_ID',
+        include_external_user_ids:  [userId],
+        headings:                   { en: 'Title' },
+        contents:                   { en: 'Message body' },
+    }),
+})
+```
+
+---
+
+## Notification routing
+
+Send a `path` in the `data` object and Despia updates the URL via the History API on notification tap. No reload, no extra code needed. Most SPA routers react to the `popstate` event Despia fires and navigate automatically.
+
+```javascript
+// Backend: send a notification with a path
+body: JSON.stringify({
+    app_id:                    'YOUR_ONESIGNAL_APP_ID',
+    include_external_user_ids: [userId],
+    headings:                  { en: 'Your order shipped' },
+    contents:                  { en: 'Tap to track it' },
+    data: {
+        path: '/account/orders/4567?tab=tracking',
+    },
+})
+```
+
+That's it for most setups. If your router does not react to a synthetic `popstate`, or you need to restore state using `metadata`, add `window.onNotificationEvent` and handle it yourself:
+
+```javascript
+// Optional: only needed if your router ignores popstate, or you use metadata
+window.onNotificationEvent = function (payload) {
+    if (payload.path) {
+        router.navigate(payload.path)
+    }
+    if (payload.metadata) {
+        const meta = typeof payload.metadata === 'string'
+            ? JSON.parse(payload.metadata)
+            : payload.metadata
+        restoreState(meta)
+    }
+}
+```
+
+<CardGroup cols={2}>
+  <Card title="Setup Guide" icon="gear" href="/native-features/onesignal/reference">
+    OneSignal dashboard setup, Apple Push Key, Firebase config, and full API reference
+  </Card>
+
+  <Card title="Offline Push" icon="bell-slash" href="/native-features/offline-push">
+    Send local notifications without a server using sendlocalpushmsg://
+  </Card>
+</CardGroup>
+
+---
+
+## OneSignal and Despia setup
+
+Configure OneSignal with your iOS and Android credentials, then connect everything to Despia. The steps go in order, each one feeds the next.
+
+<Steps>
+  <Step title="Create a OneSignal account">
+    Go to [onesignal.com](https://onesignal.com) and sign up, or sign in with an existing account. Create a new app or organization. OneSignal is free up to 10,000 subscribers & unlimited push notifications, after which paid plans apply, so account creation does not block early development.
+  </Step>
+  <Step title="Choose Native iOS and Native Android">
+    When OneSignal prompts you to choose platforms, select **Native iOS** and **Native Android**. Despia apps are native applications, not web apps, so do not pick the Web Push option even though your app code is web.
+  </Step>
+  <Step title="Generate an Apple Push Key">
+    In Apple Developer Console, go to **Certificates, Identifiers & Profiles \> Keys \> \+ New**. Name the key something like `Push Notifications`, check **Apple Push Notifications service (APNs)**, and click **Continue** then **Register**. Download the `.p8` file (you can only download it once), and note the **Key ID** that appears next to it. Also note your **Team ID** from the top right corner of Apple Developer Console.
+  </Step>
+  <Step title="Add Push Notifications to your core bundle ID">
+    Still in Apple Developer Console, go to **Identifiers**, click into your core app bundle ID (e.g. `com.despia.myapp`), and check **Push Notifications** under Capabilities. Click **Save**. Without this, APNs will reject the registration even with a valid `.p8` key.
+  </Step>
+  <Step title="Create the OneSignal Notification Service Extension bundle ID">
+    Click **\+** under Identifiers, choose **App IDs**, then **App**. Use a description like `MyApp OneSignal Module` and the bundle ID `com.despia.myapp.OneSignalNotificationServiceExtension` (your core bundle ID with `.OneSignalNotificationServiceExtension` appended). This exact naming is what Despia provisions during the build, do not change it. Under **Capabilities**, enable **Associated Domains** and **Push Notifications**.
+  </Step>
+  <Step title="Optional: enable App Groups for rich push and metrics">
+    If you need delivery metrics, rich push notifications with images and action buttons, or any other advanced OneSignal features, also create an App Group. Click **\+** under Identifiers, choose **App Groups**, and use the identifier `group.com.despia.myapp.onesignal`. Then add this group to both your core bundle ID and the `OneSignalNotificationServiceExtension` bundle ID under their App Groups capability. If you only need basic push, skip this step entirely, the integration works without an App Group for the standard delivery path.
+  </Step>
+  <Step title="Configure iOS in OneSignal">
+    In OneSignal, go to **Settings \> Push & In-App \> Apple iOS**. Upload the `.p8` file you downloaded, paste in your **Key ID** and **Team ID**, and enter your iOS bundle ID (e.g. `com.despia.myapp`). Click **Save**. OneSignal will validate the credentials with Apple immediately.
+  </Step>
+  <Step title="Set up a Firebase project for Android">
+    Go to [console.firebase.google.com](https://console.firebase.google.com), create a project (or use an existing one), and add an Android app with the same package name as your Despia app (e.g. `com.despia.myapp`). Then go to **Project settings \> Cloud Messaging** to find your **Server Key** and **Sender ID**. If the legacy Server Key is hidden, enable the Cloud Messaging API in Google Cloud Console first.
+  </Step>
+  <Step title="Configure Android in OneSignal">
+    In OneSignal, go to **Settings \> Push & In-App \> Google Android**. Paste in your **Firebase Server Key** and **Sender ID**. Click **Save**. OneSignal will validate the credentials with Google immediately.
+  </Step>
+  <Step title="Get your OneSignal App ID and REST API Key">
+    In OneSignal, go to **Settings \> Keys & IDs**. Copy the **OneSignal App ID** for client-side use, and the **REST API Key** for backend use. Keep the REST API Key on your server only, never bundle it into client code.
+  </Step>
+  <Step title="Enable OneSignal in the Despia Editor">
+    Open the Despia Editor and go to **App \> Settings \> Integrations \> OneSignal**. Toggle the integration on, then paste in your **OneSignal App ID**. If you created the App Group in the optional step above, also paste in `group.com.despia.myapp.onesignal`. Save the configuration.
+  </Step>
+  <Step title="Rebuild your app">
+    Trigger a fresh build from the Despia Editor. The OneSignal SDK and the Notification Service Extension target have to be compiled into the app binary and signed against the bundle IDs you registered, so this cannot be applied over-the-air. After the rebuild, push notifications start working immediately.
+  </Step>
+</Steps>
+
+<Warning>
+  Skipping the rebuild leaves OneSignal inactive even if the correct OneSignal App IDs are added. The `setonesignalplayerid://` call will resolve silently and your backend's `include_external_user_ids` requests will succeed at the API level but never deliver to the device. If notifications stop arriving after editing settings, rebuild before opening a support ticket.
+</Warning>
+
+---
+
+## Critical alerts
+
+Critical alerts bypass Do Not Disturb and silent mode, delivering the notification with sound regardless of the user's device settings. They are intended for urgent, time-sensitive messages such as security alerts or medical notifications.
+
+### iOS
+
+iOS requires the Critical Alerts entitlement from Apple. Request it at [developer.apple.com/contact/request/notifications-critical-alerts-entitlement](https://developer.apple.com/contact/request/notifications-critical-alerts-entitlement). Apple reviews requests manually and approval can take several weeks.
+
+When submitting the request, you need to enable the entitlement on two bundle IDs, your core app bundle ID and the OneSignal Notification Service Extension bundle ID you created in the Steps above. For example, if your app bundle ID is `com.despia.myapp`, add both:
+
+- `com.despia.myapp`
+- `com.despia.myapp.OneSignalNotificationServiceExtension`
+
+Once Apple approves the request, enable critical alerts in **Despia \> App \> Integrations \> OneSignal \> Critical Alerts** and rebuild a new version in Despia. After the rebuild, set `ios_critical_alert` to `1` in your payload.
+
+```javascript
+// Backend: send a critical alert on iOS
+const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic YOUR_REST_API_KEY',
+    },
+    body: JSON.stringify({
+        app_id:                     'YOUR_ONESIGNAL_APP_ID',
+        include_external_user_ids:  [userId],
+        headings:                   { en: 'Urgent alert' },
+        contents:                   { en: 'Message body' },
+        ios_critical_alert:         1,
+    }),
+})
+```
+
+### Android
+
+No dashboard configuration or rebuild is required. Set `priority` to `10` and `android_channel_id` to a high-importance channel in your OneSignal payload.
+
+To get your channel ID, go to **OneSignal \> Settings \> Messaging \> Android Categories** and create a new category with importance set to **Urgent**. OneSignal will generate a channel ID for that category, copy it and use it as `android_channel_id` in your payload.
+
+```javascript
+// Backend: send a critical alert on Android
+const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic YOUR_REST_API_KEY',
+    },
+    body: JSON.stringify({
+        app_id:                     'YOUR_ONESIGNAL_APP_ID',
+        include_external_user_ids:  [userId],
+        headings:                   { en: 'Urgent alert' },
+        contents:                   { en: 'Message body' },
+        priority:                   10,
+        android_channel_id:         'YOUR_CHANNEL_ID', // from OneSignal > Settings > Messaging > Android Categories
+    }),
+})
+```
+
+### Both platforms
+
+To send a single critical alert that works on both Android and iOS, combine the fields in one payload.
+
+```javascript
+// Backend: send a critical alert on Android and iOS
+const response = await fetch('https://onesignal.com/api/v1/notifications', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic YOUR_REST_API_KEY',
+    },
+    body: JSON.stringify({
+        app_id:                     'YOUR_ONESIGNAL_APP_ID',
+        include_external_user_ids:  [userId],
+        headings:                   { en: 'Urgent alert' },
+        contents:                   { en: 'Message body' },
+        priority:                   10,
+        android_channel_id:         'YOUR_CHANNEL_ID',
+        ios_critical_alert:         1,
+    }),
+})
+```
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="OneSignal Dashboard" icon="bell" href="https://onesignal.com">
+    Configure your push notification app
+  </Card>
+
+  <Card title="REST API Reference" icon="book" href="https://documentation.onesignal.com/reference/create-notification">
+    OneSignal Create Notification API
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

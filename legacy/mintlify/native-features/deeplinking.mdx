@@ -1,0 +1,148 @@
+---
+title: "Deeplinking"
+icon: "link"
+description: "Configure universal links on iOS and app links on Android so URLs from your domain open directly inside your Despia app instead of the mobile browser."
+---
+
+<iframe src="https://www.youtube.com/embed/TKByfF6dM_Q" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Info>
+  The video uses a specific AI coding tool to demonstrate the setup, but the configuration works 1:1 with Cursor, Claude Code, or any other tool. Despia is web framework and tooling agnostic, so the only thing that matters is the SDK call.
+</Info>
+
+<Info>
+  Enable Web App Synchronization in the Despia Editor before testing. Navigate to Add-ons, then Hardcoded, then toggle Web App Synchronization on for the platforms you are shipping to.
+</Info>
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+iOS and Android each look for a verification file on your domain when a link is opened. If the file proves your app owns the domain, the OS routes the URL into your installed app. Otherwise it falls back to the browser. Both files live under `/.well-known/` on the same domain that hosts your web app.
+
+---
+
+## iOS configuration
+
+Host the Apple App Site Association file at:
+
+```text
+https://yourdomain.com/.well-known/apple-app-site-association
+```
+
+```json
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["TEAMID.BUNDLEID"],
+        "components": [
+          {
+            "/": "/*",
+            "comment": "Matches any URL path"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Bundle ID is shown in the Despia Publishing Panel. Team ID is shown in your Apple Developer account under Membership. The file must have no file extension, just `apple-app-site-association`.
+
+---
+
+## Android configuration
+
+Host the Digital Asset Links file at:
+
+```text
+https://yourdomain.com/.well-known/assetlinks.json
+```
+
+```json
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "PACKAGE_NAME",
+      "sha256_cert_fingerprints": ["SHA256_FINGERPRINT"]
+    }
+  }
+]
+```
+
+Package Name is shown in the Despia Publishing Panel. SHA256 Fingerprint is in Google Play Console under Release, Setup, App Integrity.
+
+---
+
+## Hosting requirements
+
+Both files must be served over HTTPS, must be accessible without any redirects, and must return `Content-Type: application/json`. The iOS file must have no file extension.
+
+---
+
+## Verification
+
+Test deep linking on a real device before submitting builds.
+
+- iOS: use Apple's App Search API Validation Tool, or watch Safari Web Inspector logs when launching the app to confirm the AASA file loaded.
+- Android: use Google's Digital Asset Links testing endpoint, or run the App Links Assistant inside Android Studio.
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+</CardGroup>

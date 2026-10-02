@@ -1,0 +1,91 @@
+---
+title: "Safe Areas"
+icon: "object-ungroup"
+description: "Handle device safe areas (notches, status bars, home indicators) using custom CSS variables for responsive mobile layouts in your Lovable application."
+---
+
+<iframe src="https://www.youtube.com/embed/e4xN7eZW4NU" title="YouTube video player" frameborder="0" className="w-full aspect-video rounded-xl" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen />
+
+<Card title="Lovable Prompt" icon="sparkles">
+  Use CSS variables for safe area handling in your application. The Despia native runtime automatically provides `var(--safe-area-top)` and `var(--safe-area-bottom)` CSS variables.
+
+  1. Add spacer divs at the top and bottom of your layout
+  2. Set the height of spacer divs to `var(--safe-area-top)` and `var(--safe-area-bottom)`
+  3. Use CSS variables in padding or height styles for fixed positioned elements
+  4. Ensure fixed positioned elements respect device boundaries
+  5. Handle device notches, status bars, and home indicators automatically
+
+  <Danger>
+    **This feature is automatically provided by the Despia Native runtime - no npm package installation required!**
+  </Danger>
+  Please follow the implementation instructions closely. The CSS variables are injected by the Despia Native runtime environment.
+</Card>
+
+**How it works:** Lovable generates web application code that uses CSS variables (`var(--safe-area-top)` and `var(--safe-area-bottom)`) for safe area handling. When you deploy and run the generated app in the Despia native runtime, these CSS variables are automatically populated with accurate safe area measurements including iPhone notches, status bars, home indicators, and other device-specific UI elements. The values are updated in real-time when the device orientation changes, ensuring your app content is never obscured by system UI elements.
+
+## **Installation**
+
+No installation required! The CSS variables are automatically provided by the Despia native runtime.
+
+## **Usage** **1.**
+
+### **Top Safe Area Spacer**
+
+```tsx
+// Top Safe Area Spacer
+<div style={{ height: 'var(--safe-area-top)' }} />
+```
+
+### **2. Safe Area Implementation**
+
+```tsx
+// Top Safe Area Spacer
+<div style={{ height: 'var(--safe-area-top)' }} />
+
+// Fixed Header
+<header 
+  className="fixed top-0 left-0 right-0 bg-blue-600 text-white"
+  style={{ 
+    paddingTop: 'var(--safe-area-top)',
+    minHeight: 'calc(60px + var(--safe-area-top))'
+  }}
+>
+  <h1>My App</h1>
+</header>
+
+// Main Content
+<main 
+  style={{ 
+    paddingTop: 'calc(60px + var(--safe-area-top))',
+    paddingBottom: 'calc(80px + var(--safe-area-bottom))'
+  }}
+>
+  Your content here
+</main>
+
+// Fixed Bottom Navigation
+<nav 
+  className="fixed bottom-0 left-0 right-0 bg-white"
+  style={{ 
+    paddingBottom: 'var(--safe-area-bottom)',
+    minHeight: 'calc(64px + var(--safe-area-bottom))'
+  }}
+>
+  Navigation items
+</nav>
+
+// Bottom Safe Area Spacer
+<div style={{ height: 'var(--safe-area-bottom)' }} />
+```
+
+## **Resources**
+
+- **CSS Variables**: `var(--safe-area-top)` and `var(--safe-area-bottom)`
+- Automatically provided by Despia Native runtime
+- No external packages or configuration needed
+
+## **Lovable Integration**
+
+Safe area insets are automatically available in all Despia-powered Lovable applications through CSS variables, enabling instant responsive layouts that adapt to any mobile device configuration.
+
+For additional support or questions about safe area implementation, please contact our support team at [**support@despia.com**](mailto:support@despia.com)

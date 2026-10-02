@@ -1,0 +1,167 @@
+---
+title: "Interstitial Ads"
+description: "Display a full-screen native AdMob interstitial ad at a natural transition point using a single fire-and-forget SDK call."
+icon: "scroll"
+---
+
+Trigger a native AdMob interstitial through Despia with a single SDK call. The Mobile Ads SDK is bundled with the Despia runtime, so the only configuration lives in AdMob and the Despia Editor. No await, no return value, no separate AdMob installation.
+
+---
+
+## Installation
+
+<Tabs>
+  <Tab title="Bundle">
+    <CodeGroup>
+
+    ```bash npm
+    npm install despia-native
+    ```
+
+    ```bash pnpm
+    pnpm add despia-native
+    ```
+
+    ```bash yarn
+    yarn add despia-native
+    ```
+
+    </CodeGroup>
+
+    ```javascript
+    import despia from 'despia-native';
+    ```
+  </Tab>
+  <Tab title="CDN">
+    <CodeGroup>
+
+    ```html UMD
+    <script src="https://cdn.jsdelivr.net/npm/despia-native/index.min.js"></script>
+    ```
+
+    ```html ESM
+    <script type="module">
+        import despia from 'https://cdn.jsdelivr.net/npm/despia-native/+esm'
+    </script>
+    ```
+
+    </CodeGroup>
+  </Tab>
+</Tabs>
+
+---
+
+## How it works
+
+`admob://interstitial` is fire-and-forget. The native runtime loads the configured Ad Unit ID, presents a full-screen interstitial, and your JavaScript keeps running in parallel. The call takes no parameters because the Ad Unit ID is read from the Despia Editor at runtime.
+
+```javascript
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+if (isDespia) {
+    despia('admob://interstitial')
+}
+```
+
+---
+
+## AdMob and Despia setup
+
+Configure AdMob, then connect it to Despia. The steps go in order, each one feeds the next.
+
+<Steps>
+  <Step title="Create a Google AdMob account">
+    Go to [admob.google.com](https://admob.google.com) and sign in with your Google account, or create one. Complete the Account setup wizard with your country, time zone, and payment profile under **Payments \> Settings**. AdMob will not pay out without a verified payment profile, so finish this before launch.
+  </Step>
+  <Step title="Add your iOS app to AdMob">
+    In AdMob, go to **Apps \> Add app**, choose **iOS** as the platform, then either search for your app on the App Store or select **No, my app isn't listed in a supported app store yet** and enter the name manually. AdMob issues an App ID in the format `ca-app-pub-XXXXXXXXXXXXXXXX~YYYYYYYYYY`. Note the tilde, this is the App ID, not an Ad Unit ID.
+  </Step>
+  <Step title="Add your Android app to AdMob">
+    Repeat **Apps \> Add app**, this time choosing **Android**. AdMob requires a separate app entry per platform even though both versions of your product share the same name. Each one gets its own AdMob App ID.
+  </Step>
+  <Step title="Create an Interstitial Ad Unit per platform">
+    For each app, go to **Apps \> \[your app\] \> Ad units \> Create ad unit**, choose **Interstitial**, name it something descriptive like `App Interstitial`, and click **Create**. AdMob issues an Ad Unit ID in the format `ca-app-pub-XXXXXXXXXXXXXXXX/YYYYYYYYYY` (note the slash, not the tilde from the App ID). Repeat for the Android app, you will end up with two Interstitial Ad Unit IDs, one per platform.
+  </Step>
+  <Step title="Configure GDPR and CCPA consent in AdMob">
+    In AdMob, go to **Privacy & messaging \> GDPR**, create a consent message, and target all EU and UK traffic. Repeat under **CCPA** for California traffic. Without these, AdMob will not serve personalized ads to those regions and your fill rate drops sharply.
+  </Step>
+  <Step title="Enable AdMob in the Despia Editor">
+    Open the Despia Editor and go to **App \> Integrations \> AdMob**. Toggle the integration on, then paste each of the four IDs from AdMob into the matching fields:
+
+    - **iOS App ID** (with `~`)
+    - **Android App ID** (with `~`)
+    - **iOS Interstitial Ad Unit ID** (with `/`)
+    - **Android Interstitial Ad Unit ID** (with `/`)
+  </Step>
+  <Step title="Rebuild your app">
+    Trigger a fresh build from the Despia Editor. The Mobile Ads SDK has to be compiled into the app binary, so this cannot be applied over-the-air. Configure once, rebuild once, and the bridge is active for the life of the build. After the build finishes, the call to `despia('admob://interstitial')` will present native interstitials at runtime.
+  </Step>
+</Steps>
+
+<Warning>
+  Skipping the rebuild leaves Interstitial Ads inactive even if the toggle reads enabled. The call to `despia('admob://interstitial')` resolves silently in production. If ads stop showing after editing settings, rebuild before opening a support ticket.
+</Warning>
+
+---
+
+## Show at a natural transition
+
+Trigger the ad at a logical break in your app, such as after a level completes, a form submits, or a multi-step flow finishes. Because the call does not block, you can navigate immediately after firing it. The native ad layer sits above your web content while your underlying state change runs in the background.
+
+```javascript
+import despia from 'despia-native'
+
+const isDespia = navigator.userAgent.toLowerCase().includes('despia')
+
+function onLevelComplete() {
+    if (isDespia) {
+        despia('admob://interstitial')
+    }
+
+    navigateToNextScreen()
+}
+```
+
+---
+
+## Testing your integration
+
+Before going to production, swap your real Ad Unit ID for a Google test Ad Unit ID in the Despia Editor. Test units always serve a placeholder ad, so you can verify the integration without risking your account standing or skewing reporting.
+
+The current Google test Interstitial Ad Unit IDs are `ca-app-pub-3940256099942544/1033173712` for Android and `ca-app-pub-3940256099942544/4411468910` for iOS. Paste these into the Interstitial Ad Unit ID fields, rebuild, and confirm the test ad displays at your transition points. Swap back to your real Ad Unit IDs before submitting the build to the stores.
+
+<Warning>
+  Never serve real ads in development or QA builds. AdMob detects clicks from non-public traffic and can suspend your account for invalid activity. Use the test Ad Unit IDs above for any build you do not intend to ship.
+</Warning>
+
+---
+
+## Policy compliance
+
+AdMob policy prohibits showing interstitials in response to user actions where the user expects something else to happen. Tapping a navigation button, opening a menu, or completing a primary call to action must not present an ad. Place interstitials only at organic break points such as between sessions, between levels, or after a completed task.
+
+<Warning>
+  Triggering interstitials from navigation buttons or unrelated taps violates AdMob policy and can result in account suspension or revenue clawback. The Despia SDK does not enforce this rule, placement is your responsibility.
+</Warning>
+
+---
+
+## Resources
+
+<CardGroup cols={2}>
+  <Card title="NPM Package" icon="npm" href="https://www.npmjs.com/package/despia-native">
+    despia-native
+  </Card>
+
+  <Card title="Support" icon="envelope" href="mailto:support@despia.com">
+    [support@despia.com](mailto:support@despia.com)
+  </Card>
+
+  <Card title="AdMob test Ad Unit IDs" icon="circle-info" href="https://developers.google.com/admob/android/test-ads">
+    Google's official test units for development
+  </Card>
+
+  <Card title="AdMob program policies" icon="shield-halved" href="https://support.google.com/admob/answer/6128543">
+    Placement and content policy reference
+  </Card>
+</CardGroup>
