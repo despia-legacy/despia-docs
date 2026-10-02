@@ -32,6 +32,7 @@ import integrations from "../public/integrations.json";
 import versions from "../public/versions.json";
 import rootRedirects from "../redirects/docs-root.json";
 import { createTools, SPACES, type Cache, type IndexPage, type VectorHit } from "./search.ts";
+import { DOCS_TOOLS } from "./tools.ts";
 
 interface AssetsBinding { fetch(request: Request): Promise<Response> }
 
@@ -109,7 +110,6 @@ async function fetchPage(args: Record<string, unknown>) {
   return { route, url: `https://docs.despia.com${route}`, version: versions.latest, markdown: await res.text() };
 }
 
-const FILTERS = "Filters: space (modern | legacy | migrate | troubleshooting | releases | app-review), package (a package path such as Core/Basics/Haptics or its command, haptic), version (docs version; latest by default), platform (v4 | legacy).";
 const handler = createWorkersHandler(
   {
     routes: [],
@@ -137,21 +137,7 @@ const handler = createWorkersHandler(
   undefined,
   {
     siteRegistry: registry as never,
-    mcpTools: [
-      { name: "docs_search", chain: "docs", action: "docsSearch", description: `Search the Despia documentation, hybrid (keyword index + the Support knowledge base's vectors, fused). Exact identifiers (dsx.module.haptic.light, <repeat>, despia export ios, 4.2) take the keyword fast path. Use this BEFORE guessing a Despia API, attribute, CLI flag or package name. ${FILTERS} Returns ranked pages with url and markdown url.`, inputs: ["query", "space", "package", "version", "platform", "limit"] },
-      { name: "docs_fetch", chain: "docs", action: "docsFetch", description: "Fetch one documentation page as markdown by its route or URL, in any space (e.g. /framework/guides/routing, /legacy/native-features/haptic-feedback, /migrate/map, /app-review/apple-4-2-minimum-functionality).", inputs: ["route", "space", "version"] },
-      { name: "resolutions_search", chain: "docs", action: "resolutionsSearch", description: "Search anonymised, approved answers to real support questions (the Support knowledge base). Filters: package, version, platform (v4 | legacy).", inputs: ["query", "package", "version", "platform", "limit"] },
-      { name: "troubleshooting_search", chain: "docs", action: "troubleshootingSearch", description: "Search the troubleshooting articles: symptom, cause and fix. Filters: package, platform (v4 | legacy).", inputs: ["query", "package", "platform", "limit"] },
-      { name: "app_review_search", chain: "docs", action: "appReviewSearch", description: "Search the App Review knowledge base: one entry per Apple guideline or Google Play policy, what it means, why Despia apps hit it, how to fix it, a reviewer reply. Filters: store (apple | google), guideline (e.g. 4.2, 5.1.1), category (metadata, payments, privacy, minimum functionality, login, design), platform (v4 | legacy).", inputs: ["query", "store", "guideline", "category", "platform", "limit"] },
-      { name: "integrations_list", chain: "docs", action: "integrationsList", description: "List Despia packages (integrations): name, command (dsx.module.<command>), package path, licence, platforms, version. Filters: query, platform (ios | android | web | macos), license (open | commercial | an SPDX-style id).", inputs: ["query", "platform", "license", "limit"] },
-      { name: "integration_get", chain: "docs", action: "integrationGet", description: "One Despia package by command (haptic) or path (Core/Basics/Haptics): actions, licence, platforms, install line, the docs pages that use it and its v3 predecessors.", inputs: ["package"] },
-      { name: "improvements_list", chain: "docs", action: "improvementsList", description: "List entries of the Improvements ledger (despia.com/improvements): how DSX and its packages got better, with evidence. Filters: package, kind (dx, api, performance, reliability, platform-parity, native-fidelity, docs, tooling, security, support), since (a date or version).", inputs: ["package", "kind", "since", "limit"] },
-      { name: "improvements_get", chain: "docs", action: "improvementsGet", description: "One Improvements ledger entry by id.", inputs: ["id"] },
-      // the first three tools, kept for agents already configured against them
-      { name: "search", chain: "docs", action: "search", description: `Search the Despia documentation (same as docs_search). ${FILTERS}`, inputs: ["query", "space", "package", "version", "platform"] },
-      { name: "fetch-page", chain: "docs", action: "fetchPage", description: "Fetch one documentation page as raw markdown by its route (same as docs_fetch).", inputs: ["route", "space"] },
-      { name: "list-sections", chain: "docs", action: "listSections", description: "List the sections and pages of one documentation space (modern, legacy, migrate, troubleshooting, releases, app-review) or of all of them (all, the default).", inputs: ["space"] },
-    ],
+    mcpTools: DOCS_TOOLS.map((t) => ({ name: t.name, chain: "docs", action: t.action, description: t.description, inputs: Object.keys(t.inputs) })),
   },
 );
 

@@ -8,12 +8,14 @@
   },
   "scripts": {
     "sync": "node scripts/sync-content.mjs",
-    "compile": "node scripts/port-legacy.mjs && node scripts/migrate-map.mjs && node scripts/compile.mjs",
+    "compile": "node scripts/port-legacy.mjs && node scripts/migrate-map.mjs && node scripts/compile.mjs && node --experimental-strip-types --no-warnings scripts/mcp-tools.mjs",
     "build": "npm run compile && dsx build && node scripts/assemble.mjs",
     "dev": "npm run compile && dsx dev",
     "lint": "npm run compile && dsx lint --strict",
     "redirects": "node scripts/redirects.mjs",
-    "parity": "node scripts/setup-parity.mjs"
+    "parity": "node scripts/setup-parity.mjs",
+    "bench": "node --experimental-strip-types --no-warnings scripts/bench-search.mjs",
+    "integrations": "node scripts/sync-integrations.mjs"
   },
   "dependencies": {
     "@despia-native/compiler": "0.1.0",
