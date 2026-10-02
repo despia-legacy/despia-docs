@@ -1,0 +1,16 @@
+{
+  "defaults": { "device": "desktop", "scheme": "light", "target": "web", "at": "2026-10-02T09:41:00Z" },
+  "outDir": "evidence/web-launch/shots",
+  "shots": [
+    { "document": "pages/PageFramework_Guides_Routing", "route": "/framework/guides/routing", "as": "01-modern-page", "allowEmpty": true },
+    { "document": "pages/PageLegacy_Payments_Stripe_Introduction", "route": "/legacy/payments/stripe/introduction", "as": "02-legacy-steps-tabs-cards", "allowEmpty": true },
+    { "document": "pages/PageLegacy_Introduction", "route": "/legacy/introduction", "as": "03-legacy-cards", "allowEmpty": true },
+    { "document": "pages/PageMigrate_Map", "route": "/migrate/map", "as": "04-migration-map", "allowEmpty": true },
+    { "document": "pages/PageLegacy_Introduction", "route": "/legacy/introduction", "as": "05-switcher-open", "allowEmpty": true, "vars": { "switcherOpen": true } },
+    { "document": "pages/PageTroubleshooting", "route": "/troubleshooting", "as": "06-troubleshooting", "allowEmpty": true },
+    { "document": "pages/PageAppReview", "route": "/app-review", "as": "07-app-review", "allowEmpty": true },
+    { "document": "pages/PageLegacy_NativeFeatures_HapticFeedback", "route": "/legacy/native-features/haptic-feedback", "as": "08-mobile-legacy", "device": "iphone-6.1", "allowEmpty": true },
+    { "document": "pages/PageMigrate_Map", "route": "/migrate/map", "as": "09-mobile-migration-map", "device": "iphone-6.1", "allowEmpty": true },
+    { "document": "pages/PageLegacy_LocalIntelligence_Reference", "route": "/legacy/local-intelligence/reference", "as": "10-legacy-paramfields-dark", "scheme": "dark", "allowEmpty": true }
+  ]
+}

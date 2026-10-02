@@ -116,6 +116,27 @@ query is an edge-cache hit keyed by query + filters + contentVersion.
 - Widget (`<despia-support>`): attributes `mode="docs"`, `intent` (ask-ai, ask-human, propose-edit,
   request-feature), `space`, `page`, `markdown`, `origin`, and an `open()` method.
 
+## STOPPED 2026-10-02 ~19:30 (owner usage limit): state and how to resume
+
+- Last commit is WIP (see `git log`): CSP stamping (`assemble.mjs` per-page meta CSP with inline-script
+  sha256s; `worker/index.ts` security headers), the search-panel loading spinner (added with
+  `despia insert` / `despia set`, one hand fix), `dsx.shots.json`, CLI-ERGONOMICS.md. Lint was green
+  (469 files, 0 errors, 0 warnings) before these last edits; NOT re-run after them.
+- NOT done: a complete build of the final tree. Two full builds were started; the first (pre App
+  Review) finished, the next were killed by time limits on a Mac at load 40 to 56 (dsx build of 448
+  routes takes 20 to 60 min here). So: no parity run on the final tree, no screenshots yet
+  (`evidence/web-launch/shots/` is empty).
+- Resume, in order:
+  1. `npm run compile && node node_modules/.bin/dsx lint` (expect 0/0).
+  2. `rm -rf dist && node node_modules/.bin/dsx build && node scripts/assemble.mjs` (long; run in the background).
+  3. `node scripts/redirects.mjs && node scripts/setup-parity.mjs` (target 189/189 + 189 .md + extras).
+  4. Screenshots the customer way: `despia shot` with `dsx.shots.json` (documents are addressed as
+     `pages/PageX` because shot does not search `Components/pages`); interaction states (switcher open,
+     help menu open) cannot be shot by `shot` (vars reach only the root): use `despia verify --image`
+     or, as a logged fallback, `evidence/web-launch/shoot.mjs` (Playwright over dist/).
+  5. `npx wrangler deploy --dry-run --outdir dist-worker` to type-check/bundle the worker (no deploy).
+  6. `despia review` on DocShell and the new components; commit.
+
 ## Open items
 
 - Versioned docs: badges (`since`/`changed`/`removed` front matter), `versions.json` and the version

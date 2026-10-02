@@ -157,6 +157,19 @@ function allow(ip: string): boolean {
   return true;
 }
 
+//  The headers a meta tag cannot carry (the per-page CSP itself is stamped into each page by
+//  scripts/assemble.mjs, with the sha256 of every inline script).
+function secure(res: Response): Response {
+  const type = res.headers.get("content-type") ?? "";
+  if (!type.includes("text/html")) return res;
+  const out = new Response(res.body, res);
+  out.headers.set("Content-Security-Policy", "frame-ancestors 'none'");
+  out.headers.set("X-Content-Type-Options", "nosniff");
+  out.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  out.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  return out;
+}
+
 export default {
   fetch(request: Request, env: WorkersEnv, ctx: WorkersExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -170,7 +183,7 @@ export default {
     if (typeof env["SITE_ORIGIN"] === "string" && env["SITE_ORIGIN"] !== "") siteOrigin = String(env["SITE_ORIGIN"]).replace(/\/+$/, "");
     const binding = env["ASSETS"];
     if (assets === null && typeof binding === "object" && binding !== null) assets = binding as AssetsBinding;
-    return handler.fetch(request, env, ctx);
+    return handler.fetch(request, env, ctx).then(secure);
   },
   scheduled: handler.scheduled,
 };

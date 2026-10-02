@@ -9,6 +9,8 @@ import { cpSync, existsSync, readdirSync, readFileSync, writeFileSync } from "no
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { createHash } from "node:crypto";
+
 import { extractSharedStylesheet } from "@despia-native/cli";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -43,8 +45,33 @@ for (const name of readdirSync(pub)) {
 // same deployable-tree pass as docs.js.
 const canonicalFile = join(pub, "canonical.json");
 const canonical = existsSync(canonicalFile) ? JSON.parse(readFileSync(canonicalFile, "utf8")) : {};
+// A strict Content-Security-Policy per page (PLAN-O O3): every inline <script> the SSR wrote is
+// allowed by its own sha256, nothing else inline runs; scripts from this origin and the Support
+// widget origin only; no plugins, no base or form hijack. frame-src admits the v3 pages' YouTube
+// embeds. frame-ancestors cannot live in a meta tag: worker/index.ts sends it as a header.
+const supportOrigin = (process.env.DOCS_SUPPORT_ORIGIN ?? "https://support.despia.com").replace(/\/+$/, "");
+function cspFor(html) {
+  const hashes = new Set();
+  for (const m of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)) {
+    if (m[1].trim() === "") continue;
+    hashes.add(`'sha256-${createHash("sha256").update(m[1], "utf8").digest("base64")}'`);
+  }
+  return [
+    "default-src 'self'",
+    `script-src 'self' ${supportOrigin} ${[...hashes].join(" ")}`.trim(),
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: https:",
+    `connect-src 'self' ${supportOrigin}`,
+    "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
 let enhanced = 0;
 let stamped = 0;
+let secured = 0;
 const injectDocsScript = (dir) => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const abs = join(dir, entry.name);
@@ -62,8 +89,12 @@ const injectDocsScript = (dir) => {
       html = html.replace("</body>", `<script defer src="/docs.js"></script>\n</body>`);
       enhanced += 1;
     }
+    if (!html.includes('http-equiv="Content-Security-Policy"') && html.includes('<meta charset="utf-8">')) {
+      html = html.replace('<meta charset="utf-8">', `<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="${cspFor(html)}">`);
+      secured += 1;
+    }
     writeFileSync(abs, html);
   }
 };
 injectDocsScript(dist);
-console.log(`[docs.assemble] public/ artifacts folded into dist/ — one servable tree (${enhanced} page(s) carry docs.js, ${stamped} canonical + markdown alternate)`);
+console.log(`[docs.assemble] public/ artifacts folded into dist/ — one servable tree (${enhanced} page(s) carry docs.js, ${stamped} canonical + markdown alternate, ${secured} strict CSP)`);

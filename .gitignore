@@ -29,3 +29,5 @@ public/modules/
 public/integrations.json
 public/knowledge/
 public/mcp-tools.json
+.despia/
+deploy/

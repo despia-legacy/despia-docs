@@ -249,6 +249,7 @@
       <hstack class="doc-search-scope">
         <segmented bind="dsx.variable.scope" options="This space,All spaces" label="Search scope"/>
       </hstack>
+      <spinner visible-if="dsx.api.searchIndex.loading &amp;&amp; dsx.formula.searchState !== ''"/>
       <stack class="doc-search-blank" visible-if="dsx.formula.searchState === 'prompt'">
         <image style="color: var(--dsx-secondary-label)" icon="magnifyingglass" iconSize="32" a11yHidden="true" class="doc-search-blank-icon"/>
         <stack class="doc-search-blank-copy" a11yGroup="true">
