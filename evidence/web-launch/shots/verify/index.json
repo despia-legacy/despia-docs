@@ -1,0 +1,28 @@
+{
+ "command": "verify --image",
+ "out": "/Users/yacinenedjar/despia_dsx/wt-docs-web/evidence/web-launch/shots/verify",
+ "viewport": {
+  "width": 390,
+  "height": 844,
+  "scale": 2
+ },
+ "scheme": "light",
+ "states": {
+  "vocabulary": "none declared",
+  "note": "this project declares no named state for its routes, so every route was rendered in the default state only: the arrangement its own declared initials produce. A named state vocabulary exists today only for the fixtures in OpenSource/Conformance/states/routes.json."
+ },
+ "parityConfidence": "parity confidence: this is the web surface, rendered at the plane the reference was recorded on and judged by verify at 1px per box and 2.0% of pixels. No native parity confidence is recorded for this image: target unavailable: the iOS lane is measured on a booted simulator, and verify never boots one",
+ "images": [
+  {
+   "route": "/migrate/map",
+   "state": "default",
+   "file": "migrate-map.default.png",
+   "bytes": 294855,
+   "width": 780,
+   "height": 1688,
+   "sha256": "dc826161ead5c8cca7f2bddfe7b2e1d86080b69452640747cb9bcb1b61f2478d"
+  }
+ ],
+ "problems": [],
+ "diff": null
+}
