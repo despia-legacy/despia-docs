@@ -105,6 +105,13 @@ query is an edge-cache hit keyed by query + filters + contentVersion.
   240 s bound. Owner or root decision needed: a larger bound for this build, or an incremental
   `despia build`. The last complete build (before this patch) is the proof above.
 
+- Rule 15 update (web builds: 900 s bound, load at most 70): the rebuild under
+  `perl alarm 900 heavy.sh dsx build` waited about 6.5 min for a heavy slot, built for about 4 min,
+  and was then stopped by the coordinator, who needed the slot. Partial output was kept but is not a
+  servable tree. NEXT, once the coordinator frees a slot window: check `uptime` and slot availability,
+  rerun that exact command, then `node scripts/assemble.mjs`, `npm run parity` (expect 189/189), and
+  `node evidence/web-launch/shoot.mjs` (add a version-picker shot: click `.doc-version-chip`).
+
 ## Framework gaps (written down, not bypassed)
 
 0. The credential guard refuses documentation placeholders (`-----BEGIN PRIVATE KEY-----`,
