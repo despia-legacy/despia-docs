@@ -3,7 +3,7 @@ title: Migrating from v3
 description: Move a Despia v3 app (despia-native, URL-scheme calls) to Despia v4 and DSX, one page at a time.
 route: /migrate
 space: migrate
-section: Migrate
+section: Move to v4
 label: Overview
 order: 1
 ---

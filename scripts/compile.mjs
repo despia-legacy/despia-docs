@@ -605,7 +605,7 @@ const pages = files.map((file) => {
 // (its modern path /framework/guides/from-v3 is unchanged).
 const fromV3 = pages.find((p) => p.route === "/framework/guides/from-v3");
 if (fromV3 !== undefined) {
-  pages.push({ ...fromV3, route: "/migrate/guide", space: "migrate", section: "Migrate", order: 2,
+  pages.push({ ...fromV3, route: "/migrate/guide", space: "migrate", section: "Move to v4", order: 2,
     label: "Step-by-step guide", component: componentNameFor("/migrate/guide"), meta: { ...fromV3.meta, canonicalOf: fromV3.route } });
 }
 pages.sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));

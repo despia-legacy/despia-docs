@@ -850,22 +850,6 @@
 @media (prefers-reduced-motion: no-preference) {
   .doc-switcher-chevron { transition: transform var(--dsx-dur-fast) var(--dsx-ease); }
 }
-.doc-switcher-panel {
-  position: absolute;
-  top: calc(100% + 0.375rem);
-  inset-inline-start: clamp(0.75rem, 3vw, 1.5rem);
-  width: min(22rem, calc(100vw - 1.5rem));
-  z-index: 121;
-  align-items: stretch;
-  gap: 2px;
-  background: var(--dsx-surface-raised);
-  border-radius: var(--dsx-radius-lg);
-  box-shadow: var(--dsx-shadow-3), inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
-  padding: 0.375rem;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .doc-switcher-panel, .doc-actions-menu { animation: doc-search-panel-in var(--dsx-dur-fast) var(--dsx-ease) both; }
-}
 .doc-switcher-row {
   display: flex;
   flex-direction: row;
@@ -944,19 +928,6 @@
 .doc-actions-icon path { stroke: currentColor; stroke-width: 1.75; stroke-linejoin: round; }
 .doc-actions-label { font-size: 0.75rem; font-weight: 500; color: inherit; white-space: nowrap; }
 .doc-actions-copy.is-copied .doc-actions-label { color: var(--dsx-success); }
-.doc-actions-menu {
-  position: absolute;
-  top: calc(100% + 0.375rem);
-  inset-inline-end: 0;
-  width: 17rem;
-  z-index: 110;
-  align-items: stretch;
-  gap: 2px;
-  background: var(--dsx-surface-raised);
-  border-radius: var(--dsx-radius-lg);
-  box-shadow: var(--dsx-shadow-3), inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
-  padding: 0.375rem;
-}
 .doc-actions-row {
   display: flex;
   flex-direction: column;
@@ -973,16 +944,6 @@
 .doc-actions-row-hint { font-size: 0.75rem; color: var(--dsx-secondary-label); }
 
 /* the Legacy banner: one quiet hairline line, never an alarm */
-.doc-legacy-banner {
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.625rem;
-  margin-block: 0.25rem 0.5rem;
-  padding: 0.625rem 0.875rem;
-  border-radius: var(--dsx-radius);
-  background: var(--dsx-secondary-background);
-  box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
-}
 .doc-legacy-title { font-size: 0.8125rem; font-weight: 600; color: var(--dsx-label); }
 .doc-legacy-text { font-size: 0.8125rem; color: var(--dsx-secondary-label); }
 .doc-legacy-link { display: inline-flex; flex-direction: row; align-items: center; gap: 0.3rem; color: var(--dsx-accent); border-radius: var(--dsx-radius-sm); }
@@ -1137,18 +1098,6 @@
   .doc-helpbar { position: static; border-block-end: 0; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; padding-block: 0; justify-content: flex-end; }
   .doc-help-wide { display: none; }
   .doc-help-narrow { display: inline; }
-  /* the menu becomes a bottom sheet */
-  .doc-actions-menu {
-    position: fixed;
-    inset-inline: 0.5rem;
-    inset-block-end: max(0.5rem, env(safe-area-inset-bottom));
-    top: auto;
-    width: auto;
-    max-height: 75vh;
-    overflow-y: auto;
-    z-index: 130;
-    border-radius: 1.25rem;
-  }
 }
 
 /* versioned docs: lifecycle badges and Improvements markers under the help bar */
@@ -1174,3 +1123,9 @@
   .doc-ask-btn { display: none; }
   .doc-wordmark-tag { display: none; }
 }
+
+/* the stock popover owns placement and the surface; these only size its content */
+.doc-switcher-panel { width: min(22rem, calc(100vw - 2rem)); align-items: stretch; }
+.doc-actions-menu { width: min(18rem, calc(100vw - 2rem)); align-items: stretch; }
+.doc-legacy-banner { gap: 0.25rem; margin-block: 0.25rem 0.75rem; align-items: flex-start; }
+@media (max-width: 39.999rem) { .doc-helpbar { justify-content: flex-end; padding-inline-end: 0.25rem; } }

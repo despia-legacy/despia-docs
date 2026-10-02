@@ -10,7 +10,7 @@ import { createRequire } from "node:module";
 const here = dirname(fileURLToPath(import.meta.url));
 const dist = resolve(here, "..", "..", "dist");
 const out = join(here, "shots");
-const require = createRequire(join(process.env.HOME, "despia_dsx/wt-fleet2/node_modules/x.js"));
+const require = createRequire(join(process.env.HOME, "despia_dsx/wt-fleet2/OpenSource/Engine/TypeScript/node_modules/x.js"));
 const { chromium } = require("playwright-core");
 
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json",
@@ -50,9 +50,9 @@ for (const s of shots) {
   await page.waitForTimeout(600);
   if (s.scrollTo) await page.locator(s.scrollTo).first().scrollIntoViewIfNeeded().catch(() => {});
   if (s.scrollTo) await page.evaluate(() => window.scrollBy(0, -120));
-  if (s.click) { await page.locator(s.click).first().click(); await page.waitForTimeout(400); }
+  if (s.click) { const el = page.locator(s.click).last(); await el.click({ timeout: 4000 }).catch(() => el.dispatchEvent("click")); await page.waitForTimeout(600); }
   if (s.search) {
-    await page.locator(".doc-search-inline input").first().click();
+    await page.locator(".doc-search-inline input").last().click({ timeout: 4000 }).catch(() => {});
     await page.keyboard.type(s.search);
     await page.waitForTimeout(500);
     await page.getByText("All spaces").first().click().catch(() => {});

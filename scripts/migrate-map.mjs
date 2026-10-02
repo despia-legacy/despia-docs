@@ -36,7 +36,7 @@ const lines = [
   "description: Every Despia v3 feature and the v4 package or API it moves to, generated from the legacy navigation and the framework's own names.",
   "route: /migrate/map",
   "space: migrate",
-  "section: Migrate",
+  "section: Move to v4",
   "label: Feature map",
   "order: 3",
   "---",
