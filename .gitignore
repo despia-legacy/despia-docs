@@ -21,3 +21,5 @@ public/sitemap.xml
 public/migrate-map.json
 public/**/*.md
 public/index.md
+public/app-review/
+public/app-review.json

@@ -513,6 +513,7 @@ const SPACES = [
   { id: "legacy", label: "Legacy v3", prefix: "/legacy", home: "/legacy/introduction", blurb: "despia-native and the v3 runtime" },
   { id: "migrate", label: "Migration", prefix: "/migrate", home: "/migrate", blurb: "Move a v3 app to v4" },
   { id: "troubleshooting", label: "Troubleshooting", prefix: "/troubleshooting", home: "/troubleshooting", blurb: "Symptom, cause, fix" },
+  { id: "app-review", label: "App Review", prefix: "/app-review", home: "/app-review", blurb: "Apple and Google review guidelines, and how Despia apps pass them" },
 ];
 const spaceById = Object.fromEntries(SPACES.map((s) => [s.id, s]));
 function spaceOf(route) {
@@ -600,6 +601,20 @@ const generatedPages = [
   },
 ];
 
+// The App Review index is generated the same way: a filterable database of guideline entries.
+const arEntries = pages.filter((p) => p.space === "app-review");
+generatedPages.push({
+  route: "/app-review",
+  component: "PageAppReview",
+  title: "App Review",
+  label: "All guidelines",
+  space: "app-review",
+  section: "",
+  order: 1,
+  description: "Apple App Review guidelines and Google Play policies that Despia apps run into: what each means, why apps hit it, how to fix it on v4 and v3, and a reply for the reviewer.",
+  search: "app review store rejection guideline apple google play " + arEntries.map((p) => `${p.meta.guideline ?? ""} ${p.title} ${p.meta.category ?? ""}`).join(" "),
+});
+
 const entries = [...pages, ...handAuthored, ...generatedPages].sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
 
 const duplicate = entries.map((p) => p.route).filter((r, i, all) => all.indexOf(r) !== i);
@@ -641,7 +656,7 @@ const navBySpace = {};
   }
   navBySpace.legacy = sections;
 }
-for (const id of ["migrate", "troubleshooting"]) {
+for (const id of ["migrate", "troubleshooting", "app-review"]) {
   const sections = [];
   for (const page of entries.filter((p) => p.space === id && p.meta?.nav !== "false")) {
     const name = page.section === "" ? spaceById[id].label : page.section;
@@ -729,7 +744,7 @@ for (const page of pages) {
 
 // ── the generated Troubleshooting index ───────────────────────────────────────────────────
 {
-  const page = generatedPages[0];
+  const page = generatedPages.find((p) => p.route === "/troubleshooting");
   const fmtUtc = (iso) => {
     const d = new Date(iso);
     return Number.isNaN(d.getTime()) ? "" : `${d.toISOString().slice(0, 10)} ${d.toISOString().slice(11, 16)} UTC`;
@@ -808,6 +823,80 @@ for (const page of pages) {
   writeFileSync(join(publicDir, "troubleshooting.json"), JSON.stringify({ articles: items }, null, 1) + "\n");
 }
 
+// ── the generated App Review database ─────────────────────────────────────────────────────
+{
+  const page = generatedPages.find((p) => p.route === "/app-review");
+  const list = (v) => String(v ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  const items = arEntries.map((p) => ({
+    id: p.route, route: p.route, title: p.title, summary: p.description,
+    guideline: p.meta.guideline ?? "", stores: list(p.meta.store), storesLabel: list(p.meta.store).join(" · "),
+    category: p.meta.category ?? "", platforms: list(p.meta.platform).map((x) => (x === "legacy" ? "Legacy" : x)),
+    cases: Number(p.meta.cases ?? 0),
+    haystack: `${p.meta.guideline ?? ""} ${p.title} ${p.meta.category ?? ""} ${p.meta.store ?? ""} ${p.description}`.toLowerCase(),
+  })).sort((a, b) => a.guideline.localeCompare(b.guideline, "en", { numeric: true }) || (a.title < b.title ? -1 : 1));
+  const categories = ["All categories", ...[...new Set(items.map((i) => i.category))].sort()];
+  page.body = [
+    "# App Review", "", page.description, "",
+    ...items.map((i) => `- [${i.guideline} ${i.title}](${site}${mdSibling(i.route)}) (${i.storesLabel}; ${i.category}): ${i.summary}`),
+    "",
+  ].join("\n");
+  page.mdVars = [];
+  page.shell = shellAttrs(page, []);
+  const intro = pushMdVar(page, `# App Review\n\n${page.description} Search by guideline number or words, or filter by store, category and platform. Each entry links the official guideline text.`);
+  const itemsVar = page.attrVars.push(JSON.stringify(items)) - 1;
+  const head = [
+    `    <variable as="q">return ''</variable>`,
+    `    <variable as="store">return 'All'</variable>`,
+    `    <variable as="category">return 'All categories'</variable>`,
+    `    <variable as="platform">return 'All'</variable>`,
+    `    <formula as="items" input:raw="dsx.variable.a${itemsVar}">return JSON.parse(raw)</formula>`,
+    // fuzzy: every word of the query must appear in the entry, each word matched as a substring
+    // or as an in-order subsequence (so "minfunc" finds "minimum functionality", "512" finds 5.1.2)
+    `    <formula as="shown" input:items="dsx.formula.items" input:q="dsx.variable.q" input:store="dsx.variable.store" input:category="dsx.variable.category" input:platform="dsx.variable.platform">`,
+    `      const fuzzy = (hay, word) => {`,
+    `        if (hay.includes(word)) { return true }`,
+    `        const flat = hay.split('.').join('')`,
+    `        if (flat.includes(word)) { return true }`,
+    `        let at = 0`,
+    `        for (const ch of word) { at = flat.indexOf(ch, at); if (at === -1) { return false } at = at + 1 }`,
+    `        return word.length >= 3`,
+    `      }`,
+    `      const words = String(q || '').toLowerCase().split(' ').filter((w) => w !== '')`,
+    `      return items.filter((i) => (store === 'All' || i.stores.includes(store))`,
+    `        && (category === 'All categories' || i.category === category)`,
+    `        && (platform === 'All' || i.platforms.includes(platform))`,
+    `        && words.every((w) => fuzzy(i.haystack, w)))`,
+    `    </formula>`,
+  ];
+  const body = [
+    `    <markdown bind="dsx.variable.md${intro}"/>`,
+    `    <stack class="doc-ar-search">`,
+    `      <searchbar bind="dsx.variable.q" placeholder="Search guidelines: 4.2, paywall, sign in…"/>`,
+    `    </stack>`,
+    `    <hstack class="doc-ts-filters" role="group" a11yLabel="Filter guidelines">`,
+    `      <segmented bind="dsx.variable.store" options="All,Apple,Google" label="Store" class="doc-ts-platform"/>`,
+    `      <segmented bind="dsx.variable.platform" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
+    `      <picker bind="dsx.variable.category" options="${escapeForDsxAttr(categories.join(","))}" label="Category" class="doc-ts-package"/>`,
+    `    </hstack>`,
+    `    <text value="{{ dsx.formula.shown.length + (dsx.formula.shown.length === 1 ? ' guideline' : ' guidelines') }}" class="doc-ts-heading"/>`,
+    `    <list bind="dsx.formula.shown" key="id" scroll="false" class="doc-ts-list">`,
+    `      <pressable href="{{ dsx.this.route }}" class="doc-ts-card doc-ar-card">`,
+    `        <hstack class="doc-ts-card-meta">`,
+    `          <text value="{{ dsx.this.guideline }}" class="doc-ar-guideline"/>`,
+    `          <text value="{{ dsx.this.storesLabel }}" class="doc-ts-chip"/>`,
+    `          <text value="{{ dsx.this.category }}" class="doc-ts-packages"/>`,
+    `        </hstack>`,
+    `        <text value="{{ dsx.this.title }}" class="doc-ts-card-title"/>`,
+    `        <text value="{{ dsx.this.summary }}" class="doc-ts-card-symptom"/>`,
+    `      </pressable>`,
+    `    </list>`,
+    `    <text value="No guideline matches. Try fewer words, or the search in the header (it also asks the Support knowledge base)." class="doc-ts-empty" visible-if="dsx.formula.shown.length === 0"/>`,
+  ].join("\n");
+  writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
+  writeMd(page.route, page.body);
+  writeFileSync(join(publicDir, "app-review.json"), JSON.stringify({ guidelines: items.map(({ haystack, ...rest }) => ({ ...rest, url: site + rest.route, markdown: site + mdSibling(rest.route) })) }, null, 1) + "\n");
+}
+
 // The hand-authored pages have no markdown source; their sibling says what they are.
 for (const page of handAuthored) {
   writeMd(page.route, `# ${page.title}\n\n${page.description}\n\nThis page is a live DSX document (${site}${page.route}); it has no markdown source.\n`);
@@ -818,7 +907,7 @@ for (const page of handAuthored) {
 // micro-labels, nested groups under quieter sub-labels, the active row resolved from the
 // route attribute at render time. DocNav picks the space's sidebar (visible-if renders
 // nothing for the other three, so a page carries one sidebar, not four).
-const navComponentOf = (id) => "DocNav" + id.charAt(0).toUpperCase() + id.slice(1);
+const navComponentOf = (id) => "DocNav" + id.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
 function navRows(items, depth) {
   return items.flatMap((item) => {
     if (item.group !== undefined) {
@@ -875,8 +964,8 @@ ${cardRows}
 // ── the route table ───────────────────────────────────────────────────────────────────────
 const config = JSON.parse(readFileSync(join(root, "dsx.config.json"), "utf8"));
 config.siteUrl = site;
-const head = (config.web?.head ?? []).filter((row) => row.attributes?.name !== "despia-support-origin");
-config.web = { ...(config.web ?? {}), head: [...head, { tag: "meta", attributes: { name: "despia-support-origin", content: supportOrigin } }] };
+const head = (config.web?.head ?? []).filter((row) => row.meta?.name !== "despia-support-origin");
+config.web = { ...(config.web ?? {}), head: [...head, { meta: { name: "despia-support-origin", content: supportOrigin } }] };
 config.routes = entries.map((p) => ({
   path: p.route,
   component: `docs.${p.component}`,
@@ -899,7 +988,7 @@ writeFileSync(join(publicDir, "search-index.json"), JSON.stringify({
     label: pageLabel(p),
     space: p.space,
     section: p.space === "modern" ? p.section : sectionNameOf(p.space, p.route),
-    text: (p.body === undefined || p.search !== undefined ? (p.search ?? p.description) : searchText(p.body)).slice(0, 4000),
+    text: (p.body === undefined || p.search !== undefined ? (p.search ?? p.description) : searchText(p.body)).slice(0, p.space === "modern" ? 4000 : 2000),
   })),
 }) + "\n");
 
@@ -917,10 +1006,10 @@ writeFileSync(join(publicDir, "llms.txt"), [
   "",
   "> Documentation for Despia: Modern (v4, DSX: one set of documents rendered as native iOS, native",
   "> Android, an installable PWA and a server-rendered site), Legacy (v3, despia-native), Migration",
-  "> (v3 to v4) and Troubleshooting.",
+  "> (v3 to v4), Troubleshooting and App Review (Apple and Google store guidelines).",
   "",
   "Every page serves its raw markdown at its own path plus `.md` (and under /md/). The MCP server at",
-  `${site}/mcp takes a \`space\` argument (modern, legacy, migrate, troubleshooting, all).`,
+  `${site}/mcp takes a \`space\` argument (modern, legacy, migrate, troubleshooting, app-review, all).`,
   "",
   "## Spaces",
   "",

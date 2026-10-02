@@ -12,6 +12,14 @@
       }
     },
     {
+      "path": "/app-review",
+      "component": "docs.PageAppReview",
+      "meta": {
+        "title": "App Review",
+        "description": "Apple App Review guidelines and Google Play policies that Despia apps run into: what each means, why apps hit it, how to fix it on v4 and v3, and a reply for the reviewer."
+      }
+    },
+    {
       "path": "/migrate",
       "component": "docs.PageMigrate",
       "meta": {
@@ -827,11 +835,27 @@
       }
     },
     {
+      "path": "/app-review/apple-4-2-minimum-functionality",
+      "component": "docs.PageAppReview_Apple42MinimumFunctionality",
+      "meta": {
+        "title": "Minimum functionality",
+        "description": "The app has to be more than a website or a brochure in an app shell: real navigation, real depth, and features people expect from an app in its category. Reviewers judge perceived value, not the technology."
+      }
+    },
+    {
       "path": "/troubleshooting/ota-updates-not-arriving",
       "component": "docs.PageTroubleshooting_OtaUpdatesNotArriving",
       "meta": {
         "title": "OTA updates never reach the app",
         "description": "Changes deployed to production do not appear in the native app, even after force-closing it."
+      }
+    },
+    {
+      "path": "/app-review/apple-4-0-non-mobile-design",
+      "component": "docs.PageAppReview_Apple40NonMobileDesign",
+      "meta": {
+        "title": "Website-style design",
+        "description": "The app must look and behave like an app on the device: a title bar, bottom tabs or a navigation stack, touch-sized controls. Reviewers often cite this together with 4.2 as \"a repackaged website\"."
       }
     },
     {
@@ -843,11 +867,99 @@
       }
     },
     {
+      "path": "/app-review/apple-3-1-1-in-app-purchase",
+      "component": "docs.PageAppReview_Apple311InAppPurchase",
+      "meta": {
+        "title": "In-app purchase",
+        "description": "Digital goods and services sold inside the app go through Apple's in-app purchase (and Google Play Billing on Android), with a working restore, and products that are configured and purchasable."
+      }
+    },
+    {
       "path": "/troubleshooting/logged-out-after-reopen",
       "component": "docs.PageTroubleshooting_LoggedOutAfterReopen",
       "meta": {
         "title": "Users are logged out when they reopen the app",
         "description": "Users close the app and land on the login page again when they reopen it."
+      }
+    },
+    {
+      "path": "/app-review/apple-3-1-2-subscriptions-paywalls",
+      "component": "docs.PageAppReview_Apple312SubscriptionsPaywalls",
+      "meta": {
+        "title": "Subscriptions and paywalls",
+        "description": "A paywall must state what is bought, the price and billing period, and the trial terms clearly, be easy to dismiss, and never trick the user into a purchase."
+      }
+    },
+    {
+      "path": "/app-review/apple-5-1-1-privacy-policy",
+      "component": "docs.PageAppReview_Apple511PrivacyPolicy",
+      "meta": {
+        "title": "Privacy policy",
+        "description": "Every app that collects or shares data needs a reachable privacy policy, linked in the store listing and inside the app, that matches what the app and its SDKs actually do."
+      }
+    },
+    {
+      "path": "/app-review/apple-5-1-1-data-minimization",
+      "component": "docs.PageAppReview_Apple511DataMinimization",
+      "meta": {
+        "title": "Collecting data the app does not need",
+        "description": "Only ask for personal data the app's features need; anything optional must be clearly optional and explained."
+      }
+    },
+    {
+      "path": "/app-review/apple-5-1-2-app-tracking-transparency",
+      "component": "docs.PageAppReview_Apple512AppTrackingTransparency",
+      "meta": {
+        "title": "App Tracking Transparency",
+        "description": "Tracking a user across other companies' apps and websites needs the App Tracking Transparency prompt first, the choice must be respected, and the App Store privacy labels must match."
+      }
+    },
+    {
+      "path": "/app-review/apple-5-1-2-ai-data-sharing",
+      "component": "docs.PageAppReview_Apple512AiDataSharing",
+      "meta": {
+        "title": "Sharing personal data with AI services",
+        "description": "Before personal data is sent to a third-party AI service, the app must say so clearly and get the user's permission."
+      }
+    },
+    {
+      "path": "/app-review/apple-4-8-login-services",
+      "component": "docs.PageAppReview_Apple48LoginServices",
+      "meta": {
+        "title": "Login services",
+        "description": "An app that offers third-party or social login (Google, Facebook and so on) must also offer an equivalent login option that meets Apple's privacy requirements; Sign in with Apple is the usual answer."
+      }
+    },
+    {
+      "path": "/app-review/apple-2-1-blank-screens-during-login",
+      "component": "docs.PageAppReview_Apple21BlankScreensDuringLogin",
+      "meta": {
+        "title": "Blank screens during login",
+        "description": "Reviewers reject flows that show blank or white screens or look unresponsive, which often happens during an OAuth redirect."
+      }
+    },
+    {
+      "path": "/app-review/apple-4-3-spam",
+      "component": "docs.PageAppReview_Apple43Spam",
+      "meta": {
+        "title": "Spam and copies",
+        "description": "Apps that duplicate others already on the store, or that ship many near-identical variants, are rejected."
+      }
+    },
+    {
+      "path": "/app-review/apple-2-3-accurate-metadata",
+      "component": "docs.PageAppReview_Apple23AccurateMetadata",
+      "meta": {
+        "title": "Accurate metadata",
+        "description": "The name, description, screenshots and previews must show the app as it is, without features it does not have or misleading claims."
+      }
+    },
+    {
+      "path": "/app-review/apple-5-1-1-account-deletion",
+      "component": "docs.PageAppReview_Apple511AccountDeletion",
+      "meta": {
+        "title": "Account deletion",
+        "description": "An app that lets people create an account must also let them start deleting that account from inside the app."
       }
     },
     {
@@ -3323,5 +3435,16 @@
         "description": "Cache remote files locally for offline access with background downloads"
       }
     }
-  ]
+  ],
+  "siteUrl": "https://docs.despia.com",
+  "web": {
+    "head": [
+      {
+        "meta": {
+          "name": "despia-support-origin",
+          "content": "https://support.despia.com"
+        }
+      }
+    ]
+  }
 }

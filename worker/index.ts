@@ -7,7 +7,7 @@
 //      streamable HTTP, so any agent consumes these docs natively (this replaces the
 //      external docs-MCP dependency with our own product),
 //    · the API host underneath, empty today and ready for the vector-search route.
-//  One site, four spaces (modern, legacy, migrate, troubleshooting): every MCP tool takes a
+//  One site, five spaces (modern, legacy, migrate, troubleshooting, app-review): every MCP tool takes a
 //  `space` argument, and the old docs root keeps its v3 links: a v3 path asked of this host
 //  (it used to bounce to setup.despia.com) 301s once to /legacy/... (redirects/docs-root.json,
 //  generated; a path a modern page owns is never in it).
@@ -32,7 +32,7 @@ interface AssetsBinding { fetch(request: Request): Promise<Response> }
 //  object they need is held here at the boundary — the same posture every bootloader takes.
 let assets: AssetsBinding | null = null;
 
-const SPACES = ["modern", "legacy", "migrate", "troubleshooting"] as const;
+const SPACES = ["modern", "legacy", "migrate", "troubleshooting", "app-review"] as const;
 type Space = (typeof SPACES)[number];
 function spaceArg(args: Record<string, unknown>): Space | "all" {
   const raw = typeof args["space"] === "string" ? args["space"].toLowerCase() : "all";
@@ -88,9 +88,9 @@ const handler = createWorkersHandler(
   {
     siteRegistry: registry as never,
     mcpTools: [
-      { name: "search", chain: "docs", action: "search", description: "Search the Despia documentation. space: modern (v4, DSX), legacy (v3, despia-native), migrate (v3 to v4), troubleshooting, or all (default). Returns up to 8 pages with routes and markdown URLs.", inputs: ["query", "space"] },
+      { name: "search", chain: "docs", action: "search", description: "Search the Despia documentation. space: modern (v4, DSX), legacy (v3, despia-native), migrate (v3 to v4), troubleshooting, app-review (store guidelines), or all (default). Returns up to 8 pages with routes and markdown URLs.", inputs: ["query", "space"] },
       { name: "fetch-page", chain: "docs", action: "fetchPage", description: "Fetch one documentation page as raw markdown by its route, in any space (e.g. /framework/guides/routing, /legacy/native-features/haptic-feedback, /migrate/map).", inputs: ["route", "space"] },
-      { name: "list-sections", chain: "docs", action: "listSections", description: "List the sections and pages of one documentation space (modern, legacy, migrate, troubleshooting) or of all of them (all, the default).", inputs: ["space"] },
+      { name: "list-sections", chain: "docs", action: "listSections", description: "List the sections and pages of one documentation space (modern, legacy, migrate, troubleshooting, app-review) or of all of them (all, the default).", inputs: ["space"] },
     ],
   },
 );
