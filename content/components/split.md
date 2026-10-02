@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"collapseAt","type":"number","default":"760"},{"name":"contentIdeal","type":"number","default":"340"},{"name":"contentMax","type":"number","default":"480"},{"name":"contentMin","type":"number","default":"280"},{"name":"detailMin","type":"number","default":"360"},{"name":"expandAt","type":"number","default":"1104"},{"name":"on:change","type":"action","default":null},{"name":"paneRole","type":"enum","default":null,"values":["sidebar","content","detail"]},{"name":"panes","type":"number","default":null},{"name":"resizable","type":"bool","default":"true"},{"name":"sidebarIdeal","type":"number","default":"280"},{"name":"sidebarMax","type":"number","default":"360"},{"name":"sidebarMin","type":"number","default":"220"},{"name":"value","type":"expr","default":null}]
 actions: ["change"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

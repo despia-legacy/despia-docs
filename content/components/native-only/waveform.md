@@ -10,7 +10,7 @@ platforms: ios,android
 properties: [{"name":"barWidth","type":"number","default":"3"},{"name":"height","type":"number","default":"48"},{"name":"lane","type":"color","default":"var(--dsx-fill)"},{"name":"muted","type":"bool","default":"false"},{"name":"peaks","type":"csv","default":null},{"name":"seed","type":"number","default":"0"},{"name":"selected","type":"bool","default":"false"}]
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

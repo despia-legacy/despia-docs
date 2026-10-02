@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"action","type":"string","default":null},{"name":"actionIcon","type":"sf-symbol","default":null},{"name":"actionSide","type":"enum","default":"trailing","values":["leading","trailing"]},{"name":"background","type":"color","default":"var(--dsx-background)"},{"name":"close","type":"enum","default":"leading","values":["leading","trailing","none"]},{"name":"detents","type":"csv","default":"half,full","values":["content","half","full"]},{"name":"inset","type":"number","default":"14"},{"name":"mode","type":"enum","default":"sheet","values":["sheet","card","cover"]},{"name":"on:action","type":"action","default":null},{"name":"on:dismiss","type":"action","default":null},{"name":"present","type":"expr","default":null},{"name":"systemBackground","type":"bool","default":"false"},{"name":"title","type":"string","default":null}]
 actions: ["action","dismiss"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -73,7 +73,7 @@ Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colo
 | `mode` | `sheet` \| `card` \| `cover` | `sheet` | `sheet` = edge-to-edge drawer · `card` = floating inset card (AirPods-style) that **sheds the gap** at the `full` detent and becomes a drawer · `cover` = full-screen modal, no detents. |
 | `on:action` | `action` |  | The chrome action button. |
 | `on:dismiss` | `action` |  | Fires on close (swipe or programmatic). |
-| `present` | `expr` |  | **An expression, never a bare key** - the raw string is evaluated as one JSE expression on all three lanes (`store.eval` / `JSE.eval`), so it is spelled `present="dsx.variable.showEpisodes"` (or `dsx.global.*`); since the S3 cut a bare `present="showEpisodes"` reads **null** and nothing ever presents, and the linter refuses it by name (`bare-reach`). **Two-way like `bind=`:** set it true to open, and a dismissal (swipe, scrim, the system close control, a navigation) **writes it back false** through the same path before `on:dismiss` fires. |
+| `present` | `expr` |  | **An expression, never a bare key** - the value is evaluated as one expression on every platform, so it is spelled `present="dsx.variable.showEpisodes"` (or `dsx.global.*`); a bare `present="showEpisodes"` reads **null** and nothing ever presents, and `despia lint` reports it (`bare-reach`). **Two-way like `bind=`:** set it true to open, and a dismissal (swipe, scrim, the system close control, a navigation) **writes it back false** through the same path before `on:dismiss` fires. |
 | `systemBackground` | `bool` | `false` | Use the platform's native presentation material instead of an authored color. |
 | `title` | `string` |  | Standard drawer chrome: centered header title. Declaring `title`/`close`/`action` renders the built-in header (the REAL system close control + system sheet-header language) - stop hand-rolling header rows. |
 

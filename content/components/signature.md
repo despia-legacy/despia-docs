@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"baseline","type":"bool","default":"true"},{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"height","type":"number","default":"180"},{"name":"on:begin","type":"action","default":null},{"name":"on:change","type":"action","default":null},{"name":"on:end","type":"action","default":null},{"name":"placeholder","type":"string","default":null},{"name":"radius","type":"number","default":"12"},{"name":"readOnly","type":"bool","default":"false"},{"name":"strokeWidth","type":"number","default":"3"}]
 actions: ["begin","change","end"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

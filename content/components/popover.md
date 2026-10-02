@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"arrow","type":"enum","default":"top","values":["top","bottom","leading","trailing"]},{"name":"on:dismiss","type":"action","default":null},{"name":"present","type":"expr","default":null}]
 actions: ["dismiss"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

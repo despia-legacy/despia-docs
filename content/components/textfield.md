@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"autocapitalize","type":"enum","default":null,"values":["off","none","on","sentences","words","characters"]},{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"contentType","type":"enum","default":null,"values":["name","givenName","familyName","middleName","namePrefix","nameSuffix","nickname","jobTitle","organizationName","emailAddress","telephoneNumber","URL","username","password","newPassword","oneTimeCode","fullStreetAddress","streetAddressLine1","streetAddressLine2","addressCity","addressState","postalCode","countryName","creditCardNumber","creditCardName","creditCardExpiration","creditCardExpirationMonth","creditCardExpirationYear","creditCardSecurityCode","none","email","otp","firstName","lastName","phone","telephone","url","zip","address"]},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"enterkeyhint","type":"enum","default":null,"values":["enter","done","go","next","previous","search","send"]},{"name":"keyboard","type":"enum","default":null,"values":["email","number","decimal","phone","url","ascii","twitter","websearch"]},{"name":"on:blur","type":"action","default":null},{"name":"on:change","type":"action","default":null},{"name":"on:focus","type":"action","default":null},{"name":"on:submit","type":"action","default":null},{"name":"placeholder","type":"string","default":null},{"name":"secure","type":"bool","default":"false"}]
 actions: ["blur","change","focus","submit"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

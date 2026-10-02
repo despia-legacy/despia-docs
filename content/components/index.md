@@ -10,15 +10,15 @@ platforms: web,ios,android,desktop
 properties: []
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
 # Components
 
-76 components, one page each. Every page is a projection of the ledgers: the census for the attribute and event contract, the library matrix for the audited platform record, the web element ledger for the limits, and the catalog for the specimen. Nothing on a page is written by hand, so nothing on a page can quietly go stale.
+80 components, one page each. Every page is a projection of the ledgers: the census for the attribute and event contract, the library matrix for the audited platform record, the web element ledger for the limits, and the catalog for the specimen. Nothing on a page is written by hand, so nothing on a page can quietly go stale.
 
-69 of the 76 have a specimen the catalog serves today; the rest say so on their own page.
+69 of the 80 have a specimen the catalog serves today; the rest say so on their own page.
 
 ## Layout
 
@@ -117,6 +117,9 @@ The base Web twin renders real button/anchor semantics with label, icon, iconSiz
 <Card title="calendar" href="/components/calendar">
 The data-control twin renders a localized, keyboard-operable month grid with ISO binding, range constraints, marks, and month events.
 </Card>
+<Card title="colorpicker" href="/components/colorpicker">
+The browser's own colour control (input type=color) behind the iOS ColorPicker row: the label leading, a 28px well painting the bound colour trailing, the hex round-tripped by the shared core, the colour announced by name, on:change on every write and on:commit once when the browser picker closes.
+</Card>
 <Card title="combobox" href="/components/combobox">
 The native-control twin implements an editable ARIA combobox/listbox with filtering, keyboard navigation, option binding, selection, and disabled state.
 </Card>
@@ -189,6 +192,9 @@ The global Web twin provides accessible disclosure semantics, reactive title/ope
 </Card>
 <Card title="MenuBar" href="/components/menubar">
 The application-control Web twin implements bounded keyed items, canonical selection state and write-back, selection events, radio-menu semantics, keyboard and RTL navigation, the compact pill dock, and, at the shared desktop step, the WAI-ARIA menubar presentation: roving roots, per-root shadow-3 flyouts from nested items, submenu keyboard walk with Escape walking up, and right-aligned shortcut hints from the shortcut token grammar.
+</Card>
+<Card title="MenuSidebar" href="/components/menusidebar">
+The application-control Web twin of the Sidebar.dsx slide-over: a fixed overlay panel on the leading edge, min(320px, 100% - 56px) wide and padded by the safe area, over a 32% black scrim; rows bound to items (attribute first, then the store) with a 24px icon, the label and a trailing checkmark, the active row carrying aria-current and the 12% selection fill; on:select publishing the whole row as authored and on:dismiss from a scrim tap and from Escape; dark, background and tint as on the natives; focus moved into the panel (the selected row) and restored on close, focus contained, the background inerted, through the shared overlay coordinator; a slide and scrim fade in only after the document settled and a freeze-frame slide out before removal on every close path.
 </Card>
 <Card title="carousel" href="/components/carousel">
 The structural twin renders accessible slides with two-way current-page binding, snap paging, selection dots, peek and spacing geometry, and change events - the full carousel.json attribute contract.
@@ -265,6 +271,12 @@ The media Web twin implements the fixture's full contract: native HTML video ren
 ## Scene
 
 <CardGroup cols="2">
+<Card title="Scene360" href="/components/scene360">
+The panorama renders over the kernel `<scene>` engine's WebGL surface: an inside-out sphere textured with the equirectangular src, the camera at its centre, drag to look (yaw/pitch, pitch clamped), wheel and pinch on the field of view (20 to 110), yaw/pitch/fov reactive; loading, ready and failed fire as on iOS.
+</Card>
+<Card title="Scene3D" href="/components/scene3d">
+The viewer renders over the kernel `<scene>` engine's WebGL surface (packages/dom/src/scene3d.ts): one internal `<scene>` per instance (camera, key and ambient light, the GLB model centred and resting on the floor, one node per models= row) driven through the scene bus with the iOS orbit rig (drag, wheel and pinch, autoRotate), the clip and loop, the live scale and the clip clock hold; loading, ready {ar, animations, bounds}, failed {reason}, tap {node} and animationFinished fire on the element and the scene3d channel, and the scene3d verbs reach it through Core/Scene3D/web.
+</Card>
 <Card title="canvas" href="/components/canvas">
 The `<canvas>` surface renders the shared display list into an HTML canvas, with the SSR SVG path byte-identical to the native twins.
 </Card>

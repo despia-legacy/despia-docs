@@ -7,10 +7,10 @@ element: SystemSettingsRow
 category: structure
 scope: module-owned
 platforms: ios,android
-properties: [{"name":"chevron","type":"bool","default":"false"},{"name":"on:tap","type":"action","default":null},{"name":"subtitle","type":"string","default":null},{"name":"tappable","type":"bool","default":"false"},{"name":"title","type":"string","default":null},{"name":"value","type":"string","default":null}]
+properties: [{"name":"checked","type":"bool","default":"false"},{"name":"chevron","type":"bool","default":"false"},{"name":"count","type":"string","default":null},{"name":"on:tap","type":"action","default":null},{"name":"subtitle","type":"string","default":null},{"name":"tappable","type":"bool","default":"false"},{"name":"title","type":"string","default":null},{"name":"tone","type":"enum","default":null,"values":["accent","destructive","success"]},{"name":"value","type":"string","default":null}]
 actions: ["tap"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -38,11 +38,14 @@ This element is web unsupported by DESIGN, not by omission: its essence is a ven
 
 | Attribute | Type | Default | Notes |
 |---|---|---|---|
+| `checked` | `bool` | `false` |  |
 | `chevron` | `bool` | `false` |  |
+| `count` | `string` |  |  |
 | `on:tap` | `action` |  |  |
 | `subtitle` | `string` |  |  |
 | `tappable` | `bool` | `false` |  |
 | `title` | `string` |  |  |
+| `tone` | `accent` \| `destructive` \| `success` |  |  |
 | `value` | `string` |  |  |
 
 Every element also carries the [universal attributes](/components/attributes): accessibility, animation, `class`, `style` and the platform suffixes.

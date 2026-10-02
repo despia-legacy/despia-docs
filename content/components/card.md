@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"variant","type":"string","default":null}]
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -72,7 +72,7 @@ The base Web twin renders the surface word: the card corner, the raised ground, 
 
 - The inset is one token read, so an author who wants a different one re-declares padding rather than reaching for a second word.
 
-**Implementation notes.** The surface word. variant is one of cut (the outlined card) or plain (the unelevated grouped platter); an unknown word keeps the elevated base rendering. SwiftUI GroupBox and Material 3 card are the counterparts; both inset their content, which is the inset this row pins and the one the two helper classes deliberately do not carry.
+**Implementation notes.** The surface word. variant is one of cut (the outlined card) or plain (the unelevated grouped platter); an unknown word keeps the base rendering, which unstyled is the platform card itself: the stock SwiftUI GroupBox and the Material 3 filled Card (the web keeps its elevated card, VRG-F11); both inset their content, which is the inset this row pins and the one the two helper classes deliberately do not carry.
 
 Declared platforms: `ios`, `android`, `web`.
 

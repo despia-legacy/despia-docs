@@ -7,10 +7,10 @@ element: toggle
 category: input
 scope: library
 platforms: web,ios,android,desktop
-properties: [{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-accent)"},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"on:change","type":"action","default":null}]
+properties: [{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-accent)"},{"name":"disabled","type":"bool","default":"false"},{"name":"disabled-if","type":"expr","default":null},{"name":"label","type":"string","default":null},{"name":"on:change","type":"action","default":null}]
 actions: ["change"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -63,6 +63,7 @@ Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colo
 | `color` | `color` | `var(--dsx-accent)` |  |
 | `disabled` | `bool` | `false` |  |
 | `disabled-if` | `expr` |  | Disabled when this expression is truthy. `disabled=` binds as TEXT, and the string "false" is TRUE - so a bound boolean belongs here, never there. |
+| `label` | `string` |  |  |
 | `on:change` | `action` |  | Fires when the bound value changes. |
 
 Every element also carries the [universal attributes](/components/attributes): accessibility, animation, `class`, `style` and the platform suffixes.

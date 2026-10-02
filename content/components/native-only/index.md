@@ -10,26 +10,17 @@ platforms: ios,android
 properties: []
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
 # Native first elements
 
-These 14 elements are web unsupported by DESIGN and follow their own module roadmaps. They are on the scoreboard, with a dated ruling each, rather than left off the list.
+These 11 elements are web unsupported by DESIGN and follow their own module roadmaps. They are on the scoreboard, with a dated ruling each, rather than left off the list.
 
 <CardGroup cols="2">
 <Card title="LevelMeter" href="/components/native-only/levelmeter">
 The Studio audio level meter has no Web renderer or audio-analysis seam.
-</Card>
-<Card title="MenuSidebar" href="/components/native-only/menusidebar">
-The native half of the shared Sidebar.dsx adapter has no Web renderer: the slide-over panel, its scrim and its rows are composed by SwiftUI on Apple and by Material 3 ModalNavigationDrawer on Android, and a web build authors its own navigation in markup instead.
-</Card>
-<Card title="Scene360" href="/components/native-only/scene360">
-No panorama renderer is registered for Web.
-</Card>
-<Card title="Scene3D" href="/components/native-only/scene3d">
-The RealityKit scene contract has no WebGL/WebGPU model renderer.
 </Card>
 <Card title="StudioPitchEditor" href="/components/native-only/studiopitcheditor">
 The Studio pitch-editing surface has no Web DSP/editor implementation.

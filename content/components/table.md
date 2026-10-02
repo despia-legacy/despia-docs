@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"bind","type":"expr","default":null},{"name":"color","type":"color","default":"var(--dsx-label)"},{"name":"columns","type":"csv","default":null},{"name":"fields","type":"csv","default":null}]
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -37,7 +37,7 @@ Category: Display - Live specimens: the [System gallery](/system).
 ```dsx
 <Table bind="dsx.variable.rows" columns="Name,Price" style="width: 100%">
   <head>
-    <variable as="rows">return [{ Name: 'Weekly', Price: '4.99' }, { Name: 'Monthly', Price: '14.99' }]</variable>
+    <variable as="rows">return [{ name: 'Weekly', price: '4.99' }, { name: 'Monthly', price: '14.99' }]</variable>
   </head>
 </Table>
 ```

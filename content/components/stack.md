@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"align","type":"string","default":null},{"name":"alignItems","type":"enum","default":null,"values":["flex-start","center","flex-end","baseline","stretch"]},{"name":"display","type":"enum","default":"flex","values":["flex","grid"]},{"name":"flexDirection","type":"enum","default":"column","values":["column","row"]},{"name":"spacing","type":"number","default":"0"}]
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

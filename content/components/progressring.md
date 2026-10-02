@@ -7,10 +7,10 @@ element: ProgressRing
 category: display
 scope: library
 platforms: web,ios,android
-properties: [{"name":"color","type":"color","default":"var(--dsx-accent)"},{"name":"label","type":"string","default":null},{"name":"lineWidth","type":"number","default":"10"},{"name":"max","type":"number","default":"1"},{"name":"size","type":"number","default":"88"},{"name":"trackColor","type":"color","default":"#2C2C2E"},{"name":"value","type":"number","default":"0"}]
+properties: [{"name":"color","type":"color","default":"var(--dsx-accent)"},{"name":"label","type":"string","default":null},{"name":"lineWidth","type":"number","default":"10"},{"name":"max","type":"number","default":"1"},{"name":"size","type":"number","default":"88"},{"name":"trackColor","type":"color","default":"var(--dsx-fill)"},{"name":"value","type":"number","default":"0"}]
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
@@ -62,7 +62,7 @@ Rest, hover on a fine pointer, pressed, focus visible and disabled, in both colo
 | `lineWidth` | `number` | `10` |  |
 | `max` | `number` | `1` |  |
 | `size` | `number` | `88` |  |
-| `trackColor` | `color` | `#2C2C2E` |  |
+| `trackColor` | `color` | `var(--dsx-fill)` |  |
 | `value` | `number` | `0` |  |
 
 Every element also carries the [universal attributes](/components/attributes): accessibility, animation, `class`, `style` and the platform suffixes.

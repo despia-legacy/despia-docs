@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"color","type":"color","default":"white"},{"name":"images","type":"expr","default":null},{"name":"index","type":"expr","default":null},{"name":"present","type":"expr","default":null},{"name":"srcField","type":"string","default":"src"},{"name":"urls","type":"csv","default":null}]
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

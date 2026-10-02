@@ -10,7 +10,7 @@ platforms: web,ios,android,desktop
 properties: [{"name":"bind","type":"expr","default":null},{"name":"columns","type":"number","default":"3"},{"name":"key","type":"string","default":"id"},{"name":"on:reachEnd","type":"action","default":null},{"name":"scroll","type":"bool","default":"true"},{"name":"spacing","type":"number","default":"10"}]
 actions: ["reachEnd"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

@@ -92,6 +92,14 @@
       }
     },
     {
+      "path": "/components/card",
+      "component": "docs.PageComponents_Card",
+      "meta": {
+        "title": "card",
+        "description": "The base Web twin renders the surface word: the card corner, the raised ground, the elevation and the INSET, which is the part the two helper classes deliberately do not carry because their wearers pad themselves."
+      }
+    },
+    {
       "path": "/components/carousel",
       "component": "docs.PageComponents_Carousel",
       "meta": {
@@ -121,6 +129,22 @@
       "meta": {
         "title": "Checkbox",
         "description": "The global Web twin uses a real checkbox input with bound state, label, change write-back, and keyboard/focus semantics."
+      }
+    },
+    {
+      "path": "/components/chip",
+      "component": "docs.PageComponents_Chip",
+      "meta": {
+        "title": "chip",
+        "description": "The base Web twin renders the pill word with its two independent axes: role is the STATUS voice off the system's own semantic pairs (accent, success, warning, danger, info) and selected is the chosen pose, so a chip may be a warning and selected at once."
+      }
+    },
+    {
+      "path": "/components/colorpicker",
+      "component": "docs.PageComponents_Colorpicker",
+      "meta": {
+        "title": "colorpicker",
+        "description": "The browser's own colour control (input type=color) behind the iOS ColorPicker row: the label leading, a 28px well painting the bound colour trailing, the hex round-tripped by the shared core, the colour announced by name, on:change on every write and on:commit once when the browser picker closes."
       }
     },
     {
@@ -212,6 +236,14 @@
       }
     },
     {
+      "path": "/components/footercopy",
+      "component": "docs.PageComponents_Footercopy",
+      "meta": {
+        "title": "footerCopy",
+        "description": "The base Web twin renders the closing line of a screen or a form at the footnote rung in the tertiary ink, the other half of the screen header word."
+      }
+    },
+    {
       "path": "/components/form",
       "component": "docs.PageComponents_Form",
       "meta": {
@@ -284,6 +316,14 @@
       }
     },
     {
+      "path": "/components/menusidebar",
+      "component": "docs.PageComponents_Menusidebar",
+      "meta": {
+        "title": "MenuSidebar",
+        "description": "The application-control Web twin of the Sidebar.dsx slide-over: a fixed overlay panel on the leading edge, min(320px, 100% - 56px) wide and padded by the safe area, over a 32% black scrim; rows bound to items (attribute first, then the store) with a 24px icon, the label and a trailing checkmark, the active row carrying aria-current and the 12% selection fill; on:select publishing the whole row as authored and on:dismiss from a scrim tap and from Escape; dark, background and tint as on the natives; focus moved into the panel (the selected row) and restored on close, focus contained, the background inerted, through the shared overlay coordinator; a slide and scrim fade in only after the document settled and a freeze-frame slide out before removal on every close path."
+      }
+    },
+    {
       "path": "/components/native-only",
       "component": "docs.PageComponents_NativeOnly",
       "meta": {
@@ -308,35 +348,11 @@
       }
     },
     {
-      "path": "/components/native-only/menusidebar",
-      "component": "docs.PageComponents_NativeOnly_Menusidebar",
-      "meta": {
-        "title": "MenuSidebar",
-        "description": "The native half of the shared Sidebar.dsx adapter has no Web renderer: the slide-over panel, its scrim and its rows are composed by SwiftUI on Apple and by Material 3 ModalNavigationDrawer on Android, and a web build authors its own navigation in markup instead."
-      }
-    },
-    {
       "path": "/components/native-only/rive",
       "component": "docs.PageComponents_NativeOnly_Rive",
       "meta": {
         "title": "rive",
         "description": "No Rive runtime ships with the web renderer; `<rive>` is a MODULE element, and the Core/Rive web facet fills the tag through the module component loader whenever the module is registered and its pinned @rive-app/canvas player was fetched by the build."
-      }
-    },
-    {
-      "path": "/components/native-only/scene360",
-      "component": "docs.PageComponents_NativeOnly_Scene360",
-      "meta": {
-        "title": "Scene360",
-        "description": "No panorama renderer is registered for Web."
-      }
-    },
-    {
-      "path": "/components/native-only/scene3d",
-      "component": "docs.PageComponents_NativeOnly_Scene3d",
-      "meta": {
-        "title": "Scene3D",
-        "description": "The RealityKit scene contract has no WebGL/WebGPU model renderer."
       }
     },
     {
@@ -508,6 +524,38 @@
       }
     },
     {
+      "path": "/components/scene360",
+      "component": "docs.PageComponents_Scene360",
+      "meta": {
+        "title": "Scene360",
+        "description": "The panorama renders over the kernel `<scene>` engine's WebGL surface: an inside-out sphere textured with the equirectangular src, the camera at its centre, drag to look (yaw/pitch, pitch clamped), wheel and pinch on the field of view (20 to 110), yaw/pitch/fov reactive; loading, ready and failed fire as on iOS."
+      }
+    },
+    {
+      "path": "/components/scene3d",
+      "component": "docs.PageComponents_Scene3d",
+      "meta": {
+        "title": "Scene3D",
+        "description": "The viewer renders over the kernel `<scene>` engine's WebGL surface (packages/dom/src/scene3d.ts): one internal `<scene>` per instance (camera, key and ambient light, the GLB model centred and resting on the floor, one node per models= row) driven through the scene bus with the iOS orbit rig (drag, wheel and pinch, autoRotate), the clip and loop, the live scale and the clip clock hold; loading, ready {ar, animations, bounds}, failed {reason}, tap {node} and animationFinished fire on the element and the scene3d channel, and the scene3d verbs reach it through Core/Scene3D/web."
+      }
+    },
+    {
+      "path": "/components/scopebar",
+      "component": "docs.PageComponents_Scopebar",
+      "meta": {
+        "title": "scopeBar",
+        "description": "The base Web twin renders the scopes under a search field as a wrapping rail of the chip word, with the tablist semantics, a roving tab stop and the two way write back the other option controls carry."
+      }
+    },
+    {
+      "path": "/components/screenheader",
+      "component": "docs.PageComponents_Screenheader",
+      "meta": {
+        "title": "screenHeader",
+        "description": "The base Web twin renders the screen's opening block, a display title over a callout subtitle in the secondary ink, both of them display copy through the localization seam and both painted server side so a reader meets the title rather than a box that grows when the client arrives."
+      }
+    },
+    {
       "path": "/components/scroll",
       "component": "docs.PageComponents_Scroll",
       "meta": {
@@ -521,6 +569,22 @@
       "meta": {
         "title": "searchbar",
         "description": "The Web twin is the composite search field the native reference draws: a leading magnifier, the real search input with binding, the Search placeholder default and submit, and a trailing clear button that writes the bound path back and fires on:clear."
+      }
+    },
+    {
+      "path": "/components/sectionfooter",
+      "component": "docs.PageComponents_Sectionfooter",
+      "meta": {
+        "title": "sectionFooter",
+        "description": "The base Web twin renders the section footer from markup, and the bound twin is the list's group_footer_by attribute, which reads the footer off the section's first row exactly as the header reads the group value."
+      }
+    },
+    {
+      "path": "/components/sectionheader",
+      "component": "docs.PageComponents_Sectionheader",
+      "meta": {
+        "title": "sectionHeader",
+        "description": "The base Web twin renders the list section header from markup, writing the same class and the same part name the bound group_by emitter writes, so one look has two ways in and a reader hears the group's own name either way."
       }
     },
     {
@@ -624,7 +688,7 @@
       "component": "docs.PageComponents_Svg",
       "meta": {
         "title": "svg",
-        "description": "The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization."
+        "description": "The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T A Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization."
       }
     },
     {
@@ -742,7 +806,7 @@
       "path": "/framework/guides/adaptive-native-shells",
       "component": "docs.PageFramework_Guides_AdaptiveNativeShells",
       "meta": {
-        "title": "Adaptive large-screen shells"
+        "title": "Adaptive native shells"
       }
     },
     {
@@ -753,10 +817,24 @@
       }
     },
     {
+      "path": "/framework/guides/building-with-agents",
+      "component": "docs.PageFramework_Guides_BuildingWithAgents",
+      "meta": {
+        "title": "Building with agents"
+      }
+    },
+    {
       "path": "/framework/guides/cli",
       "component": "docs.PageFramework_Guides_Cli",
       "meta": {
         "title": "The `despia` command line"
+      }
+    },
+    {
+      "path": "/framework/guides/clickhouse",
+      "component": "docs.PageFramework_Guides_Clickhouse",
+      "meta": {
+        "title": "Analytics at scale: ClickHouse"
       }
     },
     {
@@ -809,6 +887,20 @@
       }
     },
     {
+      "path": "/framework/guides/credentials",
+      "component": "docs.PageFramework_Guides_Credentials",
+      "meta": {
+        "title": "Credentials held by the runner"
+      }
+    },
+    {
+      "path": "/framework/guides/debugging",
+      "component": "docs.PageFramework_Guides_Debugging",
+      "meta": {
+        "title": "Debugging a DSX app"
+      }
+    },
+    {
       "path": "/framework/guides/deploying",
       "component": "docs.PageFramework_Guides_Deploying",
       "meta": {
@@ -823,10 +915,38 @@
       }
     },
     {
+      "path": "/framework/guides/despia-design-system",
+      "component": "docs.PageFramework_Guides_DespiaDesignSystem",
+      "meta": {
+        "title": "Current DSX components and the retired v3 skin"
+      }
+    },
+    {
+      "path": "/framework/guides/device-tests",
+      "component": "docs.PageFramework_Guides_DeviceTests",
+      "meta": {
+        "title": "Device tests: end-to-end tests on the exported app"
+      }
+    },
+    {
+      "path": "/framework/guides/embed-anywhere",
+      "component": "docs.PageFramework_Guides_EmbedAnywhere",
+      "meta": {
+        "title": "Embed a DSX component anywhere"
+      }
+    },
+    {
       "path": "/framework/guides/files-and-storage",
       "component": "docs.PageFramework_Guides_FilesAndStorage",
       "meta": {
         "title": "Files & storage"
+      }
+    },
+    {
+      "path": "/framework/guides/from-v3",
+      "component": "docs.PageFramework_Guides_FromV3",
+      "meta": {
+        "title": "Moving a v3 app to DSX"
       }
     },
     {
@@ -840,7 +960,14 @@
       "path": "/framework/guides/hosted-platform",
       "component": "docs.PageFramework_Guides_HostedPlatform",
       "meta": {
-        "title": "Hosted platform: coming in 1.0.0"
+        "title": "Deploying to your own infrastructure"
+      }
+    },
+    {
+      "path": "/framework/guides/markdown",
+      "component": "docs.PageFramework_Guides_Markdown",
+      "meta": {
+        "title": "Extended markdown"
       }
     },
     {
@@ -921,13 +1048,6 @@
       }
     },
     {
-      "path": "/framework/guides/self-hosted-cicd",
-      "component": "docs.PageFramework_Guides_SelfHostedCicd",
-      "meta": {
-        "title": "Self-hosted CI/CD - a Mac mini as a Despia build node"
-      }
-    },
-    {
       "path": "/framework/guides/staging-and-testing",
       "component": "docs.PageFramework_Guides_StagingAndTesting",
       "meta": {
@@ -949,10 +1069,24 @@
       }
     },
     {
+      "path": "/framework/guides/testing",
+      "component": "docs.PageFramework_Guides_Testing",
+      "meta": {
+        "title": "Unit testing a DSX app"
+      }
+    },
+    {
       "path": "/framework/guides/theming",
       "component": "docs.PageFramework_Guides_Theming",
       "meta": {
         "title": "Theming a DSX app"
+      }
+    },
+    {
+      "path": "/framework/guides/transitions",
+      "component": "docs.PageFramework_Guides_Transitions",
+      "meta": {
+        "title": "Transitions"
       }
     },
     {
@@ -1201,10 +1335,38 @@
       }
     },
     {
+      "path": "/framework/skills/building-a-despia-platform-surface",
+      "component": "docs.PageFramework_Skills_BuildingADespiaPlatformSurface",
+      "meta": {
+        "title": "Building a platform surface in DSX"
+      }
+    },
+    {
+      "path": "/framework/skills/building-ui-that-does-not-flash",
+      "component": "docs.PageFramework_Skills_BuildingUiThatDoesNotFlash",
+      "meta": {
+        "title": "Building UI that does not flash, jump or draw a blank"
+      }
+    },
+    {
+      "path": "/framework/skills/building-with-agents",
+      "component": "docs.PageFramework_Skills_BuildingWithAgents",
+      "meta": {
+        "title": "Building a DSX app with agents: plan from measurements, check before you land"
+      }
+    },
+    {
       "path": "/framework/skills/component-props-and-state",
       "component": "docs.PageFramework_Skills_ComponentPropsAndState",
       "meta": {
         "title": "Component props vs state: attributes vs variables"
+      }
+    },
+    {
+      "path": "/framework/skills/components-and-reuse",
+      "component": "docs.PageFramework_Skills_ComponentsAndReuse",
+      "meta": {
+        "title": "Components and reuse: one root, panels, and a library of configurable primitives"
       }
     },
     {
@@ -1233,6 +1395,13 @@
       "component": "docs.PageFramework_Skills_CustomUx",
       "meta": {
         "title": "Custom UX: the escape hatches"
+      }
+    },
+    {
+      "path": "/framework/skills/deleting-safely",
+      "component": "docs.PageFramework_Skills_DeletingSafely",
+      "meta": {
+        "title": "Deleting safely: ask the framework, then delete"
       }
     },
     {
@@ -1348,6 +1517,13 @@
       }
     },
     {
+      "path": "/framework/skills/mcp-agent-transport",
+      "component": "docs.PageFramework_Skills_McpAgentTransport",
+      "meta": {
+        "title": "The agent transport: reaching this toolchain over MCP"
+      }
+    },
+    {
       "path": "/framework/skills/module-content",
       "component": "docs.PageFramework_Skills_ModuleContent",
       "meta": {
@@ -1439,6 +1615,20 @@
       }
     },
     {
+      "path": "/framework/skills/realtime-and-static-data",
+      "component": "docs.PageFramework_Skills_RealtimeAndStaticData",
+      "meta": {
+        "title": "Realtime and static data: live streams, sockets, and data baked at build"
+      }
+    },
+    {
+      "path": "/framework/skills/review-your-app",
+      "component": "docs.PageFramework_Skills_ReviewYourApp",
+      "meta": {
+        "title": "Review your app: the loop before and after every change"
+      }
+    },
+    {
       "path": "/framework/skills/runtime-api",
       "component": "docs.PageFramework_Skills_RuntimeApi",
       "meta": {
@@ -1463,7 +1653,14 @@
       "path": "/framework/skills/storage",
       "component": "docs.PageFramework_Skills_Storage",
       "meta": {
-        "title": "Storage (the `cdn` module)"
+        "title": "Storage (Core/Files)"
+      }
+    },
+    {
+      "path": "/framework/skills/structuring-an-app",
+      "component": "docs.PageFramework_Skills_StructuringAnApp",
+      "meta": {
+        "title": "Structuring an app: three layers, and when to split a document"
       }
     },
     {
@@ -1485,6 +1682,13 @@
       "component": "docs.PageFramework_Skills_ThinkingInDsx",
       "meta": {
         "title": "Thinking in DSX when you were trained on React"
+      }
+    },
+    {
+      "path": "/framework/skills/typing-declarations",
+      "component": "docs.PageFramework_Skills_TypingDeclarations",
+      "meta": {
+        "title": "Typing declarations: say what shape a name holds, and turn a set of flags into one mode"
       }
     },
     {
@@ -1540,7 +1744,7 @@
       "path": "/framework/skills/writing-a-studio-app",
       "component": "docs.PageFramework_Skills_WritingAStudioApp",
       "meta": {
-        "title": "Writing a Despia app"
+        "title": "Writing a Despia app: a package that contributes tools"
       }
     },
     {

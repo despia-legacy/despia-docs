@@ -10,7 +10,7 @@ platforms: ios,android
 properties: [{"name":"beatsPerBar","type":"number","default":"4"},{"name":"busyTracks","type":"array","default":null},{"name":"drawMode","type":"bool","default":"false"},{"name":"duration","type":"number","default":"16"},{"name":"pendingImports","type":"array","default":null},{"name":"pxPerSecond","type":"number","default":"80"},{"name":"snap","type":"bool","default":"true"},{"name":"tempo","type":"number","default":"120"},{"name":"tracks","type":"array","default":null}]
 actions: []
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 

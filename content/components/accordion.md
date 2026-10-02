@@ -10,7 +10,7 @@ platforms: web,ios,android
 properties: [{"name":"color","type":"color","default":"var(--dsx-accent)"},{"name":"on:toggle","type":"action","default":null},{"name":"open","type":"bool","default":"false"},{"name":"title","type":"string","default":null}]
 actions: ["toggle"]
 catalog: 0.1.0
-commit: 84cb9c827f770fb520dfb95c4dc8186476512631
+commit: 514fbe9725d913ddef906af0df3d86b557bb3972
 generator: ClosedSource/scripts/generate_component_docs.rb
 ---
 
