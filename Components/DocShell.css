@@ -1166,3 +1166,11 @@
   padding: 0.15em 0.5em; border-radius: 999px; box-shadow: inset 0 0 0 var(--dsx-hairline) var(--dsx-outline-soft);
 }
 @media (max-width: 39.999rem) { .doc-version-chip { display: none; } }
+
+/* compact header: the wordmark, the space switcher and Ask AI never wrap; under 40rem Ask AI
+   lives in the help menu and the header keeps the switcher */
+.doc-wordmark-name, .doc-wordmark-tag, .doc-switcher-btn, .doc-ask-btn { white-space: nowrap; flex-shrink: 0; }
+@media (max-width: 39.999rem) {
+  .doc-ask-btn { display: none; }
+  .doc-wordmark-tag { display: none; }
+}

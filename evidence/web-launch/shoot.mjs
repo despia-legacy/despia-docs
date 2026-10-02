@@ -29,17 +29,18 @@ const base = "http://127.0.0.1:8791";
 const browser = await chromium.launch();
 const shots = [
   { name: "01-modern-page", path: "/framework/guides/routing", w: 1440, h: 1000 },
-  { name: "02-legacy-steps-tabs-cards", path: "/legacy/payments/stripe/introduction", w: 1440, h: 1400, scrollTo: ".doc-steps" },
-  { name: "03-legacy-cards", path: "/legacy/introduction", w: 1440, h: 1000, scrollTo: ".doc-tiles" },
-  { name: "04-legacy-steps", path: "/legacy/deployment/apple-ios/automatic", w: 1440, h: 1000, scrollTo: ".doc-steps" },
-  { name: "05-migration-map", path: "/migrate/map", w: 1440, h: 1000 },
-  { name: "06-switcher-open", path: "/legacy/introduction", w: 1440, h: 760, click: ".doc-switcher-btn" },
-  { name: "07-page-actions-open", path: "/migrate", w: 1440, h: 760, click: ".doc-actions-more" },
-  { name: "08-search-all-spaces", path: "/legacy/introduction", w: 1440, h: 760, search: "haptic" },
-  { name: "09-troubleshooting", path: "/troubleshooting", w: 1440, h: 1000 },
-  { name: "10-mobile-legacy", path: "/legacy/native-features/haptic-feedback", w: 390, h: 844 },
-  { name: "11-mobile-switcher", path: "/migrate/map", w: 390, h: 844, click: ".doc-switcher-btn" },
-  { name: "12-legacy-dark", path: "/legacy/local-intelligence/reference", w: 1440, h: 1000, dark: true, scrollTo: ".doc-field" },
+  { name: "02-legacy-steps-tabs-cards", path: "/legacy/payments/stripe/introduction", w: 1440, h: 1400 },
+  { name: "03-legacy-banner-cards", path: "/legacy/introduction", w: 1440, h: 1000 },
+  { name: "04-migration-map", path: "/migrate/map", w: 1440, h: 1000 },
+  { name: "05-switcher-open", path: "/legacy/introduction", w: 1440, h: 800, click: ".doc-switcher-btn" },
+  { name: "06-help-menu-open", path: "/legacy/native-features/haptic-feedback", w: 1440, h: 900, click: ".doc-actions-more" },
+  { name: "07-search-all-spaces", path: "/legacy/introduction", w: 1440, h: 800, search: "haptic" },
+  { name: "08-troubleshooting", path: "/troubleshooting", w: 1440, h: 1000 },
+  { name: "09-app-review", path: "/app-review", w: 1440, h: 1100 },
+  { name: "10-releases", path: "/releases", w: 1440, h: 800 },
+  { name: "11-mobile-legacy", path: "/legacy/native-features/haptic-feedback", w: 390, h: 844 },
+  { name: "12-mobile-help-sheet", path: "/migrate/map", w: 390, h: 844, click: ".doc-actions-more" },
+  { name: "13-legacy-paramfields-dark", path: "/legacy/local-intelligence/reference", w: 1440, h: 1000, dark: true, scrollTo: ".doc-field" },
 ];
 for (const s of shots) {
   const page = await browser.newPage({ viewport: { width: s.w, height: s.h }, colorScheme: s.dark ? "dark" : "light", deviceScaleFactor: s.w < 500 ? 3 : 1 });
@@ -51,7 +52,8 @@ for (const s of shots) {
   if (s.scrollTo) await page.evaluate(() => window.scrollBy(0, -120));
   if (s.click) { await page.locator(s.click).first().click(); await page.waitForTimeout(400); }
   if (s.search) {
-    await page.locator(".doc-search-inline input").first().fill(s.search);
+    await page.locator(".doc-search-inline input").first().click();
+    await page.keyboard.type(s.search);
     await page.waitForTimeout(500);
     await page.getByText("All spaces").first().click().catch(() => {});
     await page.waitForTimeout(600);
