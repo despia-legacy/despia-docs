@@ -63,6 +63,16 @@ const tokens = (s: string): string[] => normalise(s).split(/[^a-z0-9.<>/_$-]+/).
 export function createTools(input: ToolsInput) {
   const { site, pages } = input;
   const lower = pages.map((p) => ({ p, title: p.title.toLowerCase(), label: (p.label ?? "").toLowerCase(), text: p.text.toLowerCase() }));
+  //  An inverted index built once per isolate: token -> pages, title tokens kept apart. A query
+  //  then touches only the pages that hold one of its words (postings), never the whole corpus.
+  const postings = new Map<string, number[]>();
+  const titleTokens = lower.map((e) => new Set(tokens(`${e.title} ${e.label}`)));
+  lower.forEach((e, i) => {
+    for (const t of new Set([...tokens(e.text), ...titleTokens[i]])) {
+      const list = postings.get(t);
+      if (list === undefined) postings.set(t, [i]); else list.push(i);
+    }
+  });
   const byPackage = new Map<string, Set<string>>();
   for (const m of input.integrations.packages) {
     const routes = new Set((m.docs ?? []).map((d) => d.route));
@@ -94,18 +104,28 @@ export function createTools(input: ToolsInput) {
     const needle = normalise(q);
     const words = tokens(q);
     if (needle.length < 2) return [];
+    const score = new Map<number, number>();
+    for (const w of words) {
+      for (const i of postings.get(w) ?? []) score.set(i, (score.get(i) ?? 0) + (titleTokens[i].has(w) ? 2 : 1));
+    }
+    if (score.size === 0 || isIdentifier(q)) {
+      // the substring pass: an identifier is matched as written (dsx.module.haptic inside
+      // dsx.module.haptic.light()), and a query with no whole-word hit still finds fragments
+      lower.forEach((e, i) => {
+        const inTitle = e.title.includes(needle);
+        const inText = e.text.includes(needle);
+        if (inTitle || inText) score.set(i, (score.get(i) ?? 0) + (inTitle ? 6 : 3));
+      });
+    }
     const scored: Hit[] = [];
-    for (const e of lower) {
+    for (const [i, base] of score) {
+      const e = lower[i];
       if (!ok(e.p)) continue;
-      let s = 0;
-      if (e.title === needle || e.label === needle) s += 12;
-      if (e.title.includes(needle) || e.label.includes(needle)) s += 6;
-      if (e.text.includes(needle)) s += 3;
-      for (const w of words) {
-        if (e.title.includes(w)) s += 2;
-        else if (e.text.includes(w)) s += 1;
-      }
-      if (s > 0) scored.push(hitOf(e.p, s, "lexical"));
+      let s2 = base;
+      if (e.title === needle || e.label === needle) s2 += 12;
+      if (e.title.includes(needle) || e.label.includes(needle)) s2 += 6;
+      if (words.length > 1 && e.text.includes(needle)) s2 += 3;
+      scored.push(hitOf(e.p, s2, "lexical"));
     }
     return scored.sort((a, b) => b.score - a.score).slice(0, limit);
   }
