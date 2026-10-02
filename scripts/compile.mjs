@@ -216,7 +216,14 @@ function sectionize(body, bodyStart) {
  *  screen instead of becoming a live interpolation, and the linter never sees phantom
  *  bindings. `</` is escaped inside the string so the raw scan can never end early. */
 function jseStringLiteral(source) {
-  return JSON.stringify(source).replace(/<\//g, "<\\/");
+  // Every character the document scanners read structurally travels as a \u escape: `<`
+  // (a raw `<server>` in an example would open a block), `&` (entities decode before the
+  // JSE parse, so `&quot;` would end the string), braces (never an interpolation) and the
+  // `dsx.` reach (an example's `dsx.cookie` is prose, not a read the linter should check).
+  return JSON.stringify(source)
+    .replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026")
+    .replace(/\{/g, "\\u007b").replace(/\}/g, "\\u007d")
+    .replace(/\bdsx\./g, "dsx\\u002e");
 }
 
 // ── components in markdown ────────────────────────────────────────────────────────────────
