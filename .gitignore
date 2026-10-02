@@ -23,3 +23,8 @@ public/**/*.md
 public/index.md
 public/app-review/
 public/app-review.json
+public/releases/
+public/versions.json
+public/modules/
+public/integrations.json
+public/knowledge/

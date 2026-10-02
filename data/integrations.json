@@ -1,0 +1,5394 @@
+{
+ "source": "despia-native/despia ClosedSource/PackageCatalog.json + ClosedSource/DSX/Modules/**/dsx.json",
+ "catalogVersion": 1,
+ "packages": [
+  {
+   "command": "actionsheet",
+   "name": "ActionSheet",
+   "package": "Core/ActionSheet",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The platform's own action sheet. Hand it a list of choices, get back the one the user picked, or `null` if they tapped outside to dismiss.",
+   "actions": [
+    "show"
+   ],
+   "api": "dsx.module.actionsheet",
+   "install": "despia add Core/ActionSheet"
+  },
+  {
+   "command": "adjust",
+   "name": "Adjust",
+   "package": "Core/Growth/Modules/Adjust",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Selects with Growth's config `attribution: \"adjust\"` and this module's config `app_token`, `environment` (sandbox or production) and `matching`. Growth asks the row once, when collection starts and no install is recorded, and admits the answer through its own attribution law; the touch then reaches the configured destination as `attribution.touch`.",
+   "actions": [
+    "install"
+   ],
+   "api": "dsx.module.adjust",
+   "install": "despia add Core/Growth/Modules/Adjust"
+  },
+  {
+   "command": "admob",
+   "name": "AdMob",
+   "package": "Core/AdMob",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Google Mobile Ads banners, interstitials and rewarded ads, with UMP consent.",
+   "actions": [
+    "rewarded",
+    "interstitial",
+    "banner",
+    "privacyOptions",
+    "session",
+    "attach",
+    "detach",
+    "load",
+    "close",
+    "tap",
+    "disable",
+    "enable"
+   ],
+   "api": "dsx.module.admob",
+   "install": "despia add Core/AdMob"
+  },
+  {
+   "command": "ageassurance",
+   "name": "AgeAssurance",
+   "package": "Core/AgeAssurance",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "OS-declared age signals behind one verdict: Apple's **DeclaredAgeRange** on iOS 26.2+, Google's **Play Age Signals** on Android 6.0+. Ask how old the user is without asking for a birthdate, and get the same answer shape on both platforms.",
+   "actions": [
+    "check",
+    "supported",
+    "last",
+    "forget",
+    "resolve"
+   ],
+   "api": "dsx.module.ageassurance",
+   "install": "despia add Core/AgeAssurance"
+  },
+  {
+   "command": "airbridge",
+   "name": "Airbridge",
+   "package": "Core/Airbridge",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Airbridge ad attribution and deferred deep linking.",
+   "actions": [
+    "track_event",
+    "set_user_id",
+    "clear_user_id",
+    "set_user_email",
+    "clear_user_email",
+    "set_user_phone",
+    "clear_user_phone",
+    "set_user_alias",
+    "remove_user_alias",
+    "clear_user_alias",
+    "set_user_attribute",
+    "remove_user_attribute",
+    "clear_user_attributes",
+    "clear_user",
+    "logout",
+    "set_device_alias",
+    "remove_device_alias",
+    "clear_device_alias",
+    "get_device_uuid",
+    "get_airbridge_device_id",
+    "start_tracking",
+    "stop_tracking",
+    "enable_sdk",
+    "disable_sdk",
+    "click_tracking_link",
+    "track_impression",
+    "get_attribution",
+    "get_deferred_deeplink"
+   ],
+   "api": "dsx.module.airbridge",
+   "install": "despia add Core/Airbridge"
+  },
+  {
+   "command": "alarms",
+   "name": "Alarms",
+   "package": "Core/Alarms",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Alarms and timers for clock apps, wake-up apps, cooking timers, medication reminders, interval training. On iOS 26 they are AlarmKit alarms: they ring through Silent mode and Focus, on the Lock Screen and in the Dynamic Island. On Android they are `setAlarmClock` alarms with a full-screen alarm over the lock screen. The design is [proposals/alarms.md](../../../../../OpenSource/Documentation/archit",
+   "actions": [
+    "schedule",
+    "timer",
+    "pause",
+    "resume",
+    "snooze",
+    "stop",
+    "skip",
+    "cancel",
+    "list",
+    "permission.status",
+    "permission.request",
+    "permission.openSettings"
+   ],
+   "api": "dsx.module.alarms",
+   "install": "despia add Core/Alarms"
+  },
+  {
+   "command": "amplitude",
+   "name": "Amplitude",
+   "package": "Core/Growth/Modules/Amplitude",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.growth.configure({ destination: \"amplitude\", token: \"<project API key>\" })`.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.amplitude",
+   "install": "despia add Core/Growth/Modules/Amplitude"
+  },
+  {
+   "command": "analytics",
+   "name": "Analytics",
+   "package": "Core/Firebase/Modules/Analytics",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "Firebase Analytics events and user properties.",
+   "actions": [
+    "collect",
+    "log",
+    "identify",
+    "property",
+    "consent",
+    "send"
+   ],
+   "api": "dsx.module.analytics",
+   "install": "despia add Core/Firebase/Modules/Analytics"
+  },
+  {
+   "command": "appcheck",
+   "name": "AppCheck",
+   "package": "Core/Integrity/Modules/AppCheck",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "A provider row of the integrity owner, reached as `dsx.module.integrity.appcheck`. `token()` answers an App Check token (`{ token, expiresAt }`) that the app sends to Firebase services or its own backend in the `X-Firebase-AppCheck` header. Config: `project`, `api_key` (the public Firebase API key), `ios_app_id`, `android_app_id` and, when the key is restricted, `bundle_id`.",
+   "actions": [
+    "token"
+   ],
+   "api": "dsx.module.appcheck",
+   "install": "despia add Core/Integrity/Modules/AppCheck"
+  },
+  {
+   "command": "appclip",
+   "name": "AppClip",
+   "package": "Core/Extensions/AppClip",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios"
+   ],
+   "description": "The host-side bridge for the app's App Clip. The App Clip itself is a separate extension target: a small web view that loads the App Clip URL set at build time. This module is the full app's half. It claims `appclip://` so the feature is first-class in the registry.",
+   "actions": [
+    "status"
+   ],
+   "api": "dsx.module.appclip",
+   "install": "despia add Core/Extensions/AppClip"
+  },
+  {
+   "command": "appearance",
+   "name": "Appearance",
+   "package": "Core/Basics/Appearance",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "One switch (`system` | `light` | `dark`) applied to **every** surface at the window level: the system navigation bar, sheets and materials, every adaptive color token, the status bar, the dev center, and the web view's `prefers-color-scheme`. No more dark-designed pages under a light system bar.",
+   "actions": [
+    "get",
+    "set",
+    "seed"
+   ],
+   "api": "dsx.module.appearance",
+   "install": "despia add Core/Basics/Appearance"
+  },
+  {
+   "command": "appicon",
+   "name": "AppIcon",
+   "package": "Core/Basics/AppIcon",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Lets the user pick the home-screen app icon. You declare the icons once; `despia export` generates the iOS icon sets, the Android adaptive icons and the launcher aliases from that one declaration.",
+   "actions": [
+    "set",
+    "reset",
+    "current",
+    "list"
+   ],
+   "api": "dsx.module.appicon",
+   "install": "despia add Core/Basics/AppIcon"
+  },
+  {
+   "command": "appleauth",
+   "name": "AppleAuth",
+   "package": "Core/Auth/AppleAuth",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "macos"
+   ],
+   "description": "Sign in with Apple, natively, callable from the bus.",
+   "actions": [
+    "signIn"
+   ],
+   "api": "dsx.module.appleauth",
+   "install": "despia add Core/Auth/AppleAuth"
+  },
+  {
+   "command": "applock",
+   "name": "AppLock",
+   "package": "Core/AppLock",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "A biometric app lock that gates the app before any content is shown.",
+   "actions": [],
+   "api": "dsx.module.applock",
+   "install": "despia add Core/AppLock"
+  },
+  {
+   "command": "apprating",
+   "name": "AppRating",
+   "package": "Core/Basics/AppRating",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "Asks the OS for its in-app \"rate this app\" sheet.",
+   "actions": [
+    "request"
+   ],
+   "api": "dsx.module.apprating",
+   "install": "despia add Core/Basics/AppRating"
+  },
+  {
+   "command": "apps",
+   "name": "Apps",
+   "package": "Core/Apps",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "web"
+   ],
+   "description": "Reads and writes the project list behind the Despia editor.",
+   "actions": [
+    "mounted",
+    "isMounted"
+   ],
+   "api": "dsx.module.apps",
+   "install": "despia add Core/Apps"
+  },
+  {
+   "command": "appsflyer",
+   "name": "AppsFlyer",
+   "package": "Core/AppsFlyer",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "AppsFlyer install and event attribution, with OneLink deep linking.",
+   "actions": [
+    "log_event",
+    "set_user_id",
+    "logout",
+    "get_uid",
+    "set_email",
+    "set_phone",
+    "log_ad_revenue",
+    "get_attribution",
+    "set_consent",
+    "install"
+   ],
+   "api": "dsx.module.appsflyer",
+   "install": "despia add Core/AppsFlyer"
+  },
+  {
+   "command": "apptracking",
+   "name": "AppTracking",
+   "package": "Core/WebPlatform/AppTracking",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Tells the page whether the user allowed tracking, and asks when your app chooses to, so you can switch off cross-app tracking, personalised ads, or anything else that depends on consent. It speaks the same permission contract as every other package.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings"
+   ],
+   "api": "dsx.module.apptracking",
+   "install": "despia add Core/WebPlatform/AppTracking"
+  },
+  {
+   "command": "appupdate",
+   "name": "AppUpdate",
+   "package": "Core/AppUpdate",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Is a newer version of this app available, and take the customer to it.",
+   "actions": [
+    "check",
+    "open",
+    "complete"
+   ],
+   "api": "dsx.module.appupdate",
+   "install": "despia add Core/AppUpdate"
+  },
+  {
+   "command": "ar",
+   "name": "AR",
+   "package": "Core/AR",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "A reusable native **ARKit** layer. Use it on its own to add an AR session to a screen, or let a consumer module borrow it for AR experiences: either way it owns exactly one `ARSession` and publishes it on the bus so renderers attach to the *same* session.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "start",
+    "stop",
+    "pause",
+    "resume",
+    "status",
+    "save",
+    "worlds",
+    "forget",
+    "anchor",
+    "removeAnchor"
+   ],
+   "api": "dsx.module.ar",
+   "install": "despia add Core/AR"
+  },
+  {
+   "command": "assistants",
+   "name": "Assistants",
+   "package": "Core/Assistants",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "dsx.variable.tasks = [...dsx.variable.tasks, { title: title, done: false }] return 'Added ' + title",
+   "actions": [
+    "tools"
+   ],
+   "api": "dsx.module.assistants",
+   "install": "despia add Core/Assistants"
+  },
+  {
+   "command": "audio",
+   "name": "Audio",
+   "package": "Core/Audio",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The audio capability owner (proposals/audio-revamp.md). An app declares what should sound as one JSON graph, and eight verbs move it. Core/Audio is the one owner of the audio session (AVAudioSession on Apple, audio focus and attributes on Android) and of the now-playing surface.",
+   "actions": [
+    "graph.set",
+    "set",
+    "play",
+    "pause",
+    "stop",
+    "seek",
+    "route.pick",
+    "route.set",
+    "attach",
+    "detach"
+   ],
+   "api": "dsx.module.audio",
+   "install": "despia add Core/Audio"
+  },
+  {
+   "command": "auth",
+   "name": "Auth",
+   "package": "Core/Auth/Auth",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The one owner of signing in: a session plane every interface reads, one verb set, and session providers and credential sources as adapters.",
+   "actions": [
+    "signIn",
+    "signUp",
+    "sendCode",
+    "verifyCode",
+    "signOut",
+    "session",
+    "token",
+    "updateProfile",
+    "installation",
+    "replaceInstallation",
+    "installations",
+    "setPrimaryInstallation",
+    "removeInstallation"
+   ],
+   "api": "dsx.module.auth",
+   "install": "despia add Core/Auth/Auth"
+  },
+  {
+   "command": "authfirebase",
+   "name": "AuthFirebase",
+   "package": "Core/Auth/FirebaseAuth",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Firebase Authentication as the auth owner's session provider: email and password, and Google or Apple ID tokens, over Firebase's Auth REST API.",
+   "actions": [],
+   "api": "dsx.module.authfirebase",
+   "install": "despia add Core/Auth/FirebaseAuth"
+  },
+  {
+   "command": "authidentity",
+   "name": "AuthIdentity",
+   "package": "Core/Auth/Identity",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The open, self-hosted identity service as the auth owner's session provider: emailed codes, sessions and sign-out.",
+   "actions": [],
+   "api": "dsx.module.authidentity",
+   "install": "despia add Core/Auth/Identity"
+  },
+  {
+   "command": "automotive",
+   "name": "Automotive",
+   "package": "Core/Extensions/Car/Modules/Automotive",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "android"
+   ],
+   "description": "Android Automotive OS for the Car package. The parent, `Core/Extensions/Car`, serves Android Auto: a phone projects the app's `<car>` templates to a head unit through an in-app `CarAppService`. A car that runs Android itself needs a different APK: `androidx.car.app:app-automotive`, its `CarAppActivity` as the only launcher activity, and the automotive features Google Play requires.",
+   "actions": [
+    "status"
+   ],
+   "api": "dsx.module.automotive",
+   "install": "despia add Core/Extensions/Car/Modules/Automotive"
+  },
+  {
+   "command": "backend",
+   "name": "Backend",
+   "package": "Core/CallLiveKit/Modules/Backend",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [],
+   "description": "The secret-bearing LiveKit server half: join tokens for the verified caller and verified webhooks.",
+   "actions": [
+    "token",
+    "webhook"
+   ],
+   "api": "dsx.module.backend",
+   "install": "despia add Core/CallLiveKit/Modules/Backend"
+  },
+  {
+   "command": "background",
+   "name": "Background",
+   "package": "Core/Background",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "**Read this paragraph before you design anything on top of this module.** Neither platform will run your task on a schedule. iOS `BGTaskScheduler` gives **no timing guarantee at all**: the OS learns when the user actually opens your app and schedules around that, so a task with a fifteen-minute floor may run in twenty minutes, may run in two days, and on a device where Background App Refresh is of",
+   "actions": [
+    "status",
+    "schedule",
+    "cancel",
+    "run",
+    "deliver"
+   ],
+   "api": "dsx.module.background",
+   "install": "despia add Core/Background"
+  },
+  {
+   "command": "backgroundlocation",
+   "name": "Background Location",
+   "package": "Core/Geo/Modules/BackgroundLocation",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios"
+   ],
+   "description": "List this package next to `Core/Geo` only when the app tracks location in the background or uses geofences, significant-change monitoring or visits:",
+   "actions": [],
+   "api": "dsx.module.backgroundlocation",
+   "install": "despia add Core/Geo/Modules/BackgroundLocation"
+  },
+  {
+   "command": "base",
+   "name": "Base",
+   "package": "Core/Base",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "`Core/Base` is the app's own database on the bus: **one SQLite file holding three shapes**: relational rows, key/value documents and vectors: with **savepoints** as the cheap transactional scope and **snapshots** as the durable backup. Scheme `base`.",
+   "actions": [
+    "capabilities",
+    "declare",
+    "put",
+    "get",
+    "delete",
+    "query",
+    "live",
+    "unlive",
+    "stats",
+    "savepoint",
+    "release",
+    "rollback",
+    "snapshot",
+    "snapshots",
+    "restore",
+    "export",
+    "index.upsert",
+    "index.info",
+    "index.search",
+    "index.delete",
+    "index.reindex"
+   ],
+   "api": "dsx.module.base",
+   "install": "despia add Core/Base"
+  },
+  {
+   "command": "biometric",
+   "name": "Biometric",
+   "package": "Core/Biometric",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Device-owner authentication: **Face ID / Touch ID**, falling back to the device passcode: wrapping Apple's `LocalAuthentication` (`LAContext`). This module is the **single owner** of the biometric capability *and* of the `NSFaceIDUsageDescription` Info.plist key, so no other module names the OS API or re-declares the permission.",
+   "actions": [
+    "authenticate",
+    "supported"
+   ],
+   "api": "dsx.module.biometric",
+   "install": "despia add Core/Biometric"
+  },
+  {
+   "command": "blocks",
+   "name": "Blocks",
+   "package": "Core/Blocks",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "android",
+    "web"
+   ],
+   "description": "A Notion-style block editor over markdown, headless first.",
+   "actions": [
+    "open",
+    "close",
+    "markdown",
+    "edit",
+    "key",
+    "select",
+    "mark",
+    "turnInto",
+    "insert",
+    "set",
+    "move",
+    "duplicate",
+    "remove",
+    "indent",
+    "outdent",
+    "fold",
+    "slash",
+    "paste",
+    "replace",
+    "drag",
+    "dismiss",
+    "undo",
+    "redo"
+   ],
+   "api": "dsx.module.blocks",
+   "install": "despia add Core/Blocks"
+  },
+  {
+   "command": "bluetooth",
+   "name": "Bluetooth",
+   "package": "Core/Bluetooth",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "GATT central. Scan for peripherals, connect, discover services, read / write / subscribe to characteristics. Per-call commands resolve as formulas; `scan` and `subscribe` are streams; unsolicited events broadcast on the `bluetooth` channel.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "scan",
+    "stopscan",
+    "connect",
+    "disconnect",
+    "discover",
+    "read",
+    "write",
+    "subscribe",
+    "unsubscribe",
+    "rssi",
+    "status",
+    "raw"
+   ],
+   "api": "dsx.module.bluetooth",
+   "install": "despia add Core/Bluetooth"
+  },
+  {
+   "command": "branch",
+   "name": "Branch",
+   "package": "Core/Growth/Modules/Branch",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Selects with Growth's config `attribution: \"branch\"` and this module's config `branch_key` (a public `key_live_...` or `key_test_...` key). Growth asks the row once, when collection starts and no install is recorded, and admits the answer through its own attribution law; the touch then reaches the configured destination as `attribution.touch`.",
+   "actions": [
+    "install"
+   ],
+   "api": "dsx.module.branch",
+   "install": "despia add Core/Growth/Modules/Branch"
+  },
+  {
+   "command": "braze",
+   "name": "Braze",
+   "package": "Core/Growth/Modules/Braze",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Braze as a Despia Growth destination, with push through Core/Notify's token, content cards as headless data, and in-app messages drawn by this package's islands, from one vendor session.",
+   "actions": [
+    "send",
+    "cards",
+    "card_clicked",
+    "card_viewed",
+    "card_dismissed",
+    "message_clicked",
+    "message_dismissed"
+   ],
+   "api": "dsx.module.braze",
+   "install": "despia add Core/Growth/Modules/Braze"
+  },
+  {
+   "command": "brightness",
+   "name": "ScreenBrightness",
+   "package": "Core/ScreenBrightness",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Reads and sets the screen brightness, and ships the scan bracket that cranks the display to full so an on-screen barcode or QR scans cleanly on another device's camera, then puts the user's brightness back.",
+   "actions": [
+    "set",
+    "get",
+    "enable",
+    "disable",
+    "auto"
+   ],
+   "api": "dsx.module.brightness",
+   "install": "despia add Core/ScreenBrightness"
+  },
+  {
+   "command": "browser",
+   "name": "Browser",
+   "package": "Mandatory/Browser",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Opens a URL in an in-app `SFSafariViewController`, presented from the top view controller so it works wherever the app currently is.",
+   "actions": [
+    "open"
+   ],
+   "api": "dsx.module.browser",
+   "install": "despia add Mandatory/Browser"
+  },
+  {
+   "command": "bugsnag",
+   "name": "Bugsnag",
+   "package": "Core/Telemetry/Modules/Bugsnag",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.telemetry.configure({ sink: \"bugsnag\", dsn: \"<project API key>\" })`.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.bugsnag",
+   "install": "despia add Core/Telemetry/Modules/Bugsnag"
+  },
+  {
+   "command": "calendar",
+   "name": "Calendar",
+   "package": "Core/Calendar",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Put an event in front of the user and let them save it. Only reach into the calendar store when the feature genuinely needs to, and only after asking.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "present",
+    "calendars",
+    "events",
+    "create",
+    "update",
+    "remove",
+    "reminders.list",
+    "reminders.permission.status",
+    "reminders.permission.request",
+    "reminders.permission.openSettings",
+    "reminders.permission.manage",
+    "reminders.create",
+    "reminders.update",
+    "reminders.remove"
+   ],
+   "api": "dsx.module.calendar",
+   "install": "despia add Core/Calendar"
+  },
+  {
+   "command": "call",
+   "name": "Call",
+   "package": "Core/Call",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Voice and video calls on the operating system call stack, with any provider.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "register",
+    "start",
+    "report",
+    "answer",
+    "decline",
+    "end",
+    "hold",
+    "mic",
+    "camera",
+    "speaker",
+    "audioRoute",
+    "flipCamera",
+    "dtmf",
+    "pip"
+   ],
+   "api": "dsx.module.call",
+   "install": "despia add Core/Call"
+  },
+  {
+   "command": "calldespia",
+   "name": "CallDespia",
+   "package": "Core/CallDespia",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The default call provider: WebRTC media, signalled through your own Despia Calls service.",
+   "actions": [],
+   "api": "dsx.module.calldespia",
+   "install": "despia add Core/CallDespia"
+  },
+  {
+   "command": "calllivekit",
+   "name": "CallLiveKit",
+   "package": "Core/CallLiveKit",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The LiveKit provider for the call core: rooms, published and subscribed audio and video, on the official LiveKit SDKs.",
+   "actions": [
+    "session"
+   ],
+   "api": "dsx.module.calllivekit",
+   "install": "despia add Core/CallLiveKit"
+  },
+  {
+   "command": "calltwilio",
+   "name": "CallTwilio",
+   "package": "Core/CallTwilio",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "The Twilio Voice provider for the call core, over Twilio's own Voice SDKs on iOS, Android and the web.",
+   "actions": [
+    "token",
+    "register",
+    "unregister"
+   ],
+   "api": "dsx.module.calltwilio",
+   "install": "despia add Core/CallTwilio"
+  },
+  {
+   "command": "camera",
+   "name": "Camera",
+   "package": "Core/Camera",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Headless burst capture. Takes N photos as fast as the hardware allows and hands back Core/Files paths. No preview, no shutter button, no picker.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "burst",
+    "clear",
+    "capabilities"
+   ],
+   "api": "dsx.module.camera",
+   "install": "despia add Core/Camera"
+  },
+  {
+   "command": "capture",
+   "name": "Capture",
+   "package": "Core/Capture",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Turn any element into an image. Share cards, receipt export, chart to image, watermarked previews, PDF export.",
+   "actions": [
+    "element",
+    "screen",
+    "pdf",
+    "record.start",
+    "record.stop",
+    "offscreen"
+   ],
+   "api": "dsx.module.capture",
+   "install": "despia add Core/Capture"
+  },
+  {
+   "command": "car",
+   "name": "Car",
+   "package": "Core/Extensions/Car",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "A **CarPlay + Android Auto surface** for DSX: push a DSX `<car>` document from the phone app and it renders on the vehicle's own dashboard, on both platforms, through nothing but each platform's own template system. Ships open (add `\"Car\"` to a per-app `excluded.json` to drop it); the CarPlay half additionally needs Apple's entitlement grant before it does anything on a real head unit (see *Reques",
+   "actions": [
+    "show",
+    "clear",
+    "status"
+   ],
+   "api": "dsx.module.car",
+   "install": "despia add Core/Extensions/Car"
+  },
+  {
+   "command": "cast",
+   "name": "Cast",
+   "package": "Core/Cast",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Cast media to a TV or speaker: the one owner of the `cast` capability.",
+   "actions": [
+    "routes",
+    "pick",
+    "connect",
+    "disconnect",
+    "load",
+    "play",
+    "pause",
+    "seek",
+    "stop"
+   ],
+   "api": "dsx.module.cast",
+   "install": "despia add Core/Cast"
+  },
+  {
+   "command": "cdn",
+   "name": "ContentServer",
+   "package": "Core/Legacy/Modules/ContentServer",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "> **Optional Legacy package (owner ruling 2026-10-01).** This is the local static HTTP server of > v3 apps. It is not Mandatory and nothing modern depends on it: an app ships it only when it lists > `Core/Legacy/Modules/ContentServer` (with `Core/Legacy`) in `dsx.config.json` `packages`, which > `despia init --from-v3` does for a v3 app that served from the local server. A build without it > carri",
+   "actions": [
+    "upload",
+    "url",
+    "list",
+    "remove",
+    "stats",
+    "localStorageSync",
+    "restoreCookies"
+   ],
+   "api": "dsx.module.cdn",
+   "install": "despia add Core/Legacy/Modules/ContentServer"
+  },
+  {
+   "command": "chat",
+   "name": "Chat",
+   "package": "Core/Chat",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Conversations and messages, headless first, over any chat provider.",
+   "actions": [
+    "open",
+    "send",
+    "sync",
+    "markRead",
+    "typing",
+    "conversations",
+    "close",
+    "edit",
+    "regenerate",
+    "stop",
+    "delete",
+    "react",
+    "draft",
+    "compose",
+    "mark",
+    "search",
+    "thread",
+    "report",
+    "reviews",
+    "decide"
+   ],
+   "api": "dsx.module.chat",
+   "install": "despia add Core/Chat"
+  },
+  {
+   "command": "chatdespia",
+   "name": "ChatDespia",
+   "package": "Core/ChatDespia",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The default chat provider: your own open Despia Chat service.",
+   "actions": [],
+   "api": "dsx.module.chatdespia",
+   "install": "despia add Core/ChatDespia"
+  },
+  {
+   "command": "chatmls",
+   "name": "ChatMLS",
+   "package": "Core/ChatMLS",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "End-to-end encryption for chat: MLS (RFC 9420) behind the chat core's crypto seam, one implementation on every lane.",
+   "actions": [],
+   "api": "dsx.module.chatmls",
+   "install": "despia add Core/ChatMLS"
+  },
+  {
+   "command": "chatsendbird",
+   "name": "ChatSendbird",
+   "package": "Core/ChatSendbird",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "A chat provider over Sendbird: the chat core's messages carried by your Sendbird application, through your relay.",
+   "actions": [],
+   "api": "dsx.module.chatsendbird",
+   "install": "despia add Core/ChatSendbird"
+  },
+  {
+   "command": "chatstream",
+   "name": "ChatStream",
+   "package": "Core/ChatStream",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "A chat provider over Stream Chat's official SDKs: the chat core's messages carried live by your Stream app.",
+   "actions": [],
+   "api": "dsx.module.chatstream",
+   "install": "despia add Core/ChatStream"
+  },
+  {
+   "command": "clerk",
+   "name": "Clerk",
+   "package": "Core/Clerk",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Native [Clerk](https://clerk.com) auth driven from JavaScript. Call `dsx.module.clerk.<command>` and the host's embedded Clerk iOS SDK does the work; the page never loads `clerk-js`.",
+   "actions": [
+    "configure",
+    "status",
+    "token",
+    "authview",
+    "userprofile",
+    "signout",
+    "attribution",
+    "ssr",
+    "manual",
+    "session",
+    "attach",
+    "detach",
+    "submit",
+    "close",
+    "organizations",
+    "setOrganization",
+    "invitations",
+    "createOrganization",
+    "leaveOrganization",
+    "sessions",
+    "task"
+   ],
+   "api": "dsx.module.clerk",
+   "install": "despia add Core/Clerk"
+  },
+  {
+   "command": "clipboard",
+   "name": "Clipboard",
+   "package": "Core/Clipboard",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Read from and write to the system clipboard.",
+   "actions": [
+    "read",
+    "inspect",
+    "write"
+   ],
+   "api": "dsx.module.clipboard",
+   "install": "despia add Core/Clipboard"
+  },
+  {
+   "command": "compose",
+   "name": "Compose",
+   "package": "Core/Compose",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Open the platform's own composer, prefilled. The user reads the message and taps send.",
+   "actions": [
+    "sms",
+    "mail",
+    "capabilities"
+   ],
+   "api": "dsx.module.compose",
+   "install": "despia add Core/Compose"
+  },
+  {
+   "command": "consent",
+   "name": "Consent",
+   "package": "Core/Consent",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "A tracking-consent **gate**, and the worked example of a cross-module delegate **intercept** (see `OpenSource/Documentation/architecture/delegates.md` §5).",
+   "actions": [
+    "grant",
+    "revoke",
+    "status"
+   ],
+   "api": "dsx.module.consent",
+   "install": "despia add Core/Consent"
+  },
+  {
+   "command": "console",
+   "name": "Console",
+   "package": "Core/Telemetry/Modules/Console",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.telemetry.configure({ sink: \"console\" })`. It needs no credential and makes no network requests.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.console",
+   "install": "despia add Core/Telemetry/Modules/Console"
+  },
+  {
+   "command": "contacts",
+   "name": "Contacts",
+   "package": "Core/Contacts",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Let the user hand you a contact. Only reach for the whole address book when the feature genuinely needs it, and only after asking.",
+   "actions": [
+    "pick",
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "list",
+    "get",
+    "add",
+    "update",
+    "remove",
+    "groups",
+    "read"
+   ],
+   "api": "dsx.module.contacts",
+   "install": "despia add Core/Contacts"
+  },
+  {
+   "command": "contentsafety",
+   "name": "ContentSafety",
+   "package": "Core/ContentSafety",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "An on-device image classifier that feeds content policy: labels such as nsfw reach a policy pack as signals.",
+   "actions": [],
+   "api": "dsx.module.contentsafety",
+   "install": "despia add Core/ContentSafety"
+  },
+  {
+   "command": "converse",
+   "name": "Converse",
+   "package": "Core/LocalAI/Modules/Converse",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "The realtime local voice loop: VAD → streaming STT → LLM → streaming TTS, with barge-in and mid-call tools. Entirely on device.",
+   "actions": [
+    "start",
+    "stop",
+    "say",
+    "interrupt"
+   ],
+   "api": "dsx.module.converse",
+   "install": "despia add Core/LocalAI/Modules/Converse"
+  },
+  {
+   "command": "crashlytics",
+   "name": "Crashlytics",
+   "package": "Core/Firebase/Modules/Crashlytics",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "Firebase Crashlytics as the app's crash reporter. **It replaces `Core/Telemetry`'s handler. It does not stack on it.** Pick one.",
+   "actions": [
+    "start",
+    "log",
+    "identify",
+    "key",
+    "record",
+    "pending",
+    "submit"
+   ],
+   "api": "dsx.module.crashlytics",
+   "install": "despia add Core/Firebase/Modules/Crashlytics"
+  },
+  {
+   "command": "crypto",
+   "name": "Crypto",
+   "package": "Core/Crypto",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Everything is the platform's implementation. CryptoKit on iOS, `java.security` plus the AndroidKeyStore on Android, WebCrypto in the browser. This module implements no cipher, no hash and no curve, and it never will.",
+   "actions": [
+    "digest",
+    "hmac",
+    "randomBytes",
+    "randomUUID",
+    "randomInt",
+    "secretKey",
+    "keypair",
+    "sign",
+    "verify",
+    "encrypt",
+    "decrypt"
+   ],
+   "api": "dsx.module.crypto",
+   "install": "despia add Core/Crypto"
+  },
+  {
+   "command": "customerio",
+   "name": "CustomerIO",
+   "package": "Core/Growth/Modules/CustomerIO",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.growth.configure({ destination: \"customerio\", token: \"<source write key>\" })`.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.customerio",
+   "install": "despia add Core/Growth/Modules/CustomerIO"
+  },
+  {
+   "command": "data",
+   "name": "Data",
+   "package": "Core/Server/Modules/Data",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [],
+   "description": "> **Status: declared only, no source of any kind.** This folder contains one > file, `dsx.json`. There is no Swift, no Kotlin, and no TypeScript residence. > `prepare_modules` reports `manifest scheme 'server.data' but no ': Module' > class`, so nothing answers this chain anywhere. There is no API to call, and > nothing below describes one.",
+   "actions": [],
+   "api": "dsx.module.data",
+   "install": "despia add Core/Server/Modules/Data"
+  },
+  {
+   "command": "datadog",
+   "name": "Datadog",
+   "package": "Core/Telemetry/Modules/Datadog",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Converts scrubbed Core/Telemetry events into Datadog-compatible Log Management records, then POSTs the record array to the app owner's HTTPS relay. The relay uses its server-side Datadog API key to forward the logs to Datadog `/api/v2/logs`. The app never receives a Datadog API key.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.datadog",
+   "install": "despia add Core/Telemetry/Modules/Datadog"
+  },
+  {
+   "command": "demo",
+   "name": "Demo",
+   "package": "Custom/Demo",
+   "tier": "Custom",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "phone",
+    "desktop"
+   ],
+   "description": "**Presentation status:** this legacy Demo is retired as the visual reference for new DSX apps. Use the current [component Catalog](../../../../../OpenSource/Catalog/README.md) and platform defaults. The Demo source, routes, and behavior tests remain wired into builds; their migration to modern specimens is pending. Do not treat retained screenshots as the desired look or remove behavioral assertio",
+   "actions": [
+    "open",
+    "diagnostics",
+    "qualificationcontext",
+    "copyqualification"
+   ],
+   "api": "dsx.module.demo",
+   "install": "despia add Custom/Demo"
+  },
+  {
+   "command": "dev",
+   "name": "DevSettings",
+   "package": "Core/DevSettings",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "Staging-environment switching inside the **same TestFlight binary**. On a test install (simulator / Xcode debug / TestFlight / ad-hoc), **shake the phone** (simulator: ⌃⌘Z) to open the developer panel (named presets, free-text entry, or a scanned QR) and back to production. The choice persists across relaunches and drives the kernel's dev-origin seam, so the launch URL, deep-link mapping, content ",
+   "actions": [
+    "open",
+    "info",
+    "set",
+    "reset"
+   ],
+   "api": "dsx.module.dev",
+   "install": "despia add Core/DevSettings"
+  },
+  {
+   "command": "device",
+   "name": "Device",
+   "package": "Core/Device",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Everything about the thing the app is running on: hardware, the app's own identity, screen geometry with real safe-area numbers, locale and region, battery and thermal state, and a capability matrix.",
+   "actions": [
+    "info",
+    "app",
+    "screen",
+    "locale",
+    "power",
+    "capabilities"
+   ],
+   "api": "dsx.module.device",
+   "install": "despia add Core/Device"
+  },
+  {
+   "command": "deviceusage",
+   "name": "DeviceUsage",
+   "package": "Core/DeviceUsage",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Block other apps and websites for a time, on a schedule or past a daily limit, with one API on iOS (Screen Time) and Android (Digital Wellbeing style).",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "pick",
+    "block",
+    "schedule",
+    "limit",
+    "unblock",
+    "forget",
+    "usage"
+   ],
+   "api": "dsx.module.deviceusage",
+   "install": "despia add Core/DeviceUsage"
+  },
+  {
+   "command": "dom",
+   "name": "Dom",
+   "package": "Core/Dom",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The control surface for the web view: load, reload, recover, back, forward, eval.",
+   "actions": [
+    "load",
+    "home",
+    "reload",
+    "recover",
+    "back",
+    "forward",
+    "stop",
+    "eval",
+    "call",
+    "set",
+    "css",
+    "proxy",
+    "inject",
+    "serveScheme",
+    "clearWebData",
+    "saveCookies",
+    "restoreCookies"
+   ],
+   "api": "dsx.module.dom",
+   "install": "despia add Core/Dom"
+  },
+  {
+   "command": "downloads",
+   "name": "Downloads",
+   "package": "Core/Downloads",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "A **broadcast-only observer** that surfaces the content stack's file-download lifecycle on the modern event plane. The local content engine (`FileDownloadManager`, inside the `cdn` module) already posts download events on a `NotificationCenter` channel for any plugin to observe; this module subscribes to that channel and **re-emits** each event as a `downloads` broadcast, so web and native code ca",
+   "actions": [
+    "list"
+   ],
+   "api": "dsx.module.downloads",
+   "install": "despia add Core/Downloads"
+  },
+  {
+   "command": "ecosystem",
+   "name": "Ecosystem",
+   "package": "Core/Basics/Ecosystem",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "The ecosystem scope: a variable remembered across the person's own devices with no sign-in.",
+   "actions": [],
+   "api": "dsx.module.ecosystem",
+   "install": "despia add Core/Basics/Ecosystem"
+  },
+  {
+   "command": "face",
+   "name": "WatchFace",
+   "package": "Core/Extensions/Watch/Modules/Face",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Pushes one glanceable text/value pair to the watchOS complication and Wear OS tile through the parent Watch transport.",
+   "actions": [
+    "set",
+    "clear"
+   ],
+   "api": "dsx.module.face",
+   "install": "despia add Core/Extensions/Watch/Modules/Face"
+  },
+  {
+   "command": "files",
+   "name": "Files",
+   "package": "Core/Files",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Write bytes to a file and get a path back. List a directory. Download something large that survives the app being backgrounded. Hash or zip what you wrote. Without ever touching an absolute path or knowing what a sandbox container is.",
+   "actions": [
+    "info",
+    "read",
+    "write",
+    "delete",
+    "move",
+    "copy",
+    "mkdir",
+    "list",
+    "download",
+    "upload",
+    "free",
+    "hash",
+    "zip",
+    "unzip",
+    "exclude",
+    "url",
+    "revokeUrl",
+    "watch",
+    "unwatch"
+   ],
+   "api": "dsx.module.files",
+   "install": "despia add Core/Files"
+  },
+  {
+   "command": "filesharing",
+   "name": "FileSharing",
+   "package": "Core/FileSharing",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Remote downloads are HTTPS-only and stream into a random cache reservation. Native transfer stops at 64 MB; server/URL filenames are parsed as RFC 5987 metadata and must pass a strict single-basename policy before they can reach disk. Existing files are never overwritten.",
+   "actions": [
+    "share"
+   ],
+   "api": "dsx.module.filesharing",
+   "install": "despia add Core/FileSharing"
+  },
+  {
+   "command": "fileupload",
+   "name": "FileUpload",
+   "package": "Mandatory/FileUpload",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "Makes `<input type=file>` work in the web surface. When the user taps a file input, this module shows the native source sheet (camera, photo library, document picker, document scanner) and hands the chosen files back to the page as a normal file selection. There is nothing to call and nothing to wire up: write ordinary HTML and uploads just work.",
+   "actions": [
+    "nativeOverwrite",
+    "captureInfo"
+   ],
+   "api": "dsx.module.fileupload",
+   "install": "despia add Mandatory/FileUpload"
+  },
+  {
+   "command": "fileviewer",
+   "name": "FileViewer",
+   "package": "Core/FileViewer",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Remote sources are HTTPS-only, limited to eight files per request, and stream to random cache reservations with a 64 MB per-file ceiling. Response names are RFC 5987-decoded only after passing a strict single-basename policy; traversal, hidden/control names, and overwrites are rejected.",
+   "actions": [
+    "preview",
+    "thumbnail"
+   ],
+   "api": "dsx.module.fileviewer",
+   "install": "despia add Core/FileViewer"
+  },
+  {
+   "command": "firebase",
+   "name": "Firebase",
+   "package": "Core/Firebase",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The module owns the app's **Firebase identity** and the messaging bridges on both platforms. On iOS it resolves the `FirebaseCore` + `FirebaseMessaging` SPM products and **owns `GoogleService-Info.plist`**: the file FirebaseCore reads from the bundle root at launch. On Android it initializes from the module's `android_*` config keys and registers with Firebase Messaging using a Firebase Installati",
+   "actions": [
+    "app",
+    "register",
+    "id"
+   ],
+   "api": "dsx.module.firebase",
+   "install": "despia add Core/Firebase"
+  },
+  {
+   "command": "firebaseperformance",
+   "name": "FirebasePerformance",
+   "package": "Core/Telemetry/Modules/FirebasePerformance",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Firebase Performance Monitoring as a telemetry trace provider: custom traces and the runtime's own request timings, with automatic network instrumentation off.",
+   "actions": [
+    "collect",
+    "trace_start",
+    "trace_stop",
+    "request_start",
+    "request_stop"
+   ],
+   "api": "dsx.module.firebaseperformance",
+   "install": "despia add Core/Telemetry/Modules/FirebasePerformance"
+  },
+  {
+   "command": "firestore",
+   "name": "Firestore",
+   "package": "Core/Server/Providers/Firestore",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [],
+   "description": "Cloud Firestore reads, writes and live queries.",
+   "actions": [],
+   "api": "dsx.module.firestore",
+   "install": "despia add Core/Server/Providers/Firestore"
+  },
+  {
+   "command": "flashlight",
+   "name": "Flashlight",
+   "package": "Core/Basics/Flashlight",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Turns the device torch on/off from web.",
+   "actions": [
+    "set"
+   ],
+   "api": "dsx.module.flashlight",
+   "install": "despia add Core/Basics/Flashlight"
+  },
+  {
+   "command": "focus",
+   "name": "Focus",
+   "package": "Core/Basics/Focus",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Tells you when the app moves between the foreground and the background. There's nothing to call; you read a live value or listen for the transitions.",
+   "actions": [],
+   "api": "dsx.module.focus",
+   "install": "despia add Core/Basics/Focus"
+  },
+  {
+   "command": "font",
+   "name": "Fonts",
+   "package": "Core/Fonts",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "`scheme: font`",
+   "actions": [
+    "families",
+    "load",
+    "metrics"
+   ],
+   "api": "dsx.module.font",
+   "install": "despia add Core/Fonts"
+  },
+  {
+   "command": "gallery",
+   "name": "CameraRoll",
+   "package": "Core/CameraRoll",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Saves images into the device Photos library: remote images by http(s) URL, and local files by Core/Files path. Both are streamed from disk (a URL is downloaded to a temp file first) and added with their original bytes. Ships its own `NSPhotoLibraryAddUsageDescription`.",
+   "actions": [
+    "save"
+   ],
+   "api": "dsx.module.gallery",
+   "install": "despia add Core/CameraRoll"
+  },
+  {
+   "command": "geo",
+   "name": "Geo",
+   "package": "Core/Geo",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Delivery tracking, fitness recording, \"notify me when I arrive\" and store-proximity offers. `Core/Basics/Location` keeps its `simple` one-shot and is **not replaced**: a two-line \"where am I\" should not pull in region monitoring and background wakes.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "watch",
+    "stop",
+    "last",
+    "geofence.add",
+    "geofence.remove",
+    "geofence.list",
+    "heading.watch",
+    "heading.stop",
+    "visits.watch",
+    "visits.stop",
+    "geocode",
+    "reverseGeocode",
+    "places",
+    "significant.start",
+    "significant.stop",
+    "current",
+    "distance",
+    "bearing"
+   ],
+   "api": "dsx.module.geo",
+   "install": "despia add Core/Geo"
+  },
+  {
+   "command": "global",
+   "name": "State",
+   "package": "Mandatory/State",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "The store behind `dsx.global`. Native routes, modules, components and the web view all sit on one reactive store (`DSXState`, the `global.*` namespace); this module is the bridge that lets the web layer read, write and *react to* it. A native change (auth, entitlements, credits, theme, route) reaches the page with no reload. The scheme is `global`: matching the store it fronts (`state` is a reserv",
+   "actions": [
+    "get",
+    "set",
+    "watch",
+    "apply"
+   ],
+   "api": "dsx.module.global",
+   "install": "despia add Mandatory/State"
+  },
+  {
+   "command": "google",
+   "name": "Google",
+   "package": "Core/Auth/Google",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Sign in with Google as a credential source of the auth owner: Google Identity Services on the web, the Google Sign-In SDK on iOS, Credential Manager on Android.",
+   "actions": [],
+   "api": "dsx.module.google",
+   "install": "despia add Core/Auth/Google"
+  },
+  {
+   "command": "googleadsconversions",
+   "name": "GoogleAdsConversions",
+   "package": "Core/Growth/Modules/GoogleAdsConversions",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [],
+   "description": "The Google Ads click-conversions row of Despia Growth's ad-network forwarding: server side, OAuth and developer token kept on the server, consent gated, each forward recorded.",
+   "actions": [
+    "forward"
+   ],
+   "api": "dsx.module.googleadsconversions",
+   "install": "despia add Core/Growth/Modules/GoogleAdsConversions"
+  },
+  {
+   "command": "googlecast",
+   "name": "GoogleCast",
+   "package": "Core/GoogleCast",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Google Cast: find Cast receivers, start a session, and play and control media on the TV.",
+   "actions": [
+    "devices",
+    "connect",
+    "disconnect",
+    "load",
+    "play",
+    "pause",
+    "seek",
+    "stop"
+   ],
+   "api": "dsx.module.googlecast",
+   "install": "despia add Core/GoogleCast"
+  },
+  {
+   "command": "growth",
+   "name": "Growth",
+   "package": "Core/Growth",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Despia Growth (D35), the client half: one event model for product analytics, with destinations as facet rows.",
+   "actions": [
+    "configure",
+    "track",
+    "attribute",
+    "conversion",
+    "identify",
+    "reset",
+    "flush"
+   ],
+   "api": "dsx.module.growth",
+   "install": "despia add Core/Growth"
+  },
+  {
+   "command": "gyroscope",
+   "name": "Gyroscope",
+   "package": "Core/Basics/Gyroscope",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Streams the device's rotation rate (CoreMotion) and magnetic heading (Core Location, no permission) to the web. Start it, get a sample on every frame, stop it when you're done.",
+   "actions": [
+    "start",
+    "stop"
+   ],
+   "api": "dsx.module.gyroscope",
+   "install": "despia add Core/Basics/Gyroscope"
+  },
+  {
+   "command": "handoff",
+   "name": "Handoff",
+   "package": "Core/Handoff",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "macos"
+   ],
+   "description": "Start on the iPhone, continue on the Mac.",
+   "actions": [
+    "advertise",
+    "stop",
+    "current"
+   ],
+   "api": "dsx.module.handoff",
+   "install": "despia add Core/Handoff"
+  },
+  {
+   "command": "haptic",
+   "name": "Haptics",
+   "package": "Core/Basics/Haptics",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Plays a short vibration on the Taptic Engine. It's fire-and-forget, with nothing to subscribe to.",
+   "actions": [
+    "light",
+    "medium",
+    "heavy",
+    "success",
+    "warning",
+    "error",
+    "pattern"
+   ],
+   "api": "dsx.module.haptic",
+   "install": "despia add Core/Basics/Haptics"
+  },
+  {
+   "command": "health",
+   "name": "WatchHealth",
+   "package": "Core/Extensions/Watch/Modules/Health",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Runs health operations on the paired watch. The legacy `watchhealth` alias is kept for shipped apps; new code uses the derived `watch.health` chain.",
+   "actions": [
+    "heartRate",
+    "workout",
+    "steps",
+    "read"
+   ],
+   "api": "dsx.module.health",
+   "install": "despia add Core/Extensions/Watch/Modules/Health"
+  },
+  {
+   "command": "healthkit",
+   "name": "HealthKit",
+   "package": "Core/HealthKit",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Reads and writes Apple Health / Health Connect data, fetches workouts, reports availability + authorization state, and observes types for background webhook delivery. Designed to ship only when a build needs it: add or remove `\"healthkit\"` in `DSX/Modules/Config/excluded.json` to toggle it (shipping it also wires the HealthKit entitlement, the Health usage strings, and the Android `android.permiss",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "read",
+    "write",
+    "status",
+    "workouts",
+    "observe",
+    "unobserve"
+   ],
+   "api": "dsx.module.healthkit",
+   "install": "despia add Core/HealthKit"
+  },
+  {
+   "command": "http",
+   "name": "Http",
+   "package": "Core/Server/Modules/Http",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [],
+   "description": "> **Status: no native implementation.** This module ships no Swift and no > Kotlin. `prepare_modules` reports `manifest scheme 'server.http' but no > ': Module' class`, so nothing answers this chain on iOS or Android. Its two > actions are server-resident TypeScript, not native code. Do not expect a > native call to reach them.",
+   "actions": [
+    "health",
+    "receiveWebhook",
+    "subscribe",
+    "listWebhookDeadLetters",
+    "replayWebhookDeadLetters",
+    "notes.summary",
+    "drainWebhooks"
+   ],
+   "api": "dsx.module.http",
+   "install": "despia add Core/Server/Modules/Http"
+  },
+  {
+   "command": "iap",
+   "name": "LegacyIAP",
+   "package": "Core/Legacy/Modules/IAP",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "The v1/v2 in app purchase verbs for old WebView pages (the legacy-legacy purchase path; v3 bought through RevenueCat), answered by Core/Store: successUrl and expiredUrl loads, the v3 purchase globals, the App Store receipt and the ad removal flag.",
+   "actions": [
+    "purchase",
+    "subscribe",
+    "restore",
+    "last"
+   ],
+   "api": "dsx.module.iap",
+   "install": "despia add Core/Legacy/Modules/IAP"
+  },
+  {
+   "command": "identityvault",
+   "name": "IdentityVault",
+   "package": "Core/IdentityVault",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "A Keychain backed key value vault with an optional biometric gate on read.",
+   "actions": [
+    "write",
+    "read",
+    "durability"
+   ],
+   "api": "dsx.module.identityvault",
+   "install": "despia add Core/IdentityVault"
+  },
+  {
+   "command": "imagewidget",
+   "name": "LegacyWidgets",
+   "package": "Core/Legacy/Modules/ImageWidget",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "The v3 image widget for projects that started on v3: the old page's widget spelling kept working 1:1 as a modern DSX widget.",
+   "actions": [
+    "receive",
+    "set"
+   ],
+   "api": "dsx.module.imagewidget",
+   "install": "despia add Core/Legacy/Modules/ImageWidget"
+  },
+  {
+   "command": "imessage",
+   "name": "IMessage",
+   "package": "Core/Extensions/IMessage",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios"
+   ],
+   "description": "An **iMessage-app surface** for DSX: a Messages extension (the app-drawer apps inside iMessage) that renders DSX screens natively, boots into a **bundled** start screen offline-first, navigates between screens **in the extension**, updates its screens **over-the-air**, can be re-skinned at runtime from your app, and puts the whole Messages conversation catalog: rich message bubbles, updatable sess",
+   "actions": [
+    "render",
+    "route",
+    "update",
+    "compose",
+    "status",
+    "clear",
+    "insert",
+    "insertText",
+    "insertSticker",
+    "insertAttachment",
+    "presentation",
+    "conversation",
+    "openParent",
+    "dismiss"
+   ],
+   "api": "dsx.module.imessage",
+   "install": "despia add Core/Extensions/IMessage"
+  },
+  {
+   "command": "import",
+   "name": "Import",
+   "package": "Core/Server/Modules/Import",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [],
+   "description": "`dsx.module.import` registers the **`packages`** declaration namespace. It is the answer to a question the architecture otherwise has no answer for: a declared `<action>` body cannot write an `import` statement, on purpose, that absence is what makes the grammar safe to accept from a tenant, and yet real backend work needs a real library.",
+   "actions": [],
+   "api": "dsx.module.import",
+   "install": "despia add Core/Server/Modules/Import"
+  },
+  {
+   "command": "integrity",
+   "name": "Integrity",
+   "package": "Core/Integrity",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Server verifiable attestation: App Attest on Apple, Play Integrity on Android.",
+   "actions": [
+    "supported",
+    "attest",
+    "assert",
+    "claim",
+    "status"
+   ],
+   "api": "dsx.module.integrity",
+   "install": "despia add Core/Integrity"
+  },
+  {
+   "command": "intelligence",
+   "name": "LocalAI",
+   "package": "Core/LocalAI",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "> **STATUS: NOT YET SHIPPED: licence-unblocked, and the catalog now names files the engine > actually loads.** The engine underneath is **Despia AI** (`OpenSource/AI`: Apache-2.0, over > MIT-licensed vendored llama.cpp / whisper.cpp / ggml), so the module carries no restricted > dependency, `check_dependency_licenses.rb --public-release` passes with it **enabled**, and > it is in `qa-expanded`. It",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "completion",
+    "cancel",
+    "models",
+    "models.add",
+    "models.added",
+    "models.best",
+    "download",
+    "remove",
+    "transcribe",
+    "device",
+    "detectLanguage",
+    "vad",
+    "diarize",
+    "speakerEmbed",
+    "embed",
+    "tokenize",
+    "score",
+    "prefill",
+    "listen",
+    "stopListening",
+    "index.add",
+    "index.query",
+    "index.get",
+    "index.delete",
+    "index.compact"
+   ],
+   "api": "dsx.module.intelligence",
+   "install": "despia add Core/LocalAI"
+  },
+  {
+   "command": "intents",
+   "name": "Intents",
+   "package": "Core/Intents",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "// the app's own settings page, which has no URL scheme at all await dsx.module.intents.launch({ action: \"android.settings.APPLICATION_DETAILS_SETTINGS\", data: \"package:com.example.app\", flags: [\"newTask\"], });",
+   "actions": [
+    "launch",
+    "query",
+    "canHandle"
+   ],
+   "api": "dsx.module.intents",
+   "install": "despia add Core/Intents"
+  },
+  {
+   "command": "intercom",
+   "name": "Intercom",
+   "package": "Core/Intercom",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Intercom's Messenger: identify the person, keep their attributes current, open the Messenger on a space, and read the unread count.",
+   "actions": [
+    "login",
+    "loginAnonymous",
+    "logout",
+    "update",
+    "present",
+    "hide"
+   ],
+   "api": "dsx.module.intercom",
+   "install": "despia add Core/Intercom"
+  },
+  {
+   "command": "keepawake",
+   "name": "KeepAwake",
+   "package": "Core/KeepAwake",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Holds the display awake while something on screen needs to stay readable: a barcode being scanned by another device's camera, a recipe, a video player, a turn-by-turn view. Reference-counted by tag, so two screens cannot fight over it.",
+   "actions": [
+    "activate",
+    "deactivate",
+    "status",
+    "preventSleep"
+   ],
+   "api": "dsx.module.keepawake",
+   "install": "despia add Core/KeepAwake"
+  },
+  {
+   "command": "keyboard",
+   "name": "Keyboard",
+   "package": "Core/Extensions/Keyboard",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "A **custom-keyboard surface** for DSX: a system-wide iOS keyboard (usable in every app on the device) that renders a DSX-authored key layout natively, boots into a **bundled** layout offline-first, and can be re-skinned **at runtime** from your web app. Off by default: remove `\"Keyboard\"` from a per-app `excluded.json` to ship it.",
+   "actions": [
+    "layout",
+    "update",
+    "status",
+    "clear",
+    "openSettings"
+   ],
+   "api": "dsx.module.keyboard",
+   "install": "despia add Core/Extensions/Keyboard"
+  },
+  {
+   "command": "kiosk",
+   "name": "Kiosk",
+   "package": "Core/Extensions/Kiosk",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "android"
+   ],
+   "description": "An **Android device-owner kiosk surface**: lock a device to this app (and any packages you name) with the OS's own device-owner / lock-task machinery, so a user cannot leave the app, reach the launcher, pull down the notification shade, or reboot into another account. Off by default: remove `\"Kiosk\"` from a per-app `excluded.json` to ship it.",
+   "actions": [
+    "status",
+    "enter",
+    "exit",
+    "allowlist",
+    "policy",
+    "bootLaunch"
+   ],
+   "api": "dsx.module.kiosk",
+   "install": "despia add Core/Extensions/Kiosk"
+  },
+  {
+   "command": "legacy",
+   "name": "Legacy",
+   "package": "Core/Legacy",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "The OPTIONAL v3 page API polyfill: old window.despia calls answered through modern dsx.module calls.",
+   "actions": [
+    "map",
+    "receive",
+    "inline",
+    "cameraBurst",
+    "takeScreenshot",
+    "webReset",
+    "visionOcr"
+   ],
+   "api": "dsx.module.legacy",
+   "install": "despia add Core/Legacy"
+  },
+  {
+   "command": "licensecheck",
+   "name": "LicenseCheck",
+   "package": "Mandatory/LicenseCheck",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The licence client: the evaluation bar, the sheet and the kill switch.",
+   "actions": [
+    "status"
+   ],
+   "api": "dsx.module.licensecheck",
+   "install": "despia add Mandatory/LicenseCheck"
+  },
+  {
+   "command": "light",
+   "name": "LightSensor",
+   "package": "Core/LightSensor",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "android",
+    "web"
+   ],
+   "description": "await dsx.module.light.start({ interval: 1000 }); dsx.on(\"light\", (e) => { /* { lux, category } */ });",
+   "actions": [
+    "start",
+    "stop",
+    "read"
+   ],
+   "api": "dsx.module.light",
+   "install": "despia add Core/LightSensor"
+  },
+  {
+   "command": "liveactivity",
+   "name": "ActivityKit",
+   "package": "Core/Extensions/ActivityKit",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "One live activity owner for iOS ActivityKit and Android ongoing notifications. Drive it with progress, a status line and your own `vars`. iOS renders a DSX activity document on the Lock Screen and Dynamic Island. On Android an activity can also feed one of the app's own `<widget>` documents: `widget: '<Name>'`. Notify owns notification permissions and delivery; Widgets owns the home widget.",
+   "actions": [
+    "layout",
+    "start",
+    "update",
+    "end",
+    "status"
+   ],
+   "api": "dsx.module.liveactivity",
+   "install": "despia add Core/Extensions/ActivityKit"
+  },
+  {
+   "command": "liveactivitypush",
+   "name": "OneSignalLiveActivity",
+   "package": "Core/OneSignalLiveActivity",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios"
+   ],
+   "description": "Gives Live Activities a backend update channel through OneSignal. This module has no web API of its own, it's pure native glue. The frontend still creates and drives activities with the ActivityKit module (`dsx.module.liveactivity.*`); this module only lets your server push ContentState updates to a running activity's lock-screen UI.",
+   "actions": [],
+   "api": "dsx.module.liveactivitypush",
+   "install": "despia add Core/OneSignalLiveActivity"
+  },
+  {
+   "command": "livepreview",
+   "name": "LivePreview",
+   "package": "Core/LivePreview",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "web"
+   ],
+   "description": "A live, sandboxed DSX component inside a document: rendered by the device's own renderer, fitted into the column, zoomable in a detail view, and never holding the host app's authority.",
+   "actions": [
+    "resolve"
+   ],
+   "api": "dsx.module.livepreview",
+   "install": "despia add Core/LivePreview"
+  },
+  {
+   "command": "localpush",
+   "name": "LocalPush",
+   "package": "Core/LocalPush",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Local push notifications fired from the web layer. They keep running after force-quit and reboot, and they re-anchor to local wall-clock time when the user travels (a 9am cron stays at 9am local on the other side of the world).",
+   "actions": [
+    "send",
+    "cronjob",
+    "skip",
+    "unschedule",
+    "schedule",
+    "cronjobs"
+   ],
+   "api": "dsx.module.localpush",
+   "install": "despia add Core/LocalPush"
+  },
+  {
+   "command": "location",
+   "name": "Location",
+   "package": "Core/Basics/Location",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Background GPS tracking via `dsx.module.location({ ... })`. Buffers fixes, optionally POSTs each one to a server, publishes `tracking` and `session` on its context and broadcasts each kept fix as `change`. It also gives the page the standard `navigator.geolocation` API on the native location stack.",
+   "actions": [
+    "current",
+    "start",
+    "background.on",
+    "background.off",
+    "stop"
+   ],
+   "api": "dsx.module.location",
+   "install": "despia add Core/Basics/Location"
+  },
+  {
+   "command": "logrocket",
+   "name": "LogRocket",
+   "package": "Core/Telemetry/Modules/LogRocket",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "LogRocket as a Core/Telemetry sink: errors and log lines through LogRocket's SDK, explicit identify, and session replay off by default (only with a project declaration and the end user's consent through Core/Consent).",
+   "actions": [
+    "send",
+    "identify",
+    "replay"
+   ],
+   "api": "dsx.module.logrocket",
+   "install": "despia add Core/Telemetry/Modules/LogRocket"
+  },
+  {
+   "command": "lottie",
+   "name": "Lottie",
+   "package": "Core/Lottie",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Vector motion (onboarding, empty states, success moments) rendered by [airbnb/lottie](https://github.com/airbnb/lottie-spm). A **component-only module**: no actions, no scheme traffic. It exists to carry the Lottie dependency and register the global element: on every platform: lottie-spm on iOS, lottie-compose on Android, and the vendored [lottie-web](https://github.com/airbnb/lottie-web) light pl",
+   "actions": [],
+   "api": "dsx.module.lottie",
+   "install": "despia add Core/Lottie"
+  },
+  {
+   "command": "map",
+   "name": "Maps",
+   "package": "Core/Maps",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "A production, **cross-platform** map element wrapping **MapKit**'s SwiftUI `Map` (iOS 17+). The `<map>` tag is a lowercase system element (like `<video>`); on iOS it renders through MapKit, and an Android renderer maps the *same* tag/attributes/events onto Google Maps Compose: the wire is the markup, not the platform.",
+   "actions": [
+    "search",
+    "directions",
+    "reverse",
+    "snapshot",
+    "camera"
+   ],
+   "api": "dsx.module.map",
+   "install": "despia add Core/Maps"
+  },
+  {
+   "command": "mapbox",
+   "name": "Mapbox",
+   "package": "Core/Maps/Modules/Mapbox",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "A renderer row for `<map>`, the commercial twin of Core/Maps/Modules/MapLibre. With this package installed and Core/Maps configured with `renderer: \"mapbox\"` and the app's PUBLIC Mapbox token in `renderer_token`, the same `<map>` element draws through the Mapbox Maps SDK v11 instead of the system map (MapKit on iOS, Google Maps on Android). With no token the law falls back to the system map and na",
+   "actions": [],
+   "api": "dsx.module.mapbox",
+   "install": "despia add Core/Maps/Modules/Mapbox"
+  },
+  {
+   "command": "maplibre",
+   "name": "MapLibre",
+   "package": "Core/Maps/Modules/MapLibre",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "A renderer row for `<map>`. With this package installed and Core/Maps configured with `renderer: \"maplibre\"`, the same `<map>` element draws through MapLibre Native instead of the system map (MapKit on iOS, Google Maps on Android). No key and no vendor account: the default style is MapLibre's public demo tiles, and `styleUrl` points it at any MapLibre style JSON the app owns (self-hosted, Protomap",
+   "actions": [],
+   "api": "dsx.module.maplibre",
+   "install": "despia add Core/Maps/Modules/MapLibre"
+  },
+  {
+   "command": "math",
+   "name": "Math",
+   "package": "Core/Math",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "The typesetter for math in markdown. The markdown lowering turns a ```` ```math ```` or `$$` fence into the `math` element and flags text holding `$...$` runs (extended-markdown.md section 2.3). Every app draws those, and without this package a native app shows the TeX source as code, which is also what the web shows for TeX outside its MathML subset. With this package installed, iOS typesets them",
+   "actions": [],
+   "api": "dsx.module.math",
+   "install": "despia add Core/Math"
+  },
+  {
+   "command": "mcp",
+   "name": "MCP",
+   "package": "Core/MCP",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "The app can be an MCP server: an agent: the in-app one, the app's own web surface, or (on desktop, with consent) an external agent host: calls tools this app **declared**, over loopback, with a per-session token.",
+   "actions": [
+    "server.tools",
+    "server.status",
+    "server.start",
+    "server.stop",
+    "server.consent"
+   ],
+   "api": "dsx.module.mcp",
+   "install": "despia add Core/MCP"
+  },
+  {
+   "command": "media",
+   "name": "Media",
+   "package": "Core/Media",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Pick a photo, crop it, thumbnail a video, save the result. Scheme `media`.",
+   "actions": [
+    "upload",
+    "url",
+    "pick",
+    "pickDocument",
+    "save",
+    "albums",
+    "assets",
+    "preheat",
+    "load",
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "cache.stats",
+    "cache.clear",
+    "manipulate",
+    "thumbnail",
+    "metadata",
+    "transcode"
+   ],
+   "api": "dsx.module.media",
+   "install": "despia add Core/Media"
+  },
+  {
+   "command": "menubar",
+   "name": "MenuBar",
+   "package": "Mandatory/MenuBar",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "Programmatic navigation chrome: a **bottom menu bar** and a **slide-over sidebar**, driven entirely from the web through `dsx.module.menubar`, rendered as DSX (`<MenuBar/>` / `<Sidebar/>`). No hardcoded sources: items are JSON payloads, navigation comes back as events.",
+   "actions": [
+    "show",
+    "hide",
+    "sidebar",
+    "open",
+    "close"
+   ],
+   "api": "dsx.module.menubar",
+   "install": "despia add Mandatory/MenuBar"
+  },
+  {
+   "command": "meta",
+   "name": "Meta",
+   "package": "Core/Auth/Meta",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Sign in with Facebook (Meta Limited Login) as a credential source of the auth owner: an OIDC ID token bound to the owner's nonce on iOS.",
+   "actions": [],
+   "api": "dsx.module.meta",
+   "install": "despia add Core/Auth/Meta"
+  },
+  {
+   "command": "metaads",
+   "name": "MetaAudienceNetwork",
+   "package": "Core/MetaAudienceNetwork",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Meta Audience Network bidding for the ad mediation stack.",
+   "actions": [
+    "bidder_token",
+    "interstitial"
+   ],
+   "api": "dsx.module.metaads",
+   "install": "despia add Core/MetaAudienceNetwork"
+  },
+  {
+   "command": "metaconversions",
+   "name": "MetaConversions",
+   "package": "Core/Growth/Modules/MetaConversions",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [],
+   "description": "The Meta Conversions API row of Despia Growth's ad-network forwarding: server side, consent gated, each forward recorded.",
+   "actions": [
+    "forward"
+   ],
+   "api": "dsx.module.metaconversions",
+   "install": "despia add Core/Growth/Modules/MetaConversions"
+  },
+  {
+   "command": "metadata",
+   "name": "Metadata",
+   "package": "Core/Metadata",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Native app/device metadata the web can query; each injects a JS global and resolves.",
+   "actions": [
+    "version",
+    "storelocation",
+    "pushpermission"
+   ],
+   "api": "dsx.module.metadata",
+   "install": "despia add Core/Metadata"
+  },
+  {
+   "command": "mixpanel",
+   "name": "Mixpanel",
+   "package": "Core/Growth/Modules/Mixpanel",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.growth.configure({ destination: \"mixpanel\", token: \"<project token>\" })`.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.mixpanel",
+   "install": "despia add Core/Growth/Modules/Mixpanel"
+  },
+  {
+   "command": "motion",
+   "name": "Motion",
+   "package": "Core/Basics/Motion",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "The device's inertial sensors, on one scheme. Four independent channels: a configurable IMU stream, a barometer, activity recognition and a step counter: each on its own action, so a page pays only for what it opens.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "start",
+    "stop",
+    "capabilities",
+    "barometer",
+    "activity",
+    "pedometer"
+   ],
+   "api": "dsx.module.motion",
+   "install": "despia add Core/Basics/Motion"
+  },
+  {
+   "command": "mux",
+   "name": "Mux",
+   "package": "Core/Telemetry/Modules/Mux",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Mux Data video analytics fed by <video on:qoe>: startup, rebuffers, renditions, pauses and watch progress, counted once by the G5 fold and sent through Mux's custom-integration cores.",
+   "actions": [
+    "qoe"
+   ],
+   "api": "dsx.module.mux",
+   "install": "despia add Core/Telemetry/Modules/Mux"
+  },
+  {
+   "command": "nativevideo",
+   "name": "NativeVideo",
+   "package": "Core/NativeVideo",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Plays a video URL in a native `AVPlayerViewController` laid over the web content, with automatic Picture-in-Picture and a close button. This is the fullscreen overlay player, not the inline `<video>` component. It resolves once the player is actually on screen, so an unusable URL or a missing presenter reaches you as a failure rather than as a success over an empty screen.",
+   "actions": [
+    "play",
+    "close"
+   ],
+   "api": "dsx.module.nativevideo",
+   "install": "despia add Core/NativeVideo"
+  },
+  {
+   "command": "nearby",
+   "name": "Nearby",
+   "package": "Core/Nearby",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Peer-to-peer between devices running your app: advertise, discover, connect, exchange bytes. Google Nearby Connections on Android, MultipeerConnectivity on iOS, one API.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "start",
+    "connect",
+    "disconnect",
+    "send",
+    "stop",
+    "capabilities"
+   ],
+   "api": "dsx.module.nearby",
+   "install": "despia add Core/Nearby"
+  },
+  {
+   "command": "net",
+   "name": "Net",
+   "package": "Core/Net",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "What kind of connection this device has, whether it is metered, and whether the app can actually reach anything. Reactive, not polled.",
+   "actions": [
+    "status",
+    "carrier",
+    "probe",
+    "watch",
+    "unwatch"
+   ],
+   "api": "dsx.module.net",
+   "install": "despia add Core/Net"
+  },
+  {
+   "command": "nfc",
+   "name": "NFC",
+   "package": "Core/NFC",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Read NDEF tags and write a Well-Known Text record over `dsx.module.nfc`. Wraps the [`NFCReaderWriter`](https://github.com/janlionly/NFCReaderWriter) pod. A page calls `await window.dsx.module.nfc.read({ ... })` and `await window.dsx.module.nfc.write({ text })`. The v3 `readnfc://` and `writenfc://?value=` spellings are rows of the optional Core/Legacy package.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "read",
+    "write"
+   ],
+   "api": "dsx.module.nfc",
+   "install": "despia add Core/NFC"
+  },
+  {
+   "command": "notify",
+   "name": "Notify",
+   "package": "Core/Notify",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "First-party notifications: the permission ladder, the device token, Android channels, actionable categories, badges, rich attachments, scheduling, foreground presentation policy and tap routing, without adopting OneSignal, Pushwoosh or Firebase.",
+   "actions": [
+    "permission.request",
+    "permission.status",
+    "permission.openSettings",
+    "permission.manage",
+    "token",
+    "channels.set",
+    "channels.list",
+    "channels.remove",
+    "categories.set",
+    "badge.set",
+    "badge.get",
+    "keys.set",
+    "keys.remove",
+    "present",
+    "schedule",
+    "cancel",
+    "scheduled",
+    "delivered",
+    "dismiss",
+    "presentation"
+   ],
+   "api": "dsx.module.notify",
+   "install": "despia add Core/Notify"
+  },
+  {
+   "command": "oauth",
+   "name": "OAuth",
+   "package": "Core/Auth/OAuth",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Runs a third-party OAuth / social sign-in (Google, Apple, GitHub, Microsoft, TikTok, your own IdP, …) in an `ASWebAuthenticationSession`. The system sheet shares Safari cookies and is the trusted browser the IdPs that block embedded web views require.",
+   "actions": [
+    "start",
+    "exchange",
+    "session",
+    "capabilities"
+   ],
+   "api": "dsx.module.oauth",
+   "install": "despia add Core/Auth/OAuth"
+  },
+  {
+   "command": "onesignal",
+   "name": "OneSignal",
+   "package": "Core/OneSignal",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Native OneSignal push for Despia. The module owns SDK init (on launch, from `config.app_id`), the push-subscription observer and the `OneSignal-XCFramework` SPM products. It ships no notification service extension of its own: Core/Notify owns the one an app has and reads OneSignal's rich payload (the `att` image and the `custom` data) the same way, so OneSignal's confirmed-delivery receipts and ba",
+   "actions": [
+    "id",
+    "login",
+    "logout"
+   ],
+   "api": "dsx.module.onesignal",
+   "install": "despia add Core/OneSignal"
+  },
+  {
+   "command": "orientation",
+   "name": "Orientation",
+   "package": "Core/Orientation",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Lock the screen while a surface is on display, and let it go when that surface leaves.",
+   "actions": [
+    "get",
+    "lock",
+    "unlock",
+    "claim",
+    "release"
+   ],
+   "api": "dsx.module.orientation",
+   "install": "despia add Core/Orientation"
+  },
+  {
+   "command": "passkeys",
+   "name": "Passkeys",
+   "package": "Core/Passkeys",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Passwordless sign-in on the OS's own authenticator, composing with any backend.",
+   "actions": [
+    "supported",
+    "create",
+    "get",
+    "autofill",
+    "cancel"
+   ],
+   "api": "dsx.module.passkeys",
+   "install": "despia add Core/Passkeys"
+  },
+  {
+   "command": "pay",
+   "name": "Pay",
+   "package": "Core/Pay",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The native wallet sheet: Apple Pay and Google Pay.",
+   "actions": [
+    "session",
+    "attach",
+    "detach",
+    "confirm",
+    "close",
+    "supported",
+    "request",
+    "complete"
+   ],
+   "api": "dsx.module.pay",
+   "install": "despia add Core/Pay"
+  },
+  {
+   "command": "payments",
+   "name": "Payments",
+   "package": "Core/Payments",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The payments capability owner: one vocabulary for taking money, drawn by a processor row.",
+   "actions": [
+    "session",
+    "payment",
+    "manage",
+    "confirm",
+    "close",
+    "connectBank",
+    "payAch",
+    "portal"
+   ],
+   "api": "dsx.module.payments",
+   "install": "despia add Core/Payments"
+  },
+  {
+   "command": "permissions",
+   "name": "Permissions",
+   "package": "Core/Basics/Permissions",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "What this build is *allowed to ask for*, in the same vocabulary the dashboard uses. A page reads it to hide UI it can never light up, instead of prompting for something the binary cannot request and getting a silent refusal.",
+   "actions": [
+    "list"
+   ],
+   "api": "dsx.module.permissions",
+   "install": "despia add Core/Basics/Permissions"
+  },
+  {
+   "command": "persona",
+   "name": "Persona",
+   "package": "Core/Persona",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "A vendor surface (owner: none): it presents Persona's own product, the identity verification (KYC) inquiry flow, which no Despia capability covers. The capability map names it in `vendorSurfaces` (`despia list --capabilities`).",
+   "actions": [
+    "start"
+   ],
+   "api": "dsx.module.persona",
+   "install": "despia add Core/Persona"
+  },
+  {
+   "command": "plaid",
+   "name": "Plaid",
+   "package": "Core/Payments/Modules/Plaid",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Plaid bank account linking.",
+   "actions": [
+    "link",
+    "close"
+   ],
+   "api": "dsx.module.plaid",
+   "install": "despia add Core/Payments/Modules/Plaid"
+  },
+  {
+   "command": "platform",
+   "name": "Platform",
+   "package": "Custom/Platform",
+   "tier": "Custom",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "macos"
+   ],
+   "description": "The hosted Despia platform backend, authored in DSX.",
+   "actions": [],
+   "api": "dsx.module.platform",
+   "install": "despia add Custom/Platform"
+  },
+  {
+   "command": "policy",
+   "name": "Policy",
+   "package": "Core/Policy",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Content policy and safety: evaluate the policy packs your project loads, and record each decision.",
+   "actions": [
+    "load",
+    "evaluate"
+   ],
+   "api": "dsx.module.policy",
+   "install": "despia add Core/Policy"
+  },
+  {
+   "command": "postgres",
+   "name": "Postgres",
+   "package": "Core/Server/Providers/Postgres",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [],
+   "description": "> **Status: no native implementation, and no callable action at all.** This > module ships no Swift and no Kotlin. `prepare_modules` reports `manifest > scheme 'postgres' but no ': Module' class`. Its manifest declares no actions, > so there is nothing to call on any surface, native or web. It is a build-time > and boot-time provider, not an API.",
+   "actions": [],
+   "api": "dsx.module.postgres",
+   "install": "despia add Core/Server/Providers/Postgres"
+  },
+  {
+   "command": "posthog",
+   "name": "PostHog",
+   "package": "Core/Growth/Modules/PostHog",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.growth.configure({ destination: \"posthog\", token: \"phc_...\" })`.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.posthog",
+   "install": "despia add Core/Growth/Modules/PostHog"
+  },
+  {
+   "command": "preventdefault",
+   "name": "PreventDefault",
+   "package": "Core/Basics/PreventDefault",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Turns off iOS's built-in keyboard autoscroll. Useful when your page manages its own composer or sticky bar and the system's resize/scroll fights it. Call it once; the toggle sticks for the session.",
+   "actions": [
+    "autoscroll"
+   ],
+   "api": "dsx.module.preventdefault",
+   "install": "despia add Core/Basics/PreventDefault"
+  },
+  {
+   "command": "preview",
+   "name": "Preview",
+   "package": "Core/Preview",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Turn a pasted URL into the card every chat, notes and bookmarking app shows.",
+   "actions": [
+    "link"
+   ],
+   "api": "dsx.module.preview",
+   "install": "despia add Core/Preview"
+  },
+  {
+   "command": "print",
+   "name": "PrintDocuments",
+   "package": "Core/PrintDocuments",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Prints a PDF or image: a Core/Files `path` (printed where it lies) or a `url` (downloaded to a temp file, streamed to disk), through the system print sheet (`UIPrintInteractionController`, Android `PrintManager`). No web-side print library, no `window.print()`.",
+   "actions": [
+    "document"
+   ],
+   "api": "dsx.module.print",
+   "install": "despia add Core/PrintDocuments"
+  },
+  {
+   "command": "pulltorefresh",
+   "name": "PullToRefresh",
+   "package": "Mandatory/PullToRefresh",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "A pull-to-refresh control on the web view's scroll. Pull down past the top and the page reloads.",
+   "actions": [
+    "enable",
+    "disable",
+    "colors"
+   ],
+   "api": "dsx.module.pulltorefresh",
+   "install": "despia add Mandatory/PullToRefresh"
+  },
+  {
+   "command": "pushrouting",
+   "name": "PushRouting",
+   "package": "Mandatory/PushRouting",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The provider-agnostic **delivery** half of push notifications: it hands a tapped notification's payload to the web layer.",
+   "actions": [
+    "deliver",
+    "silent"
+   ],
+   "api": "dsx.module.pushrouting",
+   "install": "despia add Mandatory/PushRouting"
+  },
+  {
+   "command": "pushwoosh",
+   "name": "Pushwoosh",
+   "package": "Core/Pushwoosh",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Push notifications via Pushwoosh. The module owns the SDK end-to-end: registration on launch, the APNs callbacks (device token, receipt, registration failure), and the web-facing HWID surface. Credentials come from `config.json` and ship into the app's Info.plist at build time.",
+   "actions": [
+    "id"
+   ],
+   "api": "dsx.module.pushwoosh",
+   "install": "despia add Core/Pushwoosh"
+  },
+  {
+   "command": "qualification",
+   "name": "Qualification",
+   "package": "Custom/Qualification",
+   "tier": "Custom",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "phone",
+    "desktop"
+   ],
+   "description": "Internal, opt-in support for the current component and physical-device qualification app. This package contains the generated acceptance console and three native reporting actions. It has no launcher, automatic presentation, scene assets, offline samples or web embed exposure.",
+   "actions": [
+    "diagnostics",
+    "qualificationcontext",
+    "copyqualification"
+   ],
+   "api": "dsx.module.qualification",
+   "install": "despia add Custom/Qualification"
+  },
+  {
+   "command": "quickactions",
+   "name": "QuickActions",
+   "package": "Core/QuickActions",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Home-screen Quick Actions (long-press the app icon). Set the menu from web JS via `dsx.module.quickactions.set`; tapping an item broadcasts `quickactions/tap` with that item's `value`, so the web app routes however it likes. iOS persists the menu across launches, so the web layer (which ships remotely) owns it without a native rebuild.",
+   "actions": [
+    "set",
+    "clear",
+    "get"
+   ],
+   "api": "dsx.module.quickactions",
+   "install": "despia add Core/QuickActions"
+  },
+  {
+   "command": "recorder",
+   "name": "Recorder",
+   "package": "Core/Recorder",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Start, show a level meter, stop, here is the file.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "start",
+    "pause",
+    "resume",
+    "stop",
+    "cancel",
+    "status"
+   ],
+   "api": "dsx.module.recorder",
+   "install": "despia add Core/Recorder"
+  },
+  {
+   "command": "remoteconfig",
+   "name": "RemoteConfig",
+   "package": "Core/Firebase/Modules/RemoteConfig",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Firebase Remote Config values, fetched and cached.",
+   "actions": [
+    "defaults",
+    "fetch",
+    "value",
+    "all",
+    "signals",
+    "listen",
+    "stop"
+   ],
+   "api": "dsx.module.remoteconfig",
+   "install": "despia add Core/Firebase/Modules/RemoteConfig"
+  },
+  {
+   "command": "remotehosts",
+   "name": "RemoteHosts",
+   "package": "Core/RemoteHosts",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "Serves the app host manifest from a live URL and caches it.",
+   "actions": [
+    "status"
+   ],
+   "api": "dsx.module.remotehosts",
+   "install": "despia add Core/RemoteHosts"
+  },
+  {
+   "command": "revenuecat",
+   "name": "RevenueCat",
+   "package": "Core/RevenueCat",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "RevenueCat purchases, paywalls, customer center and purchase history.",
+   "actions": [
+    "purchase",
+    "paywall",
+    "center",
+    "history",
+    "products",
+    "offerings",
+    "offering",
+    "catalog",
+    "customer",
+    "login",
+    "logout",
+    "redeem",
+    "entitlements",
+    "whoami",
+    "session",
+    "attach",
+    "detach",
+    "buy",
+    "close",
+    "currencies",
+    "placement",
+    "attributes",
+    "sync",
+    "eligibility"
+   ],
+   "api": "dsx.module.revenuecat",
+   "install": "despia add Core/RevenueCat"
+  },
+  {
+   "command": "rive",
+   "name": "Rive",
+   "package": "Core/Rive",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "**State-machine animation.** A Rive artboard is not a timeline that plays: it is a machine with named inputs that transitions between states, fires events back at the app, and can be driven by app data. That is what modern onboarding, interactive illustration, animated icons and game-like UI are built from.",
+   "actions": [
+    "play",
+    "pause",
+    "reset",
+    "inputs",
+    "trigger",
+    "status"
+   ],
+   "api": "dsx.module.rive",
+   "install": "despia add Core/Rive"
+  },
+  {
+   "command": "rudderstack",
+   "name": "RudderStack",
+   "package": "Core/Growth/Modules/RudderStack",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.growth.configure({ destination: \"rudderstack\", token: \"<source write key>\", endpoint: \"https://<your data plane>\" })`.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.rudderstack",
+   "install": "despia add Core/Growth/Modules/RudderStack"
+  },
+  {
+   "command": "scanner",
+   "name": "QRScanner",
+   "package": "Core/QRScanner",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Native page-sheet camera with an AR tracking box around detected codes. The user aims the camera, the green outline locks onto the code in real time, and they tap **Scan** to confirm. Nothing fires automatically.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "scan",
+    "session",
+    "attach",
+    "detach",
+    "deliver",
+    "close"
+   ],
+   "api": "dsx.module.scanner",
+   "install": "despia add Core/QRScanner"
+  },
+  {
+   "command": "scene",
+   "name": "Scene",
+   "package": "Core/Scene",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The **G5 foundation** (dsx-game.md §2): scenes are kernel ELEMENTS, and this module is how the rest of the bus reaches them. Any module, any markup action, and: through Core/MCP: any AI agent can query the graph, write attributes, drive the camera, capture frame evidence, and read the collision/profiler ledgers of every mounted `<scene>`. This is the build → run → see → debug loop's substrate.",
+   "actions": [
+    "nodes",
+    "set",
+    "snapshot",
+    "snapshots",
+    "restore",
+    "camera",
+    "capture",
+    "pick",
+    "contacts",
+    "stats"
+   ],
+   "api": "dsx.module.scene",
+   "install": "despia add Core/Scene"
+  },
+  {
+   "command": "scene3d",
+   "name": "Scene3D",
+   "package": "Core/Scene3D",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Render a **USDZ / .reality model** natively on **RealityKit** (a system framework: no pods, no SPM, zero binary cost): product viewers, hero models, and the three most common AR placements. Content loads **OTA, offline-first and hash-verified** through the kernel content plane: the exact machinery Godot's `.pck` rides.",
+   "actions": [
+    "open",
+    "close",
+    "toggle",
+    "status",
+    "play",
+    "pause",
+    "resume",
+    "reset",
+    "undo",
+    "clear",
+    "camera",
+    "raycast",
+    "snapshot"
+   ],
+   "api": "dsx.module.scene3d",
+   "install": "despia add Core/Scene3D"
+  },
+  {
+   "command": "screenshield",
+   "name": "ScreenShield",
+   "package": "Core/ScreenShield",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Screenshot and screen recording protection for the app surface.",
+   "actions": [],
+   "api": "dsx.module.screenshield",
+   "install": "despia add Core/ScreenShield"
+  },
+  {
+   "command": "screenshot",
+   "name": "Screenshot",
+   "package": "Core/Basics/Screenshot",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Captures the screen and saves it to the photo library, from web.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "save"
+   ],
+   "api": "dsx.module.screenshot",
+   "install": "despia add Core/Basics/Screenshot"
+  },
+  {
+   "command": "search",
+   "name": "Spotlight",
+   "package": "Core/Spotlight",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Your app's content, findable from the operating system's own search field.",
+   "actions": [
+    "index",
+    "remove",
+    "clear",
+    "decode"
+   ],
+   "api": "dsx.module.search",
+   "install": "despia add Core/Spotlight"
+  },
+  {
+   "command": "security",
+   "name": "Security",
+   "package": "Mandatory/Security",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "App security policy: jailbreak block, TLS cert rejection and screen-capture block (the v3 ATT-at-launch switch moved to `Core/Legacy`: nothing modern asks on launch). There is **no web caller**. The `security` scheme has no callable action; everything here runs natively off config and lifecycle hooks. You configure it, you don't invoke it.",
+   "actions": [],
+   "api": "dsx.module.security",
+   "install": "despia add Mandatory/Security"
+  },
+  {
+   "command": "see",
+   "name": "See",
+   "package": "Core/LocalAI/Modules/See",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Vision-in for the intelligence container: image understanding and description through llama.cpp multimodal (Qwen-VL-class GGUFs).",
+   "actions": [
+    "describe"
+   ],
+   "api": "dsx.module.see",
+   "install": "despia add Core/LocalAI/Modules/See"
+  },
+  {
+   "command": "segment",
+   "name": "Segment",
+   "package": "Core/Growth/Modules/Segment",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.growth.configure({ destination: \"segment\", token: \"<source write key>\" })`.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.segment",
+   "install": "despia add Core/Growth/Modules/Segment"
+  },
+  {
+   "command": "sentry",
+   "name": "Sentry",
+   "package": "Core/Telemetry/Modules/Sentry",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Selects with `dsx.module.telemetry.configure({ sink: \"sentry\", dsn: \"…\" })`.",
+   "actions": [
+    "send"
+   ],
+   "api": "dsx.module.sentry",
+   "install": "despia add Core/Telemetry/Modules/Sentry"
+  },
+  {
+   "command": "server",
+   "name": "Server",
+   "package": "Core/Server",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [],
+   "description": "The backend settings of an app (sign-in, data, addresses, deploy target and limits) and the `server` word that lets a module mark an action to run on the app's own server.",
+   "actions": [],
+   "api": "dsx.module.server",
+   "install": "despia add Core/Server"
+  },
+  {
+   "command": "settings",
+   "name": "AppSettings",
+   "package": "Core/Basics/AppSettings",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Opens your app's page in the iOS Settings app. Fire-and-forget. Useful for re-granting a permission the user previously denied (push, location, camera, microphone, photos, ...), since iOS won't show the system prompt again from inside your app.",
+   "actions": [
+    "notifications",
+    "defaults",
+    "wifi",
+    "bluetooth",
+    "location",
+    "battery",
+    "overlay",
+    "locale"
+   ],
+   "api": "dsx.module.settings",
+   "install": "despia add Core/Basics/AppSettings"
+  },
+  {
+   "command": "share",
+   "name": "SocialShare",
+   "package": "Core/SocialShare",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Opens the native iOS share sheet (`UIActivityViewController`) for a message, a link, and/or files. The system handles the rest: Messages, Mail, WhatsApp, Files, AirDrop, copy to clipboard, whatever the user has installed.",
+   "actions": [
+    "url"
+   ],
+   "api": "dsx.module.share",
+   "install": "despia add Core/SocialShare"
+  },
+  {
+   "command": "sharetarget",
+   "name": "ShareExtension",
+   "package": "Core/Extensions/ShareExtension",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Makes your app a target in the system share sheet on iOS and Android. A share is durable state: it lands in the `inbox:` root of `Core/Files` and waits there until your app takes it, even if the app was not running when it arrived.",
+   "actions": [
+    "take",
+    "release",
+    "capabilities"
+   ],
+   "api": "dsx.module.sharetarget",
+   "install": "despia add Core/Extensions/ShareExtension"
+  },
+  {
+   "command": "siri",
+   "name": "LegacySiri",
+   "package": "Core/Legacy/Modules/Siri",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [],
+   "description": "Register a phrase that the user can speak to Siri. When Siri matches the phrase, your app launches and the module broadcasts `trigger` with the phrase and whatever payload you attached.",
+   "actions": [
+    "add"
+   ],
+   "api": "dsx.module.siri",
+   "install": "despia add Core/Legacy/Modules/Siri"
+  },
+  {
+   "command": "snapconversions",
+   "name": "SnapConversions",
+   "package": "Core/Growth/Modules/SnapConversions",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [],
+   "description": "The Snap Conversions API v3 row of Despia Growth's ad-network forwarding: server side, consent gated, each forward recorded.",
+   "actions": [
+    "forward"
+   ],
+   "api": "dsx.module.snapconversions",
+   "install": "despia add Core/Growth/Modules/SnapConversions"
+  },
+  {
+   "command": "speechrecognition",
+   "name": "SpeechRecognition",
+   "package": "Core/WebPlatform/SpeechRecognition",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Native voice-to-text for WKWebView. Two surfaces, one recognizer.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "polyfill",
+    "start",
+    "stop",
+    "abort"
+   ],
+   "api": "dsx.module.speechrecognition",
+   "install": "despia add Core/WebPlatform/SpeechRecognition"
+  },
+  {
+   "command": "speechsynthesis",
+   "name": "SpeechSynthesis",
+   "package": "Core/WebPlatform/SpeechSynthesis",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Native text-to-speech on `AVSpeechSynthesizer`. DespiaScript module called from web via `dsx.module.speechsynthesis.<method>(…)`.",
+   "actions": [
+    "voices",
+    "start",
+    "stop"
+   ],
+   "api": "dsx.module.speechsynthesis",
+   "install": "despia add Core/WebPlatform/SpeechSynthesis"
+  },
+  {
+   "command": "spinner",
+   "name": "Spinner",
+   "package": "Core/Basics/Spinner",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The page-load activity indicator, as a module. It owns a `UIActivityIndicatorView` overlaid (centered) on the web surface and toggles it. It does **not** decide *when* to spin: the host keeps that logic.",
+   "actions": [
+    "show",
+    "hide"
+   ],
+   "api": "dsx.module.spinner",
+   "install": "despia add Core/Basics/Spinner"
+  },
+  {
+   "command": "splash",
+   "name": "Splash",
+   "package": "Mandatory/Splash",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "The launch splash, as a module. There is **no web caller**: the `splash` scheme has no callable action (nothing to call at `dsx.module.splash`). The host and shell lifecycle drive it, and you configure its look. It runs in two distinct spots:",
+   "actions": [],
+   "api": "dsx.module.splash",
+   "install": "despia add Mandatory/Splash"
+  },
+  {
+   "command": "storage",
+   "name": "ValueStore",
+   "package": "Core/Basics/ValueStore",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "The framework's key/value store. If you have reached for AsyncStorage, this is it.",
+   "actions": [
+    "get",
+    "set",
+    "remove",
+    "keys",
+    "clear",
+    "multiGet",
+    "open",
+    "multiSet"
+   ],
+   "api": "dsx.module.storage",
+   "install": "despia add Core/Basics/ValueStore"
+  },
+  {
+   "command": "store",
+   "name": "Store",
+   "package": "Core/Store",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "One commerce layer over StoreKit 2, RevenueCat and Android billing.",
+   "actions": [
+    "paywall",
+    "checkout",
+    "catalog",
+    "product",
+    "receipts",
+    "restore",
+    "update",
+    "dismiss",
+    "select",
+    "entitlements",
+    "subscription",
+    "manage",
+    "refund",
+    "offers",
+    "storefront",
+    "redeemCode",
+    "billingMessages"
+   ],
+   "api": "dsx.module.store",
+   "install": "despia add Core/Store"
+  },
+  {
+   "command": "stream",
+   "name": "Stream",
+   "package": "Core/DevSettings/Modules/LiveStream",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Chain `dev.stream` (proposals/live-logs.md §3.1). The merged diagnostics feed the dev-center Console already renders on-device - the dsx.log ring, the error ledger, the kernel tail - batched over plain HTTPS to a relay the DEVELOPER owns, about every 1.5 s while a session is live. Never a Despia endpoint: the relay is the @despia-native/live worker in the developer's own Cloudflare account, or `ds",
+   "actions": [
+    "start",
+    "stop",
+    "status",
+    "send"
+   ],
+   "api": "dsx.module.stream",
+   "install": "despia add Core/DevSettings/Modules/LiveStream"
+  },
+  {
+   "command": "stripe",
+   "name": "Stripe",
+   "package": "Core/Payments/Modules/Stripe",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Stripe card entry and payment confirmation.",
+   "actions": [
+    "payment",
+    "manage",
+    "session",
+    "attach",
+    "detach",
+    "confirm",
+    "close",
+    "connectBank",
+    "payAch",
+    "connectOnboard",
+    "portal"
+   ],
+   "api": "dsx.module.stripe",
+   "install": "despia add Core/Payments/Modules/Stripe"
+  },
+  {
+   "command": "studio",
+   "name": "Studio",
+   "package": "Core/Studio",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "phone",
+    "desktop"
+   ],
+   "description": "The multitrack audio timeline engine behind the Despia Studio.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "monitor",
+    "setLiveTune",
+    "record",
+    "stop",
+    "play",
+    "pausePlayback",
+    "seek",
+    "moveClip",
+    "splitClip",
+    "trimClip",
+    "deleteClip",
+    "duplicateClip",
+    "copyClip",
+    "pasteClip",
+    "addTrack",
+    "autoMix",
+    "deleteTrack",
+    "importClip",
+    "setTrackGain",
+    "setTrackMute",
+    "setTrackSolo",
+    "setTrackPan",
+    "setTrackReverb",
+    "setTrackEQ",
+    "undoEq",
+    "undoComp",
+    "undoMaster",
+    "undoChain",
+    "setTrackCompressor",
+    "setTrackEcho",
+    "setChain",
+    "setTrackAutotune",
+    "aiAutoTune",
+    "detectNotes",
+    "setNoteTarget",
+    "resetNotes",
+    "saveAutotunePreset",
+    "deleteAutotunePreset",
+    "revertFix",
+    "aiEqAuto",
+    "setTrackEnhance",
+    "setTrackDenoise",
+    "setTrackMaster",
+    "fixVocal",
+    "makeChoir",
+    "registerPlugins",
+    "runPlugin",
+    "cancelPlugin",
+    "aiIsolate",
+    "setTrackAutomation",
+    "armTrack",
+    "setTempo",
+    "setMetronome",
+    "setCountIn",
+    "setLyrics",
+    "undo",
+    "redo",
+    "export",
+    "clear",
+    "openSettings"
+   ],
+   "api": "dsx.module.studio",
+   "install": "despia add Core/Studio"
+  },
+  {
+   "command": "studioeditor",
+   "name": "StudioEditor",
+   "package": "Core/StudioEditor",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "phone",
+    "desktop"
+   ],
+   "description": "The full screen native multitrack vocal editor.",
+   "actions": [
+    "open",
+    "close"
+   ],
+   "api": "dsx.module.studioeditor",
+   "install": "despia add Core/StudioEditor"
+  },
+  {
+   "command": "supabase",
+   "name": "Supabase",
+   "package": "Core/Auth/Supabase",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Anonymous-first identity on Supabase. A session exists from first launch with no login screen, so a purchase, an entitlement and a restore all have a durable subject; a later sign-in **links** that subject instead of replacing it, so the person who paid keeps everything they own.",
+   "actions": [
+    "configure",
+    "capabilities",
+    "auth.getSession",
+    "auth.signInAnonymously",
+    "auth.refreshSession",
+    "auth.signOut",
+    "auth.signUp",
+    "auth.signInWithPassword",
+    "auth.signInWithOtp",
+    "auth.verifyOtp",
+    "auth.signInWithOAuth",
+    "auth.signInWithIdToken",
+    "auth.updateUser",
+    "auth.resetPasswordForEmail",
+    "auth.getUserIdentities",
+    "auth.unlinkIdentity"
+   ],
+   "api": "dsx.module.supabase",
+   "install": "despia add Core/Auth/Supabase"
+  },
+  {
+   "command": "systembars",
+   "name": "SystemBars",
+   "package": "Core/SystemBars",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "const plan = await dsx.module.systembars.set({ status: { background: \"#1A1A2E\" },      // icons pick their own contrast (style: \"auto\") navigation: { background: \"#1A1A2E\" }, }); plan.navigation.background; // { applied: true, via: \"backdrop\", reason: null }, or why not await dsx.module.systembars.immersive({ mode: \"sticky\" }); // the video-player mode",
+   "actions": [
+    "set",
+    "immersive",
+    "env",
+    "body"
+   ],
+   "api": "dsx.module.systembars",
+   "install": "despia add Core/SystemBars"
+  },
+  {
+   "command": "taptopay",
+   "name": "TapToPay",
+   "package": "Core/Payments/Modules/TapToPay",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Tap to Pay: the phone itself as a card reader, for in-person payments.",
+   "actions": [
+    "supported",
+    "education"
+   ],
+   "api": "dsx.module.taptopay",
+   "install": "despia add Core/Payments/Modules/TapToPay"
+  },
+  {
+   "command": "telemetry",
+   "name": "Telemetry",
+   "package": "Core/Telemetry",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "The errors your app already collects leave the device, and go somewhere you own.",
+   "actions": [
+    "configure",
+    "identify",
+    "breadcrumb",
+    "capture",
+    "flush",
+    "setContext",
+    "trace.start",
+    "trace.end"
+   ],
+   "api": "dsx.module.telemetry",
+   "install": "despia add Core/Telemetry"
+  },
+  {
+   "command": "terminal",
+   "name": "Terminal",
+   "package": "Core/Payments/Modules/Terminal",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Stripe Terminal in-person payments: discover and connect a card reader (Bluetooth, Tap to Pay, internet, USB) and collect a PaymentIntent your server created.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "configure",
+    "discover",
+    "connect",
+    "disconnect",
+    "collect",
+    "confirm",
+    "collectSetup",
+    "refund",
+    "display",
+    "clearDisplay",
+    "collectInputs",
+    "update",
+    "cancel"
+   ],
+   "api": "dsx.module.terminal",
+   "install": "despia add Core/Payments/Modules/Terminal"
+  },
+  {
+   "command": "terra",
+   "name": "Terra",
+   "package": "Core/Health/Terra",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Wraps the Terra iOS SDK so the web app can pull Apple Health (native) and plug in OAuth providers (Fitbit, Garmin, Oura, Whoop, ...) through the Terra Connect widget. Lives under the `Core/Health` group; off by default in `DSX/Modules/Config/excluded.json`.",
+   "actions": [
+    "permission.status",
+    "permission.request",
+    "permission.openSettings",
+    "permission.manage",
+    "connect",
+    "sync",
+    "data",
+    "disconnect"
+   ],
+   "api": "dsx.module.terra",
+   "install": "despia add Core/Health/Terra"
+  },
+  {
+   "command": "tiktokevents",
+   "name": "TikTokEvents",
+   "package": "Core/Growth/Modules/TikTokEvents",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [],
+   "description": "The TikTok Events API 2.0 row of Despia Growth's ad-network forwarding: server side, consent gated, each forward recorded.",
+   "actions": [
+    "forward"
+   ],
+   "api": "dsx.module.tiktokevents",
+   "install": "despia add Core/Growth/Modules/TikTokEvents"
+  },
+  {
+   "command": "toast",
+   "name": "Toast",
+   "package": "Core/Toast",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "await dsx.module.toast.show({ message: \"Saved\", tone: \"success\" });",
+   "actions": [
+    "show",
+    "hide",
+    "queue"
+   ],
+   "api": "dsx.module.toast",
+   "install": "despia add Core/Toast"
+  },
+  {
+   "command": "translate",
+   "name": "Translate",
+   "package": "Core/Translate",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Text translation, on device first.",
+   "actions": [
+    "translate"
+   ],
+   "api": "dsx.module.translate",
+   "install": "despia add Core/Translate"
+  },
+  {
+   "command": "uuid",
+   "name": "DeviceUUID",
+   "package": "Core/DeviceUUID",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Returns a stable, permission-free device identifier. iOS uses Apple's IDFV, which stays the same as long as one of your apps is installed on the device. Android generates a UUID once and keeps it in this package's durable container.",
+   "actions": [
+    "get"
+   ],
+   "api": "dsx.module.uuid",
+   "install": "despia add Core/DeviceUUID"
+  },
+  {
+   "command": "verticalplayer",
+   "name": "VerticalPlayerStack",
+   "package": "Custom/VerticalPlayerStack",
+   "tier": "Custom",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "A native, full-screen **vertical short-drama player** built on the DespiaScript **Stack** engine: called from the web as **`dsx.module.verticalplayer.*`**. The web app hands over a JSON payload of episodes (and, for paid shows, an access/credits/paywall config); the module presents a TikTok-style player and **streams every interaction and playback event back to the web**.",
+   "actions": [
+    "start",
+    "refresh",
+    "update",
+    "skip",
+    "buy",
+    "restore",
+    "getcoins",
+    "download",
+    "removeDownload",
+    "removeAllDownloads",
+    "downloads",
+    "close"
+   ],
+   "api": "dsx.module.verticalplayer",
+   "install": "despia add Custom/VerticalPlayerStack"
+  },
+  {
+   "command": "viewport",
+   "name": "Viewport",
+   "package": "Core/Basics/Viewport",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "`dsx.module.viewport` · config `keyboard_mode`, `disable_main_frame_scroll`",
+   "actions": [
+    "keyboard",
+    "overlays"
+   ],
+   "api": "dsx.module.viewport",
+   "install": "despia add Core/Basics/Viewport"
+  },
+  {
+   "command": "vision",
+   "name": "Vision",
+   "package": "Core/Vision",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Despia-Commercial-Source-1.0",
+   "commercial": true,
+   "shelf": "premium",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "On device recognition: OCR and text over images and scanned documents, and body pose (joints and joint angles) over the camera or a video file.",
+   "actions": [
+    "pose.start",
+    "pose.stop",
+    "ocr",
+    "readText"
+   ],
+   "api": "dsx.module.vision",
+   "install": "despia add Core/Vision"
+  },
+  {
+   "command": "voice",
+   "name": "Voice",
+   "package": "Core/LocalAI/Modules/Voice",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "Outbound speech for the intelligence container: `speak` for audio the device should just say, `synthesize` for audio a caller wants, `stop` for barge-in, `voices` for the per-language catalog.",
+   "actions": [
+    "synthesize",
+    "speak",
+    "stop",
+    "voices"
+   ],
+   "api": "dsx.module.voice",
+   "install": "despia add Core/LocalAI/Modules/Voice"
+  },
+  {
+   "command": "wallet",
+   "name": "Wallet",
+   "package": "Core/Wallet",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web"
+   ],
+   "description": "Apple Wallet add-pass bridge. Downloads a `.pkpass` with the web view's session cookies and presents the system Add-to-Wallet sheet (`PKAddPassesViewController`).",
+   "actions": [
+    "pkpass"
+   ],
+   "api": "dsx.module.wallet",
+   "install": "despia add Core/Wallet"
+  },
+  {
+   "command": "watch",
+   "name": "Watch",
+   "package": "Core/Extensions/Watch",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "An **Apple Watch surface** for DSX: a watchOS app that renders DSX screens natively (no WebKit on watchOS), boots into a **bundled** start screen offline-first, navigates between bundled screens on the watch, updates its screens **over-the-air**, and can be driven from the phone over **WatchConnectivity**. Off by default: remove `\"Watch\"` from a per-app `excluded.json` to ship it.",
+   "actions": [
+    "render",
+    "route",
+    "update",
+    "reachable",
+    "haptic",
+    "notify",
+    "notifyCancel",
+    "notifyClear",
+    "battery",
+    "dictate",
+    "audio",
+    "audioStop",
+    "locate",
+    "keepAwake",
+    "status",
+    "openOnPhone",
+    "crown",
+    "ambient",
+    "motion",
+    "present",
+    "record",
+    "recordStop",
+    "recordCancel",
+    "transfer",
+    "transferList",
+    "transferClear",
+    "command"
+   ],
+   "api": "dsx.module.watch",
+   "install": "despia add Core/Extensions/Watch"
+  },
+  {
+   "command": "webextension",
+   "name": "WebExtension",
+   "package": "Core/Extensions/WebExtension",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "web"
+   ],
+   "description": "A **browser-extension surface** for DSX: ONE standard WebExtension payload (`web/extension/`: manifest v3, background hub, content script, toolbar popup) packaged twice: as a **Safari Web Extension** appex inside the iOS app (synthesized by `prepare_modules` from this module's declared target) and as a **Chrome-Web-Store zip** of the same bytes (`scripts/build_webextension.rb`). Off by default: re",
+   "actions": [
+    "update",
+    "clear",
+    "status",
+    "openSettings",
+    "grant",
+    "revoke",
+    "authStatus"
+   ],
+   "api": "dsx.module.webextension",
+   "install": "despia add Core/Extensions/WebExtension"
+  },
+  {
+   "command": "websocket",
+   "name": "WebSocket",
+   "package": "Mandatory/WebSocket",
+   "tier": "Mandatory",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos"
+   ],
+   "description": "A durable WebSocket bridge on all three lanes.",
+   "actions": [
+    "connect",
+    "subscribe",
+    "send",
+    "disconnect",
+    "status",
+    "ack"
+   ],
+   "api": "dsx.module.websocket",
+   "install": "despia add Mandatory/WebSocket"
+  },
+  {
+   "command": "webview",
+   "name": "WebView",
+   "package": "Core/WebView",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "macos"
+   ],
+   "description": "The plain web view. `<WebView/>` embeds any page inside a DSX app: a node owned web canvas, created on mount and torn down on unmount, with no bridge of any kind.",
+   "actions": [],
+   "api": "dsx.module.webview",
+   "install": "despia add Core/WebView"
+  },
+  {
+   "command": "widget",
+   "name": "Widgets",
+   "package": "Core/Widgets",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android"
+   ],
+   "description": "Native home-screen and lock-screen widgets, authored in DSX: WidgetKit on iOS, Glance on Android.",
+   "actions": [
+    "update",
+    "state",
+    "reload",
+    "placed",
+    "pin"
+   ],
+   "api": "dsx.module.widget",
+   "install": "despia add Core/Widgets"
+  },
+  {
+   "command": "x",
+   "name": "ExternalApps",
+   "package": "Core/Basics/ExternalApps",
+   "tier": "Core",
+   "version": "0.1.0",
+   "license": "Apache-2.0",
+   "commercial": false,
+   "shelf": "open",
+   "platforms": [
+    "ios",
+    "android",
+    "web",
+    "macos",
+    "windows",
+    "linux"
+   ],
+   "description": "Hands a deep link to another app. The web navigates to one of these schemes and the OS launches the matching app (or its App Store page if it isn't installed).",
+   "actions": [
+    "open"
+   ],
+   "api": "dsx.module.x",
+   "install": "despia add Core/Basics/ExternalApps"
+  }
+ ]
+}

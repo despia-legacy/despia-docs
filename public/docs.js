@@ -362,34 +362,15 @@
     fetch(mdUrl()).then(function (res) { return res.ok ? res.text() : Promise.reject(new Error(String(res.status))); })
       .then(copyText)
       .then(function () {
-        var bar = document.querySelector(".doc-actions-bar .doc-actions-copy");
+        var bar = document.querySelector(".doc-helpbar .doc-actions-copy");
         if (bar === null) return;
         var label = bar.querySelector(".doc-actions-label");
         bar.classList.add("is-copied");
+        var before = label !== null ? label.textContent : "";
         if (label !== null) label.textContent = "Copied";
-        setTimeout(function () { bar.classList.remove("is-copied"); if (label !== null) label.textContent = "Copy page"; }, 2000);
+        setTimeout(function () { bar.classList.remove("is-copied"); if (label !== null) label.textContent = before; }, 2000);
       })
       .catch(function () { /* nothing copied: the View as Markdown row still works */ });
-  });
-
-  // ── overlay panels (space switcher, page actions) close on outside click / Escape
-  // The DSX toggles own the open state; this layer only taps the toggle for the user.
-  function closePanels(except) {
-    [[".doc-switcher-panel", ".doc-switcher-btn"], [".doc-actions-menu", ".doc-actions-more"]].forEach(function (pair) {
-      var panel = document.querySelector(pair[0]);
-      if (panel === null || panel === except) return;
-      var toggle = document.querySelector(pair[1]);
-      if (toggle !== null) toggle.click();
-    });
-  }
-  document.addEventListener("click", function (event) {
-    var t = event.target;
-    if (!t.closest) return;
-    if (t.closest(".doc-switcher-panel, .doc-switcher-btn, .doc-actions-menu, .doc-actions-more")) return;
-    closePanels(null);
-  }, true);
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") closePanels(null);
   });
 
   // ── Ask AI: the Despia Support widget, docs mode, loaded on first use ───────
@@ -410,11 +391,16 @@
   }
   function inertAsk() {
     support.state = "unavailable";
-    document.querySelectorAll(".doc-ask-btn").forEach(function (b) {
+    document.querySelectorAll(".doc-ask-btn, .doc-ask-btn-inline, .doc-ask-human, .doc-propose-edit, .doc-request-feature").forEach(function (b) {
       b.setAttribute("aria-disabled", "true");
       b.setAttribute("title", "The assistant is not reachable right now");
     });
   }
+  var INTENTS = [
+    [".doc-ask-human", "ask-human"], [".doc-propose-edit", "propose-edit"],
+    [".doc-request-feature", "request-feature"], [".doc-ask-btn, .doc-ask-btn-inline", "ask-ai"],
+  ];
+  var pendingIntent = "ask-ai";
   function openWidget() {
     if (support.el === null) {
       support.el = document.createElement("despia-support");
@@ -422,14 +408,24 @@
       support.el.setAttribute("origin", supportOrigin());
       document.body.appendChild(support.el);
     }
+    // the conversation's context: which space and page, and what the reader asked for
+    // (ask-ai, ask-human, propose-edit, request-feature). The widget uses the shared
+    // despia.com session when the reader is signed in.
     support.el.setAttribute("space", currentSpace());
     support.el.setAttribute("page", location.href);
+    support.el.setAttribute("markdown", location.origin + mdUrl());
+    support.el.setAttribute("intent", pendingIntent);
     if (typeof support.el.open === "function") support.el.open();
     else support.el.setAttribute("open", "true");
   }
   document.addEventListener("click", function (event) {
-    var ask = event.target.closest && event.target.closest(".doc-ask-btn");
-    if (ask === null || ask === undefined || support.state === "unavailable") return;
+    if (!event.target.closest) return;
+    var ask = null;
+    for (var i = 0; i < INTENTS.length && ask === null; i += 1) {
+      var el = event.target.closest(INTENTS[i][0]);
+      if (el !== null) { ask = el; pendingIntent = INTENTS[i][1]; }
+    }
+    if (ask === null || support.state === "unavailable") return;
     if (support.state === "ready") { openWidget(); return; }
     if (support.state === "loading") return;
     support.state = "loading";

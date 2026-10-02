@@ -20,6 +20,7 @@
 //
 
 import { execFileSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -235,9 +236,13 @@ function jseStringLiteral(source) {
 // verbatim; fenced code is never scanned for tags, so examples stay text. The name must
 // be known - a typo fails the build with file and line, never a silent passthrough. The
 // /md siblings and the llms exports keep the source markdown verbatim, tags included.
-const CALLOUT_SUGAR = { Note: "note", Info: "info", Tip: "tip", Warning: "warning", Danger: "danger" };
+// The admonitions and the linking card are the STOCK library components (rule 10: default UI
+// only): <Callout tone> with the markdown tones, <Card title href>. The sugar tags lower to them;
+// a legacy <Callout kind> is translated to its tone.
+const CALLOUT_SUGAR = { Note: "note", Info: "note", Tip: "tip", Warning: "warning", Danger: "caution" };
+const KIND_TO_TONE = { note: "note", info: "note", tip: "tip", warning: "warning", danger: "caution" };
 const COMPILER_TAGS = new Set(["Tabs", "Tab", "CodeGroup", ...Object.keys(CALLOUT_SUGAR)]);
-const SYSTEM_TAGS = new Set(["Accordion"]);
+const SYSTEM_TAGS = new Set(["Accordion", "Callout", "Card"]);
 const libraryComponents = readdirSync(join(root, "Components"), { withFileTypes: true })
   .filter((entry) => entry.isFile() && entry.name.endsWith(".dsx"))
   .map((entry) => entry.name.replace(/\.dsx$/, ""));
@@ -397,11 +402,24 @@ function codeGroupPanes(page, inner) {
 
 function componentNode(page, tag, inner, at, indent) {
   const attrs = tag.attrs === "" ? "" : ` ${tag.attrs}`;
-  const sugar = CALLOUT_SUGAR[tag.name];
+  let sugar = CALLOUT_SUGAR[tag.name];
+  let calloutAttrs = attrs;
+  if (tag.name === "Callout") {
+    const kind = attrValue(tag.attrs, "kind");
+    sugar = KIND_TO_TONE[kind ?? "note"] ?? "note";
+    calloutAttrs = attrs.replace(/\s*kind="[^"]*"/, "");
+  }
   if (sugar !== undefined) {
-    if (inner === null) return `${indent}<Callout kind="${sugar}"${attrs}/>`;
+    if (inner === null) return `${indent}<Callout tone="${sugar}"${calloutAttrs}/>`;
     const children = compileBody(page, inner.lines, inner.startLine, `${indent}  `);
-    return `${indent}<Callout kind="${sugar}"${attrs}>\n${children.join("\n")}\n${indent}</Callout>`;
+    return `${indent}<Callout tone="${sugar}"${calloutAttrs}>\n${children.join("\n")}\n${indent}</Callout>`;
+  }
+  if (tag.name === "Card") {
+    // the stock Card has no icon (a framework gap row in STATUS); the title and link carry it
+    const cardAttrs = attrs.replace(/\s*icon="[^"]*"/, "");
+    if (inner === null) return `${indent}<Card${cardAttrs}/>`;
+    const children = compileBody(page, inner.lines, inner.startLine, `${indent}  `);
+    return children.length === 0 ? `${indent}<Card${cardAttrs}/>` : `${indent}<Card${cardAttrs}>\n${children.join("\n")}\n${indent}</Card>`;
   }
   if (tag.name === "Tab") fail(page, at, `<Tab> only lives inside <Tabs>`);
   if (tag.name === "Tabs") {
@@ -513,6 +531,7 @@ const SPACES = [
   { id: "legacy", label: "Legacy v3", prefix: "/legacy", home: "/legacy/introduction", blurb: "despia-native and the v3 runtime" },
   { id: "migrate", label: "Migration", prefix: "/migrate", home: "/migrate", blurb: "Move a v3 app to v4" },
   { id: "troubleshooting", label: "Troubleshooting", prefix: "/troubleshooting", home: "/troubleshooting", blurb: "Symptom, cause, fix" },
+  { id: "releases", label: "Releases", prefix: "/releases", home: "/releases", blurb: "Release notes per DSX release and per package version" },
   { id: "app-review", label: "App Review", prefix: "/app-review", home: "/app-review", blurb: "Apple and Google review guidelines, and how Despia apps pass them" },
 ];
 const spaceById = Object.fromEntries(SPACES.map((s) => [s.id, s]));
@@ -524,6 +543,20 @@ const site = "https://docs.despia.com";
 // The Despia Support origin (vector search + the Ask AI widget): one knob, DOCS_SUPPORT_ORIGIN,
 // read here and written to both consumers (the DocShell attribute and the web.head meta docs.js
 // reads). Empty turns vector search off; the keyword index always works.
+// Versioned docs: this build is the docs of DOCS_VERSION (default: the framework release the
+// content documents). public/versions.json lists every published docs version; old versions are
+// separate builds served under /v/<version>/ (the version selector reads the list).
+const DOCS_VERSION = process.env.DOCS_VERSION ?? "0.1.0";
+// The Improvements ledger (despia.com/improvements.json, PLAN-J): an entry whose links name a docs
+// page puts an "Improved in vX" marker on that page. Read from DOCS_IMPROVEMENTS (a local copy of
+// the feed) or data/improvements.json; absent = no markers, never invented ones.
+const improvementsFile = process.env.DOCS_IMPROVEMENTS ?? join(root, "data", "improvements.json");
+const improvements = existsSync(improvementsFile) ? (JSON.parse(readFileSync(improvementsFile, "utf8")).entries ?? []) : [];
+function improvementsFor(route) {
+  const url = `https://docs.despia.com${route}`;
+  return improvements.filter((e) => (e.links?.docs ?? []).some((d) => d === route || d === url))
+    .map((e) => ({ id: e.id ?? e.slug ?? "", version: e.version ?? "", title: e.title ?? "", url: e.url ?? `https://despia.com/improvements#${e.id ?? e.slug ?? ""}` }));
+}
 const supportOrigin = (process.env.DOCS_SUPPORT_ORIGIN ?? "https://support.despia.com").replace(/\/+$/, "");
 /** The markdown sibling of a route: /x/y -> /x/y.md, / -> /index.md (Mintlify's own convention). */
 const mdSibling = (route) => (route === "/" ? "/index.md" : `${route}.md`);
@@ -615,6 +648,23 @@ generatedPages.push({
   search: "app review store rejection guideline apple google play " + arEntries.map((p) => `${p.meta.guideline ?? ""} ${p.title} ${p.meta.category ?? ""}`).join(" "),
 });
 
+// Release notes: content/releases/<slug>.md (front matter: title, version, package (dsx or a
+// package path), date, summary), written by the CMS / ROADMAP lanes. The index, RSS and JSON
+// feeds are generated here; with no notes yet the index says so.
+const relNotes = pages.filter((p) => p.space === "releases")
+  .sort((a, b) => String(b.meta.date ?? "").localeCompare(String(a.meta.date ?? "")) || (a.route < b.route ? -1 : 1));
+generatedPages.push({
+  route: "/releases",
+  component: "PageReleases",
+  title: "Releases",
+  label: "All releases",
+  space: "releases",
+  section: "",
+  order: 1,
+  description: "Release notes for every DSX release and every package version, with the docs pages, migration notes and upgrade impact each one touches.",
+  search: "releases release notes changelog version " + relNotes.map((p) => `${p.title} ${p.meta.version ?? ""} ${p.meta.package ?? ""}`).join(" "),
+});
+
 const entries = [...pages, ...handAuthored, ...generatedPages].sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
 
 const duplicate = entries.map((p) => p.route).filter((r, i, all) => all.indexOf(r) !== i);
@@ -656,7 +706,7 @@ const navBySpace = {};
   }
   navBySpace.legacy = sections;
 }
-for (const id of ["migrate", "troubleshooting", "app-review"]) {
+for (const id of ["migrate", "troubleshooting", "app-review", "releases"]) {
   const sections = [];
   for (const page of entries.filter((p) => p.space === id && p.meta?.nav !== "false")) {
     const name = page.section === "" ? spaceById[id].label : page.section;
@@ -689,6 +739,8 @@ function shellAttrs(page, toc) {
   const { prev, next } = neighborsOf(page.space, page.route);
   page.attrVars = [];
   const tocVar = page.attrVars.push(JSON.stringify(toc)) - 1;
+  const improved = improvementsFor(page.route);
+  const improvedVar = improved.length > 0 ? page.attrVars.push(JSON.stringify(improved)) - 1 : -1;
   const legacyHome = page.meta?.legacy !== undefined;
   return [
     shellAttr(page, "title", page.title),
@@ -700,6 +752,9 @@ function shellAttrs(page, toc) {
     shellAttr(page, "section", sectionNameOf(page.space, page.route)),
     `toc="{{ dsx.variable.a${tocVar} }}"`,
     ...(legacyHome && page.meta.modern ? [`modern="${escapeForDsxAttr(page.meta.modern)}"`] : []),
+    ...["since", "changed", "removed"].filter((k) => page.meta?.[k]).map((k) => `${k}="${escapeForDsxAttr(page.meta[k])}"`),
+    ...(improvedVar >= 0 ? [`improved="{{ dsx.variable.a${improvedVar} }}"`] : []),
+    `version="${escapeForDsxAttr(DOCS_VERSION)}"`,
     ...(prev !== null ? [`prev="${prev.route}"`, shellAttr(page, "prevLabel", prev.label)] : []),
     ...(next !== null ? [`next="${next.route}"`, shellAttr(page, "nextLabel", next.label)] : []),
   ].join(" ");
@@ -801,20 +856,19 @@ for (const page of pages) {
     `      <picker bind="dsx.variable.pkg" options="${escapeForDsxAttr(packageOptions.join(","))}" label="Package" class="doc-ts-package"/>`,
     `    </hstack>`,
     `    <stack class="doc-ts-fixed" visible-if="dsx.formula.fixed.length > 0">`,
-    `      <text value="Fixed fast" class="doc-ts-heading"/>`,
+    `      <text value="Fixed fast" type="headline"/>`,
     `      <list bind="dsx.formula.fixed" key="id" scroll="false" class="doc-ts-fixed-list">`,
     `        <FixedFast title="{{ dsx.this.title }}" href="{{ dsx.this.route }}" reported="{{ dsx.this.reportedLabel }}" released="{{ dsx.this.releasedLabel }}" duration="{{ dsx.this.timeToFix }}" platform="{{ dsx.this.platform }}"/>`,
     `      </list>`,
     `    </stack>`,
     `    <list bind="dsx.formula.shown" key="id" scroll="false" class="doc-ts-list">`,
-    `      <pressable href="{{ dsx.this.route }}" class="doc-ts-card">`,
+    `      <Card title="{{ dsx.this.title }}" href="{{ dsx.this.route }}" class="doc-ts-card">`,
+    `        <text value="{{ dsx.this.symptom }}" class="doc-ts-card-symptom"/>`,
     `        <hstack class="doc-ts-card-meta">`,
-    `          <text value="{{ dsx.this.platform }}" class="doc-ts-chip doc-ts-chip-{{ dsx.this.platform }}"/>`,
+    `          <chip label="{{ dsx.this.platform }}"/>`,
     `          <text value="{{ dsx.this.packagesLabel }}" class="doc-ts-packages"/>`,
     `        </hstack>`,
-    `        <text value="{{ dsx.this.title }}" class="doc-ts-card-title"/>`,
-    `        <text value="{{ dsx.this.symptom }}" class="doc-ts-card-symptom"/>`,
-    `      </pressable>`,
+    `      </Card>`,
     `    </list>`,
     `    <text value="No article matches these filters yet." class="doc-ts-empty" visible-if="dsx.formula.shown.length === 0"/>`,
   ].join("\n");
@@ -880,21 +934,129 @@ for (const page of pages) {
     `    </hstack>`,
     `    <text value="{{ dsx.formula.shown.length + (dsx.formula.shown.length === 1 ? ' guideline' : ' guidelines') }}" class="doc-ts-heading"/>`,
     `    <list bind="dsx.formula.shown" key="id" scroll="false" class="doc-ts-list">`,
-    `      <pressable href="{{ dsx.this.route }}" class="doc-ts-card doc-ar-card">`,
-    `        <hstack class="doc-ts-card-meta">`,
-    `          <text value="{{ dsx.this.guideline }}" class="doc-ar-guideline"/>`,
-    `          <text value="{{ dsx.this.storesLabel }}" class="doc-ts-chip"/>`,
-    `          <text value="{{ dsx.this.category }}" class="doc-ts-packages"/>`,
-    `        </hstack>`,
-    `        <text value="{{ dsx.this.title }}" class="doc-ts-card-title"/>`,
+    `      <Card title="{{ dsx.this.guideline + ' · ' + dsx.this.title }}" href="{{ dsx.this.route }}" class="doc-ts-card">`,
     `        <text value="{{ dsx.this.summary }}" class="doc-ts-card-symptom"/>`,
-    `      </pressable>`,
+    `        <hstack class="doc-ts-card-meta">`,
+    `          <chip label="{{ dsx.this.storesLabel }}"/>`,
+    `          <chip label="{{ dsx.this.category }}"/>`,
+    `        </hstack>`,
+    `      </Card>`,
     `    </list>`,
     `    <text value="No guideline matches. Try fewer words, or the search in the header (it also asks the Support knowledge base)." class="doc-ts-empty" visible-if="dsx.formula.shown.length === 0"/>`,
   ].join("\n");
   writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
   writeMd(page.route, page.body);
   writeFileSync(join(publicDir, "app-review.json"), JSON.stringify({ guidelines: items.map(({ haystack, ...rest }) => ({ ...rest, url: site + rest.route, markdown: site + mdSibling(rest.route) })) }, null, 1) + "\n");
+}
+
+// ── the generated Releases index + feeds ──────────────────────────────────────────────────
+{
+  const page = generatedPages.find((p) => p.route === "/releases");
+  const items = relNotes.map((p) => ({
+    id: p.route, route: p.route, title: p.title, version: p.meta.version ?? "", package: p.meta.package ?? "dsx",
+    date: p.meta.date ?? "", summary: p.meta.summary ?? p.description,
+  }));
+  page.body = ["# Releases", "", page.description, "",
+    ...(items.length === 0 ? ["No release notes are published yet."] :
+      items.map((i) => `- [${i.title}](${site}${mdSibling(i.route)}) (${i.package} ${i.version}, ${i.date}): ${i.summary}`)), ""].join("\n");
+  page.mdVars = [];
+  page.shell = shellAttrs(page, []);
+  const intro = pushMdVar(page, `# Releases\n\n${page.description} Feeds: [RSS](/releases/rss.xml), [JSON Feed](/releases/feed.json), [llms.txt](/releases/llms.txt).`);
+  const itemsVar = page.attrVars.push(JSON.stringify(items)) - 1;
+  const packages = ["All packages", ...[...new Set(items.map((i) => i.package))].sort()];
+  const head = [
+    `    <variable as="pkg">return 'All packages'</variable>`,
+    `    <formula as="items" input:raw="dsx.variable.a${itemsVar}">return JSON.parse(raw)</formula>`,
+    `    <formula as="shown" input:items="dsx.formula.items" input:pkg="dsx.variable.pkg">return items.filter((i) => pkg === 'All packages' || i.package === pkg)</formula>`,
+  ];
+  const body = [
+    `    <markdown bind="dsx.variable.md${intro}"/>`,
+    `    <hstack class="doc-ts-filters" role="group" a11yLabel="Filter releases" visible-if="dsx.formula.items.length > 0">`,
+    `      <picker bind="dsx.variable.pkg" options="${escapeForDsxAttr(packages.join(","))}" label="Package" class="doc-ts-package"/>`,
+    `    </hstack>`,
+    `    <list bind="dsx.formula.shown" key="id" scroll="false" class="doc-ts-list">`,
+    `      <Card title="{{ dsx.this.title }}" href="{{ dsx.this.route }}" class="doc-ts-card">`,
+    `        <text value="{{ dsx.this.summary }}" class="doc-ts-card-symptom"/>`,
+    `        <hstack class="doc-ts-card-meta">`,
+    `          <chip label="{{ dsx.this.package + ' ' + dsx.this.version }}"/>`,
+    `          <text value="{{ dsx.this.date }}" class="doc-ts-packages"/>`,
+    `        </hstack>`,
+    `      </Card>`,
+    `    </list>`,
+    `    <text value="No release notes are published yet. The first lands with the 0.1.0 release." class="doc-ts-empty" visible-if="dsx.formula.items.length === 0"/>`,
+  ].join("\n");
+  writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
+  writeMd(page.route, page.body);
+  mkdirSync(join(publicDir, "releases"), { recursive: true });
+  const xmlE = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  writeFileSync(join(publicDir, "releases", "rss.xml"), [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<rss version="2.0"><channel><title>Despia releases</title><link>${site}/releases</link><description>${xmlE(page.description)}</description>`,
+    ...items.map((i) => `<item><title>${xmlE(i.title)}</title><link>${site}${i.route}</link><guid>${site}${i.route}</guid>${i.date ? `<pubDate>${new Date(i.date).toUTCString()}</pubDate>` : ""}<description>${xmlE(i.summary)}</description></item>`),
+    `</channel></rss>`, ""].join("\n"));
+  writeFileSync(join(publicDir, "releases", "feed.json"), JSON.stringify({
+    version: "https://jsonfeed.org/version/1.1", title: "Despia releases", home_page_url: `${site}/releases`, feed_url: `${site}/releases/feed.json`,
+    items: items.map((i) => ({ id: site + i.route, url: site + i.route, title: i.title, summary: i.summary, ...(i.date ? { date_published: i.date } : {}), tags: [i.package, i.version] })),
+  }, null, 1) + "\n");
+}
+
+// ── versions (the selector's list) ────────────────────────────────────────────────────────
+writeFileSync(join(publicDir, "versions.json"), JSON.stringify({
+  latest: DOCS_VERSION,
+  versions: [{ version: DOCS_VERSION, label: `${DOCS_VERSION} (latest)`, path: "/" }],
+}, null, 1) + "\n");
+
+// ── the integrations snapshot: per-module llms.txt + the MCP tools' data ──────────────────
+{
+  const file = join(root, "data", "integrations.json");
+  const catalog = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")).packages : [];
+  const mapRows = existsSync(join(root, "migrate", "map.json")) ? JSON.parse(readFileSync(join(root, "migrate", "map.json"), "utf8")).entries : [];
+  const mentions = (p, m) => p.body !== undefined && (p.body.includes(`dsx.module.${m.command}.`) || p.body.includes(m.package) || (p.meta?.packages ?? "").split(",").map((x) => x.trim()).includes(m.package));
+  const index = [];
+  for (const m of catalog) {
+    const docs = entries.filter((p) => mentions(p, m));
+    const v3 = mapRows.filter((r) => r.v4 && r.v4.package === m.package);
+    index.push({ ...m, docs: docs.map((p) => ({ route: p.route, title: p.title, space: p.space })), legacy: v3.map((r) => `/legacy${r.legacyPath}`) });
+    const dir = join(publicDir, "modules", m.command);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, "llms.txt"), [
+      `# ${m.name} (\`${m.api}\`)`, "",
+      `> ${m.description || `The ${m.name} package.`}`, "",
+      `- Package: \`${m.package}\` (install: \`${m.install}\`), version ${m.version ?? "unreleased"}`,
+      `- Licence: ${m.license ?? "unknown"}${m.commercial ? " (commercial, source available)" : ""}`,
+      `- Platforms: ${(m.platforms ?? []).join(", ") || "not declared"}`,
+      ...(m.actions.length > 0 ? [`- Actions: ${m.actions.map((a) => `\`${a}\``).join(", ")}`] : []),
+      "", "## Docs", "",
+      ...(docs.length > 0 ? docs.map((p) => `- [${p.title}](${site}${mdSibling(p.route)}) (${p.space})`) : ["- No page mentions this package yet."]),
+      ...(v3.length > 0 ? ["", "## Moving from v3", "", ...v3.map((r) => `- [${r.legacyTitle}](${site}/legacy${r.legacyPath}.md): ${r.note}`)] : []),
+      "",
+    ].join("\n"));
+  }
+  writeFileSync(join(publicDir, "modules", "llms.txt"), [
+    "# Despia packages", "", `> Every package with a callable command: its own llms.txt lists its API, licence, platforms and the docs pages that use it. Part of ${site} (index: ${site}/llms.txt).`, "",
+    ...index.map((m) => `- [${m.name}](${site}/modules/${m.command}/llms.txt): \`${m.api}\`, ${m.package}`), ""].join("\n"));
+  writeFileSync(join(publicDir, "integrations.json"), JSON.stringify({ packages: index }) + "\n");
+}
+
+// ── the knowledge export: heading-aware chunks for publish-time embeddings ────────────────
+// The Support indexer (bge-m3, Workers AI) embeds THESE chunks once per publish, keyed by
+// content hash, so a query never embeds a document; contentVersion keys every edge cache.
+{
+  const chunks = [];
+  for (const p of entries.filter((e) => e.body !== undefined)) {
+    const parts = sectionize(p.body, 1);
+    for (const c of parts) {
+      const text = c.body.trim();
+      if (text === "") continue;
+      const id = `${p.route}#${c.id || "top"}`;
+      chunks.push({ id, route: p.route, space: p.space, title: p.title, heading: c.title || p.title,
+        text: text.slice(0, 6000), hash: createHash("sha256").update(text).digest("hex").slice(0, 16) });
+    }
+  }
+  const contentVersion = createHash("sha256").update(chunks.map((c) => c.hash).join("")).digest("hex").slice(0, 16);
+  mkdirSync(join(publicDir, "knowledge"), { recursive: true });
+  writeFileSync(join(publicDir, "knowledge", "chunks.json"), JSON.stringify({ contentVersion, model: "@cf/baai/bge-m3", chunks }) + "\n");
+  writeFileSync(join(publicDir, "knowledge", "version.json"), JSON.stringify({ contentVersion, chunks: chunks.length }) + "\n");
 }
 
 // The hand-authored pages have no markdown source; their sibling says what they are.
@@ -1006,10 +1168,10 @@ writeFileSync(join(publicDir, "llms.txt"), [
   "",
   "> Documentation for Despia: Modern (v4, DSX: one set of documents rendered as native iOS, native",
   "> Android, an installable PWA and a server-rendered site), Legacy (v3, despia-native), Migration",
-  "> (v3 to v4), Troubleshooting and App Review (Apple and Google store guidelines).",
+  "> (v3 to v4), Troubleshooting, Releases and App Review (Apple and Google store guidelines).",
   "",
   "Every page serves its raw markdown at its own path plus `.md` (and under /md/). The MCP server at",
-  `${site}/mcp takes a \`space\` argument (modern, legacy, migrate, troubleshooting, app-review, all).`,
+  `${site}/mcp takes a \`space\` argument (modern, legacy, migrate, troubleshooting, releases, app-review, all).`,
   "",
   "## Spaces",
   "",
@@ -1017,6 +1179,7 @@ writeFileSync(join(publicDir, "llms.txt"), [
     ? `- [Modern](${site}/llms.txt): this file; full text at ${site}/llms-full.txt`
     : `- [${s.label}](${site}${s.prefix}/llms.txt): ${s.blurb}; full text at ${site}${s.prefix}/llms-full.txt`),
   `- [Migration map (JSON)](${site}/migrate-map.json): every v3 feature and its v4 package or API`,
+  `- [Packages](${site}/modules/llms.txt): one llms.txt per package (API, licence, platforms, the docs that use it)`,
   "",
   ...llmsList("modern"),
 ].join("\n"));

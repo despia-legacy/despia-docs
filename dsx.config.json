@@ -36,6 +36,14 @@
       }
     },
     {
+      "path": "/releases",
+      "component": "docs.PageReleases",
+      "meta": {
+        "title": "Releases",
+        "description": "Release notes for every DSX release and every package version, with the docs pages, migration notes and upgrade impact each one touches."
+      }
+    },
+    {
       "path": "/troubleshooting",
       "component": "docs.PageTroubleshooting",
       "meta": {
