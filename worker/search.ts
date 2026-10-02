@@ -188,7 +188,7 @@ export function createTools(input: ToolsInput) {
       const platform = str(args, "platform").toLowerCase();
       const pkg = str(args, "package").toLowerCase();
       const rows = input.troubleshooting.articles.filter((a) => match(a, q)
-        && (platform === "" || String(a["platform"]).toLowerCase() === (platform === "legacy" ? "legacy" : "v4"))
+        && (platform === "" || String(a["platform"]).toLowerCase().includes(platform === "legacy" ? "legacy" : "v4"))
         && (pkg === "" || ((a["packages"] as string[]) ?? []).some((p) => p.toLowerCase().includes(pkg))));
       return { articles: rows.slice(0, num(args, "limit", 8, 20)).map((a) => ({ ...a, url: site + a["route"], markdown: mdOf(String(a["route"])) })) };
     }),

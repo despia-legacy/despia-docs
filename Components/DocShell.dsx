@@ -43,7 +43,10 @@
     <variable as="actionsOpen">return false</variable>
     <variable as="scope">return 'This space'</variable>
     <variable as="vector">return []</variable>
+    <variable as="versionsOpen">return false</variable>
     <api as="searchIndex" url="/search-index.json"/>
+    <!-- The version picker's list (public/versions.json: latest at /, each older version under /v/<v>/). -->
+    <api as="versions" url="/versions.json"/>
     <formula as="spaceLabel" input:space="dsx.attribute.space">
       if (space === 'legacy') { return 'Legacy v3' }
       if (space === 'migrate') { return 'Migration' }
@@ -131,6 +134,11 @@
         { id: 'cursor', title: 'Connect to Cursor', hint: 'Install the docs MCP server in Cursor', href: 'cursor://anysphere.cursor-deeplink/mcp/install?name=despia-docs&config=eyJ1cmwiOiJodHRwczovL2RvY3MuZGVzcGlhLmNvbS9tY3AifQ==' },
       ]
     </formula>
+    <formula as="versionRows" input:current="dsx.attribute.version">
+      const list = dsx.api.versions.data && dsx.api.versions.data.versions ? dsx.api.versions.data.versions : []
+      if (list.length === 0) { return [{ version: current, label: current + ' (latest)', path: '/', current: true }] }
+      return list.map((v) => ({ version: v.version, label: v.label, path: v.path, current: v.version === current }))
+    </formula>
     <formula as="improvedRows" input:raw="dsx.attribute.improved">
       if (!raw || raw === '' || raw === '[]') { return [] }
       return JSON.parse(raw)
@@ -214,7 +222,21 @@
           </scroll>
         </stack>
       </popover>
-      <chip label="{{ 'v' + dsx.attribute.version }}" class="doc-version-chip"/>
+      <popover present="dsx.variable.versionsOpen" on:dismiss="dsx.variable.versionsOpen = false" arrow="top" class="doc-version">
+        <chip label="{{ 'v' + dsx.attribute.version }}" class="doc-version-chip" on:tap="dsx.variable.versionsOpen = !dsx.variable.versionsOpen"/>
+        <stack slot="content" class="doc-version-panel" role="navigation" a11yLabel="Docs versions">
+          <scroll class="doc-switcher-scroll">
+            <list bind="dsx.formula.versionRows" key="version" scroll="false" class="doc-switcher-list">
+              <row href="{{ dsx.this.path }}" on:tap="dsx.variable.versionsOpen = false">
+                <hstack class="doc-switcher-row">
+                  <text value="{{ dsx.this.label }}" class="doc-switcher-name"/>
+                  <image icon="checkmark" iconSize="14" visible-if="dsx.this.current" a11yHidden="true" style="color: var(--dsx-accent)"/>
+                </hstack>
+              </row>
+            </list>
+          </scroll>
+        </stack>
+      </popover>
       <spacer/>
       <stack class="doc-search-inline">
         <searchbar bind="dsx.variable.query" placeholder="{{ 'Search ' + dsx.formula.spaceLabel }}"

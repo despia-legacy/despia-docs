@@ -33,7 +33,9 @@ import { fileURLToPath } from "node:url";
 // llms exports). This compiler treats them as ordinary content.
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const contentDir = join(root, "content");
+// DOCS_CONTENT builds an older docs version from its snapshot (versions/<v>/, written by the CMS at
+// release time); the default is the live tree.
+const contentDir = process.env.DOCS_CONTENT ? resolve(root, process.env.DOCS_CONTENT) : join(root, "content");
 const generatedDir = join(root, "Components", "pages");
 const publicDir = join(root, "public");
 
@@ -579,9 +581,20 @@ rmSync(generatedDir, { recursive: true, force: true });
 mkdirSync(generatedDir, { recursive: true });
 mkdirSync(join(publicDir, "md"), { recursive: true });
 
+// Version markers (CMS, PLAN-H H4): `since`, `changed` (a list) and `removed` front matter keys. A page
+// added after DOCS_VERSION or removed at or before it is not part of this version's build; the markers
+// themselves render as DocShell's version chips (the CMS patch's inline marker line is not applied, so a
+// page never says it twice).
+const semver = (v) => String(v).trim().replace(/^v/, "").split(/[.-]/).slice(0, 3).map(Number);
+const cmpVersion = (a, b) => { const x = semver(a), y = semver(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return 0; };
+const inThisVersion = (meta) => !(meta.since && cmpVersion(meta.since, DOCS_VERSION) > 0) && !(meta.removed && cmpVersion(meta.removed, DOCS_VERSION) <= 0);
+
 const pages = files.map((file) => {
   const source = defang(readFileSync(file, "utf8"));
-  const { meta, body } = frontMatter(source);
+  const parsed = frontMatter(source);
+  const meta = parsed.meta;
+  if (!inThisVersion(meta)) return null;
+  const body = parsed.body;
   const route = meta.route ?? routeFor(file);
   const space = meta.space ?? spaceOf(route);
   const title = meta.title ?? firstHeading(body) ?? relative(contentDir, file);
@@ -599,7 +612,7 @@ const pages = files.map((file) => {
     component: componentNameFor(route),
     meta,
   };
-});
+}).filter((p) => p !== null);
 
 // The framework's from-v3 guide, promoted: the same markdown also opens the Migration space
 // (its modern path /framework/guides/from-v3 is unchanged).
@@ -659,7 +672,7 @@ generatedPages.push({
 // Release notes: content/releases/<slug>.md (front matter: title, version, package (dsx or a
 // package path), date, summary), written by the CMS / ROADMAP lanes. The index, RSS and JSON
 // feeds are generated here; with no notes yet the index says so.
-const relNotes = pages.filter((p) => p.space === "releases")
+const relNotes = pages.filter((p) => p.space === "releases" && p.meta.status !== "upcoming")
   .sort((a, b) => String(b.meta.date ?? "").localeCompare(String(a.meta.date ?? "")) || (a.route < b.route ? -1 : 1));
 generatedPages.push({
   route: "/releases",
@@ -824,9 +837,11 @@ for (const page of pages) {
   };
   const items = tsArticles.map((p) => {
     const packages = String(p.meta.packages ?? "").split(",").map((s) => s.trim()).filter(Boolean);
-    const platform = p.meta.platform === "legacy" ? "Legacy" : "v4";
+    // CMS schema v1 (collections/troubleshooting.json): platform v4 | legacy | both; reportedAt,
+    // workaroundAt, resolvedAt (+ resolvedIn, releaseNote). fixedAt / releasedAt are read as aliases.
+    const platform = p.meta.platform === "legacy" ? "Legacy" : p.meta.platform === "both" ? "v4 · Legacy" : "v4";
     const reported = p.meta.reportedAt ?? "";
-    const released = p.meta.releasedAt ?? p.meta.fixedAt ?? "";
+    const released = p.meta.resolvedAt ?? p.meta.releasedAt ?? p.meta.fixedAt ?? "";
     return {
       id: p.route, route: p.route, title: p.title, symptom: p.meta.symptom ?? p.description,
       platform, packages, packagesLabel: packages.join(" · "),
@@ -835,6 +850,7 @@ for (const page of pages) {
       releasedLabel: released !== "" ? fmtUtc(released) : "",
       timeToFix: reported !== "" && released !== "" ? span(reported, released) : "",
       issueUrl: p.meta.issueUrl ?? "",
+      status: p.meta.status ?? "", resolvedIn: p.meta.resolvedIn ?? "", releaseNote: p.meta.releaseNote ?? "",
     };
   });
   const packageOptions = ["All packages", ...[...new Set(items.flatMap((i) => i.packages))].sort()];
@@ -853,7 +869,7 @@ for (const page of pages) {
     `    <variable as="pkg">return 'All packages'</variable>`,
     `    <formula as="items" input:raw="dsx.variable.a${itemsVar}">return JSON.parse(raw)</formula>`,
     `    <formula as="shown" input:items="dsx.formula.items" input:platform="dsx.variable.platform" input:pkg="dsx.variable.pkg">`,
-    `      return items.filter((i) => (platform === 'All' || i.platform === platform) && (pkg === 'All packages' || i.packages.includes(pkg)))`,
+    `      return items.filter((i) => (platform === 'All' || i.platform.includes(platform)) && (pkg === 'All packages' || i.packages.includes(pkg)))`,
     `    </formula>`,
     `    <formula as="fixed" input:items="dsx.formula.items">return items.filter((i) => i.fixed)</formula>`,
   ];
@@ -1009,10 +1025,19 @@ for (const page of pages) {
 }
 
 // ── versions (the selector's list) ────────────────────────────────────────────────────────
-writeFileSync(join(publicDir, "versions.json"), JSON.stringify({
-  latest: DOCS_VERSION,
-  versions: [{ version: DOCS_VERSION, label: `${DOCS_VERSION} (latest)`, path: "/" }],
-}, null, 1) + "\n");
+// data/docs-versions.json is written by the CMS when a release snapshots the docs: newest first,
+// [{ "version": "0.2.0", "date": "2026-11-01" }]. The first entry is latest (served at /), every other
+// one is its own build of versions/<v>/ served under /v/<v>/ and stays readable forever.
+{
+  const listFile = join(root, "data", "docs-versions.json");
+  const listed = existsSync(listFile) ? JSON.parse(readFileSync(listFile, "utf8")) : [];
+  const all = [...new Set([DOCS_VERSION, ...listed.map((v) => v.version)])].sort((a, b) => cmpVersion(b, a));
+  writeFileSync(join(publicDir, "versions.json"), JSON.stringify({
+    latest: all[0],
+    current: DOCS_VERSION,
+    versions: all.map((v, i) => ({ version: v, label: i === 0 ? `${v} (latest)` : v, path: i === 0 ? "/" : `/v/${v}/` })),
+  }, null, 1) + "\n");
+}
 
 // ── the integrations snapshot: per-module llms.txt + the MCP tools' data ──────────────────
 {

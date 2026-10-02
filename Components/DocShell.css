@@ -1129,3 +1129,5 @@
 .doc-actions-menu { width: min(18rem, calc(100vw - 2rem)); align-items: stretch; }
 .doc-legacy-banner { gap: 0.25rem; margin-block: 0.25rem 0.75rem; align-items: flex-start; }
 @media (max-width: 39.999rem) { .doc-helpbar { justify-content: flex-end; padding-inline-end: 0.25rem; } }
+.doc-version-panel { width: 12rem; align-items: stretch; }
+@media (max-width: 39.999rem) { .doc-version { display: none; } }
