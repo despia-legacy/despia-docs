@@ -1,0 +1,32 @@
+<hstack class="doc-callout doc-callout-{{ dsx.attribute.kind }}" role="note">
+  <head>
+    <!--
+      The admonition: a hairline box whose hue lives only in the kind icon and
+      the border, an optional neutral title, and the body slot (nested markdown
+      chunks from the compiler). Authored in markdown as <Callout kind="...">,
+      or through the sugar tags Note / Info / Tip / Warning / Danger
+      (scripts/compile.mjs rewrites those to kinds). Looks live in DocShell.css
+      (the sheet that reaches every page), tokens only.
+    -->
+    <attribute as="kind" default="'note'"/>
+    <attribute as="title" default="''"/>
+    <!-- The kind glyphs are drawn here, full-frame in the 24 grid (ink to ~2..22, the
+         header-glyph precedent), because the shared icon corpus insets its strokes:
+         a 16-20px slot rendered those at ~11-13px optical, decorative-tiny. The paths
+         are centerlines; DocShell.css strokes them (fill none, stroke currentColor). -->
+    <formula as="icon" kind="dsx.attribute.kind">
+      if (kind === 'info') { return 'M12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9zM12 8.3h.01M12 11.8v4.7' }
+      if (kind === 'tip') { return 'M12 2.5C13 8 16 11 21.5 12 16 13 13 16 12 21.5 11 16 8 13 2.5 12 8 11 11 8 12 2.5z' }
+      if (kind === 'warning') { return 'M12 3.5L21.5 20.5H2.5zM12 10v4.5M12 17.6h.01' }
+      if (kind === 'danger') { return 'M8.3 3h7.4L21 8.3v7.4L15.7 21H8.3L3 15.7V8.3zM9.6 9.6l4.8 4.8M14.4 9.6l-4.8 4.8' }
+      return 'M5.5 2.75H14L18.5 7.25V21.25H5.5zM14 3v4.5h4.4M9 12.75h6M9 16.5h6'
+    </formula>
+  </head>
+  <svg d="{{ dsx.formula.icon }}" viewBox="0 0 24 24" fill="none" width="20" height="20" class="doc-callout-icon"/>
+  <stack class="doc-callout-content">
+    <text value="{{ dsx.attribute.title }}" class="doc-callout-title" visible-if="dsx.attribute.title !== ''"/>
+    <stack class="doc-callout-body">
+      <slot/>
+    </stack>
+  </stack>
+</hstack>

@@ -1,0 +1,10 @@
+<stack class="doc-steps" role="list">
+  <head>
+    <!--
+      The numbered procedure: <Step title="..."> children render on a numbered rail
+      (CSS counter in DocShell.css); list semantics give assistive tech the position,
+      so the painted number stays decorative.
+    -->
+  </head>
+  <slot/>
+</stack>

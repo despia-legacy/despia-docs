@@ -1,0 +1,15 @@
+<hstack class="doc-step" role="listitem">
+  <head>
+    <!-- One step of <Steps>: badge + connector on the rail, title + body content. -->
+    <attribute as="title" default="''"/>
+  </head>
+  <stack class="doc-step-rail" a11yHidden="true">
+    <stack class="doc-step-badge"/>
+  </stack>
+  <stack class="doc-step-content">
+    <text value="{{ dsx.attribute.title }}" class="doc-step-title" visible-if="dsx.attribute.title !== ''"/>
+    <stack class="doc-step-body">
+      <slot/>
+    </stack>
+  </stack>
+</hstack>

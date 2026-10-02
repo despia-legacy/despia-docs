@@ -1,0 +1,9 @@
+<stack class="doc-accordions">
+  <head>
+    <!--
+      The disclosure set: system <Accordion> children on one card, joined by
+      hairlines (DocShell.css). Dogfood - the group adds chrome, never behavior.
+    -->
+  </head>
+  <slot/>
+</stack>

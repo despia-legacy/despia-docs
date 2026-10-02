@@ -1,0 +1,1765 @@
+{
+  "name": "Despia Docs",
+  "entry": "PageIndex",
+  "outDir": "dist",
+  "routes": [
+    {
+      "path": "/",
+      "component": "docs.PageIndex",
+      "meta": {
+        "title": "Despia documentation",
+        "description": "One set of DSX documents, rendered as native iOS, native Android, an installable PWA and a server-rendered site."
+      }
+    },
+    {
+      "path": "/quickstart",
+      "component": "docs.PageQuickstart",
+      "meta": {
+        "title": "Quickstart",
+        "description": "From an empty directory to a running DSX app."
+      }
+    },
+    {
+      "path": "/system",
+      "component": "docs.System",
+      "meta": {
+        "title": "System",
+        "description": "The design system as a living page: every element in its states."
+      }
+    },
+    {
+      "path": "/components",
+      "component": "docs.PageComponents",
+      "meta": {
+        "title": "Components",
+        "description": "Every element the DSX language has, one page each, generated from the ledgers that keep them honest."
+      }
+    },
+    {
+      "path": "/components/accordion",
+      "component": "docs.PageComponents_Accordion",
+      "meta": {
+        "title": "Accordion",
+        "description": "The global Web twin provides accessible disclosure semantics, reactive title/open state, toggle events, and the named header slot that REPLACES the default title + chevron."
+      }
+    },
+    {
+      "path": "/components/alert",
+      "component": "docs.PageComponents_Alert",
+      "meta": {
+        "title": "alert",
+        "description": "The overlay twin provides modal alert semantics, focus containment/restoration, bound presentation, normalized actions, and dismissal."
+      }
+    },
+    {
+      "path": "/components/attributes",
+      "component": "docs.PageComponents_Attributes",
+      "meta": {
+        "title": "Universal attributes",
+        "description": "The vocabulary every element carries, whatever it draws: accessibility, animation, class, style and the platform suffixes."
+      }
+    },
+    {
+      "path": "/components/audio",
+      "component": "docs.PageComponents_Audio",
+      "meta": {
+        "title": "audio",
+        "description": "The media Web twin implements the fixture's full transport/readout contract: headless HTMLMediaElement playback, reactive transport/scrubbing bindings, bounded ready/time/buffering/error events, a 15-second load deadline, teardown, feature-detected Media Session commands, and the session= playback/ambient category applied through the page-scoped Audio Session API where the engine has one."
+      }
+    },
+    {
+      "path": "/components/button",
+      "component": "docs.PageComponents_Button",
+      "meta": {
+        "title": "button",
+        "description": "The base Web twin renders real button/anchor semantics with label, icon, iconSize, bordered/prominent variants, destructive/cancel roles, href navigation, disabled gating, and tap/double-tap activation - the full button.json attribute contract."
+      }
+    },
+    {
+      "path": "/components/calendar",
+      "component": "docs.PageComponents_Calendar",
+      "meta": {
+        "title": "calendar",
+        "description": "The data-control twin renders a localized, keyboard-operable month grid with ISO binding, range constraints, marks, and month events."
+      }
+    },
+    {
+      "path": "/components/canvas",
+      "component": "docs.PageComponents_Canvas",
+      "meta": {
+        "title": "canvas",
+        "description": "The `<canvas>` surface renders the shared display list into an HTML canvas, with the SSR SVG path byte-identical to the native twins."
+      }
+    },
+    {
+      "path": "/components/card",
+      "component": "docs.PageComponents_Card",
+      "meta": {
+        "title": "card",
+        "description": "The base Web twin renders the surface word: the card corner, the raised ground, the elevation and the INSET, which is the part the two helper classes deliberately do not carry because their wearers pad themselves."
+      }
+    },
+    {
+      "path": "/components/carousel",
+      "component": "docs.PageComponents_Carousel",
+      "meta": {
+        "title": "carousel",
+        "description": "The structural twin renders accessible slides with two-way current-page binding, snap paging, selection dots, peek and spacing geometry, and change events - the full carousel.json attribute contract."
+      }
+    },
+    {
+      "path": "/components/chart",
+      "component": "docs.PageComponents_Chart",
+      "meta": {
+        "title": "chart",
+        "description": "The rich Web twin renders accessible SVG line, area, bar and point charts from bound data - multi-series with palette or single color=, stacked= areas and bars (domain from the stack totals, bands closing on the previous layer), legend= at the census positions (a figcaption, so assistive tech reads it as the caption), xType=time positioning by parsed timestamps with the kernel timeTicks ladder, y2Key/y2Color riding a labeled secondary axis, animate= draw-in (reduced-motion instant), interpolation=linear|smooth|monotone|step, grids, and deterministic downsampling."
+      }
+    },
+    {
+      "path": "/components/chatbubble",
+      "component": "docs.PageComponents_Chatbubble",
+      "meta": {
+        "title": "ChatBubble",
+        "description": "The global Web twin renders the directional bubble, bound value/children, semantic colors, and bounded width."
+      }
+    },
+    {
+      "path": "/components/checkbox",
+      "component": "docs.PageComponents_Checkbox",
+      "meta": {
+        "title": "Checkbox",
+        "description": "The global Web twin uses a real checkbox input with bound state, label, change write-back, and keyboard/focus semantics."
+      }
+    },
+    {
+      "path": "/components/chip",
+      "component": "docs.PageComponents_Chip",
+      "meta": {
+        "title": "chip",
+        "description": "The base Web twin renders the pill word with its two independent axes: role is the STATUS voice off the system's own semantic pairs (accent, success, warning, danger, info) and selected is the chosen pose, so a chip may be a warning and selected at once."
+      }
+    },
+    {
+      "path": "/components/colorpicker",
+      "component": "docs.PageComponents_Colorpicker",
+      "meta": {
+        "title": "colorpicker",
+        "description": "The browser's own colour control (input type=color) behind the iOS ColorPicker row: the label leading, a 28px well painting the bound colour trailing, the hex round-tripped by the shared core, the colour announced by name, on:change on every write and on:commit once when the browser picker closes."
+      }
+    },
+    {
+      "path": "/components/combobox",
+      "component": "docs.PageComponents_Combobox",
+      "meta": {
+        "title": "combobox",
+        "description": "The native-control twin implements an editable ARIA combobox/listbox with filtering, keyboard navigation, option binding, selection, and disabled state."
+      }
+    },
+    {
+      "path": "/components/confirmdialog",
+      "component": "docs.PageComponents_Confirmdialog",
+      "meta": {
+        "title": "confirmDialog",
+        "description": "The overlay twin provides an adaptive confirm dialog with modal semantics, normalized actions, focus containment/restoration, and dismissal."
+      }
+    },
+    {
+      "path": "/components/contextmenu",
+      "component": "docs.PageComponents_Contextmenu",
+      "meta": {
+        "title": "contextmenu",
+        "description": "The overlay twin supports context-click and long-press opening, nested actions, roles, separators, keyboard traversal and focus restoration, on the same long-press timing the native gesture recognizer uses."
+      }
+    },
+    {
+      "path": "/components/datepicker",
+      "component": "docs.PageComponents_Datepicker",
+      "meta": {
+        "title": "datepicker",
+        "description": "The native-control twin uses browser date/time controls with normalized DSX wire values, label, color, disabled state, and write-back."
+      }
+    },
+    {
+      "path": "/components/declarations",
+      "component": "docs.PageComponents_Declarations",
+      "meta": {
+        "title": "Declarations",
+        "description": "The tags that render nothing and declare everything: state, actions, formulas, events, styles and slots."
+      }
+    },
+    {
+      "path": "/components/divider",
+      "component": "docs.PageComponents_Divider",
+      "meta": {
+        "title": "divider",
+        "description": "The base Web twin renders the semantic-token divider and accepts universal style/color overrides."
+      }
+    },
+    {
+      "path": "/components/drawer",
+      "component": "docs.PageComponents_Drawer",
+      "meta": {
+        "title": "Drawer",
+        "description": "The application-control Web twin implements BOTH declared presentations: the modal drawer (adaptive geometry, focus containment and restoration, background inerting, Escape and scrim dismissal, bounded content, 120px drag dismissal) and, at the shared desktop step, the standing drawer pinned in flow (collapse-to-rail control, keyboard- and pointer-resizable drag hairline within min/max, honest complementary semantics, no scrim or focus trap)."
+      }
+    },
+    {
+      "path": "/components/dsxview",
+      "component": "docs.PageComponents_Dsxview",
+      "meta": {
+        "title": "DSXView",
+        "description": "The rich Web twin mounts the screen component src names from this build's compiled registry (the web reading of the native rule that a shipped tag of the same name always wins), with reactive src re-resolution, the stable dsx-view lifecycle events, and a labelled unavailable state."
+      }
+    },
+    {
+      "path": "/components/dsxwebview",
+      "component": "docs.PageComponents_Dsxwebview",
+      "meta": {
+        "title": "DSXWebView",
+        "description": "The rich Web twin mounts the composed app web surface as the same policy-constrained iframe WebView rides, resolving path against this page's own origin (an explicit origin wins) with the shared lifecycle events and the named-surface controls the Dom facet targets."
+      }
+    },
+    {
+      "path": "/components/field",
+      "component": "docs.PageComponents_Field",
+      "meta": {
+        "title": "field",
+        "description": "The form twin supplies labeled controls, shared form state, touched/dirty/error tracking, validation, secure inputs, and option fields."
+      }
+    },
+    {
+      "path": "/components/flow",
+      "component": "docs.PageComponents_Flow",
+      "meta": {
+        "title": "flow",
+        "description": "The structural twin provides wrapping flow layout with bounded reactive item and line spacing."
+      }
+    },
+    {
+      "path": "/components/footercopy",
+      "component": "docs.PageComponents_Footercopy",
+      "meta": {
+        "title": "footerCopy",
+        "description": "The base Web twin renders the closing line of a screen or a form at the footnote rung in the tertiary ink, the other half of the screen header word."
+      }
+    },
+    {
+      "path": "/components/form",
+      "component": "docs.PageComponents_Form",
+      "meta": {
+        "title": "form",
+        "description": "The form twin manages namespace state, child fields, validity, scrolling, and submit actions/events using a real form element."
+      }
+    },
+    {
+      "path": "/components/grid",
+      "component": "docs.PageComponents_Grid",
+      "meta": {
+        "title": "grid",
+        "description": "The structural/binding twin renders semantic grid rows/cells with responsive columns, keyed reconciliation, spacing, scroll, and reach-end handling - the full grid.json attribute contract (bind/key/columns/spacing/scroll/reachEnd)."
+      }
+    },
+    {
+      "path": "/components/hstack",
+      "component": "docs.PageComponents_Hstack",
+      "meta": {
+        "title": "hstack",
+        "description": "The base Web twin renders a horizontal flex stack with DSX spacing/alignment through the universal style contract."
+      }
+    },
+    {
+      "path": "/components/image",
+      "component": "docs.PageComponents_Image",
+      "meta": {
+        "title": "image",
+        "description": "The base Web twin renders remote and relative images, every icon name in the shared cross-runtime sf-map corpus, the fixture's decorative-by-default accessibility contract, iconSize/fontSize geometry, semantic tint and the cache policy."
+      }
+    },
+    {
+      "path": "/components/lightbox",
+      "component": "docs.PageComponents_Lightbox",
+      "meta": {
+        "title": "lightbox",
+        "description": "The media Web twin provides a shared-top-layer modal gallery with bounded safe sources, reactive presentation/index, focus containment/restoration, keyboard and RTL paging, pointer swipe, interactive drag dismissal, responsive controls, deterministic SSR, and the native zoom ladder: pinch (pointer pairs and trackpad ctrl+wheel) and double-tap zoom toward the focal point (1..4x), pan while zoomed with the native lock (pager and dismiss-drag disabled, chrome hidden), Escape unwinding zoom before dismissal, per-page zoom reset."
+      }
+    },
+    {
+      "path": "/components/list",
+      "component": "docs.PageComponents_List",
+      "meta": {
+        "title": "list",
+        "description": "The structural/binding twin implements the whole fixture contract: semantic rows, keyed identity, write-back scope, spacing/axis/scroll/alignment, reach-end, group_by sections in first-seen order, the swipe-action rails with both firing shapes and per-edge full-swipe commit, drag reorder that writes the moved array back through the bind seam and fires on:move with FINAL indices, and the horizontal autoscroll marquee - under the same construct gating List.swift uses (scroll=\"false\" and a horizontal axis win over all three; a grouped list ignores reorder; an active reorder suppresses swipe) and with an SSR twin that paints the same first frame."
+      }
+    },
+    {
+      "path": "/components/map",
+      "component": "docs.PageComponents_Map",
+      "meta": {
+        "title": "map",
+        "description": "The rich Web twin renders a REAL basemap when tiles= names a source - a self-hosted Protomaps .pmtiles archive (range-read, MVT-decoded, canvas-painted in the Despia neutral language with archive-metadata attribution) or a raster {z}/{x}/{y} template - plus accessible pins and pointer/keyboard pan/zoom; without tiles= it is the honest offline coordinate plane."
+      }
+    },
+    {
+      "path": "/components/menu",
+      "component": "docs.PageComponents_Menu",
+      "meta": {
+        "title": "menu",
+        "description": "The overlay twin provides anchored nested menus with normalized actions, roles, separators, focus management, and keyboard traversal."
+      }
+    },
+    {
+      "path": "/components/menubar",
+      "component": "docs.PageComponents_Menubar",
+      "meta": {
+        "title": "MenuBar",
+        "description": "The application-control Web twin implements bounded keyed items, canonical selection state and write-back, selection events, radio-menu semantics, keyboard and RTL navigation, the compact pill dock, and, at the shared desktop step, the WAI-ARIA menubar presentation: roving roots, per-root shadow-3 flyouts from nested items, submenu keyboard walk with Escape walking up, and right-aligned shortcut hints from the shortcut token grammar."
+      }
+    },
+    {
+      "path": "/components/menusidebar",
+      "component": "docs.PageComponents_Menusidebar",
+      "meta": {
+        "title": "MenuSidebar",
+        "description": "The application-control Web twin of the Sidebar.dsx slide-over: a fixed overlay panel on the leading edge, min(320px, 100% - 56px) wide and padded by the safe area, over a 32% black scrim; rows bound to items (attribute first, then the store) with a 24px icon, the label and a trailing checkmark, the active row carrying aria-current and the 12% selection fill; on:select publishing the whole row as authored and on:dismiss from a scrim tap and from Escape; dark, background and tint as on the natives; focus moved into the panel (the selected row) and restored on close, focus contained, the background inerted, through the shared overlay coordinator; a slide and scrim fade in only after the document settled and a freeze-frame slide out before removal on every close path."
+      }
+    },
+    {
+      "path": "/components/native-only",
+      "component": "docs.PageComponents_NativeOnly",
+      "meta": {
+        "title": "Native first elements",
+        "description": "The rows whose essence is a platform or vendor runtime the web renderer does not ship."
+      }
+    },
+    {
+      "path": "/components/native-only/levelmeter",
+      "component": "docs.PageComponents_NativeOnly_Levelmeter",
+      "meta": {
+        "title": "LevelMeter",
+        "description": "The Studio audio level meter has no Web renderer or audio-analysis seam."
+      }
+    },
+    {
+      "path": "/components/native-only/lottie",
+      "component": "docs.PageComponents_NativeOnly_Lottie",
+      "meta": {
+        "title": "lottie",
+        "description": "No built-in Lottie player ships with the runtime; `<lottie>` is a MODULE element, and the Core/Lottie web facet (the vendored lottie-web light player, MIT, pinned) fills the tag through the module component loader whenever the module is registered."
+      }
+    },
+    {
+      "path": "/components/native-only/rive",
+      "component": "docs.PageComponents_NativeOnly_Rive",
+      "meta": {
+        "title": "rive",
+        "description": "No Rive runtime ships with the web renderer; `<rive>` is a MODULE element, and the Core/Rive web facet fills the tag through the module component loader whenever the module is registered and its pinned @rive-app/canvas player was fetched by the build."
+      }
+    },
+    {
+      "path": "/components/native-only/studiopitcheditor",
+      "component": "docs.PageComponents_NativeOnly_Studiopitcheditor",
+      "meta": {
+        "title": "StudioPitchEditor",
+        "description": "The Studio pitch-editing surface has no Web DSP/editor implementation."
+      }
+    },
+    {
+      "path": "/components/native-only/studioshow",
+      "component": "docs.PageComponents_NativeOnly_Studioshow",
+      "meta": {
+        "title": "StudioShow",
+        "description": "The Studio mode-switching surface has no Web implementation."
+      }
+    },
+    {
+      "path": "/components/native-only/studiotimecode",
+      "component": "docs.PageComponents_NativeOnly_Studiotimecode",
+      "meta": {
+        "title": "StudioTimecode",
+        "description": "The Studio synchronized timecode display has no Web transport-clock integration."
+      }
+    },
+    {
+      "path": "/components/native-only/studiotimeline",
+      "component": "docs.PageComponents_NativeOnly_Studiotimeline",
+      "meta": {
+        "title": "StudioTimeline",
+        "description": "The multi-track Studio timeline/editor has no Web implementation."
+      }
+    },
+    {
+      "path": "/components/native-only/studiotrim",
+      "component": "docs.PageComponents_NativeOnly_Studiotrim",
+      "meta": {
+        "title": "StudioTrim",
+        "description": "The Studio clip-trimming surface has no Web implementation."
+      }
+    },
+    {
+      "path": "/components/native-only/systemfab",
+      "component": "docs.PageComponents_NativeOnly_Systemfab",
+      "meta": {
+        "title": "SystemFAB",
+        "description": "The native half of the shared FAB.dsx wrapper has no Web renderer, and is not asked for one: FAB.dsx gates this tag off web, Windows and Linux and gives those lanes a pressable composition instead, so the floating action button an author writes as `<FAB>` is a real, styled, accessible control on every renderer while this tag itself stays native."
+      }
+    },
+    {
+      "path": "/components/native-only/systemsettingsrow",
+      "component": "docs.PageComponents_NativeOnly_Systemsettingsrow",
+      "meta": {
+        "title": "SystemSettingsRow",
+        "description": "The native half of the shared SettingsRow.dsx wrapper has no Web renderer, and is not asked for one: SettingsRow.dsx gates this tag off web, Windows and Linux and composes the row from standard elements and CSS on those lanes, so the settings row an author writes as `<SettingsRow>` is a real, styled, accessible row on every renderer while this tag itself stays native."
+      }
+    },
+    {
+      "path": "/components/native-only/waveform",
+      "component": "docs.PageComponents_NativeOnly_Waveform",
+      "meta": {
+        "title": "Waveform",
+        "description": "The Studio waveform surface has no Web renderer."
+      }
+    },
+    {
+      "path": "/components/otp",
+      "component": "docs.PageComponents_Otp",
+      "meta": {
+        "title": "otp",
+        "description": "The native-control twin implements a segmented one-time-code input with binding, paste/input normalization, completion event, and accessibility labeling."
+      }
+    },
+    {
+      "path": "/components/pager",
+      "component": "docs.PageComponents_Pager",
+      "meta": {
+        "title": "pager",
+        "description": "The structural/binding twin renders horizontal/vertical snap paging with two-way current-page binding, keyed bound pages, selection dots, and change events - the full pager.json attribute contract."
+      }
+    },
+    {
+      "path": "/components/picker",
+      "component": "docs.PageComponents_Picker",
+      "meta": {
+        "title": "picker",
+        "description": "The native-control twin uses a real select control with static/bound options, labels, disabled state, and value write-back."
+      }
+    },
+    {
+      "path": "/components/popover",
+      "component": "docs.PageComponents_Popover",
+      "meta": {
+        "title": "popover",
+        "description": "The overlay twin provides an anchored, viewport-aware popover with trigger semantics, dismissal, keyboard handling, and focus restoration."
+      }
+    },
+    {
+      "path": "/components/pressable",
+      "component": "docs.PageComponents_Pressable",
+      "meta": {
+        "title": "pressable",
+        "description": "The base Web twin provides whole-area button/anchor semantics with child content and universal tap, double-tap, long-press, and navigation wiring."
+      }
+    },
+    {
+      "path": "/components/progress",
+      "component": "docs.PageComponents_Progress",
+      "meta": {
+        "title": "progress",
+        "description": "The base Web twin provides an accessible determinate progressbar with clamped bound value and semantic track/fill styling."
+      }
+    },
+    {
+      "path": "/components/progressring",
+      "component": "docs.PageComponents_Progressring",
+      "meta": {
+        "title": "ProgressRing",
+        "description": "The global Web twin renders an accessible SVG progress ring with bound value/max, line width, colors, size, and label."
+      }
+    },
+    {
+      "path": "/components/qrcode",
+      "component": "docs.PageComponents_Qrcode",
+      "meta": {
+        "title": "qrcode",
+        "description": "The rich Web twin generates deterministic SVG QR matrices with size, colors, correction level, accessible labeling, and fail-closed input handling."
+      }
+    },
+    {
+      "path": "/components/radiogroup",
+      "component": "docs.PageComponents_Radiogroup",
+      "meta": {
+        "title": "RadioGroup",
+        "description": "The global data-control twin renders real radio inputs from CSV or bound option data and writes the selected value back."
+      }
+    },
+    {
+      "path": "/components/rangeslider",
+      "component": "docs.PageComponents_Rangeslider",
+      "meta": {
+        "title": "rangeslider",
+        "description": "The native-control twin implements two bounded range inputs with normalized low/high constraints, throttled write-back, final commit, and accessible labels."
+      }
+    },
+    {
+      "path": "/components/refreshable",
+      "component": "docs.PageComponents_Refreshable",
+      "meta": {
+        "title": "refreshable",
+        "description": "The data-control twin implements the fixture's on:refresh/busy contract: scroll-contained content, rubber-band pull on touch and fine pointers with the shared overscroll curve, a built-in always-visible 44px refresh control for keyboard and mouse with hover and focus-visible states, a polite live status region, aria-busy reflection, spin progress with reduced-motion collapse, and busy-gated completion."
+      }
+    },
+    {
+      "path": "/components/scaffold",
+      "component": "docs.PageComponents_Scaffold",
+      "meta": {
+        "title": "scaffold",
+        "description": "The base Web twin provides an accessible adaptive split/stack shell with sidebar/content/inspector panes, authored widths, collapse policy, and labels."
+      }
+    },
+    {
+      "path": "/components/scene",
+      "component": "docs.PageComponents_Scene",
+      "meta": {
+        "title": "scene",
+        "description": "The DSX-native scene root renders in the browser through the in-kernel WebGL surface installed by registerSceneSurface, over the same corpus-pinned scene fold (transform composition, projection, picking) the two native lanes and the Compose desktop rasterizer read, so a scene cannot mean one thing here and another on a phone."
+      }
+    },
+    {
+      "path": "/components/scene360",
+      "component": "docs.PageComponents_Scene360",
+      "meta": {
+        "title": "Scene360",
+        "description": "The panorama renders over the kernel `<scene>` engine's WebGL surface: an inside-out sphere textured with the equirectangular src, the camera at its centre, drag to look (yaw/pitch, pitch clamped), wheel and pinch on the field of view (20 to 110), yaw/pitch/fov reactive; loading, ready and failed fire as on iOS."
+      }
+    },
+    {
+      "path": "/components/scene3d",
+      "component": "docs.PageComponents_Scene3d",
+      "meta": {
+        "title": "Scene3D",
+        "description": "The viewer renders over the kernel `<scene>` engine's WebGL surface (packages/dom/src/scene3d.ts): one internal `<scene>` per instance (camera, key and ambient light, the GLB model centred and resting on the floor, one node per models= row) driven through the scene bus with the iOS orbit rig (drag, wheel and pinch, autoRotate), the clip and loop, the live scale and the clip clock hold; loading, ready {ar, animations, bounds}, failed {reason}, tap {node} and animationFinished fire on the element and the scene3d channel, and the scene3d verbs reach it through Core/Scene3D/web."
+      }
+    },
+    {
+      "path": "/components/scopebar",
+      "component": "docs.PageComponents_Scopebar",
+      "meta": {
+        "title": "scopeBar",
+        "description": "The base Web twin renders the scopes under a search field as a wrapping rail of the chip word, with the tablist semantics, a roving tab stop and the two way write back the other option controls carry."
+      }
+    },
+    {
+      "path": "/components/screenheader",
+      "component": "docs.PageComponents_Screenheader",
+      "meta": {
+        "title": "screenHeader",
+        "description": "The base Web twin renders the screen's opening block, a display title over a callout subtitle in the secondary ink, both of them display copy through the localization seam and both painted server side so a reader meets the title rather than a box that grows when the client arrives."
+      }
+    },
+    {
+      "path": "/components/scroll",
+      "component": "docs.PageComponents_Scroll",
+      "meta": {
+        "title": "scroll",
+        "description": "The base Web twin provides vertical or horizontal overflow layout and renders child content through the common binding/style contract."
+      }
+    },
+    {
+      "path": "/components/searchbar",
+      "component": "docs.PageComponents_Searchbar",
+      "meta": {
+        "title": "searchbar",
+        "description": "The Web twin is the composite search field the native reference draws: a leading magnifier, the real search input with binding, the Search placeholder default and submit, and a trailing clear button that writes the bound path back and fires on:clear."
+      }
+    },
+    {
+      "path": "/components/sectionfooter",
+      "component": "docs.PageComponents_Sectionfooter",
+      "meta": {
+        "title": "sectionFooter",
+        "description": "The base Web twin renders the section footer from markup, and the bound twin is the list's group_footer_by attribute, which reads the footer off the section's first row exactly as the header reads the group value."
+      }
+    },
+    {
+      "path": "/components/sectionheader",
+      "component": "docs.PageComponents_Sectionheader",
+      "meta": {
+        "title": "sectionHeader",
+        "description": "The base Web twin renders the list section header from markup, writing the same class and the same part name the bound group_by emitter writes, so one look has two ways in and a reader hears the group's own name either way."
+      }
+    },
+    {
+      "path": "/components/segmented",
+      "component": "docs.PageComponents_Segmented",
+      "meta": {
+        "title": "segmented",
+        "description": "The rich Web twin provides an accessible radiogroup with static/bound options, selection write-back, and arrow/Home/End keyboard behavior."
+      }
+    },
+    {
+      "path": "/components/segmentedbutton",
+      "component": "docs.PageComponents_Segmentedbutton",
+      "meta": {
+        "title": "segmentedButton",
+        "description": "The data-control twin implements single or multiple segmented selection, labels/icons, binding, keyboard traversal, and accessibility state."
+      }
+    },
+    {
+      "path": "/components/sheet",
+      "component": "docs.PageComponents_Sheet",
+      "meta": {
+        "title": "sheet",
+        "description": "The overlay twin implements modal sheet/inset/full modes, normalized detents, title/close/action chrome, focus containment/restoration, and dismissal."
+      }
+    },
+    {
+      "path": "/components/signature",
+      "component": "docs.PageComponents_Signature",
+      "meta": {
+        "title": "Signature",
+        "description": "The global Web twin is a real pointer-driven ink pad: a devicePixelRatio-scaled 2D canvas drawing the SHARED ink law (@despia-native/kernel signature-core: clamp, round-at-capture, midpoint quadratic curve), one bound write per stroke on pointer-up, and a server twin that renders the committed strokes as an inline SVG in the same normalized space, so a signed document has real first paint before the pad mounts."
+      }
+    },
+    {
+      "path": "/components/skeleton",
+      "component": "docs.PageComponents_Skeleton",
+      "meta": {
+        "title": "Skeleton",
+        "description": "The global Web twin renders a size/radius-aware loading placeholder hidden from assistive technology."
+      }
+    },
+    {
+      "path": "/components/slider",
+      "component": "docs.PageComponents_Slider",
+      "meta": {
+        "title": "slider",
+        "description": "The base Web twin uses a real range input with binding, min/max, input write-back, and semantic tint styling."
+      }
+    },
+    {
+      "path": "/components/spacer",
+      "component": "docs.PageComponents_Spacer",
+      "meta": {
+        "title": "spacer",
+        "description": "The base Web twin participates as flexible space in DSX stack layout and accepts universal size constraints."
+      }
+    },
+    {
+      "path": "/components/spinner",
+      "component": "docs.PageComponents_Spinner",
+      "meta": {
+        "title": "spinner",
+        "description": "The base Web twin provides an accessible status spinner with semantic color/scale styling and reduced-motion handling."
+      }
+    },
+    {
+      "path": "/components/split",
+      "component": "docs.PageComponents_Split",
+      "meta": {
+        "title": "split",
+        "description": "The structural twin provides the two/three-pane plan (paneRole resolution, collapseAt/expandAt width classes), the phone stack push with a back pop, the overlay sidebar, ARIA window-splitter dividers with drag and keyboard resize, and value/on:change detail routing."
+      }
+    },
+    {
+      "path": "/components/stack",
+      "component": "docs.PageComponents_Stack",
+      "meta": {
+        "title": "stack",
+        "description": "The base Web twin provides the generic DSX flex/display container and universal spacing/alignment/style contract."
+      }
+    },
+    {
+      "path": "/components/stars",
+      "component": "docs.PageComponents_Stars",
+      "meta": {
+        "title": "stars",
+        "description": "The rich Web twin renders fractional SVG star fills with read-only or radiogroup semantics, binding, and keyboard selection."
+      }
+    },
+    {
+      "path": "/components/stepper",
+      "component": "docs.PageComponents_Stepper",
+      "meta": {
+        "title": "stepper",
+        "description": "The base Web twin provides the visible label caption, named decrement/value/increment controls, semantic tint, fixture-default bounds, bound numeric updates and press-and-hold acceleration."
+      }
+    },
+    {
+      "path": "/components/svg",
+      "component": "docs.PageComponents_Svg",
+      "meta": {
+        "title": "svg",
+        "description": "The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T A Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization."
+      }
+    },
+    {
+      "path": "/components/table",
+      "component": "docs.PageComponents_Table",
+      "meta": {
+        "title": "Table",
+        "description": "The global Web twin renders the whole native Table contract: a semantic, scroll-contained table from bound rows, declared columns/fields (fields defaulting to the lowercased column labels), semantic tint, header cell traits and one combined accessibility element per row."
+      }
+    },
+    {
+      "path": "/components/tabs",
+      "component": "docs.PageComponents_Tabs",
+      "meta": {
+        "title": "tabs",
+        "description": "The structural twin provides ARIA tabs/tabpanels, bound selection, icons/badges/titles, change events, and keyboard traversal."
+      }
+    },
+    {
+      "path": "/components/text",
+      "component": "docs.PageComponents_Text",
+      "meta": {
+        "title": "text",
+        "description": "The base Web twin renders bound/value/inner content with semantic color and universal typography, the inline markdown vocabulary the native reference renders, and lineLimit tail truncation."
+      }
+    },
+    {
+      "path": "/components/textarea",
+      "component": "docs.PageComponents_Textarea",
+      "meta": {
+        "title": "textarea",
+        "description": "The base Web twin uses a real textarea with binding, placeholder, input, focus and blur events, and grows between minLines and maxLines exactly like the native lineLimit(min...max) contract."
+      }
+    },
+    {
+      "path": "/components/textfield",
+      "component": "docs.PageComponents_Textfield",
+      "meta": {
+        "title": "textfield",
+        "description": "The base Web twin uses a real text/password input with binding, placeholder, change, submit, focus and blur events, and maps the fixture's contentType/keyboard tokens onto autocomplete/inputmode/type."
+      }
+    },
+    {
+      "path": "/components/toggle",
+      "component": "docs.PageComponents_Toggle",
+      "meta": {
+        "title": "toggle",
+        "description": "The base Web twin uses a real checkbox input with switch semantics, bound state, change write-back, and accessible focus handling."
+      }
+    },
+    {
+      "path": "/components/toolbar",
+      "component": "docs.PageComponents_Toolbar",
+      "meta": {
+        "title": "toolbar",
+        "description": "The structural twin provides toolbar semantics, position/spacing, child content, and roving arrow/Home/End focus behavior."
+      }
+    },
+    {
+      "path": "/components/video",
+      "component": "docs.PageComponents_Video",
+      "meta": {
+        "title": "video",
+        "description": "The media Web twin implements the fixture's full contract: native HTML video rendering, active-page ownership, reactive transport/scrubbing/readout bindings, subtitles, bounded load/error state, accurate isolated target-frame previews, best-effort Media Session commands, the audio= playback/ambient category via the page-scoped Audio Session API where present, accessibility, and deterministic SSR."
+      }
+    },
+    {
+      "path": "/components/vstack",
+      "component": "docs.PageComponents_Vstack",
+      "meta": {
+        "title": "vstack",
+        "description": "The base Web twin renders a vertical flex stack with DSX spacing/alignment and slot content through the universal style contract."
+      }
+    },
+    {
+      "path": "/components/webview",
+      "component": "docs.PageComponents_Webview",
+      "meta": {
+        "title": "WebView",
+        "description": "The rich Web twin provides a policy-constrained iframe, lifecycle events, named controls, safe URL schemes, and ephemeral isolation."
+      }
+    },
+    {
+      "path": "/components/wheelpicker",
+      "component": "docs.PageComponents_Wheelpicker",
+      "meta": {
+        "title": "wheelpicker",
+        "description": "A real drum to the shared spec (PickerElements.kt, which carries the UIPickerView metrics): a 216px scroll-snap wheel of 32px rows, the selection band behind the centre row, off-centre rows dimmed, drag/fling/trackpad momentum and snap from the scroller itself, tap-to-centre, arrow/Home/End keys on a listbox role, a settled snap writing through the bind seam once, and bound writes scrolling the drum."
+      }
+    },
+    {
+      "path": "/components/zstack",
+      "component": "docs.PageComponents_Zstack",
+      "meta": {
+        "title": "zstack",
+        "description": "The base Web twin provides layered stack layout and DSX alignment through the universal style contract."
+      }
+    },
+    {
+      "path": "/writing-docs",
+      "component": "docs.PageWritingDocs",
+      "meta": {
+        "title": "Writing docs",
+        "description": "The authoring system, markdown plus components, documented with itself."
+      }
+    },
+    {
+      "path": "/framework/guides",
+      "component": "docs.PageFramework_Guides",
+      "meta": {
+        "title": "Building an app on DSX"
+      }
+    },
+    {
+      "path": "/framework/guides/adaptive-native-shells",
+      "component": "docs.PageFramework_Guides_AdaptiveNativeShells",
+      "meta": {
+        "title": "Adaptive native shells"
+      }
+    },
+    {
+      "path": "/framework/guides/build-secrets-setup",
+      "component": "docs.PageFramework_Guides_BuildSecretsSetup",
+      "meta": {
+        "title": "Build secrets: simple setup guide"
+      }
+    },
+    {
+      "path": "/framework/guides/building-with-agents",
+      "component": "docs.PageFramework_Guides_BuildingWithAgents",
+      "meta": {
+        "title": "Building with agents"
+      }
+    },
+    {
+      "path": "/framework/guides/cli",
+      "component": "docs.PageFramework_Guides_Cli",
+      "meta": {
+        "title": "The `despia` command line"
+      }
+    },
+    {
+      "path": "/framework/guides/clickhouse",
+      "component": "docs.PageFramework_Guides_Clickhouse",
+      "meta": {
+        "title": "Analytics at scale: ClickHouse"
+      }
+    },
+    {
+      "path": "/framework/guides/codemagic-build",
+      "component": "docs.PageFramework_Guides_CodemagicBuild",
+      "meta": {
+        "title": "Building an iOS app: Codemagic & the `iOS/` assets folder"
+      }
+    },
+    {
+      "path": "/framework/guides/combinations",
+      "component": "docs.PageFramework_Guides_Combinations",
+      "meta": {
+        "title": "The combination matrix: every integration shape, named and walked"
+      }
+    },
+    {
+      "path": "/framework/guides/combinations/c1-pure-dsx-app",
+      "component": "docs.PageFramework_Guides_Combinations_C1PureDsxApp",
+      "meta": {
+        "title": "C1: the pure DSX app, four surfaces from one codebase"
+      }
+    },
+    {
+      "path": "/framework/guides/combinations/c2-web-app-plus-native",
+      "component": "docs.PageFramework_Guides_Combinations_C2WebAppPlusNative",
+      "meta": {
+        "title": "C2: your web app, plus DSX native parts"
+      }
+    },
+    {
+      "path": "/framework/guides/combinations/c3-existing-app-despia-backend",
+      "component": "docs.PageFramework_Guides_Combinations_C3ExistingAppDespiaBackend",
+      "meta": {
+        "title": "C3: your app, plus a Despia backend only"
+      }
+    },
+    {
+      "path": "/framework/guides/combinations/c5-dsx-frontend-vendor-backend",
+      "component": "docs.PageFramework_Guides_Combinations_C5DsxFrontendVendorBackend",
+      "meta": {
+        "title": "C5: a DSX front end on your vendor's backend, directly"
+      }
+    },
+    {
+      "path": "/framework/guides/combinations/c7-self-hosted-ota",
+      "component": "docs.PageFramework_Guides_Combinations_C7SelfHostedOta",
+      "meta": {
+        "title": "C7: self-hosted OTA, your content, your host, no Despia hosting"
+      }
+    },
+    {
+      "path": "/framework/guides/credentials",
+      "component": "docs.PageFramework_Guides_Credentials",
+      "meta": {
+        "title": "Credentials held by the runner"
+      }
+    },
+    {
+      "path": "/framework/guides/debugging",
+      "component": "docs.PageFramework_Guides_Debugging",
+      "meta": {
+        "title": "Debugging a DSX app"
+      }
+    },
+    {
+      "path": "/framework/guides/deploying",
+      "component": "docs.PageFramework_Guides_Deploying",
+      "meta": {
+        "title": "Deploying"
+      }
+    },
+    {
+      "path": "/framework/guides/despia-api",
+      "component": "docs.PageFramework_Guides_DespiaApi",
+      "meta": {
+        "title": "The `window.dsx` API"
+      }
+    },
+    {
+      "path": "/framework/guides/despia-design-system",
+      "component": "docs.PageFramework_Guides_DespiaDesignSystem",
+      "meta": {
+        "title": "Current DSX components and the retired v3 skin"
+      }
+    },
+    {
+      "path": "/framework/guides/device-tests",
+      "component": "docs.PageFramework_Guides_DeviceTests",
+      "meta": {
+        "title": "Device tests: end-to-end tests on the exported app"
+      }
+    },
+    {
+      "path": "/framework/guides/embed-anywhere",
+      "component": "docs.PageFramework_Guides_EmbedAnywhere",
+      "meta": {
+        "title": "Embed a DSX component anywhere"
+      }
+    },
+    {
+      "path": "/framework/guides/files-and-storage",
+      "component": "docs.PageFramework_Guides_FilesAndStorage",
+      "meta": {
+        "title": "Files & storage"
+      }
+    },
+    {
+      "path": "/framework/guides/from-v3",
+      "component": "docs.PageFramework_Guides_FromV3",
+      "meta": {
+        "title": "Moving a v3 app to DSX"
+      }
+    },
+    {
+      "path": "/framework/guides/getting-started",
+      "component": "docs.PageFramework_Guides_GettingStarted",
+      "meta": {
+        "title": "Getting started"
+      }
+    },
+    {
+      "path": "/framework/guides/hosted-platform",
+      "component": "docs.PageFramework_Guides_HostedPlatform",
+      "meta": {
+        "title": "Deploying to your own infrastructure"
+      }
+    },
+    {
+      "path": "/framework/guides/markdown",
+      "component": "docs.PageFramework_Guides_Markdown",
+      "meta": {
+        "title": "Extended markdown"
+      }
+    },
+    {
+      "path": "/framework/guides/native-export",
+      "component": "docs.PageFramework_Guides_NativeExport",
+      "meta": {
+        "title": "`despia export`: a real Xcode project, a real Android Studio project"
+      }
+    },
+    {
+      "path": "/framework/guides/oauth-https-callback",
+      "component": "docs.PageFramework_Guides_OauthHttpsCallback",
+      "meta": {
+        "title": "OAuth HTTPS Callback: Cross-Platform Specification"
+      }
+    },
+    {
+      "path": "/framework/guides/packages",
+      "component": "docs.PageFramework_Guides_Packages",
+      "meta": {
+        "title": "Package catalog"
+      }
+    },
+    {
+      "path": "/framework/guides/patterns",
+      "component": "docs.PageFramework_Guides_Patterns",
+      "meta": {
+        "title": "Common patterns"
+      }
+    },
+    {
+      "path": "/framework/guides/platform-support",
+      "component": "docs.PageFramework_Guides_PlatformSupport",
+      "meta": {
+        "title": "Platform support: what the cross-platform claim is measured to mean"
+      }
+    },
+    {
+      "path": "/framework/guides/provisioning",
+      "component": "docs.PageFramework_Guides_Provisioning",
+      "meta": {
+        "title": "Provisioning: bundle ids, capabilities and App Groups"
+      }
+    },
+    {
+      "path": "/framework/guides/quickstart",
+      "component": "docs.PageFramework_Guides_Quickstart",
+      "meta": {
+        "title": "Quickstart: a DSX app from nothing"
+      }
+    },
+    {
+      "path": "/framework/guides/rendering",
+      "component": "docs.PageFramework_Guides_Rendering",
+      "meta": {
+        "title": "Server rendering"
+      }
+    },
+    {
+      "path": "/framework/guides/reserved-directories",
+      "component": "docs.PageFramework_Guides_ReservedDirectories",
+      "meta": {
+        "title": "The reserved-directory contract"
+      }
+    },
+    {
+      "path": "/framework/guides/routing",
+      "component": "docs.PageFramework_Guides_Routing",
+      "meta": {
+        "title": "Routing"
+      }
+    },
+    {
+      "path": "/framework/guides/running-locally",
+      "component": "docs.PageFramework_Guides_RunningLocally",
+      "meta": {
+        "title": "Running locally: the simulator and emulator you already have"
+      }
+    },
+    {
+      "path": "/framework/guides/staging-and-testing",
+      "component": "docs.PageFramework_Guides_StagingAndTesting",
+      "meta": {
+        "title": "Staging, testing & the dev center"
+      }
+    },
+    {
+      "path": "/framework/guides/state-and-events",
+      "component": "docs.PageFramework_Guides_StateAndEvents",
+      "meta": {
+        "title": "State & events"
+      }
+    },
+    {
+      "path": "/framework/guides/styling",
+      "component": "docs.PageFramework_Guides_Styling",
+      "meta": {
+        "title": "Styling DSX with CSS"
+      }
+    },
+    {
+      "path": "/framework/guides/testing",
+      "component": "docs.PageFramework_Guides_Testing",
+      "meta": {
+        "title": "Unit testing a DSX app"
+      }
+    },
+    {
+      "path": "/framework/guides/theming",
+      "component": "docs.PageFramework_Guides_Theming",
+      "meta": {
+        "title": "Theming a DSX app"
+      }
+    },
+    {
+      "path": "/framework/guides/transitions",
+      "component": "docs.PageFramework_Guides_Transitions",
+      "meta": {
+        "title": "Transitions"
+      }
+    },
+    {
+      "path": "/framework/guides/transport-and-ota-integrity",
+      "component": "docs.PageFramework_Guides_TransportAndOtaIntegrity",
+      "meta": {
+        "title": "Transport & OTA integrity: HTTP/HTTPS and signed updates (the visual guide)"
+      }
+    },
+    {
+      "path": "/framework/reference/style",
+      "component": "docs.PageFramework_Reference_Style",
+      "meta": {
+        "title": "Styling reference"
+      }
+    },
+    {
+      "path": "/framework/reference/style/custom-properties",
+      "component": "docs.PageFramework_Reference_Style_CustomProperties",
+      "meta": {
+        "title": "Custom properties and `@property`"
+      }
+    },
+    {
+      "path": "/framework/reference/style/feature-queries",
+      "component": "docs.PageFramework_Reference_Style_FeatureQueries",
+      "meta": {
+        "title": "Feature detection and fallback"
+      }
+    },
+    {
+      "path": "/framework/reference/style/media-features",
+      "component": "docs.PageFramework_Reference_Style_MediaFeatures",
+      "meta": {
+        "title": "The media feature table: what each lane can answer about a @media query"
+      }
+    },
+    {
+      "path": "/framework/reference/style/motion",
+      "component": "docs.PageFramework_Reference_Style_Motion",
+      "meta": {
+        "title": "Motion"
+      }
+    },
+    {
+      "path": "/framework/reference/style/not-in-the-vocabulary",
+      "component": "docs.PageFramework_Reference_Style_NotInTheVocabulary",
+      "meta": {
+        "title": "What the DSX CSS vocabulary deliberately does not accept"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/background",
+      "component": "docs.PageFramework_Reference_Style_Properties_Background",
+      "meta": {
+        "title": "Background"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/border-outline",
+      "component": "docs.PageFramework_Reference_Style_Properties_BorderOutline",
+      "meta": {
+        "title": "Borders, radii and outline"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/cascade",
+      "component": "docs.PageFramework_Reference_Style_Properties_Cascade",
+      "meta": {
+        "title": "Cascade wide"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/filter-mask",
+      "component": "docs.PageFramework_Reference_Style_Properties_FilterMask",
+      "meta": {
+        "title": "Filter, mask, clip and blending"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/flexbox",
+      "component": "docs.PageFramework_Reference_Style_Properties_Flexbox",
+      "meta": {
+        "title": "Flexbox and gaps"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/grid",
+      "component": "docs.PageFramework_Reference_Style_Properties_Grid",
+      "meta": {
+        "title": "Grid"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/interaction",
+      "component": "docs.PageFramework_Reference_Style_Properties_Interaction",
+      "meta": {
+        "title": "Pointer, selection and cursor"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/layout-box",
+      "component": "docs.PageFramework_Reference_Style_Properties_LayoutBox",
+      "meta": {
+        "title": "Layout box, position and size"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/motion-path",
+      "component": "docs.PageFramework_Reference_Style_Properties_MotionPath",
+      "meta": {
+        "title": "Motion path"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/multi-column",
+      "component": "docs.PageFramework_Reference_Style_Properties_MultiColumn",
+      "meta": {
+        "title": "Multi-column"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/overflow-containment",
+      "component": "docs.PageFramework_Reference_Style_Properties_OverflowContainment",
+      "meta": {
+        "title": "Overflow, containment and stacking"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/rendering",
+      "component": "docs.PageFramework_Reference_Style_Properties_Rendering",
+      "meta": {
+        "title": "Replaced content, appearance and color scheme"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/scrolling",
+      "component": "docs.PageFramework_Reference_Style_Properties_Scrolling",
+      "meta": {
+        "title": "Scrolling, snapping and scrollbars"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/shadow-opacity",
+      "component": "docs.PageFramework_Reference_Style_Properties_ShadowOpacity",
+      "meta": {
+        "title": "Shadow, opacity and visibility"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/text",
+      "component": "docs.PageFramework_Reference_Style_Properties_Text",
+      "meta": {
+        "title": "Color, fonts and text"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/transform",
+      "component": "docs.PageFramework_Reference_Style_Properties_Transform",
+      "meta": {
+        "title": "Transform and 3D"
+      }
+    },
+    {
+      "path": "/framework/reference/style/properties/transition-animation",
+      "component": "docs.PageFramework_Reference_Style_Properties_TransitionAnimation",
+      "meta": {
+        "title": "Transitions and animation"
+      }
+    },
+    {
+      "path": "/framework/reference/style/selectors",
+      "component": "docs.PageFramework_Reference_Style_Selectors",
+      "meta": {
+        "title": "Selectors"
+      }
+    },
+    {
+      "path": "/framework/reference/style/write-this-instead",
+      "component": "docs.PageFramework_Reference_Style_WriteThisInstead",
+      "meta": {
+        "title": "Write this instead"
+      }
+    },
+    {
+      "path": "/framework/skills",
+      "component": "docs.PageFramework_Skills",
+      "meta": {
+        "title": "Despia Skills"
+      }
+    },
+    {
+      "path": "/framework/skills/action-contracts",
+      "component": "docs.PageFramework_Skills_ActionContracts",
+      "meta": {
+        "title": "Action contracts: inputs in, events out"
+      }
+    },
+    {
+      "path": "/framework/skills/android",
+      "component": "docs.PageFramework_Skills_Android",
+      "meta": {
+        "title": "DespiaScript on Android"
+      }
+    },
+    {
+      "path": "/framework/skills/android/api-mapping",
+      "component": "docs.PageFramework_Skills_Android_ApiMapping",
+      "meta": {
+        "title": "API mapping - Swift ↔ Kotlin"
+      }
+    },
+    {
+      "path": "/framework/skills/android/containers",
+      "component": "docs.PageFramework_Skills_Android_Containers",
+      "meta": {
+        "title": "`dsx.container` on Android"
+      }
+    },
+    {
+      "path": "/framework/skills/android/js-core-parity",
+      "component": "docs.PageFramework_Skills_Android_JsCoreParity",
+      "meta": {
+        "title": "JS-core parity contract: iOS ⇄ Android, API by API"
+      }
+    },
+    {
+      "path": "/framework/skills/android/manifest-and-build",
+      "component": "docs.PageFramework_Skills_Android_ManifestAndBuild",
+      "meta": {
+        "title": "dsx.json → Android"
+      }
+    },
+    {
+      "path": "/framework/skills/attribute-classes",
+      "component": "docs.PageFramework_Skills_AttributeClasses",
+      "meta": {
+        "title": "Attribute classes: one classification for every DSX block"
+      }
+    },
+    {
+      "path": "/framework/skills/building",
+      "component": "docs.PageFramework_Skills_Building",
+      "meta": {
+        "title": "Building the monorepo runtime in Xcode directly"
+      }
+    },
+    {
+      "path": "/framework/skills/building-a-despia-platform-surface",
+      "component": "docs.PageFramework_Skills_BuildingADespiaPlatformSurface",
+      "meta": {
+        "title": "Building a platform surface in DSX"
+      }
+    },
+    {
+      "path": "/framework/skills/building-ui-that-does-not-flash",
+      "component": "docs.PageFramework_Skills_BuildingUiThatDoesNotFlash",
+      "meta": {
+        "title": "Building UI that does not flash, jump or draw a blank"
+      }
+    },
+    {
+      "path": "/framework/skills/building-with-agents",
+      "component": "docs.PageFramework_Skills_BuildingWithAgents",
+      "meta": {
+        "title": "Building a DSX app with agents: plan from measurements, check before you land"
+      }
+    },
+    {
+      "path": "/framework/skills/component-props-and-state",
+      "component": "docs.PageFramework_Skills_ComponentPropsAndState",
+      "meta": {
+        "title": "Component props vs state: attributes vs variables"
+      }
+    },
+    {
+      "path": "/framework/skills/components-and-reuse",
+      "component": "docs.PageFramework_Skills_ComponentsAndReuse",
+      "meta": {
+        "title": "Components and reuse: one root, panels, and a library of configurable primitives"
+      }
+    },
+    {
+      "path": "/framework/skills/containers",
+      "component": "docs.PageFramework_Skills_Containers",
+      "meta": {
+        "title": "Containers (the shared App Group)"
+      }
+    },
+    {
+      "path": "/framework/skills/cookies",
+      "component": "docs.PageFramework_Skills_Cookies",
+      "meta": {
+        "title": "Cookies: `dsx.cookie`"
+      }
+    },
+    {
+      "path": "/framework/skills/cross-module-calls",
+      "component": "docs.PageFramework_Skills_CrossModuleCalls",
+      "meta": {
+        "title": "Cross-module calls"
+      }
+    },
+    {
+      "path": "/framework/skills/custom-ux",
+      "component": "docs.PageFramework_Skills_CustomUx",
+      "meta": {
+        "title": "Custom UX: the escape hatches"
+      }
+    },
+    {
+      "path": "/framework/skills/deleting-safely",
+      "component": "docs.PageFramework_Skills_DeletingSafely",
+      "meta": {
+        "title": "Deleting safely: ask the framework, then delete"
+      }
+    },
+    {
+      "path": "/framework/skills/deploying",
+      "component": "docs.PageFramework_Skills_Deploying",
+      "meta": {
+        "title": "Deploying from Xcode: archive, sign, ship"
+      }
+    },
+    {
+      "path": "/framework/skills/designing-an-app",
+      "component": "docs.PageFramework_Skills_DesigningAnApp",
+      "meta": {
+        "title": "Designing an app that does not look generated"
+      }
+    },
+    {
+      "path": "/framework/skills/despiascript",
+      "component": "docs.PageFramework_Skills_Despiascript",
+      "meta": {
+        "title": "DespiaScript"
+      }
+    },
+    {
+      "path": "/framework/skills/documenting-a-module",
+      "component": "docs.PageFramework_Skills_DocumentingAModule",
+      "meta": {
+        "title": "Documenting a module"
+      }
+    },
+    {
+      "path": "/framework/skills/dsx-best-practices",
+      "component": "docs.PageFramework_Skills_DsxBestPractices",
+      "meta": {
+        "title": "DSX best practices"
+      }
+    },
+    {
+      "path": "/framework/skills/dsx-runtime-traps",
+      "component": "docs.PageFramework_Skills_DsxRuntimeTraps",
+      "meta": {
+        "title": "DSX runtime traps: the ones that fail silently"
+      }
+    },
+    {
+      "path": "/framework/skills/dynamic-modules",
+      "component": "docs.PageFramework_Skills_DynamicModules",
+      "meta": {
+        "title": "Building dynamic, powerful modules"
+      }
+    },
+    {
+      "path": "/framework/skills/editor-catalog",
+      "component": "docs.PageFramework_Skills_EditorCatalog",
+      "meta": {
+        "title": "Editor catalog: the web-canvas element schema"
+      }
+    },
+    {
+      "path": "/framework/skills/examples",
+      "component": "docs.PageFramework_Skills_Examples",
+      "meta": {
+        "title": "Trails: the worked example app"
+      }
+    },
+    {
+      "path": "/framework/skills/extracting-a-module",
+      "component": "docs.PageFramework_Skills_ExtractingAModule",
+      "meta": {
+        "title": "Extracting a host feature into a module"
+      }
+    },
+    {
+      "path": "/framework/skills/global-state",
+      "component": "docs.PageFramework_Skills_GlobalState",
+      "meta": {
+        "title": "Global app state: `global.*`"
+      }
+    },
+    {
+      "path": "/framework/skills/js-core",
+      "component": "docs.PageFramework_Skills_JsCore",
+      "meta": {
+        "title": "The JS core globals in JSE: app logic, 1:1, no browser"
+      }
+    },
+    {
+      "path": "/framework/skills/lifecycle",
+      "component": "docs.PageFramework_Skills_Lifecycle",
+      "meta": {
+        "title": "Lifecycle guarantees: every resource × every transition"
+      }
+    },
+    {
+      "path": "/framework/skills/live-activities-and-widgets",
+      "component": "docs.PageFramework_Skills_LiveActivitiesAndWidgets",
+      "meta": {
+        "title": "Live Activities & widgets: authoring the OS surfaces"
+      }
+    },
+    {
+      "path": "/framework/skills/localization",
+      "component": "docs.PageFramework_Skills_Localization",
+      "meta": {
+        "title": "Localization"
+      }
+    },
+    {
+      "path": "/framework/skills/manifest-dsl",
+      "component": "docs.PageFramework_Skills_ManifestDsl",
+      "meta": {
+        "title": "dsx.json - the property DSL"
+      }
+    },
+    {
+      "path": "/framework/skills/mcp-agent-transport",
+      "component": "docs.PageFramework_Skills_McpAgentTransport",
+      "meta": {
+        "title": "The agent transport: reaching this toolchain over MCP"
+      }
+    },
+    {
+      "path": "/framework/skills/module-content",
+      "component": "docs.PageFramework_Skills_ModuleContent",
+      "meta": {
+        "title": "`content`: bundled content folders (dsx.json) and the `dsx.content` primitive"
+      }
+    },
+    {
+      "path": "/framework/skills/module-frameworks",
+      "component": "docs.PageFramework_Skills_ModuleFrameworks",
+      "meta": {
+        "title": "Module build artifacts: binary dependencies without committing binaries"
+      }
+    },
+    {
+      "path": "/framework/skills/module-permissions",
+      "component": "docs.PageFramework_Skills_ModulePermissions",
+      "meta": {
+        "title": "Permissions: `Config/permissions.json`"
+      }
+    },
+    {
+      "path": "/framework/skills/module-secrets",
+      "component": "docs.PageFramework_Skills_ModuleSecrets",
+      "meta": {
+        "title": "Module secrets: build-time SDK credentials, dynamic across every app"
+      }
+    },
+    {
+      "path": "/framework/skills/module-state",
+      "component": "docs.PageFramework_Skills_ModuleState",
+      "meta": {
+        "title": "Module context: `dsx.module.<scheme>.context.*`"
+      }
+    },
+    {
+      "path": "/framework/skills/module-system",
+      "component": "docs.PageFramework_Skills_ModuleSystem",
+      "meta": {
+        "title": "Module system architecture"
+      }
+    },
+    {
+      "path": "/framework/skills/module-weights",
+      "component": "docs.PageFramework_Skills_ModuleWeights",
+      "meta": {
+        "title": "Module weights: bundling large ML blobs without committing them"
+      }
+    },
+    {
+      "path": "/framework/skills/mounting-components",
+      "component": "docs.PageFramework_Skills_MountingComponents",
+      "meta": {
+        "title": "Mounting components: `dsx.component.mount`"
+      }
+    },
+    {
+      "path": "/framework/skills/native-components",
+      "component": "docs.PageFramework_Skills_NativeComponents",
+      "meta": {
+        "title": "Native components: the custom-coded component primitive"
+      }
+    },
+    {
+      "path": "/framework/skills/native-languages",
+      "component": "docs.PageFramework_Skills_NativeLanguages",
+      "meta": {
+        "title": "Native languages: the polyglot-module primitive (`languages`)"
+      }
+    },
+    {
+      "path": "/framework/skills/offline-best-practices",
+      "component": "docs.PageFramework_Skills_OfflineBestPractices",
+      "meta": {
+        "title": "Offline, caching & UI state: best practices per surface"
+      }
+    },
+    {
+      "path": "/framework/skills/package-as-sdk",
+      "component": "docs.PageFramework_Skills_PackageAsSdk",
+      "meta": {
+        "title": "Authoring a package as an SDK: DSX best practices"
+      }
+    },
+    {
+      "path": "/framework/skills/porting-a-react-native-library",
+      "component": "docs.PageFramework_Skills_PortingAReactNativeLibrary",
+      "meta": {
+        "title": "Porting a React Native library into DSX"
+      }
+    },
+    {
+      "path": "/framework/skills/realtime-and-static-data",
+      "component": "docs.PageFramework_Skills_RealtimeAndStaticData",
+      "meta": {
+        "title": "Realtime and static data: live streams, sockets, and data baked at build"
+      }
+    },
+    {
+      "path": "/framework/skills/review-your-app",
+      "component": "docs.PageFramework_Skills_ReviewYourApp",
+      "meta": {
+        "title": "Review your app: the loop before and after every change"
+      }
+    },
+    {
+      "path": "/framework/skills/runtime-api",
+      "component": "docs.PageFramework_Skills_RuntimeApi",
+      "meta": {
+        "title": "Runtime API (native) & web contract"
+      }
+    },
+    {
+      "path": "/framework/skills/sample-values",
+      "component": "docs.PageFramework_Skills_SampleValues",
+      "meta": {
+        "title": "Sample values - unit tests as editor fuel"
+      }
+    },
+    {
+      "path": "/framework/skills/security",
+      "component": "docs.PageFramework_Skills_Security",
+      "meta": {
+        "title": "Security model: what JSE/DSX can do, and what holds it"
+      }
+    },
+    {
+      "path": "/framework/skills/storage",
+      "component": "docs.PageFramework_Skills_Storage",
+      "meta": {
+        "title": "Storage (Core/Files)"
+      }
+    },
+    {
+      "path": "/framework/skills/structuring-an-app",
+      "component": "docs.PageFramework_Skills_StructuringAnApp",
+      "meta": {
+        "title": "Structuring an app: three layers, and when to split a document"
+      }
+    },
+    {
+      "path": "/framework/skills/style-catalog",
+      "component": "docs.PageFramework_Skills_StyleCatalog",
+      "meta": {
+        "title": "Style catalog: the style panel's schema, generated from the CSS vocabulary"
+      }
+    },
+    {
+      "path": "/framework/skills/surface-bridges",
+      "component": "docs.PageFramework_Skills_SurfaceBridges",
+      "meta": {
+        "title": "Surface bridges: mounting a RENDER SURFACE on the bus (`dsx.messenger`)"
+      }
+    },
+    {
+      "path": "/framework/skills/thinking-in-dsx",
+      "component": "docs.PageFramework_Skills_ThinkingInDsx",
+      "meta": {
+        "title": "Thinking in DSX when you were trained on React"
+      }
+    },
+    {
+      "path": "/framework/skills/typing-declarations",
+      "component": "docs.PageFramework_Skills_TypingDeclarations",
+      "meta": {
+        "title": "Typing declarations: say what shape a name holds, and turn a set of flags into one mode"
+      }
+    },
+    {
+      "path": "/framework/skills/using-the-cli",
+      "component": "docs.PageFramework_Skills_UsingTheCli",
+      "meta": {
+        "title": "Using the despia CLI"
+      }
+    },
+    {
+      "path": "/framework/skills/web-crypto",
+      "component": "docs.PageFramework_Skills_WebCrypto",
+      "meta": {
+        "title": "Web Crypto in JSE: the standard API, 1:1, no JS engine"
+      }
+    },
+    {
+      "path": "/framework/skills/white-label",
+      "component": "docs.PageFramework_Skills_WhiteLabel",
+      "meta": {
+        "title": "White-labeling: `dsx.global.strings` + `dsx.global.theme` (the platform convention)"
+      }
+    },
+    {
+      "path": "/framework/skills/writing-a-backend",
+      "component": "docs.PageFramework_Skills_WritingABackend",
+      "meta": {
+        "title": "Writing a backend in DSX"
+      }
+    },
+    {
+      "path": "/framework/skills/writing-a-film",
+      "component": "docs.PageFramework_Skills_WritingAFilm",
+      "meta": {
+        "title": "Writing a film in DSX"
+      }
+    },
+    {
+      "path": "/framework/skills/writing-a-module",
+      "component": "docs.PageFramework_Skills_WritingAModule",
+      "meta": {
+        "title": "Writing a module - DespiaScript"
+      }
+    },
+    {
+      "path": "/framework/skills/writing-a-module-internal",
+      "component": "docs.PageFramework_Skills_WritingAModuleInternal",
+      "meta": {
+        "title": "Writing a module"
+      }
+    },
+    {
+      "path": "/framework/skills/writing-a-studio-app",
+      "component": "docs.PageFramework_Skills_WritingAStudioApp",
+      "meta": {
+        "title": "Writing a Despia app: a package that contributes tools"
+      }
+    },
+    {
+      "path": "/framework/skills/writing-an-app",
+      "component": "docs.PageFramework_Skills_WritingAnApp",
+      "meta": {
+        "title": "Writing an app in DSX"
+      }
+    },
+    {
+      "path": "/framework/skills/writing-unit-tests",
+      "component": "docs.PageFramework_Skills_WritingUnitTests",
+      "meta": {
+        "title": "Writing unit tests: self-contained actions in `dsx.json`"
+      }
+    }
+  ]
+}

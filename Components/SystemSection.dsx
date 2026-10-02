@@ -1,0 +1,17 @@
+<stack style="gap: 0.9rem; margin-top: 1.5rem; align-items: stretch">
+  <head>
+    <!--
+      One section of the /system gallery: the small-caps label, an optional one-line
+      note, then the live demo in the slot. Hand-authored, so it survives the compile
+      step's regeneration of Components/pages (which owns only generated files).
+    -->
+    <attribute as="title"/>
+    <attribute as="note" default="''"/>
+  </head>
+
+  <text value="{{ dsx.attribute.title }}"
+        style="font-size: 0.72rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--dsx-secondary-label)"/>
+  <text visible-if="dsx.attribute.note !== ''" value="{{ dsx.attribute.note }}"
+        style="font-size: 0.85rem; color: var(--dsx-tertiary-label)"/>
+  <slot/>
+</stack>

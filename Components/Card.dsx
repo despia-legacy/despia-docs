@@ -1,0 +1,20 @@
+<stack class="doc-tile">
+  <head>
+    <!--
+      The linking card: optional icon, a title that stretches into the whole card
+      when href is set (the ::after stretched-link recipe in DocShell.css), and the
+      body slot. Lives alone or inside <CardGroup cols="2|3">.
+    -->
+    <attribute as="title" default="''"/>
+    <attribute as="icon" default="''"/>
+    <attribute as="href" default="''"/>
+  </head>
+  <image icon="{{ dsx.attribute.icon }}" iconSize="22" class="doc-tile-icon" visible-if="dsx.attribute.icon !== ''"/>
+  <pressable href="{{ dsx.attribute.href }}" class="doc-tile-link" visible-if="dsx.attribute.href !== ''">
+    <text value="{{ dsx.attribute.title }}" class="doc-tile-title"/>
+  </pressable>
+  <text value="{{ dsx.attribute.title }}" class="doc-tile-title" visible-if="dsx.attribute.href === '' &amp;&amp; dsx.attribute.title !== ''"/>
+  <stack class="doc-tile-body">
+    <slot/>
+  </stack>
+</stack>

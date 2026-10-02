@@ -1,0 +1,12 @@
+node_modules/
+package-lock.json
+dist/
+dist-worker/
+Components/pages/
+content/framework/
+public/md/
+public/nav.json
+public/search-index.json
+public/llms.txt
+public/llms-full.txt
+.wrangler/

@@ -1,42 +1,45 @@
 # Despia Docs
 
-The documentation platform for [Despia](https://github.com/despia-native/despia), and a
-Despia app itself. The site you read at [docs.despia.com](https://docs.despia.com) is built
-from this repository with the same framework it documents: DSX documents, server-side
-rendering through `@despia/server`, search backed by a `<server>` route, and its own MCP
-server so agents can read the docs natively. Every feature of the site doubles as a working
-demonstration, which is the point.
+The documentation platform for [Despia](https://github.com/despia-native/despia), and
+deliberately also its showcase: this site is itself a DSX application, built on the exact
+stack it documents.
 
-## What ships from here
+- **Authoring**: pages are markdown with front matter under `content/`; the framework's own
+  guides and skills sync in from the front door. `scripts/compile.mjs` turns the tree into
+  DSX page components, the route table, the navigation model, a client-side search index,
+  raw-markdown siblings for every page, and `llms.txt` + `llms-full.txt`.
+- **The component reference** under `content/components/` is generated, never hand written:
+  the framework's `ClosedSource/scripts/generate_component_docs.rb` projects it from the
+  element census, the library matrix, the web element ledger and the catalog, one page per
+  element plus the overview, each carrying machine-readable front matter (element, properties
+  with types, actions, platforms, catalog version, ledger commit). Edit a ledger, not a page.
+- **Rendering**: `dsx build` compiles the pages; `@despia-native/server` renders them on Cloudflare
+  Workers. The `<markdown>` element paints the block vocabulary server-side, so first paint
+  is the content.
+- **Search**: client-side over the build-time index. No server dependency for the basic
+  path.
+- **Agents are first-class**: every page serves its raw markdown under `/md/…`, the site
+  summarizes itself at `/llms.txt`, and the site runs its own MCP server at `/mcp` with
+  `search`, `fetch-page` and `list-sections` tools over streamable HTTP.
 
-- The documentation site: server-side rendered, fast, light and dark, no client framework
-  underneath it but Despia's own.
-- Fuzzy search compiled at build time, vector search served by a Despia backend route.
-- A raw markdown twin of every page, a copy-as-markdown control, and `llms.txt` at the
-  root, so the docs are as readable to an agent as to a person.
-- The docs MCP server: search, fetch-page and list-sections as tools, served from the same
-  document that defines the site's routes.
+```sh
+npm install
+npm run sync       # pull the framework docs from a front-door checkout (DESPIA_FRONT_DOOR=…)
+npm run dev        # compile + serve + watch
+npm run build      # compile + dsx build + assemble the servable tree in dist/
+npx wrangler deploy
+```
 
-Content comes from two places: the framework documentation and skills synced from
-[`despia-native/despia`](https://github.com/despia-native/despia) (`Documentation/` and
-`Skills/`), and the product guides authored here.
-
-## Status
-
-Version 0.0.1 of the framework is the first public release, and this site is being built in
-the open on top of it. Until it goes live, the same content is readable at
-[docs.despia.com](https://docs.despia.com) and in the
-[`Documentation/`](https://github.com/despia-native/despia/tree/main/Documentation) tree of
-the front door.
+CI builds from the public registry, boots the worker with `wrangler dev`, and probes SSR,
+the markdown routes, `llms.txt` and the MCP face on every push; it goes green with the
+0.1.0 registry wave.
 
 ## Issues and contributions
 
-Bugs in the documentation site itself belong here. Framework bugs, feature requests, and
-everything else belong on
-[`despia-native/despia`](https://github.com/despia-native/despia/issues), the single
-tracker. The contribution flow, the DCO sign-off, and what makes a change land are in
-[CONTRIBUTING.md](https://github.com/despia-native/despia/blob/main/CONTRIBUTING.md).
-Maintained by the Despia team as part of daily work.
+Docs-site bugs live here; framework issues live on
+[`despia-native/despia`](https://github.com/despia-native/despia/issues). See
+[CONTRIBUTING.md](https://github.com/despia-native/despia/blob/main/CONTRIBUTING.md) for
+the workflow. Maintained by the Despia team.
 
 ## License
 

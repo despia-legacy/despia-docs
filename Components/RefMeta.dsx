@@ -1,0 +1,23 @@
+<stack class="doc-refmeta">
+  <head>
+    <!--
+      The reference-page hero meta: platform chips over a dot-separated meta line.
+      platforms is a comma list ("Web,iOS,Android"); the body slot is the meta line
+      itself, ordinary markdown, so code chips and links keep working. Emitted by
+      scripts/generate-components.mjs on every component page; looks in DocShell.css.
+    -->
+    <attribute as="platforms" default="''"/>
+    <formula as="chips" raw="dsx.attribute.platforms">
+      if (!raw || raw === '') { return [] }
+      return raw.split(',').map((name) => name.trim()).filter((name) => name !== '')
+    </formula>
+  </head>
+  <hstack class="doc-refmeta-chips" visible-if="dsx.formula.chips.length > 0" a11yLabel="Platforms">
+    <list bind="dsx.formula.chips" key="index" scroll="false" spacing="0" class="doc-refmeta-chiplist">
+      <text bind="item.value" class="doc-refmeta-chip"/>
+    </list>
+  </hstack>
+  <stack class="doc-refmeta-line">
+    <slot/>
+  </stack>
+</stack>
