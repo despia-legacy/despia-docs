@@ -184,7 +184,7 @@
     </pressable>
     <searchbar bind="dsx.variable.query" placeholder="Search"/>
     <segmented bind="dsx.variable.scope" options="This space,All spaces" label="Search scope" visible-if="dsx.variable.query.length >= 2"/>
-    <list bind="dsx.formula.hitRows" key="id" group_by="group" class="doc-hits" visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length > 0">
+    <list bind="dsx.formula.hitRows" key="id" group_by="group" class="doc-hits" style="appearance: sidebar" visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length > 0">
       <row href="{{ dsx.this.route }}" on:tap="dsx.variable.query = ''">
         <text value="{{ dsx.this.title }}" lineLimit="2"/>
       </row>
@@ -217,7 +217,7 @@
           <popover present="dsx.variable.agentsOpen" on:dismiss="dsx.variable.agentsOpen = false" arrow="top">
             <button label="Open in AI agent" icon="sparkles" variant="bordered" a11yLabel="Open this page in an AI agent" on:tap="dsx.variable.agentsOpen = !dsx.variable.agentsOpen"/>
             <scroll slot="content">
-              <list bind="dsx.formula.agentRows" key="id" scroll="false" class="doc-agents">
+              <list bind="dsx.formula.agentRows" key="id" scroll="false" style="appearance: sidebar">
                 <row href="{{ dsx.this.href }}" on:tap="dsx.variable.agentsOpen = false">
                   <hstack class="doc-agent-row">
                     <image src="{{ dsx.this.mark }}" a11yHidden="true" style="width: 20px; height: 20px"/>
@@ -230,7 +230,7 @@
           <popover present="dsx.variable.moreOpen" on:dismiss="dsx.variable.moreOpen = false" arrow="top">
             <button label="More" icon="ellipsis" variant="bordered" a11yLabel="More ways to use this page" on:tap="dsx.variable.moreOpen = !dsx.variable.moreOpen"/>
             <scroll slot="content">
-              <list bind="dsx.formula.helpRows" key="id" scroll="false">
+              <list bind="dsx.formula.helpRows" key="id" scroll="false" style="appearance: sidebar">
                 <row href="{{ dsx.this.href }}" on:tap="dsx.variable.moreOpen = false">
                   <text value="{{ dsx.this.title }}" class="{{ dsx.this.hook }}"/>
                 </row>
@@ -260,13 +260,8 @@
         </hstack>
       </vstack>
 
-      <vstack class="doc-rail" visible-if="dsx.formula.tocRows.length >= 2" role="navigation" a11yLabel="On this page">
-        <text type="footnote" value="On this page" style="color: var(--dsx-secondary-label)"/>
-        <scroll class="doc-toc-scroll">
-          <vstack class="doc-toc">
-            <text repeat="dsx.formula.tocRows" key="id" value="{{ dsx.this.title }}" href="#{{ dsx.this.id }}" type="footnote" class="doc-toc-link doc-toc-l{{ dsx.this.level }}"/>
-          </vstack>
-        </scroll>
+      <vstack class="doc-rail" visible-if="dsx.formula.tocRows.length >= 2">
+        <Outline title="On this page" items="{{ dsx.attribute.toc }}"/>
       </vstack>
     </hstack>
   </scroll>

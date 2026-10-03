@@ -147,6 +147,13 @@ new download.
 
 ## Framework gaps (written down, not bypassed)
 
+22. **No heading-in-view binding.** The stock Outline takes `current` = the id of the heading in
+    view, but no DSX binding reads scroll position. docs.js marks the Outline row `aria-current` from
+    a scroll spy, and the Outline's own sheet draws it. Ask: a scroll-spy primitive (an
+    IntersectionObserver-backed value, or Outline observing the anchors itself).
+(Gaps 14, 16, 20 and TOC are closed by the framework's `appearance: sidebar`, `selection=`,
+Accordion `icon=` and `<Outline>`, adopted in DocShell.)
+
 16. **No sidebar list style on the web.** SwiftUI's `.listStyle(.sidebar)` and Material 3's
     navigation drawer items both draw plain rows with no cards and no separators, plus a selected
     highlight. A stock `<list>` resolves either to the inset card (the default) or, through

@@ -4,8 +4,6 @@
 //   1. anchor ids: `doc-anchor-<slug>` class tokens promote to real element ids
 //      (the web renderer emits no id attribute), scoped to the active route frame
 //   2. rail scroll-spy: the "On this page" link for the section in view
-//   3. aria-current="page" on the sidebar row of this page (the stock list has no
-//      selection binding yet: framework gap, STATUS)
 //   4. cmd/ctrl+K or "/" focuses the sidebar search
 //   5. rail clicks scroll in place (smooth only when motion is welcome)
 //   6. Copy for AI (the page's markdown sibling) and the lazy Support widget
@@ -32,14 +30,6 @@
     });
   }
 
-  function markNav() {
-    var path = location.pathname.replace(/\/+$/, "") || "/";
-    document.querySelectorAll(".doc-nav a[href], .doc-nav [data-dsx-href]").forEach(function (link) {
-      var href = (link.getAttribute("data-dsx-href") || link.getAttribute("href") || "").replace(/\/+$/, "") || "/";
-      if (href === path) link.setAttribute("aria-current", "page");
-      else link.removeAttribute("aria-current");
-    });
-  }
 
   var spyTicking = false;
   function spy() {
@@ -52,10 +42,10 @@
     for (var i = 0; i < sections.length; i += 1) {
       if (sections[i].getBoundingClientRect().top <= 104) currentId = sections[i].id;
     }
-    root.querySelectorAll('.doc-toc [data-dsx-href^="#"], .doc-toc a[href^="#"]').forEach(function (link) {
-      var target = (link.getAttribute("data-dsx-href") || link.getAttribute("href")).slice(1);
-      var current = target === currentId;
-      link.classList.toggle("is-current", current);
+    // the stock Outline's current row is aria-current (its sheet draws it); the heading in view
+    // is a scroll position, which no DSX binding reads yet (framework gap 22)
+    root.querySelectorAll('.dsx-outline a[href^="#"]').forEach(function (link) {
+      var current = link.getAttribute("href").slice(1) === currentId;
       if (current) link.setAttribute("aria-current", "true");
       else link.removeAttribute("aria-current");
     });
@@ -67,7 +57,7 @@
   }
 
   document.addEventListener("click", function (event) {
-    var link = event.target && event.target.closest ? event.target.closest('.doc-toc [data-dsx-href^="#"], .doc-toc a[href^="#"]') : null;
+    var link = event.target && event.target.closest ? event.target.closest('.dsx-outline a[href^="#"]') : null;
     if (link === null) return;
     var id = (link.getAttribute("data-dsx-href") || link.getAttribute("href")).slice(1);
     var target = document.getElementById(id);
@@ -217,7 +207,6 @@
   function refresh() {
     refreshQueued = false;
     promoteAnchors();
-    markNav();
     focusableScrollRegions();
     spy();
     if (location.hash.length > 1) {
