@@ -1142,6 +1142,7 @@
   border-radius: 0;
 }
 .doc-toc .doc-toc-link.doc-toc-l3 { padding-inline-start: 1.5rem; }
+.doc-toc .doc-toc-text { flex: 0 1 auto; min-width: 0; }
 @media (hover: hover) {
   .doc-toc .doc-toc-link:hover { background: none; }
   .doc-toc .doc-toc-link:hover .doc-toc-text { color: var(--dsx-label); }
@@ -1152,6 +1153,10 @@
 /* sidebar titles: wrap to two lines, then an ellipsis (never a hard clip) */
 .doc-nav-link { min-width: 0; }
 .doc-nav-text {
+  /* the element sheet's hug law gives text flex: none, and only `.dsx-hstack > .dsx-text` and
+     `.dsx-button > .dsx-text` get the shrink permission back; this row is a pressable laid out by
+     CSS, so the permission is declared here (framework gap 10 in STATUS) */
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   display: -webkit-box;

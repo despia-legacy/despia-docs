@@ -131,6 +131,16 @@ committed in afd19dc. Fixes in source after that run, not yet rebuilt:
    opened by URL. For an app that is "Back works"; for a website every URL is a root. Ask: a site or
    web project should treat the URL-landed route as the root frame, or the cold load should not stack
    it. Not worked around here; a NavBar release would hide it, but that is a per-page bypass.
+10. **The text hug law ignores a CSS-authored row.** The element sheet sets `.dsx-text { flex: none }`.
+   It gives the shrink back (`flex-shrink: var(--dsx-text-shrinkable)`) only to
+   `.dsx-hstack > .dsx-text` and `.dsx-button > .dsx-text` (dom/src/theme.ts 2043-2045). A `<pressable>`
+   laid out as a row by author CSS (`display: flex; flex-direction: row`) keeps its text at
+   `flex-shrink: 0`. So the sidebar title ignored `line-clamp: 2` and overflowed the 16.5rem rail: shot
+   01, "Current DSX components and the reti" clipped at the sidebar edge. The CSS clamp only grants the
+   permission through `--dsx-text-shrinkable`, which an un-hstacked row never reads. Docs now declare
+   `flex: 0 1 auto` on `.doc-nav-text`, an author flex-shrink, which the sheet documents as allowed.
+   Ask: key the permission on the computed axis (any flex row parent), or make `pressable`
+   row-aware like `button`.
 9. **`<menu>` items have no `href` and no `checked`.** A menu row dispatches only a module call. The
    version picker uses `icon: 'checkmark'` for the current version and `route.reset` for others, which
    cannot leave the SPA route table for another build under `/v/<v>/`.
