@@ -123,7 +123,25 @@ committed in afd19dc. Fixes in source after that run, not yet rebuilt:
 - Sidebar titles: wrap to 2 lines, then an ellipsis.
 - The stray "‹ Back": this is the framework, not the docs. See gap 8 below. No workaround applied.
 
+## Stock rebuild (owner ruling 2026-10-03, commit 036dd8a)
+
+DocShell is rebuilt from stock components only. DocShell.css went from 48,736 to 1,945 bytes and is
+now layout only: the one colour is `var(--dsx-accent)` on the "On this page" item in view. Content
+blocks lower to extended-markdown directives, so the stock `<markdown>` lowering renders them as
+Callout, Card, MarkdownSteps, MarkdownTabs, Accordion and CodeBlock. All local content components
+are deleted. `despia lint` gives 459 files 0/0 and `despia review` gives 0/0. Not yet rebuilt.
+
 ## Framework gaps (written down, not bypassed)
+
+11. No card grid directive. Mintlify CardGroup `cols` becomes stacked `:::card`s.
+12. No API field row on web. `FieldRow` is ios/android only, so ParamField and ResponseField lower
+    to a markdown list.
+13. No embed directive. Extended markdown refuses iframes until an allowlist is proposed, so the
+    57 v3 YouTube embeds become `::link-card` links.
+14. Stock `<list>` has no selection binding (List(selection:)), so the sidebar's current row is
+    `aria-current` from docs.js with no stock selected look.
+15. No outline / table-of-contents component. The rail is stock text links plus the one
+    accent-token rule.
 
 8. **A URL-landed page shows the stock "‹ Back" bar.** Per router.ts, a deep link cold-loads the entry
    frame (PageIndex at `/`) and pushes the matched route on top. Depth is then 2, so the default-back
