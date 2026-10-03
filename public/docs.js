@@ -151,14 +151,14 @@
   }
   function inertAsk() {
     support.state = "unavailable";
-    document.querySelectorAll(".doc-ask-btn, .doc-ask-btn-inline, .doc-ask-human, .doc-propose-edit, .doc-request-feature").forEach(function (b) {
+    document.querySelectorAll('.doc-ask-btn-inline, [aria-label="Ask AI"], .doc-ask-human, .doc-propose-edit, .doc-request-feature').forEach(function (b) {
       b.setAttribute("aria-disabled", "true");
       b.setAttribute("title", "The assistant is not reachable right now");
     });
   }
   var INTENTS = [
     [".doc-ask-human", "ask-human"], [".doc-propose-edit", "propose-edit"],
-    [".doc-request-feature", "request-feature"], [".doc-ask-btn, .doc-ask-btn-inline", "ask-ai"],
+    [".doc-request-feature", "request-feature"], ['.doc-ask-btn-inline, [aria-label="Ask AI"]', "ask-ai"],
   ];
   var pendingIntent = "ask-ai";
   function openWidget() {

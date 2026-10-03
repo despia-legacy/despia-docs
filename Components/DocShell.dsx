@@ -131,11 +131,13 @@
          (copy, and the Support widget intents). A stock <menu> row cannot carry an href (gap 9). -->
     <formula as="helpRows" input:md="dsx.attribute.md" input:prompt="dsx.formula.askPrompt">
       return [
+        { id: 'human', title: 'Ask a human', href: '', hook: 'doc-ask-human' },
         { id: 'chatgpt', title: 'Open in ChatGPT', href: 'https://chatgpt.com/?hints=search&q=' + prompt, hook: '' },
         { id: 'cursor', title: 'Connect to Cursor', href: 'cursor://anysphere.cursor-deeplink/mcp/install?name=despia-docs&config=eyJ1cmwiOiJodHRwczovL2RvY3MuZGVzcGlhLmNvbS9tY3AifQ==', hook: '' },
         { id: 'md', title: 'View as Markdown', href: md, hook: '' },
         { id: 'edit', title: 'Propose an edit', href: '', hook: 'doc-propose-edit' },
         { id: 'feature', title: 'Request a feature', href: '', hook: 'doc-request-feature' },
+        { id: 'github', title: 'Despia on GitHub', href: 'https://github.com/despia-native/despia', hook: '' },
       ]
     </formula>
     <action as="cycleTheme">
@@ -179,13 +181,15 @@
   </vstack>
 
   <scroll paneRole="detail" class="doc-detail">
-    <NavBar title="{{ dsx.formula.spaceLabel }}">
+    <!-- One brand title; the trailing items are the bar's own: bare <button icon a11yLabel> and a
+         <menu> around one bare button are dressed as bar items by the route bar (any other word
+         on them, a class or an href, would make them "authored" and undressed). -->
+    <NavBar title="Despia Docs">
       <picker slot="trailing" bind="dsx.variable.spacePick" options="{{ dsx.formula.spaceNames }}" label="Docs space"/>
       <menu slot="trailing" menu="dsx.formula.versionMenu">
-        <button label="{{ 'v' + dsx.attribute.version }}" variant="plain" a11yLabel="{{ 'Docs version ' + dsx.attribute.version }}"/>
+        <button label="{{ 'v' + dsx.attribute.version }}" a11yLabel="{{ 'Docs version ' + dsx.attribute.version }}"/>
       </menu>
-      <button slot="trailing" icon="sparkles" a11yLabel="Ask AI" class="doc-ask-btn"/>
-      <button slot="trailing" icon="chevron.left.forwardslash.chevron.right" a11yLabel="Despia on GitHub" href="https://github.com/despia-native/despia"/>
+      <button slot="trailing" icon="sparkles" a11yLabel="Ask AI"/>
       <button slot="trailing" icon="circle.lefthalf.filled" a11yLabel="{{ 'Appearance: ' + (dsx.formula.themeState === '' ? 'system' : dsx.formula.themeState) }}" on:tap="dsx.action.cycleTheme()"/>
     </NavBar>
     <hstack class="doc-detail-row">
@@ -195,10 +199,9 @@
         <hstack class="doc-help" visible-if="dsx.attribute.md !== ''" role="toolbar" a11yLabel="Page help">
           <button label="Copy for AI" icon="doc.on.doc" variant="prominent" class="doc-actions-copy"/>
           <button label="Ask AI" icon="sparkles" variant="bordered" class="doc-ask-btn-inline"/>
-          <button label="Ask a human" icon="person" variant="bordered" class="doc-ask-human"/>
-          <button label="Open in Claude" variant="plain" href="{{ 'https://claude.ai/new?q=' + dsx.formula.askPrompt }}"/>
+          <button label="Open in Claude" icon="arrow.up.right" variant="bordered" href="{{ 'https://claude.ai/new?q=' + dsx.formula.askPrompt }}"/>
           <popover present="dsx.variable.moreOpen" on:dismiss="dsx.variable.moreOpen = false" arrow="top">
-            <button icon="ellipsis" a11yLabel="More ways to use this page" on:tap="dsx.variable.moreOpen = !dsx.variable.moreOpen"/>
+            <button label="More" icon="ellipsis" variant="bordered" a11yLabel="More ways to use this page" on:tap="dsx.variable.moreOpen = !dsx.variable.moreOpen"/>
             <scroll slot="content">
               <list bind="dsx.formula.helpRows" key="id" scroll="false">
                 <row href="{{ dsx.this.href }}" on:tap="dsx.variable.moreOpen = false">

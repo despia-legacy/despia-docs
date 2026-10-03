@@ -8,6 +8,9 @@
 
 .doc-sidebar { gap: 0.75rem; padding: 0.75rem; min-height: 0; align-items: stretch; }
 .doc-hits, .doc-nav-slot { flex: 1; min-height: 0; }
+/* the closest stock list idiom to a sidebar: edge-to-edge rows, no inset card (appearance is
+   the stock list's own switch; a true sidebar style is framework gap 16) */
+.doc-hits, .doc-nav .dsx-list { appearance: grouped; }
 
 .doc-detail { min-height: 0; }
 .doc-detail-row { align-items: flex-start; gap: 2.5rem; padding: 1rem clamp(1rem, 4vw, 3rem) 4rem; }

@@ -133,6 +133,24 @@ are deleted. `despia lint` gives 459 files 0/0 and `despia review` gives 0/0. No
 
 ## Framework gaps (written down, not bypassed)
 
+16. **No sidebar list style on the web.** SwiftUI's `.listStyle(.sidebar)` and Material 3's
+    navigation drawer items both draw plain rows with no cards and no separators, plus a selected
+    highlight. A stock `<list>` resolves either to the inset card (the default) or, through
+    `appearance: grouped`, to edge-to-edge rows with full-width separators. The docs sidebar uses
+    `grouped`, the closest stock idiom. Ask: a `sidebar` list idiom, with the selection binding of
+    gap 14.
+17. **NavBar trailing items: only bare `<button>`s are dressed.** `navbar-trailing.ts item()`
+    dresses a bare `<button icon|label>`, or a `<menu>` holding exactly one, as bar items. Anything
+    else is "authored" and keeps its own cascade. That covers a `<picker>`, or a button with a
+    class or an href. The route bar's trailing column then has `gap: 0.125rem` and relies on the
+    44 px targets of dressed buttons, so a `<picker>` between bar buttons sits flush against them.
+    Ask: dress `picker`/`segmented` as bar items too, the SwiftUI toolbar Picker / M3 action
+    equivalent, or give the column a real item gap. Docs also moved GitHub into the "More" list,
+    because an href made it authored.
+18. **The back control is labelled with the covered frame's title.** That frame is the entry,
+    stacked by gap 8, so a URL-landed page shows "‹ Modern" beside its own title. This follows from
+    gap 8; it goes away with it.
+
 11. No card grid directive. Mintlify CardGroup `cols` becomes stacked `:::card`s.
 12. No API field row on web. `FieldRow` is ios/android only, so ParamField and ResponseField lower
     to a markdown list.
