@@ -32,15 +32,15 @@ const shots = [
   { name: "02-legacy-steps-tabs-cards", path: "/legacy/payments/stripe/introduction", w: 1440, h: 1400 },
   { name: "03-legacy-banner-cards", path: "/legacy/introduction", w: 1440, h: 1000 },
   { name: "04-migration-map", path: "/migrate/map", w: 1440, h: 1000 },
-  { name: "05-switcher-open", path: "/legacy/introduction", w: 1440, h: 800, click: ".doc-switcher-btn" },
-  { name: "06-help-menu-open", path: "/legacy/native-features/haptic-feedback", w: 1440, h: 900, click: ".doc-actions-more" },
+  { name: "05-switcher-open", path: "/legacy/introduction", w: 1440, h: 800, click: "[aria-label=\"Docs space\"]" },
+  { name: "06-help-menu-open", path: "/legacy/native-features/haptic-feedback", w: 1440, h: 900, click: "[aria-label=\"More ways to use this page\"]" },
   { name: "07-search-all-spaces", path: "/legacy/introduction", w: 1440, h: 800, search: "haptic" },
   { name: "08-troubleshooting", path: "/troubleshooting", w: 1440, h: 1000 },
   { name: "09-app-review", path: "/app-review", w: 1440, h: 1100 },
   { name: "10-releases", path: "/releases", w: 1440, h: 800 },
   { name: "11-mobile-legacy", path: "/legacy/native-features/haptic-feedback", w: 390, h: 844 },
-  { name: "12-mobile-help-sheet", path: "/migrate/map", w: 390, h: 844, click: ".doc-actions-more" },
-  { name: "14-version-picker-open", path: "/framework/guides/routing", w: 1440, h: 700, click: ".doc-version-chip" },
+  { name: "12-mobile-help-sheet", path: "/migrate/map", w: 390, h: 844, click: "[aria-label=\"More ways to use this page\"]" },
+  { name: "14-version-picker-open", path: "/framework/guides/routing", w: 1440, h: 700, click: "[aria-label^=\"Docs version\"]" },
   { name: "13-legacy-paramfields-dark", path: "/legacy/local-intelligence/reference", w: 1440, h: 1000, dark: true, scrollTo: ".doc-field" },
 ];
 for (const s of shots) {
@@ -53,7 +53,7 @@ for (const s of shots) {
   if (s.scrollTo) await page.evaluate(() => window.scrollBy(0, -120));
   if (s.click) { const el = page.locator(s.click).last(); await el.click({ timeout: 4000 }).catch(() => el.dispatchEvent("click")); await page.waitForTimeout(600); }
   if (s.search) {
-    await page.locator(".doc-search-inline input").last().click({ timeout: 4000 }).catch(() => {});
+    await page.locator(".doc-sidebar input").last().click({ timeout: 4000 }).catch(() => {});
     await page.keyboard.type(s.search);
     await page.waitForTimeout(500);
     await page.getByText("All spaces").first().click().catch(() => {});
