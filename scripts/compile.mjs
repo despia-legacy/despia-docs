@@ -224,14 +224,11 @@ function jseStringLiteral(source) {
   // Every character the document scanners read structurally travels as a \u escape: `<`
   // (a raw `<server>` in an example would open a block), `&` (entities decode before the
   // JSE parse, so `&quot;` would end the string), braces (never an interpolation) and the
-  // `dsx.` reach (an example's `dsx.cookie` is prose, not a read the linter should check), and the
-  // `await` keyword (the widened await-placement check scans literals' text).
+  // `dsx.` reach (an example's `dsx.cookie` is prose, not a read the linter should check).
   return JSON.stringify(source)
     .replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026")
     .replace(/\{/g, "\\u007b").replace(/\}/g, "\\u007d")
-    .replace(/\bdsx\./g, "dsx\\u002e")
-    // and `await`: a page that TEACHES the await-in-a-ternary trap must not be read as committing it
-    .replace(/\bawait\b/g, "\\u0061wait");
+    .replace(/\bdsx\./g, "dsx\\u002e");
 }
 
 // ── components in markdown ────────────────────────────────────────────────────────────────
@@ -814,9 +811,7 @@ for (const page of pages) {
   const blocks = chunks.map((chunk) => {
     if (chunk.level === 0) return compileBody(page, chunk.lines, chunk.start, "    ").join("\n");
     const nodes = compileBody(page, chunk.lines, chunk.start, "      ");
-    // the slug rides the class with `_` for `-` (docs.js turns it back into the id): a class token
-    // like `await-in-a-ternary` reads to the await-placement check as `await` after an operator
-    return `    <stack class="doc-section doc-anchor-${chunk.id.replace(/-/g, "_")}">\n${nodes.join("\n")}\n    </stack>`;
+    return `    <stack class="doc-section doc-anchor-${chunk.id}">\n${nodes.join("\n")}\n    </stack>`;
   }).filter((block) => block !== "").join("\n");
   page.shell = shellAttrs(page, toc);
   writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, [], blocks));

@@ -26,7 +26,7 @@
       if (!inFrame) { if (el.id) el.removeAttribute("id"); return; }
       var token = null;
       el.classList.forEach(function (t) { if (token === null && t.indexOf("doc-anchor-") === 0) token = t; });
-      if (token !== null) el.id = token.slice("doc-anchor-".length).replace(/_/g, "-");
+      if (token !== null) el.id = token.slice("doc-anchor-".length);
     });
   }
 
