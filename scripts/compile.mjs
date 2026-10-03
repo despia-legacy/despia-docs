@@ -159,7 +159,7 @@ function sectionFor(route, meta) {
   if (route.startsWith("/framework/reference/style")) return "styling";
   return route === "/" ? "" : route.split("/")[1];
 }
-const SECTION_RANK = { "": 0, guides: 1, components: 2, styling: 3, skills: 4 };
+const SECTION_RANK = { "": 0, guides: 1, modules: 1.5, components: 2, styling: 3, skills: 4 };
 
 // ── the section splitter (rail anchors) ───────────────────────────────────────────────────
 // A page body splits at its h2/h3 headings (fence-aware) so each section renders as its
@@ -604,6 +604,18 @@ const defang = (text) => text
   .replace(/-----(BEGIN|END) ((?:RSA |EC |DSA |OPENSSH |PGP |ENCRYPTED )?PRIVATE KEY)-----/g, "-----$1\u2060 $2-----")
   .replace(/\bAuthKey_([A-Z0-9]{10})\.p8\b/g, "AuthKey_\u2060$1.p8");
 
+// Docs-side notes on pages synced from the framework (their source is not ours to edit): the AI
+// skill for writing a module points people at the human walkthrough, under its title.
+const PAGE_NOTES = {
+  "/framework/skills/writing-a-module": ":::tip\nPrefer a walkthrough? Read the guide: [Build a module](/framework/guides/build-a-module).\n:::",
+};
+function withPageNote(route, body) {
+  const note = PAGE_NOTES[route];
+  if (note === undefined) return body;
+  const m = /^#\s.*$/m.exec(body);
+  return m === null ? `${note}\n\n${body}` : `${body.slice(0, m.index + m[0].length)}\n\n${note}\n${body.slice(m.index + m[0].length)}`;
+}
+
 const files = walk(contentDir);
 if (files.length === 0) {
   console.error("[docs.compile] content/ holds no markdown — nothing to build");
@@ -627,7 +639,7 @@ const pages = files.map((file) => {
   const parsed = frontMatter(source);
   const meta = parsed.meta;
   if (!inThisVersion(meta)) return null;
-  const body = parsed.body;
+  const body = withPageNote(meta.route ?? routeFor(file), parsed.body);
   const route = meta.route ?? routeFor(file);
   const space = meta.space ?? spaceOf(route);
   const title = meta.title ?? firstHeading(body) ?? relative(contentDir, file);
@@ -763,12 +775,12 @@ const sfIcon = (fa) => (fa ? FA_TO_SF[fa] ?? "doc.text" : undefined);
 // Modern and the other spaces: by section, then a few routes of their own.
 const SECTION_ICONS = {
   Start: "house", Guides: "book", Components: "cube", Styling: "paintbrush", Skills: "hammer",
-  "Move to v4": "arrow.down.doc", Troubleshooting: "ladybug", Releases: "newspaper", "App Review": "checkmark.seal",
+  "Move to v4": "arrow.down.doc", Modules: "shippingbox", Troubleshooting: "ladybug", Releases: "newspaper", "App Review": "checkmark.seal",
 };
 const ROUTE_ICONS = {
   "/": "house", "/quickstart": "bolt", "/system": "paintbrush", "/writing-docs": "pencil",
   "/migrate": "info.circle", "/migrate/guide": "list.bullet", "/migrate/map": "map",
-  "/troubleshooting": "list.bullet", "/releases": "newspaper", "/app-review": "list.bullet",
+  "/troubleshooting": "list.bullet", "/framework/modules": "shippingbox", "/framework/guides/build-a-module": "hammer", "/releases": "newspaper", "/app-review": "list.bullet",
 };
 
 // ── the nav model, per space ──────────────────────────────────────────────────────────────

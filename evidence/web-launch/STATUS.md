@@ -145,6 +145,17 @@ spacing. So JS one-liners over 100 characters are only reported (3, all v3 Lovab
 Adopting `prettier` as a devDependency would do it properly; that is owner-gated, since it is a
 new download.
 
+## Module docs (owner, 2026-10-03)
+
+- `/framework/modules` (content/modules/index.md): the Modules index, linking to the guide, the
+  skill, despia.com/modules and despia.com/backends.
+- `/framework/guides/build-a-module` (content/modules/build-a-module.md): the human walkthrough.
+- Both pages are docs-owned files in wt-docs-web. The framework's guides are synced from the
+  front door and are read-only here, so nothing was written into the framework tree. They sit in a
+  new "Modules" sidebar section after Guides.
+- The skill page `/framework/skills/writing-a-module` gets a docs-side note under its title:
+  "Prefer a walkthrough? Read the guide" (PAGE_NOTES in compile.mjs). The skill source is unchanged.
+
 ## Framework gaps (written down, not bypassed)
 
 22. **No heading-in-view binding.** The stock Outline takes `current` = the id of the heading in
