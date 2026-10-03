@@ -228,8 +228,8 @@
         <slot/>
 
         <hstack class="doc-pager" visible-if="dsx.attribute.prev !== '' || dsx.attribute.next !== ''">
-          <Card title="{{ 'Previous: ' + dsx.attribute.prevLabel }}" href="{{ dsx.attribute.prev }}" visible-if="dsx.attribute.prev !== ''"/>
-          <Card title="{{ 'Next: ' + dsx.attribute.nextLabel }}" href="{{ dsx.attribute.next }}" visible-if="dsx.attribute.next !== ''"/>
+          <LinkCard title="{{ dsx.attribute.prevLabel }}" description="Previous" href="{{ dsx.attribute.prev }}" visible-if="dsx.attribute.prev !== ''"/>
+          <LinkCard title="{{ dsx.attribute.nextLabel }}" description="Next" href="{{ dsx.attribute.next }}" visible-if="dsx.attribute.next !== ''"/>
         </hstack>
 
         <text type="footnote" value="Apache-2.0. Every page has a markdown sibling at its own path plus .md; each space is one llms.txt away."

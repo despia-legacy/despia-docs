@@ -4,7 +4,11 @@
   the "On this page" item in view takes var(--dsx-accent), the brand's only door (rule 10).
 */
 
-.doc-shell { height: 100dvh; min-height: 0; align-self: stretch; }
+.doc-shell {
+  height: 100dvh; min-height: 0; align-self: stretch;
+  /* the website's face (owner direction 2026-10-03), through the stock font token */
+  --dsx-font: "Inter Tight", Inter, system-ui, sans-serif;
+}
 
 .doc-sidebar { gap: 0.75rem; padding: 0.75rem; min-height: 0; align-items: stretch; }
 .doc-hits, .doc-nav-slot { flex: 1; min-height: 0; }

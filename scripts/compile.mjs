@@ -468,11 +468,12 @@ function emitDirectives(nodes) {
         break;
       }
       case "ParamField": case "ResponseField": {
+        // the stock FieldRow (label column + content), through the `:field` mapping row each
+        // <markdown> carries (MD_COMPONENTS): name, type, required and default ride the label
         const name = attr("name") ?? attr("path") ?? attr("query") ?? attr("body") ?? "";
-        const bits = [`**\`${name}\`**`, attr("type") ? `\`${attr("type")}\`` : "", attr("required") === "true" ? "required" : "",
-          attr("default") ? `default \`${attr("default")}\`` : ""].filter(Boolean).join(" · ");
-        const body = mdText(kids);
-        out.push(`\n- ${bits}${body ? "\n\n" + body.split("\n").map((l) => (l === "" ? "" : "  " + l)).join("\n") : ""}\n`);
+        const label = [name, attr("type") ?? "", attr("required") === "true" ? "required" : "",
+          attr("default") ? `default ${attr("default")}` : ""].filter(Boolean).join(" · ").replace(/[\[\]]/g, "");
+        out.push(`\n${f}field[${label}]\n${mdText(kids)}\n${f}\n`);
         break;
       }
       case "Update": {
@@ -500,10 +501,15 @@ function emitDirectives(nodes) {
   return out.join("\n").replace(/\n{3,}/g, "\n\n");
 }
 
+/** The docs' one app mapping row: an API field (`:::field[label]`) is the stock FieldRow. */
+const MD_COMPONENTS = `{{ { ':field': { component: 'FieldRow', props: { label: 'label' }, body: 'blocks' } } }}`;
+
 /** A run of lines as ONE stock <markdown> (tags lowered to directives). */
 function compileBody(page, lines, startLine, indent) {
   const text = emitDirectives(tagTree(page, lines, startLine)).replace(/^\n+|\n+$/g, "");
-  return text.trim() === "" ? [] : [`${indent}<markdown bind="dsx.variable.md${pushMdVar(page, text)}"/>`];
+  if (text.trim() === "") return [];
+  const field = text.includes(":field[") ? ` components="${MD_COMPONENTS}"` : "";
+  return [`${indent}<markdown bind="dsx.variable.md${pushMdVar(page, text)}"${field}/>`];
 }
 
 // ── spaces ────────────────────────────────────────────────────────────────────────────────
@@ -846,18 +852,18 @@ for (const page of pages) {
   const itemsVar = page.attrVars.push(JSON.stringify(items)) - 1;
   // the variables carry JSON text; the formulas parse it once
   const head = [
-    `    <variable as="platform">return 'All'</variable>`,
+    `    <variable as="platformFilter">return 'All'</variable>`,
     `    <variable as="pkg">return 'All packages'</variable>`,
     `    <formula as="items" input:raw="dsx.variable.a${itemsVar}">return JSON.parse(raw)</formula>`,
-    `    <formula as="shown" input:items="dsx.formula.items" input:platform="dsx.variable.platform" input:pkg="dsx.variable.pkg">`,
-    `      return items.filter((i) => (platform === 'All' || i.platform.includes(platform)) && (pkg === 'All packages' || i.packages.includes(pkg)))`,
+    `    <formula as="shown" input:items="dsx.formula.items" input:wantPlatform="dsx.variable.platformFilter" input:pkg="dsx.variable.pkg">`,
+    `      return items.filter((i) => (wantPlatform === 'All' || i.platform.includes(wantPlatform)) && (pkg === 'All packages' || i.packages.includes(pkg)))`,
     `    </formula>`,
     `    <formula as="fixed" input:items="dsx.formula.items">return items.filter((i) => i.fixed)</formula>`,
   ];
   const body = [
     `    <markdown bind="dsx.variable.md${intro}"/>`,
     `    <hstack class="doc-ts-filters" role="group" a11yLabel="Filter articles">`,
-    `      <segmented bind="dsx.variable.platform" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
+    `      <segmented bind="dsx.variable.platformFilter" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
     `      <picker bind="dsx.variable.pkg" options="${escapeForDsxAttr(packageOptions.join(","))}" label="Package" class="doc-ts-package"/>`,
     `    </hstack>`,
     `    <stack class="doc-ts-fixed" visible-if="dsx.formula.fixed.length > 0">`,
@@ -907,11 +913,11 @@ for (const page of pages) {
     `    <variable as="q">return ''</variable>`,
     `    <variable as="store">return 'All'</variable>`,
     `    <variable as="category">return 'All categories'</variable>`,
-    `    <variable as="platform">return 'All'</variable>`,
+    `    <variable as="platformFilter">return 'All'</variable>`,
     `    <formula as="items" input:raw="dsx.variable.a${itemsVar}">return JSON.parse(raw)</formula>`,
     // fuzzy: every word of the query must appear in the entry, each word matched as a substring
     // or as an in-order subsequence (so "minfunc" finds "minimum functionality", "512" finds 5.1.2)
-    `    <formula as="shown" input:items="dsx.formula.items" input:q="dsx.variable.q" input:store="dsx.variable.store" input:category="dsx.variable.category" input:platform="dsx.variable.platform">`,
+    `    <formula as="shown" input:items="dsx.formula.items" input:q="dsx.variable.q" input:wantStore="dsx.variable.store" input:wantCategory="dsx.variable.category" input:wantPlatform="dsx.variable.platformFilter">`,
     `      const fuzzy = (hay, word) => {`,
     `        if (hay.includes(word)) { return true }`,
     `        const flat = hay.split('.').join('')`,
@@ -921,9 +927,9 @@ for (const page of pages) {
     `        return word.length >= 3`,
     `      }`,
     `      const words = String(q || '').toLowerCase().split(' ').filter((w) => w !== '')`,
-    `      return items.filter((i) => (store === 'All' || i.stores.includes(store))`,
-    `        && (category === 'All categories' || i.category === category)`,
-    `        && (platform === 'All' || i.platforms.includes(platform))`,
+    `      return items.filter((i) => (wantStore === 'All' || i.stores.includes(wantStore))`,
+    `        && (wantCategory === 'All categories' || i.category === wantCategory)`,
+    `        && (wantPlatform === 'All' || i.platforms.includes(wantPlatform))`,
     `        && words.every((w) => fuzzy(i.haystack, w)))`,
     `    </formula>`,
   ];
@@ -934,7 +940,7 @@ for (const page of pages) {
     `    </stack>`,
     `    <hstack class="doc-ts-filters" role="group" a11yLabel="Filter guidelines">`,
     `      <segmented bind="dsx.variable.store" options="All,Apple,Google" label="Store" class="doc-ts-platform"/>`,
-    `      <segmented bind="dsx.variable.platform" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
+    `      <segmented bind="dsx.variable.platformFilter" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
     `      <picker bind="dsx.variable.category" options="${escapeForDsxAttr(categories.join(","))}" label="Category" class="doc-ts-package"/>`,
     `    </hstack>`,
     `    <text value="{{ dsx.formula.shown.length + (dsx.formula.shown.length === 1 ? ' guideline' : ' guidelines') }}" type="headline"/>`,
