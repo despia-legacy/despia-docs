@@ -1216,8 +1216,11 @@ ${pad}</Accordion>`);
 }
 for (const s of SPACES) {
   const vars = [];
-  const sections = (navBySpace[s.id] ?? []).map((section) => [
-    `  <text value="${escapeForDsxAttr(section.name)}" type="footnote" class="doc-nav-section"/>`,
+  // a section header that only restates the space ("Troubleshooting" in Troubleshooting) or opens
+  // the list ("Start") says nothing the reader does not know; it is left out
+  const quiet = (name, i) => name === s.label || (i === 0 && (name === "Start" || name === "Get started"));
+  const sections = (navBySpace[s.id] ?? []).map((section, i) => [
+    ...(quiet(section.name, i) ? [] : [`  <text value="${escapeForDsxAttr(section.name)}" type="footnote" class="doc-nav-section"/>`]),
     navMarkup(section.items, section.icon ?? SECTION_ICONS[section.name], 0, vars),
   ].join("\n")).join("\n");
   writeFileSync(join(generatedDir, `${navComponentOf(s.id)}.dsx`), `<vstack class="doc-nav doc-nav-${s.id}" style="align-items: stretch" role="navigation" a11yLabel="${escapeForDsxAttr(s.label)} documentation">

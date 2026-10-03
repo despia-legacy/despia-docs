@@ -10,5 +10,6 @@ test("DocShell state and the space label", async () => {
   assert.equal(shell.variable("query"), "");
   assert.equal(shell.variable("spacePick"), "Legacy v3");
   assert.equal(shell.formula("spaceLabel"), "Legacy v3");
-  assert.equal(JSON.parse(shell.formula("crumbs"))[0].label, "Legacy v3");
+  // the trail starts below the space: the section (when it is not the space itself), then the page
+  assert.deepEqual(JSON.parse(shell.formula("crumbs")).map((c) => c.label), ["Despia docs"]);
 });
