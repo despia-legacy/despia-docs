@@ -504,9 +504,55 @@ function emitDirectives(nodes) {
 /** The docs' one app mapping row: an API field (`:::field[label]`) is the stock FieldRow. */
 const MD_COMPONENTS = `{{ { ':field': { component: 'FieldRow', props: { label: 'label' }, body: 'blocks' } } }}`;
 
+// ── code formatting (owner: JSON and JavaScript are formatted, never one long line) ─────────────
+// A json/jsonc fence that parses is re-printed with JSON.stringify(value, null, 2) when it is not
+// already multi-line; a fence that does not parse is left exactly as written and reported
+// (evidence/web-launch/code-format-report.txt). Shell, log, diff and every other language are
+// never touched. JS/TS one-liners are reported, not rewritten: no formatter ships with the docs
+// toolchain (see STATUS).
+const formatReport = [];
+function stripJsonComments(text) {
+  return text.replace(/("(?:[^"\\]|\\.)*")|\/\/[^\n]*|\/\*[\s\S]*?\*\//g, (m, str) => (str !== undefined ? str : ""));
+}
+/** JSON.stringify(value, null, 2), except that an array of scalars which fits on one line stays on it. */
+function prettyJson(value, pad) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    const flat = JSON.stringify(value);
+    if (value.every((v) => v === null || typeof v !== "object") && flat.length + pad.length <= 72) return flat.replace(/,/g, ", ");
+    return "[\n" + value.map((v) => pad + "  " + prettyJson(v, pad + "  ")).join(",\n") + "\n" + pad + "]";
+  }
+  if (value !== null && typeof value === "object") {
+    const keys = Object.keys(value);
+    if (keys.length === 0) return "{}";
+    return "{\n" + keys.map((k) => `${pad}  ${JSON.stringify(k)}: ${prettyJson(value[k], pad + "  ")}`).join(",\n") + "\n" + pad + "}";
+  }
+  return JSON.stringify(value);
+}
+function formatFences(page, text, startLine) {
+  return text.replace(/^(\s*)(`{3,})(json|jsonc|javascript|js|ts|typescript|tsx|jsx)([^\n]*)\n([\s\S]*?)\n\1\2[ \t]*$/gm, (whole, ind, marks, lang, meta, body) => {
+    const where = `${relative(root, page.file ?? "").split(sep).join("/")}:~${startLine}`;
+    const lines = body.split("\n");
+    // a one-line object or array holding another one, or any one-liner past 60 characters
+    const flat = body.trim();
+    const long = lines.length === 1 && (flat.length > 60 || (/^[{[]/.test(flat) && /[{[]/.test(flat.slice(1, -1))));
+    if (lang === "json" || lang === "jsonc") {
+      if (!long) return whole;
+      let value;
+      try { value = JSON.parse(lang === "jsonc" ? stripJsonComments(body) : body); }
+      catch { formatReport.push(`${where} ${lang} block does not parse; left as written`); return whole; }
+      if (lang === "jsonc" && /\/\/|\/\*/.test(body)) { formatReport.push(`${where} jsonc one-liner with comments; left as written`); return whole; }
+      const pretty = prettyJson(value, "").split("\n").map((l) => ind + l).join("\n");
+      return `${ind}${marks}${lang}${meta}\n${pretty}\n${ind}${marks}`;
+    }
+    if (long && body.trim().length > 100) formatReport.push(`${where} ${lang} one-liner of ${body.trim().length} chars; needs a JS formatter`);
+    return whole;
+  });
+}
+
 /** A run of lines as ONE stock <markdown> (tags lowered to directives). */
 function compileBody(page, lines, startLine, indent) {
-  const text = emitDirectives(tagTree(page, lines, startLine)).replace(/^\n+|\n+$/g, "");
+  const text = formatFences(page, emitDirectives(tagTree(page, lines, startLine)).replace(/^\n+|\n+$/g, ""), startLine);
   if (text.trim() === "") return [];
   const field = text.includes(":field[") ? ` components="${MD_COMPONENTS}"` : "";
   return [`${indent}<markdown bind="dsx.variable.md${pushMdVar(page, text)}"${field}/>`];
@@ -1332,6 +1378,10 @@ writeFileSync(join(publicDir, "sitemap.xml"), [
 // ── the canonical table (assemble.mjs stamps <link rel="canonical"> from it) ──────────────
 writeFileSync(join(publicDir, "canonical.json"), JSON.stringify(Object.fromEntries(entries.map((p) =>
   [p.route, site + (p.meta?.canonicalOf ?? p.route)]))) + "\n");
+
+mkdirSync(join(root, "evidence", "web-launch"), { recursive: true });
+writeFileSync(join(root, "evidence", "web-launch", "code-format-report.txt"),
+  formatReport.length === 0 ? "every json block parsed; no one-line JS/TS over 100 chars\n" : formatReport.join("\n") + "\n");
 
 const counts = SPACES.map((s) => `${s.id} ${entries.filter((p) => p.space === s.id).length}`).join(", ");
 console.log(`[docs.compile] ${entries.length} route(s) (${counts}) → Components/pages (+ DocNav per space, SystemCards), routes, nav, search index, md siblings, llms per space, sitemap`);

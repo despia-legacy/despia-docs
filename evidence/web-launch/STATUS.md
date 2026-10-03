@@ -131,6 +131,20 @@ blocks lower to extended-markdown directives, so the stock `<markdown>` lowering
 Callout, Card, MarkdownSteps, MarkdownTabs, Accordion and CodeBlock. All local content components
 are deleted. `despia lint` gives 459 files 0/0 and `despia review` gives 0/0. Not yet rebuilt.
 
+## Code formatting (owner, 2026-10-03)
+
+The compiler re-prints one-line `json`/`jsonc` fences: a nested object or array, or anything past
+60 characters. It uses 2-space indentation, and an array of scalars stays on one line when it fits.
+The md siblings keep the source as written. A block that does not parse is left exactly as written
+and listed, with path and approximate line, in `evidence/web-launch/code-format-report.txt` (7 JSON
+examples in the framework skills that are deliberately partial, e.g. with `…`).
+
+JS/TS: nothing in the docs toolchain formats them. The fleet installs have `typescript` and
+`esbuild`, but neither is a docs dependency, and the TS printer drops blank lines and rewrites
+spacing. So JS one-liners over 100 characters are only reported (3, all v3 Lovable pages).
+Adopting `prettier` as a devDependency would do it properly; that is owner-gated, since it is a
+new download.
+
 ## Framework gaps (written down, not bypassed)
 
 16. **No sidebar list style on the web.** SwiftUI's `.listStyle(.sidebar)` and Material 3's
