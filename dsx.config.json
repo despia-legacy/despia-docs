@@ -20,6 +20,14 @@
       }
     },
     {
+      "path": "/framework/modules",
+      "component": "docs.PageFramework_Modules",
+      "meta": {
+        "title": "Modules",
+        "description": "Native capabilities, UI and backends as modules: build your own, let an agent build one, or install one from the catalogue."
+      }
+    },
+    {
       "path": "/migrate",
       "component": "docs.PageMigrate",
       "meta": {
@@ -49,6 +57,14 @@
       "meta": {
         "title": "Troubleshooting",
         "description": "Symptom, cause and fix for the problems Despia developers actually hit, on v4 and on the v3 runtime."
+      }
+    },
+    {
+      "path": "/framework/guides/build-a-module",
+      "component": "docs.PageFramework_Guides_BuildAModule",
+      "meta": {
+        "title": "Build a module",
+        "description": "Write your own Despia module, from an empty folder to a release: the manifest, the Swift, Kotlin and web facets, components, state, tests, versioning and publishing."
       }
     },
     {
