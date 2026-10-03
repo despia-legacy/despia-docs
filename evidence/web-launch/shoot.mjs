@@ -40,6 +40,7 @@ const shots = [
   { name: "10-releases", path: "/releases", w: 1440, h: 800 },
   { name: "11-mobile-legacy", path: "/legacy/native-features/haptic-feedback", w: 390, h: 844 },
   { name: "12-mobile-help-sheet", path: "/migrate/map", w: 390, h: 844, click: ".doc-actions-more" },
+  { name: "14-version-picker-open", path: "/framework/guides/routing", w: 1440, h: 700, click: ".doc-version-chip" },
   { name: "13-legacy-paramfields-dark", path: "/legacy/local-intelligence/reference", w: 1440, h: 1000, dark: true, scrollTo: ".doc-field" },
 ];
 for (const s of shots) {
