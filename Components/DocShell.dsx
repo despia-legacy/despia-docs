@@ -168,16 +168,14 @@
   <vstack paneRole="sidebar" class="doc-sidebar">
     <searchbar bind="dsx.variable.query" placeholder="{{ 'Search ' + dsx.formula.spaceLabel }}"/>
     <segmented bind="dsx.variable.scope" options="This space,All spaces" label="Search scope" visible-if="dsx.variable.query.length >= 2"/>
-    <scroll class="doc-sidebar-scroll">
-      <list bind="dsx.formula.hitRows" key="id" group_by="group" scroll="false" visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length > 0">
-        <row href="{{ dsx.this.route }}" on:tap="dsx.variable.query = ''">
-          <text value="{{ dsx.this.title }}" lineLimit="2"/>
-        </row>
-      </list>
-      <EmptyState visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length === 0" icon="magnifyingglass"
+    <list bind="dsx.formula.hitRows" key="id" group_by="group" class="doc-hits" visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length > 0">
+      <row href="{{ dsx.this.route }}" on:tap="dsx.variable.query = ''">
+        <text value="{{ dsx.this.title }}" lineLimit="2"/>
+      </row>
+    </list>
+    <EmptyState visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length === 0" icon="magnifyingglass"
                   title="No results" message="{{ dsx.variable.scope === 'All spaces' ? 'Nothing matches in any space.' : 'Nothing here. Try All spaces.' }}"/>
-      <DocNav visible-if="dsx.variable.query.length &lt; 2" route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}"/>
-    </scroll>
+    <DocNav visible-if="dsx.variable.query.length &lt; 2" route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}" class="doc-nav-slot"/>
   </vstack>
 
   <scroll paneRole="detail" class="doc-detail">
