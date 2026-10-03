@@ -238,17 +238,14 @@ function jseStringLiteral(source) {
 // verbatim; fenced code is never scanned for tags, so examples stay text. The name must
 // be known - a typo fails the build with file and line, never a silent passthrough. The
 // /md siblings and the llms exports keep the source markdown verbatim, tags included.
-// The admonitions and the linking card are the STOCK library components (rule 10: default UI
-// only): <Callout tone> with the markdown tones, <Card title href>. The sugar tags lower to them;
-// a legacy <Callout kind> is translated to its tone.
-const CALLOUT_SUGAR = { Note: "note", Info: "note", Tip: "tip", Warning: "warning", Danger: "caution" };
+// The MDX-style tags authors write (and the legacy port emits) are a CLOSED set, LOWERED to
+// extended-markdown directives (extended-markdown.md 2.2) that the stock <markdown> lowering maps
+// to stock components: Callout, Card, MarkdownSteps, MarkdownTabs, Accordion, CodeBlock. Docs
+// carry no content components of their own (rule 10: default UI only).
+const CALLOUT_SUGAR = { Note: "note", Info: "note", Tip: "tip", Warning: "warning", Danger: "caution", Check: "tip" };
 const KIND_TO_TONE = { note: "note", info: "note", tip: "tip", warning: "warning", danger: "caution" };
-const COMPILER_TAGS = new Set(["Tabs", "Tab", "CodeGroup", ...Object.keys(CALLOUT_SUGAR)]);
-const SYSTEM_TAGS = new Set(["Accordion", "Callout", "Card"]);
-const libraryComponents = readdirSync(join(root, "Components"), { withFileTypes: true })
-  .filter((entry) => entry.isFile() && entry.name.endsWith(".dsx"))
-  .map((entry) => entry.name.replace(/\.dsx$/, ""));
-const KNOWN_COMPONENTS = new Set([...libraryComponents, ...COMPILER_TAGS, ...SYSTEM_TAGS]);
+const KNOWN_COMPONENTS = new Set(["Callout", "Card", "CardGroup", "Steps", "Step", "Tabs", "Tab", "CodeGroup", "Accordion",
+  "AccordionGroup", "Frame", "ParamField", "ResponseField", "Update", "Video", "RefMeta", ...Object.keys(CALLOUT_SUGAR)]);
 
 const OPEN_TAG = /^\s{0,3}<([A-Z][A-Za-z0-9]*)(?=[\s/>])/;
 const CLOSE_TAG = /^\s{0,3}<\/([A-Z][A-Za-z0-9]*)>\s*$/;
@@ -331,198 +328,182 @@ function pushMdVar(page, text) {
   return page.mdVars.push(text) - 1;
 }
 
-/** One titled fence as a code card: header bar (language chip, title) + the fence as a
- *  markdown chunk. docs.js adds the copy button into the bar; bare fences keep their
- *  floating button instead. */
-function codeblockNode(page, meta, marker, body, indent) {
-  const n = pushMdVar(page, `${marker}${meta.lang}\n${body.join("\n")}\n${marker}`);
-  return [
-    `${indent}<stack class="doc-codeblock">`,
-    `${indent}  <hstack class="doc-codebar">`,
-    ...(meta.lang !== "" ? [`${indent}    <text value="${escapeForDsxAttr(meta.lang)}" class="doc-codebar-lang"/>`] : []),
-    ...(meta.title !== "" ? [`${indent}    <text value="${escapeForDsxAttr(meta.title)}" class="doc-codebar-title"/>`] : []),
-    `${indent}  </hstack>`,
-    `${indent}  <markdown bind="dsx.variable.md${n}"/>`,
-    `${indent}</stack>`,
-  ].join("\n");
-}
-
-/** The inner blocks of a container that accepts ONLY <name> children (Tabs -> Tab). */
-function childBlocks(page, inner, name, parent) {
-  const blocks = [];
-  const lines = inner.lines;
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (line.trim() === "") { i += 1; continue; }
-    const tag = parseOpenTag(line);
-    if (tag === null || tag.name !== name) fail(page, inner.startLine + i, `<${parent}> accepts only <${name}> children`);
-    if (tag.selfClosing) fail(page, inner.startLine + i, `<${name}> needs body content`);
-    const restTrim = tag.rest.trim();
-    if (restTrim !== "") {
-      const closeTok = `</${name}>`;
-      if (!restTrim.endsWith(closeTok)) fail(page, inner.startLine + i, `<${name}> with inline content must close on the same line`);
-      blocks.push({ tag, at: inner.startLine + i, inner: { lines: [restTrim.slice(0, -closeTok.length).trim()], startLine: inner.startLine + i } });
-      i += 1;
-      continue;
-    }
-    const end = findClose(page, lines, i + 1, name, inner.startLine);
-    blocks.push({ tag, at: inner.startLine + i, inner: { lines: lines.slice(i + 1, end), startLine: inner.startLine + i + 1 } });
-    i = end + 1;
-  }
-  if (blocks.length === 0) fail(page, inner.startLine, `<${parent}> needs at least one <${name}> child`);
-  return blocks;
-}
-
-/** CodeGroup inner content: fenced blocks only, each one pane of the shared tab bar. */
-function codeGroupPanes(page, inner) {
-  const panes = [];
-  const lines = inner.lines;
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (line.trim() === "") { i += 1; continue; }
-    const opener = /^\s{0,3}(`{3,}|~{3,})(.*)$/.exec(line);
-    if (opener === null) fail(page, inner.startLine + i, `<CodeGroup> accepts only fenced code blocks`);
-    const marker = opener[1];
-    if (marker.length !== 3) fail(page, inner.startLine + i, `<CodeGroup> fences must open with exactly three marks`);
-    const info = opener[2].trim();
-    const meta = parseFenceMeta(page, inner.startLine + i, marker, info) ?? { lang: info, title: "" };
-    const body = [];
-    i += 1;
-    while (i < lines.length && !(lines[i].trim().startsWith(marker[0].repeat(3)) && lines[i].trim().replace(new RegExp(`^${marker[0]}+`), "") === "")) {
-      body.push(lines[i]);
-      i += 1;
-    }
-    if (i >= lines.length) fail(page, inner.startLine, `<CodeGroup> holds an unterminated fence`);
-    i += 1;
-    panes.push({ meta, marker, body });
-  }
-  if (panes.length === 0) fail(page, inner.startLine, `<CodeGroup> needs at least one fenced block`);
-  return panes;
-}
-
-function componentNode(page, tag, inner, at, indent) {
-  const attrs = tag.attrs === "" ? "" : ` ${tag.attrs}`;
-  let sugar = CALLOUT_SUGAR[tag.name];
-  let calloutAttrs = attrs;
-  if (tag.name === "Callout") {
-    const kind = attrValue(tag.attrs, "kind");
-    sugar = KIND_TO_TONE[kind ?? "note"] ?? "note";
-    calloutAttrs = attrs.replace(/\s*kind="[^"]*"/, "");
-  }
-  if (sugar !== undefined) {
-    if (inner === null) return `${indent}<Callout tone="${sugar}"${calloutAttrs}/>`;
-    const children = compileBody(page, inner.lines, inner.startLine, `${indent}  `);
-    return `${indent}<Callout tone="${sugar}"${calloutAttrs}>\n${children.join("\n")}\n${indent}</Callout>`;
-  }
-  if (tag.name === "Card") {
-    // the stock Card has no icon (a framework gap row in STATUS); the title and link carry it
-    const cardAttrs = attrs.replace(/\s*icon="[^"]*"/, "");
-    if (inner === null) return `${indent}<Card${cardAttrs}/>`;
-    const children = compileBody(page, inner.lines, inner.startLine, `${indent}  `);
-    return children.length === 0 ? `${indent}<Card${cardAttrs}/>` : `${indent}<Card${cardAttrs}>\n${children.join("\n")}\n${indent}</Card>`;
-  }
-  if (tag.name === "Tab") fail(page, at, `<Tab> only lives inside <Tabs>`);
-  if (tag.name === "Tabs") {
-    if (inner === null) fail(page, at, `<Tabs> needs <Tab> children`);
-    const panes = childBlocks(page, inner, "Tab", "Tabs").map((block) => {
-      const title = attrValue(block.tag.attrs, "title");
-      if (title === null) fail(page, block.at, `<Tab> needs a title="..."`);
-      const children = compileBody(page, block.inner.lines, block.inner.startLine, `${indent}      `);
-      return `${indent}    <stack tabTitle="${escapeForDsxAttr(title)}" class="doc-tab-pane">\n${children.join("\n")}\n${indent}    </stack>`;
-    });
-    return `${indent}<stack class="doc-tabs">\n${indent}  <tabs${attrs}>\n${panes.join("\n")}\n${indent}  </tabs>\n${indent}</stack>`;
-  }
-  if (tag.name === "CodeGroup") {
-    if (inner === null) fail(page, at, `<CodeGroup> needs fenced blocks`);
-    const panes = codeGroupPanes(page, inner).map((pane) => {
-      const title = pane.meta.title !== "" ? pane.meta.title : (pane.meta.lang !== "" ? pane.meta.lang : "code");
-      const n = pushMdVar(page, `${pane.marker}${pane.meta.lang}\n${pane.body.join("\n")}\n${pane.marker}`);
-      return `${indent}    <stack tabTitle="${escapeForDsxAttr(title)}" class="doc-tab-pane"><markdown bind="dsx.variable.md${n}"/></stack>`;
-    });
-    return `${indent}<stack class="doc-codegroup">\n${indent}  <tabs${attrs}>\n${panes.join("\n")}\n${indent}  </tabs>\n${indent}</stack>`;
-  }
-  if (inner === null) return `${indent}<${tag.name}${attrs}/>`;
-  const children = compileBody(page, inner.lines, inner.startLine, `${indent}  `);
-  if (children.length === 0) return `${indent}<${tag.name}${attrs}/>`;
-  return `${indent}<${tag.name}${attrs}>\n${children.join("\n")}\n${indent}</${tag.name}>`;
-}
-
-/** Compile a run of markdown lines into DSX nodes: markdown chunks (page variables +
- *  <markdown> binds), component blocks (real DSX nodes, inner content recursed) and
- *  titled fences (code cards). The recursion IS the authoring system. */
-function compileBody(page, lines, startLine, indent) {
+/** The tag tree of a run of lines: markdown runs and component blocks (fence-aware). */
+function tagTree(page, lines, startLine) {
   const nodes = [];
   let run = [];
-  const flushRun = () => {
-    const text = run.join("\n").replace(/^\n+/, "").replace(/\n+$/, "");
-    run = [];
-    if (text.trim() === "") return;
-    nodes.push(`${indent}<markdown bind="dsx.variable.md${pushMdVar(page, text)}"/>`);
-  };
-  let i = 0;
+  const flush = () => { if (run.length > 0) nodes.push({ md: run }); run = []; };
   let fence = null;
-  while (i < lines.length) {
+  for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     const opener = /^\s{0,3}(`{3,}|~{3,})(.*)$/.exec(line);
     if (fence !== null) {
       run.push(line);
-      if (opener !== null && opener[1].startsWith(fence[0]) && opener[1].length >= fence.length) fence = null;
-      i += 1;
+      if (opener !== null && opener[1].startsWith(fence[0]) && opener[1].length >= fence.length && opener[2].trim() === "") fence = null;
       continue;
     }
-    if (opener !== null) {
-      const meta = parseFenceMeta(page, startLine + i, opener[1], opener[2].trim());
-      if (meta === null) {
-        fence = opener[1];
-        run.push(line);
-        i += 1;
-        continue;
-      }
-      flushRun();
-      const marker = opener[1];
-      const body = [];
-      i += 1;
-      while (i < lines.length && !(lines[i].trim().startsWith(marker) && lines[i].trim().replace(new RegExp(`^${marker[0]}+`), "") === "")) {
-        body.push(lines[i]);
-        i += 1;
-      }
-      if (i >= lines.length) fail(page, startLine, `unterminated fence`);
-      i += 1;
-      nodes.push(codeblockNode(page, meta, marker, body, indent));
-      continue;
-    }
+    if (opener !== null) { fence = opener[1]; run.push(line); continue; }
     const closing = CLOSE_TAG.exec(line);
     if (closing !== null) fail(page, startLine + i, `stray closing tag </${closing[1]}>`);
     const tag = parseOpenTag(line);
-    if (tag !== null) {
-      if (!KNOWN_COMPONENTS.has(tag.name)) {
-        fail(page, startLine + i, `unknown component <${tag.name}> - known: ${[...KNOWN_COMPONENTS].sort().join(", ")}. Add Components/${tag.name}.dsx to extend the set.`);
+    if (tag === null) { run.push(line); continue; }
+    if (!KNOWN_COMPONENTS.has(tag.name)) {
+      fail(page, startLine + i, `unknown component <${tag.name}> - known: ${[...KNOWN_COMPONENTS].sort().join(", ")}`);
+    }
+    flush();
+    let inner = [];
+    if (!tag.selfClosing) {
+      const restTrim = tag.rest.trim();
+      if (restTrim !== "") {
+        const closeTok = `</${tag.name}>`;
+        if (!restTrim.endsWith(closeTok)) fail(page, startLine + i, `<${tag.name}> with inline content must close on the same line`);
+        inner = [restTrim.slice(0, -closeTok.length).trim()];
+      } else {
+        const end = findClose(page, lines, i + 1, tag.name, startLine);
+        inner = lines.slice(i + 1, end);
+        nodes.push({ tag: tag.name, attrs: tag.attrs, at: startLine + i, children: tagTree(page, inner, startLine + i + 1) });
+        i = end;
+        continue;
       }
-      flushRun();
-      let inner = null;
-      if (!tag.selfClosing) {
-        const restTrim = tag.rest.trim();
-        if (restTrim !== "") {
-          const closeTok = `</${tag.name}>`;
-          if (!restTrim.endsWith(closeTok)) fail(page, startLine + i, `<${tag.name}> with inline content must close on the same line`);
-          inner = { lines: [restTrim.slice(0, -closeTok.length).trim()], startLine: startLine + i };
-        } else {
-          const end = findClose(page, lines, i + 1, tag.name, startLine);
-          inner = { lines: lines.slice(i + 1, end), startLine: startLine + i + 1 };
-          i = end;
-        }
-      }
-      nodes.push(componentNode(page, tag, inner, startLine + i, indent));
-      i += 1;
+    }
+    nodes.push({ tag: tag.name, attrs: tag.attrs, at: startLine + i, children: tagTree(page, inner, startLine + i) });
+  }
+  flush();
+  return nodes;
+}
+
+const decodeAttr = (v) => v === null ? null : v.replace(/&#123;/g, "{").replace(/&#125;/g, "}").replace(/&quot;/g, '"')
+  .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+const dirAttr = (v) => `"${String(v).replace(/"/g, "'")}"`;
+const mdText = (nodes) => emitDirectives(nodes).replace(/^\n+|\n+$/g, "");
+
+/** The container height of a subtree: a container's fence needs one more colon than any it holds. */
+function height(nodes) {
+  let h = 0;
+  for (const n of nodes) if (n.tag !== undefined) h = Math.max(h, 1 + height(n.children));
+  return h;
+}
+const fenceOf = (nodes) => ":".repeat(3 + height(nodes));
+
+/** One fenced code block lifted out of a run (CodeGroup panes). */
+function fencesOf(nodes) {
+  const text = nodes.filter((n) => n.md !== undefined).map((n) => n.md.join("\n")).join("\n");
+  const panes = [];
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i += 1) {
+    const o = /^\s*(`{3,}|~{3,})(.*)$/.exec(lines[i]);
+    if (o === null) continue;
+    const body = [lines[i].trim()];
+    let j = i + 1;
+    for (; j < lines.length; j += 1) {
+      body.push(lines[j].replace(/^\s+$/, ""));
+      const c = /^\s*(`{3,}|~{3,})\s*$/.exec(lines[j]);
+      if (c !== null && c[1][0] === o[1][0] && c[1].length >= o[1].length) break;
+    }
+    const info = o[2].trim();
+    const title = /title="([^"]*)"/.exec(info)?.[1] ?? (info.split(/\s+/)[0] || "code");
+    panes.push({ title, text: body.join("\n") });
+    i = j;
+  }
+  return panes;
+}
+
+/** Lower the tag tree to extended-markdown directives (stock lowering targets). */
+function emitDirectives(nodes) {
+  const out = [];
+  for (const n of nodes) {
+    if (n.md !== undefined) { out.push(n.md.join("\n")); continue; }
+    const attr = (k) => decodeAttr(attrValue(n.attrs, k));
+    const kids = n.children;
+    const f = fenceOf(kids);
+    const tone = CALLOUT_SUGAR[n.tag] ?? (n.tag === "Callout" ? (KIND_TO_TONE[attr("kind") ?? "note"] ?? "note") : null);
+    if (tone !== null) {
+      const title = attr("title");
+      out.push(`\n${f}${tone}${title ? `{title=${dirAttr(title)}}` : ""}\n${mdText(kids)}\n${f}\n`);
       continue;
     }
-    run.push(line);
-    i += 1;
+    switch (n.tag) {
+      case "Card": {
+        const pairs = [attr("title") ? `title=${dirAttr(attr("title"))}` : "", attr("href") ? `href=${dirAttr(attr("href"))}` : ""].filter(Boolean);
+        const body = mdText(kids);
+        out.push(`\n${f}card${pairs.length ? `{${pairs.join(" ")}}` : ""}\n${body === "" ? (attr("title") ?? "") : body}\n${f}\n`);
+        break;
+      }
+      case "CardGroup": case "AccordionGroup": out.push(`\n${emitDirectives(kids)}\n`); break;
+      case "Steps": {
+        // :::steps holds an ordered list, one step per item: the title, then the body indented
+        const steps = kids.filter((k) => k.tag === "Step");
+        const items = steps.map((st, i) => {
+          const title = decodeAttr(attrValue(st.attrs, "title")) ?? "";
+          const body = mdText(st.children);
+          const indented = body === "" ? "" : "\n\n" + body.split("\n").map((l) => (l === "" ? "" : "   " + l)).join("\n");
+          return `${i + 1}. **${title}**${indented}`;
+        });
+        const sf = fenceOf(steps.flatMap((st) => st.children));
+        out.push(`\n${sf}steps\n${items.join("\n\n")}\n${sf}\n`);
+        break;
+      }
+      case "Step": out.push(mdText(kids)); break;
+      case "Tabs": {
+        const tabs = kids.filter((k) => k.tag === "Tab");
+        const inner = ":".repeat(3 + Math.max(0, ...tabs.map((t) => height(t.children))));
+        const outer = inner + ":";
+        out.push(`\n${outer}tabs\n${tabs.map((t) => `${inner}tab{title=${dirAttr(decodeAttr(attrValue(t.attrs, "title")) ?? "Tab")}}\n${mdText(t.children)}\n${inner}`).join("\n")}\n${outer}\n`);
+        break;
+      }
+      case "Tab": out.push(mdText(kids)); break;
+      case "CodeGroup": {
+        const panes = fencesOf(kids);
+        out.push(`\n::::tabs\n${panes.map((p) => `:::tab{title=${dirAttr(p.title)}}\n${p.text}\n:::`).join("\n")}\n::::\n`);
+        break;
+      }
+      case "Accordion": {
+        const open = attr("open") === "true" || attr("defaultOpen") === "true";
+        out.push(`\n${f}details[${(attr("title") ?? "Details").replace(/[\[\]]/g, "")}]${open ? "{open}" : ""}\n${mdText(kids)}\n${f}\n`);
+        break;
+      }
+      case "Frame": {
+        const caption = attr("caption");
+        out.push(`\n${mdText(kids)}${caption ? `\n\n*${caption}*` : ""}\n`);
+        break;
+      }
+      case "ParamField": case "ResponseField": {
+        const name = attr("name") ?? attr("path") ?? attr("query") ?? attr("body") ?? "";
+        const bits = [`**\`${name}\`**`, attr("type") ? `\`${attr("type")}\`` : "", attr("required") === "true" ? "required" : "",
+          attr("default") ? `default \`${attr("default")}\`` : ""].filter(Boolean).join(" · ");
+        const body = mdText(kids);
+        out.push(`\n- ${bits}${body ? "\n\n" + body.split("\n").map((l) => (l === "" ? "" : "  " + l)).join("\n") : ""}\n`);
+        break;
+      }
+      case "Update": {
+        const label = attr("label") ?? "";
+        const description = attr("description");
+        out.push(`\n### ${label}\n\n${description ? `*${description}*\n\n` : ""}${mdText(kids)}\n\n---\n`);
+        break;
+      }
+      case "Video": {
+        // no iframe embed in the extended-markdown table (an embed allowlist is not proposed yet)
+        const src = attr("src") ?? "";
+        const id = /youtube\.com\/embed\/([\w-]+)/.exec(src)?.[1];
+        const href = id ? `https://www.youtube.com/watch?v=${id}` : src;
+        out.push(`\n::link-card{href=${dirAttr(href)} title=${dirAttr("Watch the video: " + (attr("title") ?? "video"))}}\n`);
+        break;
+      }
+      case "RefMeta": {
+        const platforms = attr("platforms");
+        out.push(`\n${f}note${platforms ? `{title=${dirAttr("Platforms: " + platforms)}}` : ""}\n${mdText(kids)}\n${f}\n`);
+        break;
+      }
+      default: fail({ file: "?" }, n.at, `no lowering for <${n.tag}>`);
+    }
   }
-  flushRun();
-  return nodes;
+  return out.join("\n").replace(/\n{3,}/g, "\n\n");
+}
+
+/** A run of lines as ONE stock <markdown> (tags lowered to directives). */
+function compileBody(page, lines, startLine, indent) {
+  const text = emitDirectives(tagTree(page, lines, startLine)).replace(/^\n+|\n+$/g, "");
+  return text.trim() === "" ? [] : [`${indent}<markdown bind="dsx.variable.md${pushMdVar(page, text)}"/>`];
 }
 
 // ── spaces ────────────────────────────────────────────────────────────────────────────────
@@ -784,7 +765,7 @@ const varLines = (page) => [
   ...page.mdVars.map((text, i) => `    <variable as="md${i}">return ${jseStringLiteral(text)}</variable>`),
   ...page.attrVars.map((text, i) => `    <variable as="a${i}">return ${jseStringLiteral(text)}</variable>`),
 ];
-const pageFrame = (page, extraHead, body) => `<scroll theme="{{ dsx.global.docs &amp;&amp; dsx.global.docs.theme ? dsx.global.docs.theme : '' }}" style="background: var(--dsx-background)">
+const pageFrame = (page, extraHead, body) => `<vstack theme="{{ dsx.global.docs &amp;&amp; dsx.global.docs.theme ? dsx.global.docs.theme : '' }}" class="doc-root">
   <head>
     <!-- GENERATED by scripts/compile.mjs${page.file ? ` from ${relative(root, page.file).split(sep).join("/")}` : ""} - edit the source, not this file. -->
 ${[...varLines(page), ...extraHead].join("\n")}
@@ -792,7 +773,7 @@ ${[...varLines(page), ...extraHead].join("\n")}
   <DocShell ${page.shell}>
 ${body}
   </DocShell>
-</scroll>
+</vstack>
 `;
 
 const writeMd = (route, text) => {
@@ -887,14 +868,14 @@ for (const page of pages) {
     `    </stack>`,
     `    <list bind="dsx.formula.shown" key="id" scroll="false" class="doc-ts-list">`,
     `      <Card title="{{ dsx.this.title }}" href="{{ dsx.this.route }}" class="doc-ts-card">`,
-    `        <text value="{{ dsx.this.symptom }}" class="doc-ts-card-symptom"/>`,
+    `        <text value="{{ dsx.this.symptom }}" type="callout"/>`,
     `        <hstack class="doc-ts-card-meta">`,
     `          <chip label="{{ dsx.this.platform }}"/>`,
-    `          <text value="{{ dsx.this.packagesLabel }}" class="doc-ts-packages"/>`,
+    `          <text value="{{ dsx.this.packagesLabel }}" type="footnote"/>`,
     `        </hstack>`,
     `      </Card>`,
     `    </list>`,
-    `    <text value="No article matches these filters yet." class="doc-ts-empty" visible-if="dsx.formula.shown.length === 0"/>`,
+    `    <text value="No article matches these filters yet." type="footnote" visible-if="dsx.formula.shown.length === 0"/>`,
   ].join("\n");
   writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
   writeMd(page.route, page.body);
@@ -956,17 +937,17 @@ for (const page of pages) {
     `      <segmented bind="dsx.variable.platform" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
     `      <picker bind="dsx.variable.category" options="${escapeForDsxAttr(categories.join(","))}" label="Category" class="doc-ts-package"/>`,
     `    </hstack>`,
-    `    <text value="{{ dsx.formula.shown.length + (dsx.formula.shown.length === 1 ? ' guideline' : ' guidelines') }}" class="doc-ts-heading"/>`,
+    `    <text value="{{ dsx.formula.shown.length + (dsx.formula.shown.length === 1 ? ' guideline' : ' guidelines') }}" type="headline"/>`,
     `    <list bind="dsx.formula.shown" key="id" scroll="false" class="doc-ts-list">`,
     `      <Card title="{{ dsx.this.guideline + ' · ' + dsx.this.title }}" href="{{ dsx.this.route }}" class="doc-ts-card">`,
-    `        <text value="{{ dsx.this.summary }}" class="doc-ts-card-symptom"/>`,
+    `        <text value="{{ dsx.this.summary }}" type="callout"/>`,
     `        <hstack class="doc-ts-card-meta">`,
     `          <chip label="{{ dsx.this.storesLabel }}"/>`,
     `          <chip label="{{ dsx.this.category }}"/>`,
     `        </hstack>`,
     `      </Card>`,
     `    </list>`,
-    `    <text value="No guideline matches. Try fewer words, or the search in the header (it also asks the Support knowledge base)." class="doc-ts-empty" visible-if="dsx.formula.shown.length === 0"/>`,
+    `    <text value="No guideline matches. Try fewer words, or the search in the header (it also asks the Support knowledge base)." type="footnote" visible-if="dsx.formula.shown.length === 0"/>`,
   ].join("\n");
   writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
   writeMd(page.route, page.body);
@@ -1000,14 +981,14 @@ for (const page of pages) {
     `    </hstack>`,
     `    <list bind="dsx.formula.shown" key="id" scroll="false" class="doc-ts-list">`,
     `      <Card title="{{ dsx.this.title }}" href="{{ dsx.this.route }}" class="doc-ts-card">`,
-    `        <text value="{{ dsx.this.summary }}" class="doc-ts-card-symptom"/>`,
+    `        <text value="{{ dsx.this.summary }}" type="callout"/>`,
     `        <hstack class="doc-ts-card-meta">`,
     `          <chip label="{{ dsx.this.package + ' ' + dsx.this.version }}"/>`,
-    `          <text value="{{ dsx.this.date }}" class="doc-ts-packages"/>`,
+    `          <text value="{{ dsx.this.date }}" type="footnote"/>`,
     `        </hstack>`,
     `      </Card>`,
     `    </list>`,
-    `    <text value="No release notes are published yet. The first lands with the 0.1.0 release." class="doc-ts-empty" visible-if="dsx.formula.items.length === 0"/>`,
+    `    <text value="No release notes are published yet. The first lands with the 0.1.0 release." type="footnote" visible-if="dsx.formula.items.length === 0"/>`,
   ].join("\n");
   writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
   writeMd(page.route, page.body);
@@ -1103,39 +1084,45 @@ for (const page of handAuthored) {
 // route attribute at render time. DocNav picks the space's sidebar (visible-if renders
 // nothing for the other three, so a page carries one sidebar, not four).
 const navComponentOf = (id) => "DocNav" + id.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
-function navRows(items, depth) {
-  return items.flatMap((item) => {
-    if (item.group !== undefined) {
-      return [
-        `  <text value="${escapeForDsxAttr(item.group)}" class="doc-nav-sublabel doc-nav-depth-${depth}"/>`,
-        ...navRows(item.items, depth + 1),
-      ];
+// Each space's sidebar is ONE stock grouped list over its rows (the group is the list section
+// header; a nested v3 group reads "Group · Subgroup"). The rows ride a variable, the list renders
+// them server-side, every row a real link.
+function navRowsOf(sections) {
+  const rows = [];
+  const walk = (items, group) => {
+    for (const item of items) {
+      if (item.group !== undefined) walk(item.items, `${group} · ${item.group}`);
+      else rows.push({ route: item.route, label: item.label, group });
     }
-    return [`  <pressable href="${item.route}" on:tap="dsx.event('navigate')" class="doc-nav-link doc-nav-depth-${depth}{{ dsx.attribute.route === '${item.route}' ? ' is-active' : '' }}"><text value="${escapeForDsxAttr(item.label)}" class="doc-nav-text"/></pressable>`];
-  });
+  };
+  for (const section of sections) walk(section.items, section.name);
+  return rows;
 }
 for (const s of SPACES) {
-  const rows = (navBySpace[s.id] ?? []).map((section) =>
-    [`  <text value="${escapeForDsxAttr(section.name)}" class="doc-nav-label"/>`, ...navRows(section.items, 0)].join("\n")).join("\n");
-  writeFileSync(join(generatedDir, `${navComponentOf(s.id)}.dsx`), `<stack class="doc-nav doc-nav-${s.id}" role="navigation" a11yLabel="${escapeForDsxAttr(s.label)} documentation">
+  const rows = navRowsOf(navBySpace[s.id] ?? []);
+  writeFileSync(join(generatedDir, `${navComponentOf(s.id)}.dsx`), `<vstack class="doc-nav doc-nav-${s.id}" role="navigation" a11yLabel="${escapeForDsxAttr(s.label)} documentation">
   <head>
-    <!-- GENERATED by scripts/compile.mjs (the ${s.label} nav model as static markup) - edit the content tree, not this file. -->
+    <!-- GENERATED by scripts/compile.mjs (the ${s.label} nav model) - edit the content tree, not this file. -->
     <attribute as="route" default="''"/>
-    <event as="navigate"/>
+    <variable as="rows">return ${jseStringLiteral(JSON.stringify(rows))}</variable>
+    <formula as="items" input:raw="dsx.variable.rows">return JSON.parse(raw)</formula>
   </head>
-${rows}
-</stack>
+  <list bind="dsx.formula.items" key="route" group_by="group" scroll="false">
+    <row href="{{ dsx.this.route }}">
+      <text value="{{ dsx.this.label }}" lineLimit="2"/>
+    </row>
+  </list>
+</vstack>
 `);
 }
-writeFileSync(join(generatedDir, "DocNav.dsx"), `<stack class="doc-nav-host">
+writeFileSync(join(generatedDir, "DocNav.dsx"), `<vstack class="doc-nav-host">
   <head>
     <!-- GENERATED by scripts/compile.mjs: the sidebar of the page's space. -->
     <attribute as="route" default="''"/>
     <attribute as="space" default="'modern'"/>
-    <event as="navigate"/>
   </head>
-${SPACES.map((s) => `  <${navComponentOf(s.id)} visible-if="dsx.attribute.space === '${s.id}'" route="{{ dsx.attribute.route }}" on:navigate="dsx.event('navigate')"/>`).join("\n")}
-</stack>
+${SPACES.map((s) => `  <${navComponentOf(s.id)} visible-if="dsx.attribute.space === '${s.id}'" route="{{ dsx.attribute.route }}"/>`).join("\n")}
+</vstack>
 `);
 
 // ── the generated /system card wall (SystemCards) ─────────────────────────────────────────
@@ -1144,16 +1131,15 @@ const cardRoleFor = (description) => {
   return clause.charAt(0).toUpperCase() + clause.slice(1);
 };
 const cardRows = entries.filter((p) => p.route.startsWith("/components/")).map((p) =>
-  `  <pressable href="${p.route}" class="doc-card">
-    <text value="${escapeForDsxAttr(componentLabel(p.route, p.title))}" class="doc-card-name"/>
-    <text value="${escapeForDsxAttr(cardRoleFor(p.description))}" class="doc-card-role"/>
-  </pressable>`).join("\n");
-writeFileSync(join(generatedDir, "SystemCards.dsx"), `<stack class="doc-cardwall">
+  `  <Card title="${escapeForDsxAttr(componentLabel(p.route, p.title))}" href="${p.route}">
+    <text value="${escapeForDsxAttr(cardRoleFor(p.description))}" type="footnote"/>
+  </Card>`).join("\n");
+writeFileSync(join(generatedDir, "SystemCards.dsx"), `<grid class="doc-cardwall">
   <head>
     <!-- GENERATED by scripts/compile.mjs (the component reference as a card grid). -->
   </head>
 ${cardRows}
-</stack>
+</grid>
 `);
 
 // ── the route table ───────────────────────────────────────────────────────────────────────

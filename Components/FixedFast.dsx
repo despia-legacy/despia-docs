@@ -14,8 +14,8 @@
     <attribute as="platform" default="''"/>
   </head>
   <hstack class="doc-fixed-top">
-    <text value="{{ dsx.attribute.duration }}" class="doc-fixed-duration"/>
+    <text value="{{ dsx.attribute.duration }}" type="title2"/>
     <chip label="{{ dsx.attribute.platform }}" visible-if="dsx.attribute.platform !== ''"/>
   </hstack>
-  <text value="{{ 'Reported ' + dsx.attribute.reported + ' · fixed and released ' + dsx.attribute.released }}" class="doc-fixed-time"/>
+  <text value="{{ 'Reported ' + dsx.attribute.reported + ' · fixed and released ' + dsx.attribute.released }}" type="footnote"/>
 </Card>
