@@ -1206,11 +1206,13 @@ function navMarkup(items, sectionIcon, depth, vars) {
   const pad = "  ".repeat(depth + 2);
   const flush = () => {
     if (run.length === 0) return;
+    // a run whose pages carry no icon of their own shows none: thirty copies of the section's icon
+    // (or the generic page glyph) down a column is noise, not wayfinding (polish pass 2026-10-03)
+    const ownIcons = run.some((i) => i.icon !== undefined && i.icon !== "doc.text");
     const rows = run.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sectionIcon ?? "doc.text" }));
     const n = vars.push(`    <variable as="r${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(rows))})</variable>`) - 1;
     out.push(`${pad}<pressable repeat="dsx.variable.r${n}" key="route" href="{{ dsx.this.route }}">
-${pad}  <image icon="{{ dsx.this.icon }}" iconSize="15" a11yHidden="true"/>
-${pad}  <text value="{{ dsx.this.label }}" lineLimit="2"/>
+${ownIcons ? `${pad}  <image icon="{{ dsx.this.icon }}" iconSize="15" a11yHidden="true"/>\n` : ""}${pad}  <text value="{{ dsx.this.label }}" lineLimit="2"/>
 ${pad}</pressable>`);
     run = [];
   };

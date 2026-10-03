@@ -261,6 +261,17 @@ Accordion `icon=` and `<Outline>`, adopted in DocShell.)
   05 switcher open, 06 help menu open, 07 search across all spaces, 08 troubleshooting,
   09 App Review, 10 releases, 11 mobile legacy, 12 mobile help, 13 ParamFields dark.
 
+## Polish pass (2026-10-03, stock look like the landing)
+
+Matrix: page, table, code block, callout, search, Open-in-AI-agent menu at 1440 and 390 px, light and
+dark, 2x (`shots/polish-2026-10-03/`, script `shoot-polish.mjs`). Fixed:
+- The agent menu: the ChatGPT mark was white-on-white in light and Cursor black-on-black in dark. One-colour
+  marks are now the stock svg in currentColor; Claude keeps its colour image.
+- The sidebar: rows with no icon of their own no longer repeat the section icon (30 identical book glyphs
+  down Guides). Runs with authored icons (Start, Modules, Legacy from Mintlify) keep them.
+Left as stock (framework, not docs): MarkdownTable hugs its content instead of filling the column; at 390 the
+split's "Back" bar and the NavBar items sit on two rows; menu rows with an href show a disclosure chevron.
+
 ## Open items
 
 - Versioned docs: badges (`since`/`changed`/`removed` front matter), `versions.json` and the version
