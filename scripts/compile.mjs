@@ -681,11 +681,55 @@ if (duplicate.length > 0) {
   process.exit(1);
 }
 
+// ── sidebar icons (SF names from the shipped web icon set) ──────────────────────────────────
+// v3 pages and groups carry Mintlify (FontAwesome) icon names; each maps to the nearest SF symbol
+// the web set ships. An unmapped name falls back to doc.text, never to an invented symbol.
+const FA_TO_SF = {
+  "hand-horns": "hand.wave", "folder-tree": "folder", "clock-rotate-left": "clock", rocket: "paperplane",
+  "compass-drafting": "hammer", "user-robot": "iphone", "thumbs-up": "hand.thumbsup", "circle-nodes": "circle.grid.3x3",
+  "chart-tree-map": "chart.pie", cat: "creditcard", cowbell: "bell", "wifi-slash": "wifi.slash", globe: "globe",
+  sparkle: "sparkles", database: "cpu", "box-open": "shippingbox", shield: "lock.shield", "arrow-right-from-arc": "link",
+  "dollar-sign": "dollarsign.circle", coins: "bitcoinsign.circle", "money-bill-1-wave": "banknote", "money-bill-wave": "banknote",
+  code: "chevron.left.forwardslash.chevron.right", "chart-mixed": "chart.bar", "chart-pie-simple": "chart.pie",
+  "chart-column": "chart.bar", "chart-line": "chart.line.uptrend.xyaxis", "chart-pyramid": "chart.bar", plug: "powerplug",
+  "heart-pulse": "heart.text.square", webhook: "link", "head-side-gear": "brain", eye: "eye", "eye-slash": "eye.slash",
+  "walkie-talkie": "antenna.radiowaves.left.and.right", wallet: "creditcard", "credit-card": "creditcard",
+  "bolt-lightning": "bolt", bolt: "bolt", "bell-ring": "bell.badge", bell: "bell.fill", key: "key", "clapperboard-play": "play.rectangle",
+  "leaf-heart": "leaf", edit: "pencil", bug: "ladybug", "apple-whole": "apple.logo", apple: "apple.logo",
+  "lightbulb-gear": "lightbulb", lightbulb: "lightbulb", "brake-warning": "exclamationmark.octagon", "octagon-xmark": "xmark.octagon",
+  "message-dots": "bubble.left", trophy: "trophy", heart: "heart", "circle-info": "info.circle", "align-left": "text.alignleft",
+  link: "link", "link-horizontal": "link", "code-branch": "chevron.left.forwardslash.chevron.right", gear: "gearshape",
+  user: "person", "user-large": "person", "user-shield": "lock.shield", fingerprint: "faceid", "share-from-square": "square.on.square",
+  recycle: "repeat", "arrows-repeat-1": "repeat", "border-top-left": "square.dashed", "border-all": "square.grid.2x2",
+  "file-import": "arrow.down.doc", "file-arrow-up": "doc", "object-ungroup": "square.on.square", copy: "square.on.square",
+  waveform: "waveform", "circle-waveform-lines": "waveform.path", "waves-sine": "waveform.path", "wave-pulse": "waveform.path",
+  vault: "lock.shield", "location-arrow": "location", "location-dot": "mappin", "photo-film": "photo.on.rectangle", print: "printer",
+  microphone: "mic", flask: "flask", "shield-check": "checkmark.shield", "rectangle-ad": "rectangle.portrait.and.arrow.right",
+  "nfc-symbol": "dot.radiowaves.left.and.right", "signal-stream": "dot.radiowaves.left.and.right", "puzzle-piece": "cube",
+  page: "doc", robot: "cpu", barcode: "barcode", "barcode-scan": "barcode.viewfinder", "cookie-bite": "doc.text",
+  "arrow-right-from-bracket": "rectangle.portrait.and.arrow.right", compass: "safari", headphones: "headphones", star: "star",
+  "moon-stars": "moon.stars", "bezier-curve": "pencil", bluetooth: "antenna.radiowaves.left.and.right",
+  "file-magnifying-glass": "doc.text.magnifyingglass", ellipsis: "ellipsis", paperclip: "paperclip", keyboard: "keyboard",
+  music: "music.note", tiktok: "play.rectangle", scroll: "doc.plaintext", "person-running-fast": "figure.run", frame: "square.dashed",
+  "pen-nib": "pencil", book: "book", "bullseye-arrow": "target", stamp: "checkmark.seal", google: "globe", alt: "doc.text",
+};
+const sfIcon = (fa) => (fa ? FA_TO_SF[fa] ?? "doc.text" : undefined);
+// Modern and the other spaces: by section, then a few routes of their own.
+const SECTION_ICONS = {
+  Start: "house", Guides: "book", Components: "cube", Styling: "paintbrush", Skills: "hammer",
+  "Move to v4": "arrow.down.doc", Troubleshooting: "ladybug", Releases: "newspaper", "App Review": "checkmark.seal",
+};
+const ROUTE_ICONS = {
+  "/": "house", "/quickstart": "bolt", "/system": "paintbrush", "/writing-docs": "pencil",
+  "/migrate": "info.circle", "/migrate/guide": "list.bullet", "/migrate/map": "map",
+  "/troubleshooting": "list.bullet", "/releases": "newspaper", "/app-review": "list.bullet",
+};
+
 // ── the nav model, per space ──────────────────────────────────────────────────────────────
 // A section is { name, items }; an item is a page { route, title, label } or a nested group
 // { group, items }. Modern keeps its reading-rank sections; Legacy replays docs.json's own
 // groups and order; Migration and Troubleshooting group by front-matter section.
-const navItem = (p) => ({ route: p.route, title: p.title, label: pageLabel(p) });
+const navItem = (p, icon) => ({ route: p.route, title: p.title, label: pageLabel(p), icon: icon ?? ROUTE_ICONS[p.route] ?? (p.space === "modern" ? undefined : "doc.text") });
 const byRoute = new Map(entries.map((p) => [p.route, p]));
 const navBySpace = {};
 {
@@ -703,12 +747,12 @@ const navBySpace = {};
   const navFile = join(contentDir, "legacy", "_nav.json");
   const tree = existsSync(navFile) ? JSON.parse(readFileSync(navFile, "utf8")).tree : [];
   const convert = (nodes) => nodes.map((n) => n.page !== undefined
-    ? (byRoute.has(n.page) ? navItem(byRoute.get(n.page)) : null)
-    : { group: n.group, items: convert(n.pages) }).filter((n) => n !== null);
+    ? (byRoute.has(n.page) ? navItem(byRoute.get(n.page), sfIcon(n.icon)) : null)
+    : { group: n.group, icon: sfIcon(n.icon), defaultOpen: n.defaultOpen === true, items: convert(n.pages) }).filter((n) => n !== null);
   const sections = [];
   let loose = null;
   for (const node of convert(tree)) {
-    if (node.group !== undefined) { sections.push({ name: node.group, items: node.items }); loose = null; continue; }
+    if (node.group !== undefined) { sections.push({ name: node.group, icon: node.icon, items: node.items }); loose = null; continue; }
     if (loose === null) { loose = { name: sections.length === 0 ? "Get started" : "More", items: [] }; sections.push(loose); }
     loose.items.push(node);
   }
@@ -1090,34 +1134,53 @@ for (const page of handAuthored) {
 // route attribute at render time. DocNav picks the space's sidebar (visible-if renders
 // nothing for the other three, so a page carries one sidebar, not four).
 const navComponentOf = (id) => "DocNav" + id.split("-").map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join("");
-// Each space's sidebar is ONE stock grouped list over its rows (the group is the list section
-// header; a nested v3 group reads "Group · Subgroup"). The rows ride a variable, the list renders
-// them server-side, every row a real link.
-function navRowsOf(sections) {
-  const rows = [];
-  const walk = (items, group) => {
-    for (const item of items) {
-      if (item.group !== undefined) walk(item.items, `${group} · ${item.group}`);
-      else rows.push({ route: item.route, label: item.label, group });
-    }
+// Each space's sidebar, Mintlify-shaped from stock parts: a section header (footnote text), the
+// section's pages as one stock list of rows (icon + label, real links), and every nested group as
+// a stock Accordion (DisclosureGroup) holding its own rows, open when it holds the page on screen
+// or declares defaultOpen. A modern page with no icon of its own takes its section's.
+const containsRoute = (items, route) => items.some((i) => (i.group !== undefined ? containsRoute(i.items, route) : i.route === route));
+function navMarkup(items, sectionIcon, depth, vars) {
+  const out = [];
+  let run = [];
+  const pad = "  ".repeat(depth + 1);
+  const flush = () => {
+    if (run.length === 0) return;
+    const rows = run.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sectionIcon ?? "doc.text" }));
+    const n = vars.push(`    <variable as="r${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(rows))})</variable>`) - 1;
+    out.push(`${pad}<list bind="dsx.variable.r${n}" key="route" scroll="false" class="doc-nav-rows">
+${pad}  <row href="{{ dsx.this.route }}">
+${pad}    <hstack class="doc-nav-row">
+${pad}      <image icon="{{ dsx.this.icon }}" iconSize="15" a11yHidden="true"/>
+${pad}      <text value="{{ dsx.this.label }}" lineLimit="2"/>
+${pad}    </hstack>
+${pad}  </row>
+${pad}</list>`);
+    run = [];
   };
-  for (const section of sections) walk(section.items, section.name);
-  return rows;
+  for (const item of items) {
+    if (item.group === undefined) { run.push(item); continue; }
+    flush();
+    const routes = JSON.stringify(flatItems(item.items).map((i) => i.route)).replace(/"/g, "'");
+    out.push(`${pad}<Accordion title="${escapeForDsxAttr(item.group)}" open="${item.defaultOpen ? "true" : `{{ ${routes}.includes(dsx.attribute.route) }}`}" class="doc-nav-group">
+${navMarkup(item.items, item.icon ?? sectionIcon, depth + 1, vars)}
+${pad}</Accordion>`);
+  }
+  flush();
+  return out.join("\n");
 }
 for (const s of SPACES) {
-  const rows = navRowsOf(navBySpace[s.id] ?? []);
-  writeFileSync(join(generatedDir, `${navComponentOf(s.id)}.dsx`), `<vstack class="doc-nav doc-nav-${s.id}" style="flex: 1; min-height: 0; align-items: stretch" role="navigation" a11yLabel="${escapeForDsxAttr(s.label)} documentation">
+  const vars = [];
+  const sections = (navBySpace[s.id] ?? []).map((section) => [
+    `  <text value="${escapeForDsxAttr(section.name)}" type="footnote" class="doc-nav-section"/>`,
+    navMarkup(section.items, section.icon ?? SECTION_ICONS[section.name], 0, vars),
+  ].join("\n")).join("\n");
+  writeFileSync(join(generatedDir, `${navComponentOf(s.id)}.dsx`), `<vstack class="doc-nav doc-nav-${s.id}" style="align-items: stretch" role="navigation" a11yLabel="${escapeForDsxAttr(s.label)} documentation">
   <head>
     <!-- GENERATED by scripts/compile.mjs (the ${s.label} nav model) - edit the content tree, not this file. -->
     <attribute as="route" default="''"/>
-    <variable as="rows">return ${jseStringLiteral(JSON.stringify(rows))}</variable>
-    <formula as="items" input:raw="dsx.variable.rows">return JSON.parse(raw)</formula>
+${vars.join("\n")}
   </head>
-  <list bind="dsx.formula.items" key="route" group_by="group" style="flex: 1; min-height: 0">
-    <row href="{{ dsx.this.route }}">
-      <text value="{{ dsx.this.label }}" lineLimit="2"/>
-    </row>
-  </list>
+${sections}
 </vstack>
 `);
 }
@@ -1160,7 +1223,11 @@ config.routes = entries.map((p) => ({
 }));
 writeFileSync(join(root, "dsx.config.json"), JSON.stringify(config, null, 2) + "\n");
 
-const navJson = (sections) => sections.map((s) => ({ name: s.name, pages: flatItems(s.items).map(({ route, title, label }) => ({ route, title, label })) }));
+const navTree = (items) => items.map((i) => (i.group !== undefined
+  ? { group: i.group, ...(i.icon ? { icon: i.icon } : {}), ...(i.defaultOpen ? { defaultOpen: true } : {}), items: navTree(i.items) }
+  : { route: i.route, title: i.title, label: i.label, ...(i.icon ? { icon: i.icon } : {}) }));
+const navJson = (sections) => sections.map((s) => ({ name: s.name, icon: s.icon ?? SECTION_ICONS[s.name] ?? null,
+  pages: flatItems(s.items).map(({ route, title, label }) => ({ route, title, label })), tree: navTree(s.items) }));
 writeFileSync(join(publicDir, "nav.json"), JSON.stringify({
   sections: navJson(navBySpace.modern),
   spaces: SPACES.map((s) => ({ id: s.id, label: s.label, home: s.home, sections: navJson(navBySpace[s.id] ?? []) })),

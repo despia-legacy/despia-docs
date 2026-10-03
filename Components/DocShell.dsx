@@ -38,6 +38,7 @@
     <variable as="scope">return 'This space'</variable>
     <variable as="vector">return []</variable>
     <variable as="moreOpen">return false</variable>
+    <variable as="agentsOpen">return false</variable>
     <variable as="spacePick">
       const names = { modern: 'Modern', legacy: 'Legacy v3', migrate: 'Migration', troubleshooting: 'Troubleshooting', releases: 'Releases', 'app-review': 'App Review' }
       return names[dsx.attribute.space] || 'Modern'
@@ -129,11 +130,17 @@
     <formula as="spaceNames">return 'Modern,Legacy v3,Migration,Troubleshooting,Releases,App Review'</formula>
     <!-- The help menu: rows with an href are links; the hook rows are the actions docs.js performs
          (copy, and the Support widget intents). A stock <menu> row cannot carry an href (gap 9). -->
+    <!-- The agents (the website's marks, copied to public/marks): the page goes as context. -->
+    <formula as="agentRows" input:prompt="dsx.formula.askPrompt">
+      return [
+        { id: 'claude', title: 'Claude', mark: '/marks/claude-color.svg', href: 'https://claude.ai/new?q=' + prompt },
+        { id: 'chatgpt', title: 'ChatGPT', mark: '/marks/openai.svg', href: 'https://chatgpt.com/?hints=search&q=' + prompt },
+        { id: 'cursor', title: 'Cursor', mark: '/marks/cursor-dark.svg', href: 'cursor://anysphere.cursor-deeplink/mcp/install?name=despia-docs&config=eyJ1cmwiOiJodHRwczovL2RvY3MuZGVzcGlhLmNvbS9tY3AifQ==' },
+      ]
+    </formula>
     <formula as="helpRows" input:md="dsx.attribute.md" input:prompt="dsx.formula.askPrompt">
       return [
         { id: 'human', title: 'Ask a human', href: '', hook: 'doc-ask-human' },
-        { id: 'chatgpt', title: 'Open in ChatGPT', href: 'https://chatgpt.com/?hints=search&q=' + prompt, hook: '' },
-        { id: 'cursor', title: 'Connect to Cursor', href: 'cursor://anysphere.cursor-deeplink/mcp/install?name=despia-docs&config=eyJ1cmwiOiJodHRwczovL2RvY3MuZGVzcGlhLmNvbS9tY3AifQ==', hook: '' },
         { id: 'md', title: 'View as Markdown', href: md, hook: '' },
         { id: 'edit', title: 'Propose an edit', href: '', hook: 'doc-propose-edit' },
         { id: 'feature', title: 'Request a feature', href: '', hook: 'doc-request-feature' },
@@ -168,6 +175,13 @@
   </head>
 
   <vstack paneRole="sidebar" class="doc-sidebar">
+    <!-- the Despia mark (the website header's SiteIcon "mark", same paths) and the product word -->
+    <pressable href="/" a11yLabel="Despia Docs home" class="doc-brand">
+      <hstack class="doc-brand-row">
+        <svg d="M200,0C89.54,0,0,89.54,0,200c110.46,0,200-89.54,200-200 M0,200H0C0,310.46,89.54,400,200,400c0-110.46-89.54-200-200-200 M200,400c110.46,0,200-89.54,200-200h0c-110.46,0-200,89.54-200,200 M317.75 161.05 C359.37 161.05 393.11 127.31 393.11 85.69 C393.11 44.07 359.37 10.33 317.75 10.33 C276.13 10.33 242.39 44.07 242.39 85.69 C242.39 105.677 250.33 124.845 264.462 138.978 C278.595 153.11 297.763 161.05 317.75 161.05" viewBox="0 0 400 400" fill="currentColor" style="width: 26px; height: 26px" a11yHidden="true"/>
+        <text value="Despia Docs" type="headline"/>
+      </hstack>
+    </pressable>
     <searchbar bind="dsx.variable.query" placeholder="{{ 'Search ' + dsx.formula.spaceLabel }}"/>
     <segmented bind="dsx.variable.scope" options="This space,All spaces" label="Search scope" visible-if="dsx.variable.query.length >= 2"/>
     <list bind="dsx.formula.hitRows" key="id" group_by="group" class="doc-hits" visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length > 0">
@@ -177,14 +191,15 @@
     </list>
     <EmptyState visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length === 0" icon="magnifyingglass"
                   title="No results" message="{{ dsx.variable.scope === 'All spaces' ? 'Nothing matches in any space.' : 'Nothing here. Try All spaces.' }}"/>
-    <DocNav visible-if="dsx.variable.query.length &lt; 2" route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}" class="doc-nav-slot"/>
+    <scroll class="doc-nav-slot" visible-if="dsx.variable.query.length &lt; 2">
+      <DocNav route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}"/>
+    </scroll>
   </vstack>
 
   <scroll paneRole="detail" class="doc-detail">
-    <!-- One brand title; the trailing items are the bar's own: bare <button icon a11yLabel> and a
-         <menu> around one bare button are dressed as bar items by the route bar (any other word
-         on them, a class or an href, would make them "authored" and undressed). -->
-    <NavBar title="Despia Docs">
+    <!-- The stock NavBar in its own custom mode: no title (the brand lives at the top of the
+         sidebar) and no system bar, only the trailing items. -->
+    <NavBar system="false">
       <picker slot="trailing" bind="dsx.variable.spacePick" options="{{ dsx.formula.spaceNames }}" label="Docs space"/>
       <menu slot="trailing" menu="dsx.formula.versionMenu">
         <button label="{{ 'v' + dsx.attribute.version }}" a11yLabel="{{ 'Docs version ' + dsx.attribute.version }}"/>
@@ -199,7 +214,19 @@
         <hstack class="doc-help" visible-if="dsx.attribute.md !== ''" role="toolbar" a11yLabel="Page help">
           <button label="Copy for AI" icon="doc.on.doc" variant="prominent" class="doc-actions-copy"/>
           <button label="Ask AI" icon="sparkles" variant="bordered" class="doc-ask-btn-inline"/>
-          <button label="Open in Claude" icon="arrow.up.right" variant="bordered" href="{{ 'https://claude.ai/new?q=' + dsx.formula.askPrompt }}"/>
+          <popover present="dsx.variable.agentsOpen" on:dismiss="dsx.variable.agentsOpen = false" arrow="top">
+            <button label="Open in AI agent" icon="sparkles" variant="bordered" a11yLabel="Open this page in an AI agent" on:tap="dsx.variable.agentsOpen = !dsx.variable.agentsOpen"/>
+            <scroll slot="content">
+              <list bind="dsx.formula.agentRows" key="id" scroll="false" class="doc-agents">
+                <row href="{{ dsx.this.href }}" on:tap="dsx.variable.agentsOpen = false">
+                  <hstack class="doc-agent-row">
+                    <image src="{{ dsx.this.mark }}" a11yHidden="true" style="width: 20px; height: 20px"/>
+                    <text value="{{ dsx.this.title }}"/>
+                  </hstack>
+                </row>
+              </list>
+            </scroll>
+          </popover>
           <popover present="dsx.variable.moreOpen" on:dismiss="dsx.variable.moreOpen = false" arrow="top">
             <button label="More" icon="ellipsis" variant="bordered" a11yLabel="More ways to use this page" on:tap="dsx.variable.moreOpen = !dsx.variable.moreOpen"/>
             <scroll slot="content">

@@ -14,7 +14,11 @@
 .doc-hits, .doc-nav-slot { flex: 1; min-height: 0; }
 /* the closest stock list idiom to a sidebar: edge-to-edge rows, no inset card (appearance is
    the stock list's own switch; a true sidebar style is framework gap 16) */
-.doc-hits, .doc-nav .dsx-list { appearance: grouped; }
+.doc-hits, .doc-nav-rows, .doc-agents { appearance: grouped; }
+.doc-brand-row, .doc-nav-row, .doc-agent-row { gap: 0.625rem; align-items: center; }
+.doc-brand { padding-block: 0.25rem; }
+.doc-nav { gap: 0.25rem; }
+.doc-nav-section { margin-block: 1rem 0.25rem; }
 
 .doc-detail { min-height: 0; }
 .doc-detail-row { align-items: flex-start; gap: 2.5rem; padding: 1rem clamp(1rem, 4vw, 3rem) 4rem; }

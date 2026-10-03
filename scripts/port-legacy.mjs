@@ -55,15 +55,22 @@ if (existsSync(mapFile)) {
 // ── navigation ────────────────────────────────────────────────────────────────────────────
 const docsJson = JSON.parse(readFileSync(join(src, "docs.json"), "utf8"));
 const navOrder = [];
+/** A page's own Mintlify icon (FontAwesome name), from its front matter; compile.mjs maps it. */
+function pageIcon(path) {
+  const file = join(src, ...(path.slice(1) + ".mdx").split("/"));
+  if (!existsSync(file)) return undefined;
+  const m = /^icon:\s*"?([\w-]+)/m.exec(readFileSync(file, "utf8"));
+  return m === null ? undefined : m[1];
+}
 function walkNav(items, groups) {
   const nodes = [];
   for (const item of items) {
     if (typeof item === "string") {
       navOrder.push({ path: "/" + item, groups });
-      nodes.push({ page: LEGACY + "/" + item });
+      nodes.push({ page: LEGACY + "/" + item, icon: pageIcon("/" + item) });
     } else {
       const name = item.group;
-      nodes.push({ group: name, pages: walkNav(item.pages ?? [], [...groups, name]) });
+      nodes.push({ group: name, ...(item.icon ? { icon: item.icon } : {}), ...(item.expanded ? { defaultOpen: true } : {}), pages: walkNav(item.pages ?? [], [...groups, name]) });
     }
   }
   return nodes;
