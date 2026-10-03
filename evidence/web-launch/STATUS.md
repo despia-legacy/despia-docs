@@ -112,7 +112,28 @@ query is an edge-cache hit keyed by query + filters + contentVersion.
   rerun that exact command, then `node scripts/assemble.mjs`, `npm run parity` (expect 189/189), and
   `node evidence/web-launch/shoot.mjs` (add a version-picker shot: click `.doc-version-chip`).
 
+## Polish after the coordinator's proof run (2026-10-03)
+
+The coordinator ran the build with the wt-web incremental build: exit 0. Parity 189/189 and 14 shots,
+committed in afd19dc. Fixes in source after that run, not yet rebuilt:
+- The "On this page" rail: plain text links drawn by `repeat=`, with no list platter. The section in
+  view is marked by an accent left rule and weight.
+- The version picker: the stock `<menu>` with a "Docs version" header, the current version
+  checkmarked, and older versions opening through `route.reset`.
+- Sidebar titles: wrap to 2 lines, then an ellipsis.
+- The stray "‹ Back": this is the framework, not the docs. See gap 8 below. No workaround applied.
+
 ## Framework gaps (written down, not bypassed)
+
+8. **A URL-landed page shows the stock "‹ Back" bar.** Per router.ts, a deep link cold-loads the entry
+   frame (PageIndex at `/`) and pushes the matched route on top. Depth is then 2, so the default-back
+   law (route-chrome.ts `frameBar`, corpus router/default-back.json) draws the bar on every docs page
+   opened by URL. For an app that is "Back works"; for a website every URL is a root. Ask: a site or
+   web project should treat the URL-landed route as the root frame, or the cold load should not stack
+   it. Not worked around here; a NavBar release would hide it, but that is a per-page bypass.
+9. **`<menu>` items have no `href` and no `checked`.** A menu row dispatches only a module call. The
+   version picker uses `icon: 'checkmark'` for the current version and `route.reset` for others, which
+   cannot leave the SPA route table for another build under `/v/<v>/`.
 
 0. The credential guard refuses documentation placeholders (`-----BEGIN PRIVATE KEY-----`,
    `AuthKey_XXXXXXXXXX.p8`) in the framework's own guides; compile.mjs inserts an invisible word joiner.

@@ -1129,5 +1129,35 @@
 .doc-actions-menu { width: min(18rem, calc(100vw - 2rem)); align-items: stretch; }
 .doc-legacy-banner { gap: 0.25rem; margin-block: 0.25rem 0.75rem; align-items: flex-start; }
 @media (max-width: 39.999rem) { .doc-helpbar { justify-content: flex-end; padding-inline-end: 0.25rem; } }
-.doc-version-panel { width: 12rem; align-items: stretch; }
 @media (max-width: 39.999rem) { .doc-version { display: none; } }
+
+/* the rail: plain text links, the section in view marked by weight and the accent, no platter */
+.doc-toc { gap: 0; align-items: stretch; border-inline-start: var(--dsx-hairline) solid var(--dsx-outline-soft); }
+.doc-toc .doc-toc-link {
+  display: flex;
+  padding: 0.3rem 0.75rem;
+  margin-inline-start: calc(-1 * var(--dsx-hairline));
+  border-inline-start: 2px solid transparent;
+  background: none;
+  border-radius: 0;
+}
+.doc-toc .doc-toc-link.doc-toc-l3 { padding-inline-start: 1.5rem; }
+@media (hover: hover) {
+  .doc-toc .doc-toc-link:hover { background: none; }
+  .doc-toc .doc-toc-link:hover .doc-toc-text { color: var(--dsx-label); }
+}
+.doc-toc .doc-toc-link.is-current { background: none; border-inline-start-color: var(--dsx-accent); }
+.doc-toc .doc-toc-link.is-current .doc-toc-text { color: var(--dsx-accent); font-weight: 600; }
+
+/* sidebar titles: wrap to two lines, then an ellipsis (never a hard clip) */
+.doc-nav-link { min-width: 0; }
+.doc-nav-text {
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
