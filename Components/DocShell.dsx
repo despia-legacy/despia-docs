@@ -224,6 +224,7 @@
                     <image src="{{ dsx.this.mark }}" visible-if="dsx.this.mark !== ''" a11yHidden="true" style="width: 20px; height: 20px"/>
                     <svg d="{{ dsx.this.d }}" visible-if="dsx.this.d !== ''" viewBox="0 0 24 24" fill="currentColor" a11yHidden="true" style="width: 20px; height: 20px"/>
                     <text value="{{ dsx.this.title }}"/>
+                    <image icon="arrow.up.right" a11yHidden="true"/>
                   </hstack>
                 </row>
               </list>
@@ -234,7 +235,10 @@
             <scroll slot="content">
               <list bind="dsx.formula.helpRows" key="id" scroll="false" style="appearance: sidebar">
                 <row href="{{ dsx.this.href }}" on:tap="dsx.variable.moreOpen = false">
-                  <text value="{{ dsx.this.title }}" class="{{ dsx.this.hook }}"/>
+                  <hstack>
+                    <text value="{{ dsx.this.title }}" class="{{ dsx.this.hook }}"/>
+                    <image icon="arrow.up.right" a11yHidden="true"/>
+                  </hstack>
                 </row>
               </list>
             </scroll>
@@ -244,7 +248,7 @@
         <hstack class="doc-chips" visible-if="dsx.attribute.since !== '' || dsx.attribute.changed !== '' || dsx.attribute.removed !== '' || dsx.formula.improvedRows.length > 0">
           <chip label="{{ 'Added in ' + dsx.attribute.since }}" visible-if="dsx.attribute.since !== ''"/>
           <chip label="{{ 'Changed in ' + dsx.attribute.changed }}" visible-if="dsx.attribute.changed !== ''"/>
-          <chip label="{{ 'Removed in ' + dsx.attribute.removed }}" role="destructive" visible-if="dsx.attribute.removed !== ''"/>
+          <chip label="{{ 'Removed in ' + dsx.attribute.removed }}" role="danger" visible-if="dsx.attribute.removed !== ''"/>
           <button repeat="dsx.formula.improvedRows" key="id" label="{{ 'Improved in ' + dsx.this.version + ': ' + dsx.this.title }}" variant="plain" href="{{ dsx.this.url }}"/>
         </hstack>
 

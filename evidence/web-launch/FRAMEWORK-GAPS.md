@@ -39,3 +39,9 @@ once the docs are rebuilt with the wt-web CLI; drop a gap that the merge closed.
 - Docs-side mitigation (in the uncommitted DocShell patch): link rows end in `arrow.up.right`, the
   platform glyph for leaving, which the stock rule already stands down for.
 - Ask: `<menu>` items with `href` (closes gap 9 and this).
+
+## Re-check 2026-10-05 (after shots in shots/launch-2026-10-03/after)
+- G1 open: at 390 the Back row and the NavBar still sit on two rows (agent-390-light).
+- G2 open: table scrollW equals clientW (462) at both widths, so the table still hugs its content; no change from before.
+- G3 open: the popover ground still shows page text through it (agent-390-light), computed bg color(srgb 1 1 1 / 0.94) over blur.
+- G4 closed on the site side: link rows now end in arrow.up.right and draw no chevron (popoverChevrons 0).

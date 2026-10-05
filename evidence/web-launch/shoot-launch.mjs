@@ -8,7 +8,7 @@ import { extname, join } from "node:path";
 import { createRequire } from "node:module";
 const dist = process.env.DIST ?? join(process.env.HOME, "despia_dsx/wt-docs-web/dist");
 const out = process.env.OUT ?? "shots"; mkdirSync(out, { recursive: true });
-const require = createRequire(join(process.env.HOME, "despia_dsx/wt-fleet2/OpenSource/Engine/TypeScript/node_modules/x.js"));
+const require = createRequire("/Volumes/DSX-SSD/worktrees/website/OpenSource/Engine/TypeScript/node_modules/x.js");
 const { chromium } = require("playwright-core");
 const TYPES = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".md": "text/markdown" };
 const server = createServer((req, res) => {
