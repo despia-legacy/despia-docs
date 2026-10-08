@@ -1,0 +1,53 @@
+{
+  "note": "Fact corrections to the v3 snapshot. scripts/port-legacy.mjs applies every edit to the source text before converting and FAILS when a 'find' string is no longer in the page (the snapshot moved: re-check the fact, then update or drop the row). Each page with a correction carries its note as a callout at the top. Only verified facts go here, each with its evidence.",
+  "pages": [
+    {
+      "path": "/native-features/store-location",
+      "date": "2026-10-08",
+      "evidence": "despia-framework proof/v3-v4-parity/DOCS-NOTE-store-location.md: V3 iOS reads SKPaymentQueue.default().storefront.countryCode (ISO 3166-1 alpha-3, 'USA' on the parity simulators); V3 Android reads Play Billing BillingConfig.getCountryCode() (alpha-2, 'US').",
+      "callout": "Corrected on 8 October 2026: iOS returns a three-letter code (`USA`, `DEU`, `JPN`) and Android a two-letter code (`US`, `DE`, `JP`). This page used to say both return `US`, so an iOS check against `'US'` never matched. The examples below compare against the right value.",
+      "edits": [
+        {
+          "find": "A user in Spain signed into a US App Store account returns `US`.",
+          "replace": "A user in Spain signed into a US App Store account returns `USA` on iOS (`US` on Android)."
+        },
+        {
+          "find": "It returns a two-letter ISO country code like `US`, `DE`, `JP`, or `BR`.",
+          "replace": "It returns the store's own country code: a three-letter ISO 3166-1 alpha-3 code on iOS (`USA`, `DEU`, `JPN`, `BRA`) and a two-letter alpha-2 code on Android (`US`, `DE`, `JP`, `BR`). Normalize before comparing if you support both platforms."
+        },
+        {
+          "find": "// The only combination that qualifies for external web payment\nconst allowsWebPayment = isDespiaIOS && storeLocation === 'US'",
+          "replace": "// The only combination that qualifies for external web payment.\n// iOS reports the three-letter code, so compare against 'USA'.\nconst allowsWebPayment = isDespiaIOS && storeLocation === 'USA'"
+        },
+        {
+          "find": "This works the same way on iOS and Android, since both expose the same two-letter codes.",
+          "replace": "iOS reports three-letter codes (`USA`) and Android two-letter codes (`US`), so normalize to one form first."
+        },
+        {
+          "find": "    const currency = storeCurrency(storeLocation)",
+          "replace": "    const currency = storeCurrency(toAlpha2(storeLocation))"
+        },
+        {
+          "find": "function storeCurrency(country) {",
+          "replace": "// iOS: alpha-3 ('USA'), Android: alpha-2 ('US'). Normalize to alpha-2.\nconst ALPHA3_TO_2 = {\n    USA: 'US', CAN: 'CA', GBR: 'GB', AUS: 'AU',\n    DEU: 'DE', FRA: 'FR', ITA: 'IT', ESP: 'ES',\n    JPN: 'JP', KOR: 'KR', IND: 'IN', BRA: 'BR',\n}\n\nfunction toAlpha2(code) {\n    return code && code.length === 3 ? ALPHA3_TO_2[code] : code\n}\n\nfunction storeCurrency(country) {"
+        },
+        {
+          "find": "A row with `storeLocation: 'US'` and `platform: 'ios'` is the only combination",
+          "replace": "A row with `storeLocation: 'USA'` and `platform: 'ios'` is the only combination"
+        }
+      ]
+    },
+    {
+      "path": "/lovable/native-features/store-location",
+      "date": "2026-10-08",
+      "evidence": "despia-framework proof/v3-v4-parity/DOCS-NOTE-store-location.md (same finding as /native-features/store-location).",
+      "callout": "Corrected on 8 October 2026: `despia.storeLocation` is `USA` on iOS and `US` on Android. The web payment check below is for iOS users of the US App Store, so it compares against `'USA'`; see [Store Location](/native-features/store-location) for the full platform gate.",
+      "edits": [
+        {
+          "find": "  {storeLocation === 'USA' && (",
+          "replace": "  {/* iOS reports 'USA'; Android reports 'US' */}\n  {storeLocation === 'USA' && ("
+        }
+      ]
+    }
+  ]
+}

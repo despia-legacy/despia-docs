@@ -13,6 +13,7 @@ description: "Complete guide for building and publishing iOS applications using 
  3. [Creating App Icons](#creating-app-icons)
  4. [Creating Splash Screens](#creating-splash-screens)
  5. [Bundle ID Configuration](#bundle-id-configuration)
+ 6. [App Store Connect API Key](#app-store-connect-api-key)
  6. [Publishing Your App](#publishing-your-app)
  7. [Testing & TestFlight](#testing--testflight)
  8. [App Store Submission](#app-store-submission)
@@ -26,6 +27,7 @@ description: "Complete guide for building and publishing iOS applications using 
 Before you begin, ensure you have:
 
 - An active **Apple Developer Account** (\$99/year)
+- An **App Store Connect API key** with the **App Manager** role (see [App Store Connect API Key](#app-store-connect-api-key))
 - A **deployed web application** with HTTPS enabled
 - Access to the **Despia platform**
 - **Design software** (Canva recommended for icon/splash creation)
@@ -259,6 +261,52 @@ App Groups allow data sharing between your main app and extensions:
 
 ---
 
+## App Store Connect API Key
+
+Despia uses an App Store Connect API key to sign, build, and upload your app on your behalf. You need to create this key once and add it to Despia before your first build.
+
+<Warning>
+  The key **must** use the **App Manager** role. Keys with the **Admin** or **Developer** role are not supported and will cause your build to fail. Only App Manager keys are allowed.
+</Warning>
+
+### Create the Key in App Store Connect
+
+1. Log into [App Store Connect](https://appstoreconnect.apple.com/)
+2. Go to **Users and Access** → **Integrations** → **App Store Connect API**
+3. Open the **Team Keys** tab
+   - If this is your first key, the Account Holder must click **Request Access** and accept the terms first
+4. Click **Generate API Key** (or the **\+** button)
+5. Enter a name, for example `Despia`
+6. Set **Access** to **App Manager**
+7. Click **Generate**
+8. Download the `.p8` key file
+   - Apple only lets you download it **once**, so store it somewhere safe
+9. Copy the **Key ID** (shown next to the key) and the **Issuer ID** (shown above the keys list)
+
+### Add the Key to Despia
+
+1. Open your project in Despia
+2. Go to **Publish** → **iOS** → **Build Settings**
+3. Click **Add Development Team**
+4. Upload your `.p8` file
+5. Enter the **Key ID** and **Issuer ID**
+6. Save
+
+### Key Role Reference
+
+| Role | Supported |
+| :-- | :-- |
+| App Manager | Yes |
+| Admin | No, build fails |
+| Developer | No, build fails |
+| Any other role | No, build fails |
+
+> **Already created an Admin or Developer key?** Revoke it or leave it unused, generate a new key with the App Manager role, and add that one to Despia instead. A key's role cannot be changed after it's generated.
+
+For a full walkthrough of the key setup, see the [deployment tutorial](https://setup.despia.com/deployment).
+
+---
+
 ## Publishing Your App
 
 ### Building Your Application
@@ -276,6 +324,7 @@ App Groups allow data sharing between your main app and extensions:
      - Missing splash screen
      - Invalid icon dimensions
      - Incorrect URL configuration
+     - App Store Connect API key without the App Manager role
 
 ### Build Output
 
@@ -515,6 +564,15 @@ You only need to rebuild when changing:
 
 ### Build Failures
 
+#### App Store Connect Authentication Failed
+
+**Error:** "401" or "Authentication credentials are missing or invalid" **Solution:**
+
+- Confirm the API key uses the **App Manager** role (Admin and Developer keys fail)
+- If it doesn't, generate a new App Manager key and add it under **Publish** → **iOS** → **Build Settings** → **Add Development Team**
+- Double check the Key ID and Issuer ID match the uploaded `.p8` file
+- Make sure the key hasn't been revoked in App Store Connect
+
 #### Invalid Icon Dimensions
 
 **Error:** "Icon size must be 1024x1024" **Solution:**
@@ -643,6 +701,7 @@ You only need to rebuild when changing:
 ### Despia Resources
 
 - **NPM Package Documentation:** Add native features programmatically
+- **Deployment Tutorial:** [setup.despia.com/deployment](https://setup.despia.com/deployment)
 - **Customer Support:** Available via Intercom in Despia dashboard
 - **Website:** [despia.com](https://despia.com/)
 - **Email Support:** [hey@despia.com](mailto:hey@despia.com)
@@ -723,6 +782,7 @@ You now have a complete guide to deploying your Despia iOS application to the Ap
 1. Setting up your web app URL in Despia
 2. Creating properly sized icons and splash screens
 3. Configuring bundle IDs and capabilities
+4. Adding an App Manager App Store Connect API key
 4. Building and testing via TestFlight
 5. Submitting to App Store
 6. Leveraging OTA updates for continuous deployment

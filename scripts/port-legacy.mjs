@@ -52,6 +52,24 @@ if (existsSync(mapFile)) {
   }
 }
 
+// ── fact corrections (legacy/corrections.json): verified v3 facts the snapshot gets wrong ─────
+const correctionsFile = join(root, "legacy", "corrections.json");
+const correctionOf = new Map();
+if (existsSync(correctionsFile)) {
+  for (const row of JSON.parse(readFileSync(correctionsFile, "utf8")).pages ?? []) correctionOf.set(row.path, row);
+}
+/** Applies a page's corrections to its source; every `find` must still be there (else the fact moved). */
+function correct(path, body, problems) {
+  const row = correctionOf.get(path);
+  if (row === undefined) return body;
+  let text = body;
+  for (const edit of row.edits ?? []) {
+    if (!text.includes(edit.find)) { problems.push(`legacy/corrections.json ${path}: text not found (re-check the fact): ${edit.find.split("\n")[0]}`); continue; }
+    text = text.split(edit.find).join(edit.replace);
+  }
+  return `<Note>\n${row.callout}\n</Note>\n\n${text}`;
+}
+
 // ── navigation ────────────────────────────────────────────────────────────────────────────
 const docsJson = JSON.parse(readFileSync(join(src, "docs.json"), "utf8"));
 const navOrder = [];
@@ -473,12 +491,13 @@ mkdirSync(out, { recursive: true });
 const orderOf = new Map(navOrder.map((n, i) => [n.path, i]));
 const problems = [];
 let ported = 0;
+for (const path of correctionOf.keys()) if (!allPaths.includes(path)) problems.push(`legacy/corrections.json: ${path} is not a v3 page`);
 for (const path of allPaths) {
   const file = join(src, ...(path.slice(1) + ".mdx").split("/"));
   const { meta, body } = parseFrontMatter(readFileSync(file, "utf8").replace(/\r\n/g, "\n"));
   let converted;
   try {
-    converted = emitNodes(parseNodes(body.split("\n"), path), path);
+    converted = emitNodes(parseNodes(correct(path, body, problems).split("\n"), path), path);
   } catch (error) {
     problems.push(String(error.message ?? error));
     continue;
@@ -500,6 +519,7 @@ for (const path of allPaths) {
     `nav: ${nav !== undefined ? "true" : "false"}`,
     ...(lastmodOf.has(path) ? [`lastmod: ${lastmodOf.get(path)}`] : []),
     ...(modernOf.has(path) ? [`modern: ${modernOf.get(path)}`] : []),
+    ...(correctionOf.has(path) ? [`corrected: ${correctionOf.get(path).date}`] : []),
     `legacy: ${path}`,
     "---",
     "",

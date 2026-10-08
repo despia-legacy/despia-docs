@@ -4,6 +4,28 @@ description: "New features, improvements, and fixes across the Despia platform."
 icon: "clock-rotate-left"
 ---
 
+<Update label="September 13, 2026" description="Infrastructure - DNS resolution during the V3 to V4 migration">
+  ## V3 to V4 migration - if a Despia page says "This site can't be reached"
+
+  All Despia addresses are resolving normally again. On September 13, while internal infrastructure moved as part of the V3 to V4 migration, a few despia.com addresses such as v3.despia.com stopped resolving for a short time.
+
+  This was a hosting-level address lookup issue. Your projects, builds and account data were never touched and remain fully secured.
+
+  We are migrating Despia V3 to Despia V4, moving onto self hosted infrastructure and rebuilding Despia in Despia itself, so that we run on exactly what you run on.
+
+  **If your browser still shows the error:**
+
+  If you still see "This site can't be reached" or the code `DNS_PROBE_FINISHED_NXDOMAIN`, your device or network cached the failed lookup. It clears on its own within about 30 minutes. Any one of these clears it immediately:
+
+  - **Restart your Wi-Fi router.** This fixes every device on the network at once.
+  - **Switch networks briefly.** Your phone's hotspot works.
+  - **Set your device DNS to 1.1.1.1.** On Mac: System Settings, Network, your connection, Details, DNS, add 1.1.1.1. On Windows: Settings, Network and internet, your connection, DNS server assignment, Edit, Manual, IPv4 on, Preferred DNS 1.1.1.1. On iPhone: Settings, Wi-Fi, the i next to your network, Configure DNS, Manual, add 1.1.1.1. On Android: Settings, Network and internet, Private DNS, enter one.one.one.one.
+
+  Then reload the page. In Chrome, if it still fails, open `chrome://net-internals/#dns` and click Clear host cache.
+
+  No dashboard configuration changes, rebuild steps, or integration code changes are required. The only action needed is clearing a stale DNS cache on your own device, and only if you are still seeing the error.
+</Update>
+
 <Update label="September 03, 2026" description="Age Assurance - OS age range checks on iOS and Android">
   ## Age Assurance
 
