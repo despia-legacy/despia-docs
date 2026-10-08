@@ -1,0 +1,16 @@
+<!-- Settings: a native screen, shipped over the air. Stock parts only: the iOS inset-grouped
+     list on iPhone, Material 3 on Android. It reads what the web page shared (dsx.global.session)
+     and writes a preference the page listens to (dsx.global.prefs). -->
+<vstack style="flex: 1; align-items: stretch">
+  <NavBar title="Settings" large="true"/>
+  <list style="flex: 1">
+    <sectionHeader value="Account"/>
+    <SettingsRow icon="person.crop.circle.fill" title="{{ dsx.global.session.name }}" subtitle="{{ dsx.global.session.email }}"/>
+    <SettingsRow icon="star" title="Plan" value="{{ dsx.global.session.plan }}"/>
+    <sectionHeader value="Notifications"/>
+    <SettingsRow icon="bell.badge" title="Class Reminders">
+      <toggle bind="dsx.global.prefs.reminders" a11yLabel="Class Reminders"/>
+    </SettingsRow>
+    <sectionFooter value="A reminder one hour before each class."/>
+  </list>
+</vstack>

@@ -562,13 +562,14 @@ function compileBody(page, lines, startLine, indent) {
 // One site, four spaces, one switcher. A space owns a path prefix, a sidebar, a search scope,
 // its own llms.txt pair and an MCP `space` value. Modern keeps every path it ever had.
 const SPACES = [
-  { id: "modern", label: "Modern", prefix: "", home: "/", blurb: "Despia v4 and DSX" },
-  { id: "legacy", label: "Legacy v3", prefix: "/legacy", home: "/legacy/introduction", blurb: "despia-native and the v3 runtime" },
+  { id: "modern", label: "Despia V4", prefix: "", home: "/", blurb: "Despia V4 and DSX" },
+  { id: "legacy", label: "Legacy (V3)", prefix: "/legacy", home: "/legacy/introduction", blurb: "despia-native and the V3 runtime" },
   { id: "migrate", label: "Migration", prefix: "/migrate", home: "/migrate", blurb: "Move a v3 app to v4" },
   { id: "troubleshooting", label: "Troubleshooting", prefix: "/troubleshooting", home: "/troubleshooting", blurb: "Symptom, cause, fix" },
   { id: "releases", label: "Releases", prefix: "/releases", home: "/releases", blurb: "Release notes per DSX release and per package version" },
   { id: "app-review", label: "App Review", prefix: "/app-review", home: "/app-review", blurb: "Apple and Google review guidelines, and how Despia apps pass them" },
 ];
+const SPACES_JSON = JSON.stringify(SPACES.map(({ id, label, home }) => ({ id, label, home })));
 const spaceById = Object.fromEntries(SPACES.map((s) => [s.id, s]));
 function spaceOf(route) {
   for (const s of SPACES.slice(1)) if (route === s.prefix || route.startsWith(s.prefix + "/")) return s.id;
@@ -861,6 +862,8 @@ function shellAttrs(page, toc) {
     ...(page.body !== undefined ? [`md="${mdSibling(page.route)}"`] : []),
     shellAttr(page, "section", sectionNameOf(page.space, page.route)),
     `toc="{{ dsx.variable.a${tocVar} }}"`,
+    // the space picker, its labels and homes: SPACES above is the one declaration
+    shellAttr(page, "spaces", SPACES_JSON),
     ...(legacyHome && page.meta.modern ? [`modern="${escapeForDsxAttr(page.meta.modern)}"`] : []),
     ...["since", "changed", "removed"].filter((k) => page.meta?.[k]).map((k) => `${k}="${escapeForDsxAttr(page.meta[k])}"`),
     ...(improvedVar >= 0 ? [`improved="{{ dsx.variable.a${improvedVar} }}"`] : []),
@@ -1290,7 +1293,7 @@ config.web = { ...(config.web ?? {}), head: [...head, { meta: { name: "despia-su
 config.routes = entries.map((p) => ({
   path: p.route,
   component: `docs.${p.component}`,
-  meta: { title: p.space === "legacy" ? `${p.title} (Despia v3)` : p.title, ...(p.description !== "" ? { description: p.description } : {}) },
+  meta: { title: p.space === "legacy" ? `${p.title} (Despia V3)` : p.title, ...(p.description !== "" ? { description: p.description } : {}) },
 }));
 writeFileSync(join(root, "dsx.config.json"), JSON.stringify(config, null, 2) + "\n");
 

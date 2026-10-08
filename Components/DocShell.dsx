@@ -15,6 +15,8 @@
     <attribute as="label" default="''"/>
     <attribute as="route" default="'/'"/>
     <attribute as="space" default="'modern'"/>
+    <!-- The spaces (id, label, home) as JSON: scripts/compile.mjs SPACES is the one declaration. -->
+    <attribute as="spaces" default="'[]'"/>
     <!-- md = the raw-markdown sibling (route + .md). -->
     <attribute as="md" default="''"/>
     <attribute as="section" default="''"/>
@@ -39,10 +41,10 @@
     <variable as="vector">return []</variable>
     <variable as="moreOpen">return false</variable>
     <variable as="newsClosed">return ''</variable>
-    <variable as="agentsOpen">return false</variable>
     <variable as="spacePick">
-      const names = { modern: 'Modern', legacy: 'Legacy v3', migrate: 'Migration', troubleshooting: 'Troubleshooting', releases: 'Releases', 'app-review': 'App Review' }
-      return names[dsx.attribute.space] || 'Modern'
+      const list = dsx.attribute.spaces ? JSON.parse(dsx.attribute.spaces) : []
+      const hit = list.find((s) => s.id === dsx.attribute.space)
+      return hit ? hit.label : (list.length > 0 ? list[0].label : '')
     </variable>
     <api as="searchIndex" url="/search-index.json"/>
     <!-- The version menu's list (public/versions.json: latest at /, each older version under /v/<v>/). -->
@@ -56,28 +58,23 @@
       const top = items.length &gt; 0 ? items[0] : null
       return top == null || top.id === dsx.variable.newsClosed ? null : top
     </variable>
-    <formula as="spaceLabel" input:space="dsx.attribute.space">
-      if (space === 'legacy') { return 'Legacy v3' }
-      if (space === 'migrate') { return 'Migration' }
-      if (space === 'troubleshooting') { return 'Troubleshooting' }
-      if (space === 'app-review') { return 'App Review' }
-      if (space === 'releases') { return 'Releases' }
-      return 'Modern'
+    <formula as="spaceList" input:raw="dsx.attribute.spaces">
+      return raw ? JSON.parse(raw) : []
     </formula>
-    <formula as="spaceHome" input:space="dsx.attribute.space">
-      if (space === 'legacy') { return '/legacy/introduction' }
-      if (space === 'migrate') { return '/migrate' }
-      if (space === 'troubleshooting') { return '/troubleshooting' }
-      if (space === 'app-review') { return '/app-review' }
-      if (space === 'releases') { return '/releases' }
-      return '/'
+    <formula as="spaceLabel" input:space="dsx.attribute.space" input:list="dsx.formula.spaceList">
+      const hit = list.find((s) => s.id === space)
+      return hit ? hit.label : ''
     </formula>
-    <formula as="hitGroups" input:q="dsx.variable.query" input:scope="dsx.variable.scope" input:space="dsx.attribute.space" input:vector="dsx.variable.vector">
+    <formula as="spaceHome" input:space="dsx.attribute.space" input:list="dsx.formula.spaceList">
+      const hit = list.find((s) => s.id === space)
+      return hit ? hit.home : '/'
+    </formula>
+    <formula as="hitGroups" input:q="dsx.variable.query" input:scope="dsx.variable.scope" input:space="dsx.attribute.space" input:vector="dsx.variable.vector" input:list="dsx.formula.spaceList">
       if (!q || q.length < 2) { return [] }
       const index = dsx.api.searchIndex.data
       if (!index || !index.pages) { return [] }
       const all = scope === 'All spaces'
-      const labels = { modern: 'Modern', legacy: 'Legacy v3', migrate: 'Migration', troubleshooting: 'Troubleshooting', 'app-review': 'App Review', releases: 'Releases', blog: 'Blog' }
+      const labels = Object.fromEntries(list.map((s) => [s.id, s.label]).concat([['blog', 'Blog']]))
       const needle = q.toLowerCase()
       const pool = all ? index.pages : index.pages.filter((page) => page.space === space)
       const inTitle = pool.filter((page) => page.title.toLowerCase().includes(needle))
@@ -139,7 +136,7 @@
       rows.push({ label: label !== '' ? label : title, path: route })
       return JSON.stringify(rows)
     </formula>
-    <formula as="spaceNames">return 'Modern,Legacy v3,Migration,Troubleshooting,Releases,App Review'</formula>
+    <formula as="spaceNames" input:list="dsx.formula.spaceList">return list.map((s) => s.label).join(',')</formula>
     <!-- The help menu: rows with an href are links; the hook rows are the actions docs.js performs
          (copy, and the Support widget intents). A stock <menu> row cannot carry an href (gap 9). -->
     <!-- The agents (the website's marks, copied to public/marks): the page goes as context. A colour
@@ -160,6 +157,13 @@
         { id: 'github', title: 'Despia on GitHub', href: 'https://github.com/despia-native/despia', hook: '' },
       ]
     </formula>
+    <!-- the one page menu: agents, then Ask AI and a human, then this page's links -->
+    <formula as="pageRows" input:agents="dsx.formula.agentRows" input:help="dsx.formula.helpRows">
+      const open = agents.map((a) => ({ id: a.id, title: a.id === 'cursor' ? 'Add the docs to Cursor' : 'Open in ' + a.title, href: a.href, hook: '', mark: a.mark, d: a.d, icon: '', group: 'Open in an AI agent' }))
+      const ask = [{ id: 'ask', title: 'Ask AI', href: '', hook: 'doc-ask-btn-inline', mark: '', d: '', icon: 'sparkles', group: 'Ask' }]
+      const rest = help.map((h) => ({ id: h.id, title: h.title, href: h.href, hook: h.hook, mark: '', d: '', icon: '', group: h.id === 'human' ? 'Ask' : 'This page' }))
+      return open.concat(ask, rest)
+    </formula>
     <action as="cycleTheme">
       const current = dsx.global.docs && dsx.global.docs.theme ? dsx.global.docs.theme : ''
       dsx.global.docs = { theme: current === '' ? 'dark' : current === 'dark' ? 'light' : '' }
@@ -178,8 +182,8 @@
       if (r.ok && r.data && r.data.hits && dsx.variable.query === q) { dsx.variable.vector = r.data.hits }
     </action>
     <action as="goSpace">
-      const homes = { 'Modern': '/', 'Legacy v3': '/legacy/introduction', 'Migration': '/migrate', 'Troubleshooting': '/troubleshooting', 'Releases': '/releases', 'App Review': '/app-review' }
-      const path = homes[dsx.variable.spacePick]
+      const hit = dsx.formula.spaceList.find((s) => s.label === dsx.variable.spacePick)
+      const path = hit ? hit.home : ''
       if (path && dsx.variable.spacePick !== dsx.formula.spaceLabel) { dsx.module.route.reset({ path: path }) }
     </action>
     <watch value="dsx.variable.query" on:change="dsx.action.queueVector()"/>
@@ -222,32 +226,22 @@
       <vstack class="doc-page">
         <Breadcrumb bind="{{ dsx.formula.crumbs }}" visible-if="dsx.attribute.route !== dsx.formula.spaceHome &amp;&amp; JSON.parse(dsx.formula.crumbs).length > 1"/>
 
+        <!-- Page help: ONE copy button and ONE menu (owner taste: never a strip of 3+ buttons). The menu
+             holds the agents (the page goes as context), Ask AI, and the page's own links. Rows with a
+             hook are the actions docs.js performs (copy, the Support widget intents). -->
         <hstack class="doc-help" visible-if="dsx.attribute.md !== ''" role="toolbar" a11yLabel="Page help">
-          <button label="Copy for AI" icon="doc.on.doc" variant="prominent" class="doc-actions-copy"/>
-          <button label="Ask AI" icon="sparkles" variant="bordered" class="doc-ask-btn-inline"/>
-          <popover present="dsx.variable.agentsOpen" on:dismiss="dsx.variable.agentsOpen = false" arrow="top">
-            <button label="Open in AI agent" icon="sparkles" variant="bordered" a11yLabel="Open this page in an AI agent" on:tap="dsx.variable.agentsOpen = !dsx.variable.agentsOpen"/>
+          <button label="Copy page" icon="doc.on.doc" variant="bordered" class="doc-actions-copy" a11yLabel="Copy this page as Markdown for AI"/>
+          <popover present="dsx.variable.moreOpen" on:dismiss="dsx.variable.moreOpen = false" arrow="top">
+            <button icon="ellipsis" variant="bordered" a11yLabel="More ways to use this page" on:tap="dsx.variable.moreOpen = !dsx.variable.moreOpen"/>
             <scroll slot="content">
-              <list bind="dsx.formula.agentRows" key="id" scroll="false" style="appearance: sidebar">
-                <row href="{{ dsx.this.href }}" on:tap="dsx.variable.agentsOpen = false">
+              <list bind="dsx.formula.pageRows" key="id" group_by="group" scroll="false" style="appearance: sidebar">
+                <row href="{{ dsx.this.href }}" on:tap="dsx.variable.moreOpen = false">
                   <hstack class="doc-agent-row">
                     <image src="{{ dsx.this.mark }}" visible-if="dsx.this.mark !== ''" a11yHidden="true" style="width: 20px; height: 20px"/>
                     <svg d="{{ dsx.this.d }}" visible-if="dsx.this.d !== ''" viewBox="0 0 24 24" fill="currentColor" a11yHidden="true" style="width: 20px; height: 20px"/>
-                    <text value="{{ dsx.this.title }}"/>
-                    <image icon="arrow.up.right" a11yHidden="true"/>
-                  </hstack>
-                </row>
-              </list>
-            </scroll>
-          </popover>
-          <popover present="dsx.variable.moreOpen" on:dismiss="dsx.variable.moreOpen = false" arrow="top">
-            <button label="More" icon="ellipsis" variant="bordered" a11yLabel="More ways to use this page" on:tap="dsx.variable.moreOpen = !dsx.variable.moreOpen"/>
-            <scroll slot="content">
-              <list bind="dsx.formula.helpRows" key="id" scroll="false" style="appearance: sidebar">
-                <row href="{{ dsx.this.href }}" on:tap="dsx.variable.moreOpen = false">
-                  <hstack>
+                    <image icon="{{ dsx.this.icon }}" visible-if="dsx.this.icon !== ''" a11yHidden="true"/>
                     <text value="{{ dsx.this.title }}" class="{{ dsx.this.hook }}"/>
-                    <image icon="arrow.up.right" a11yHidden="true"/>
+                    <image icon="arrow.up.right" visible-if="dsx.this.href !== ''" a11yHidden="true"/>
                   </hstack>
                 </row>
               </list>
@@ -270,8 +264,8 @@
         </vstack>
 
         <vstack class="doc-legacy" visible-if="dsx.attribute.space === 'legacy'">
-          <Banner type="info" title="Legacy docs (Despia v3)" message="This page documents despia-native on the v3 runtime."/>
-          <button label="{{ dsx.attribute.modern !== '' ? 'Modern equivalent' : 'Migration map' }}" icon="arrow.right" variant="plain"
+          <Banner type="info" title="Legacy (V3)" message="This page documents Despia V3 and the despia-native package."/>
+          <button label="{{ dsx.attribute.modern !== '' ? 'Despia V4 equivalent' : 'Migration map' }}" icon="arrow.right" variant="plain"
                   href="{{ dsx.attribute.modern !== '' ? dsx.attribute.modern : '/migrate/map' }}"/>
         </vstack>
 

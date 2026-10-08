@@ -159,10 +159,14 @@ function allow(ip: string): boolean {
 
 //  The headers a meta tag cannot carry (the per-page CSP itself is stamped into each page by
 //  scripts/assemble.mjs, with the sha256 of every inline script).
-function secure(res: Response): Response {
+//  A preview deploy (env NOINDEX = "1", wrangler env `preview`) tells every crawler to stay out:
+//  X-Robots-Tag on every response and a robots.txt that disallows everything.
+function secure(res: Response, noindex: boolean): Response {
   const type = res.headers.get("content-type") ?? "";
-  if (!type.includes("text/html")) return res;
+  if (!type.includes("text/html") && !noindex) return res;
   const out = new Response(res.body, res);
+  if (noindex) out.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  if (!type.includes("text/html")) return out;
   out.headers.set("Content-Security-Policy", "frame-ancestors 'none'");
   out.headers.set("X-Content-Type-Options", "nosniff");
   out.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -173,6 +177,10 @@ function secure(res: Response): Response {
 export default {
   fetch(request: Request, env: WorkersEnv, ctx: WorkersExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+    const noindex = env["NOINDEX"] === "1";
+    if (noindex && url.pathname === "/robots.txt") {
+      return Promise.resolve(new Response("User-agent: *\nDisallow: /\n", { headers: { "content-type": "text/plain; charset=utf-8", "X-Robots-Tag": "noindex, nofollow" } }));
+    }
     const moved = (rootRedirects as Record<string, string>)[url.pathname.length > 1 ? url.pathname.replace(/\/+$/, "") : url.pathname];
     if (moved !== undefined) return Promise.resolve(Response.redirect(`${url.origin}${moved}${url.search}`, 301));
     if (url.pathname === "/mcp" && request.method === "POST" && !allow(request.headers.get("cf-connecting-ip") ?? "local")) {
@@ -183,7 +191,7 @@ export default {
     if (typeof env["SITE_ORIGIN"] === "string" && env["SITE_ORIGIN"] !== "") siteOrigin = String(env["SITE_ORIGIN"]).replace(/\/+$/, "");
     const binding = env["ASSETS"];
     if (assets === null && typeof binding === "object" && binding !== null) assets = binding as AssetsBinding;
-    return handler.fetch(request, env, ctx).then(secure);
+    return handler.fetch(request, env, ctx).then((res) => secure(res, noindex));
   },
   scheduled: handler.scheduled,
 };

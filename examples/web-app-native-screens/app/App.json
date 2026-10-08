@@ -1,0 +1,9 @@
+{
+  "name": "Studio",
+  "host": "app.example.com",
+  "entry": {
+    "root": "/",
+    "ota": "/dsx/manifest.json",
+    "surfaces": ["App"]
+  }
+}

@@ -1,0 +1,4 @@
+[
+  { "path": "/settings", "view": "DSXView", "src": "/dsx/settings/" },
+  { "path": "/*" }
+]

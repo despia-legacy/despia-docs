@@ -1,0 +1,9 @@
+{
+  "name": "Studio",
+  "description": "A bookings web app as an iOS and Android app, with a native Settings screen shipped over the air.",
+  "command": "studio",
+  "schemaVersion": 1,
+  "entry": "App",
+  "outDir": "dist",
+  "modules": ["global"]
+}

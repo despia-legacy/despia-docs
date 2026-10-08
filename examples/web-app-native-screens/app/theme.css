@@ -1,0 +1,13 @@
+/* theme.css: the app's tokens (OpenSource/Documentation/guides/theming.md). Re-pin a kernel token and every control that
+   reads it moves at once, on iOS, Android, desktop and the web. New App writes the accent you choose here.
+   The default blues are the ones Apple's own web uses for links (#0066CC light, #2997FF dark): the iOS system blue as
+   text is under the 4.5:1 WCAG floor on light grounds, and an accent is read as text (links, the selected tab). */
+:root {
+  --dsx-accent: #0066CC;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --dsx-accent: #2997FF;
+  }
+}

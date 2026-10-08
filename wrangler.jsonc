@@ -16,5 +16,15 @@
     // one 301 lands on a 200 (scripts/setup-parity.mjs holds that for all 189 v3 pages)
     "html_handling": "drop-trailing-slash"
   },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+  // A private preview: its own worker on workers.dev, never a despia.com route, noindex everywhere.
+  // `npx wrangler deploy --env preview`
+  "env": {
+    "preview": {
+      "name": "despia-docs-preview",
+      "vars": { "NOINDEX": "1" },
+      "workers_dev": true,
+      "routes": []
+    }
+  }
 }
