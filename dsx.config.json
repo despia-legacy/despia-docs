@@ -8,7 +8,7 @@
       "component": "docs.PageIndex",
       "meta": {
         "title": "Despia documentation",
-        "description": "One set of DSX documents, rendered as native iOS, native Android, an installable PWA and a server-rendered site."
+        "description": "Build native iOS and Android apps, a web app and a back end from one set of DSX documents. Start here, by what you want to do."
       }
     },
     {
@@ -40,7 +40,7 @@
       "component": "docs.PageQuickstart",
       "meta": {
         "title": "Quickstart",
-        "description": "From an empty directory to a running DSX app."
+        "description": "From an empty folder to a running Despia app, then on your phone, in five minutes."
       }
     },
     {
@@ -65,6 +65,14 @@
       "meta": {
         "title": "Troubleshooting",
         "description": "Symptom, cause and fix for the problems Despia developers actually hit, on v4 and on the v3 runtime."
+      }
+    },
+    {
+      "path": "/agents",
+      "component": "docs.PageAgents",
+      "meta": {
+        "title": "Use these docs with your agent",
+        "description": "Give Claude Code, Cursor, Codex or any MCP client the Despia documentation: an MCP server, llms.txt and a markdown twin of every page."
       }
     },
     {
@@ -3565,5 +3573,8 @@
         }
       }
     ]
+  },
+  "owner": {
+    "workspace": "despia"
   }
 }

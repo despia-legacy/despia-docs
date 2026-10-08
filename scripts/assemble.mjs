@@ -99,31 +99,3 @@ const injectDocsScript = (dir) => {
 injectDocsScript(dist);
 console.log(`[docs.assemble] public/ artifacts folded into dist/ — one servable tree (${enhanced} page(s) carry docs.js, ${stamped} canonical + markdown alternate, ${secured} strict CSP)`);
 
-// Cloudflare's _headers holds at most 100 rules; `dsx build` writes one `no-cache` rule per route
-// and per index.html (938 for this site: a framework gap, see the lane doc). Fold them into ONE
-// `/*` rule and keep each immutable (content-hashed) asset rule, which detaches the folded
-// Cache-Control first (`! Cache-Control`) so the two values never merge.
-{
-  const headersFile = join(dist, "_headers");
-  if (existsSync(headersFile)) {
-    const rules = [];
-    let at = null;
-    for (const line of readFileSync(headersFile, "utf8").split("\n")) {
-      if (line.startsWith("/")) { at = { path: line.trim(), headers: [] }; rules.push(at); continue; }
-      if (at !== null && line.trim() !== "") at.headers.push(line.trim());
-    }
-    const noCache = (r) => r.headers.length === 1 && r.headers[0] === "Cache-Control: no-cache";
-    const kept = rules.filter((r) => !noCache(r));
-    const folded = rules.length - kept.length;
-    if (folded > 0) {
-      const out = ["/*", "  Cache-Control: no-cache"];
-      for (const r of kept) {
-        out.push(r.path);
-        if (r.headers.some((h) => h.startsWith("Cache-Control:"))) out.push("  ! Cache-Control");
-        for (const h of r.headers) out.push(`  ${h}`);
-      }
-      writeFileSync(headersFile, out.join("\n") + "\n");
-      console.log(`[docs.assemble] _headers: ${folded} no-cache rule(s) folded into /*, ${kept.length} kept (${kept.length + 1} total, limit 100)`);
-    }
-  }
-}

@@ -94,6 +94,55 @@
     });
   }
   markCurrentPage();
+
+  // ── remembered per reader: which sidebar sections are open, and the platform tab picked last.
+  // Both act through the stock controls' own buttons (the Accordion header, the segmented
+  // choice), so the components keep their state; storage is a convenience and may be absent.
+  function remember(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key) || "null") || fallback; } catch (e) { return fallback; }
+  }
+  function keep(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private mode */ }
+  }
+  var SECTIONS = "despia.docs.sections";
+  var TAB = "despia.docs.tab";
+  function sectionHeaders() { return document.querySelectorAll(".doc-nav .doc-nav-section .dsx-accordion-header"); }
+  function tabChoices() { return document.querySelectorAll('.dsx-markdown-tabs [role="radio"], .dsx-markdown-tabs input[type="radio"]'); }
+  function choiceLabel(el) {
+    var label = el.getAttribute("aria-label") || (el.labels && el.labels[0] && el.labels[0].textContent) || el.textContent || "";
+    return label.trim();
+  }
+  function restore() {
+    var open = remember(SECTIONS, {});
+    sectionHeaders().forEach(function (header) {
+      var name = (header.textContent || "").trim();
+      // the section holding this page always stays open
+      if (!(name in open) || header.closest(".doc-nav-section").querySelector('a[aria-current="page"]')) return;
+      if ((header.getAttribute("aria-expanded") === "true") !== open[name]) header.click();
+    });
+    var tab = remember(TAB, "");
+    if (tab !== "") tabChoices().forEach(function (choice) {
+      if (choiceLabel(choice) === tab && choice.getAttribute("aria-checked") !== "true" && !choice.checked) choice.click();
+    });
+  }
+  document.addEventListener("click", function (event) {
+    var target = event.target && event.target.closest ? event.target : null;
+    if (target === null) return;
+    var header = target.closest(".doc-nav .doc-nav-section .dsx-accordion-header");
+    if (header !== null) {
+      var open = remember(SECTIONS, {});
+      // read after the component has toggled
+      setTimeout(function () { open[(header.textContent || "").trim()] = header.getAttribute("aria-expanded") === "true"; keep(SECTIONS, open); }, 0);
+      return;
+    }
+    var choice = target.closest('.dsx-markdown-tabs [role="radio"], .dsx-markdown-tabs input[type="radio"], .dsx-markdown-tabs label');
+    if (choice !== null && event.isTrusted) {
+      var input = choice.tagName === "LABEL" ? choice.querySelector("input") || choice : choice;
+      keep(TAB, choiceLabel(input));
+    }
+  }, true);
+  if (document.readyState === "complete") setTimeout(restore, 300);
+  else window.addEventListener("load", function () { setTimeout(restore, 300); });
   window.addEventListener("popstate", markCurrentPage);
 
   // ── page actions: "Copy page" copies the page's markdown sibling ────────────

@@ -178,7 +178,7 @@ Edit the screen, deploy your site, and the next open shows it. No new build, no 
     <SettingsRow icon="globe" title="Language" value="English" chevron="true"/>
 ```
 
-![The Settings screen after the deploy, with the new Language row](/guides/shots/web-first-ota.png)
+::image{src="/guides/shots/web-first-ota.png" alt="The Settings screen after the deploy, with the new Language row" width="300" height="652"}
 
 *The same installed app on its next open, after the deploy.*
 

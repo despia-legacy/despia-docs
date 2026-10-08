@@ -14,7 +14,7 @@ routes of the app and share data with the native screens.
 This guide builds **Notes**, a native notes app whose **Help Center** is a page from your own site.
 The full example is in the docs repository under `examples/native-app-web-views`.
 
-![Notes on iPhone: the native home screen, with the Plan picker and the Help Center row](/guides/shots/native-first-home.png)
+::image{src="/guides/shots/native-first-home.png" alt="Notes on iPhone: the native home screen, with the Plan picker and the Help Center row" width="300" height="652"}
 
 *The native home screen. iPhone 17 simulator.*
 
