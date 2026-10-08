@@ -49,5 +49,32 @@
         }
       ]
     }
+  ],
+  "patterns": [
+    {
+      "id": "empty-results-1.0.28",
+      "date": "2026-10-08",
+      "evidence": "Owner ruling 2026-10-08 (despia-native stays 1.0.28 unchanged) and the V3/V4 parity review (lanes/CODEX legacy payload review, 50bf0dc097 / a994158aac): under despia-native 1.0.28 an empty purchase history ([]) or an empty contact list ({}) is never delivered to the waiting call; it times out after 30 s and resolves undefined, exactly as V3 did.",
+      "minPages": 6,
+      "callout": "An empty result never arrives (despia-native 1.0.28, the same as Despia V3): when the purchase history is empty (`[]`) or the device has no contacts (`{}`), the call waits 30 seconds and then returns `undefined`. Every example on this page guards for that (`data?.restoredData ?? []`, `data?.contacts ?? {}`); keep the guard in your own code.",
+      "rules": [
+        {
+          "match": "Object\\.(entries|values|keys)\\((\\w+)\\.contacts\\)",
+          "with": "Object.$1($2?.contacts ?? {})"
+        },
+        {
+          "match": "\\b(\\w+)\\.contacts\\b",
+          "with": "$1?.contacts"
+        },
+        {
+          "match": "\\b(\\w+)\\.restoredData(\\s*\\?\\?)",
+          "with": "$1?.restoredData$2"
+        },
+        {
+          "match": "\\b(\\w+)\\.restoredData\\b(?!\\s*\\?\\?)",
+          "with": "($1?.restoredData ?? [])"
+        }
+      ]
+    }
   ]
 }

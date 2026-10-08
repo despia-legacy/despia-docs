@@ -55,19 +55,37 @@ if (existsSync(mapFile)) {
 // ── fact corrections (legacy/corrections.json): verified v3 facts the snapshot gets wrong ─────
 const correctionsFile = join(root, "legacy", "corrections.json");
 const correctionOf = new Map();
+// SITE-WIDE PATTERNS (corrections.json `patterns`): one verified behaviour that many examples get wrong, fixed by
+// regular expressions on every page they match, with the row's callout on each such page. A pattern that matches
+// fewer pages than its `minPages` fails the port (the snapshot moved: re-check the fact).
+const patterns = [];
+const patternHits = new Map();
 if (existsSync(correctionsFile)) {
-  for (const row of JSON.parse(readFileSync(correctionsFile, "utf8")).pages ?? []) correctionOf.set(row.path, row);
+  const doc = JSON.parse(readFileSync(correctionsFile, "utf8"));
+  for (const row of doc.pages ?? []) correctionOf.set(row.path, row);
+  for (const row of doc.patterns ?? []) { patterns.push(row); patternHits.set(row.id, 0); }
 }
 /** Applies a page's corrections to its source; every `find` must still be there (else the fact moved). */
 function correct(path, body, problems) {
-  const row = correctionOf.get(path);
-  if (row === undefined) return body;
   let text = body;
-  for (const edit of row.edits ?? []) {
-    if (!text.includes(edit.find)) { problems.push(`legacy/corrections.json ${path}: text not found (re-check the fact): ${edit.find.split("\n")[0]}`); continue; }
-    text = text.split(edit.find).join(edit.replace);
+  const notes = [];
+  const row = correctionOf.get(path);
+  if (row !== undefined) {
+    for (const edit of row.edits ?? []) {
+      if (!text.includes(edit.find)) { problems.push(`legacy/corrections.json ${path}: text not found (re-check the fact): ${edit.find.split("\n")[0]}`); continue; }
+      text = text.split(edit.find).join(edit.replace);
+    }
+    notes.push(row.callout);
   }
-  return `<Note>\n${row.callout}\n</Note>\n\n${text}`;
+  for (const pattern of patterns) {
+    let hit = false;
+    for (const rule of pattern.rules) {
+      const re = new RegExp(rule.match, "g");
+      if (re.test(text)) { hit = true; text = text.replace(new RegExp(rule.match, "g"), rule.with); }
+    }
+    if (hit) { notes.push(pattern.callout); patternHits.set(pattern.id, patternHits.get(pattern.id) + 1); }
+  }
+  return notes.length === 0 ? text : `${notes.map((n) => `<Note>\n${n}\n</Note>`).join("\n\n")}\n\n${text}`;
 }
 
 // ── navigation ────────────────────────────────────────────────────────────────────────────
@@ -538,6 +556,9 @@ for (const dir of ["images", "logo"]) {
   if (existsSync(join(src, dir))) cpSync(join(src, dir), join(root, "public", "legacy", dir), { recursive: true });
 }
 
+for (const pattern of patterns) {
+  if (patternHits.get(pattern.id) < (pattern.minPages ?? 1)) problems.push(`legacy/corrections.json pattern ${pattern.id}: matched ${patternHits.get(pattern.id)} page(s), expected at least ${pattern.minPages ?? 1} (re-check the fact)`);
+}
 if (problems.length > 0) {
   console.error(`[docs.port-legacy] ${problems.length} problem(s):\n  ${problems.join("\n  ")}`);
   process.exit(1);
