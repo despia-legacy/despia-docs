@@ -159,7 +159,7 @@ function sectionFor(route, meta) {
   if (route.startsWith("/framework/reference/style")) return "styling";
   return route === "/" ? "" : route.split("/")[1];
 }
-const SECTION_RANK = { "": 0, guides: 1, modules: 1.5, components: 2, styling: 3, skills: 4 };
+const SECTION_RANK = { "": 0, guides: 1, services: 1.2, modules: 1.5, components: 2, styling: 3, skills: 4 };
 
 // ── the section splitter (rail anchors) ───────────────────────────────────────────────────
 // A page body splits at its h2/h3 headings (fence-aware) so each section renders as its
@@ -775,7 +775,7 @@ const FA_TO_SF = {
 const sfIcon = (fa) => (fa ? FA_TO_SF[fa] ?? "doc.text" : undefined);
 // Modern and the other spaces: by section, then a few routes of their own.
 const SECTION_ICONS = {
-  Start: "house", Guides: "book", Components: "cube", Styling: "paintbrush", Skills: "hammer",
+  Start: "house", Guides: "book", Components: "cube", Styling: "paintbrush", Skills: "hammer", Services: "server.rack",
   "Move to v4": "arrow.down.doc", Modules: "shippingbox", Troubleshooting: "ladybug", Releases: "newspaper", "App Review": "checkmark.seal",
 };
 const ROUTE_ICONS = {
