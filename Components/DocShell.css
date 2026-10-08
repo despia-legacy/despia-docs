@@ -39,3 +39,14 @@
 .doc-rail-title { font-size: var(--dsx-type-footnote-size, 0.8125rem); font-weight: 600; color: var(--dsx-secondary-label); }
 .doc-outline { font-size: var(--dsx-type-subheadline-size, 0.9375rem); color: var(--dsx-secondary-label); }
 .doc-outline-sub { padding-inline-start: 0.75rem; }
+
+/* The sidebar rows (stock list, plain): icon + label on one line, the SwiftUI sidebar's capsule
+   selection in a neutral fill, hover a background tint only (owner taste: no lift, no ring) */
+.doc-nav .dsx-pressable { display: flex; flex-direction: row; align-items: center; gap: 0.625rem;
+  min-height: 2rem; padding: 0.25rem 0.75rem; border-radius: var(--dsx-radius-control, 0.5rem);
+  color: var(--dsx-label); text-decoration: none; }
+.doc-nav .dsx-pressable .dsx-icon { color: var(--dsx-secondary-label); flex: 0 0 auto; }
+.doc-nav .dsx-pressable:hover { background-color: var(--dsx-state-layer-hover); }
+.doc-nav .dsx-pressable[aria-current="page"] { background-color: var(--dsx-sidebar-selection, color-mix(in srgb, var(--dsx-secondary-label) 20%, transparent)); font-weight: 600; }
+.doc-nav .dsx-list-section-header { background: transparent; }
+.doc-outline a[aria-current] { color: var(--dsx-label); }

@@ -42,9 +42,9 @@
     for (var i = 0; i < sections.length; i += 1) {
       if (sections[i].getBoundingClientRect().top <= 104) currentId = sections[i].id;
     }
-    // the stock Outline's current row is aria-current (its sheet draws it); the heading in view
+    // the On this page row in view is aria-current (DocShell.css draws it); the heading in view
     // is a scroll position, which no DSX binding reads yet (framework gap 22)
-    root.querySelectorAll('.dsx-outline a[href^="#"]').forEach(function (link) {
+    root.querySelectorAll('.doc-outline a[href^="#"]').forEach(function (link) {
       var current = link.getAttribute("href").slice(1) === currentId;
       if (current) link.setAttribute("aria-current", "true");
       else link.removeAttribute("aria-current");
@@ -57,7 +57,7 @@
   }
 
   document.addEventListener("click", function (event) {
-    var link = event.target && event.target.closest ? event.target.closest('.dsx-outline a[href^="#"]') : null;
+    var link = event.target && event.target.closest ? event.target.closest('.doc-outline a[href^="#"]') : null;
     if (link === null) return;
     var id = (link.getAttribute("data-dsx-href") || link.getAttribute("href")).slice(1);
     var target = document.getElementById(id);
@@ -83,6 +83,18 @@
       if (scrollable && (scrollsX || scrollsY)) el.setAttribute("tabindex", "0");
     });
   }
+
+  // ── the sidebar's current page: the link to this path is aria-current="page" (DocShell.css
+  // draws the selection). The list's own selection= is not drawn by the SSR (framework gap).
+  function markCurrentPage() {
+    var path = location.pathname.replace(/\/+$/, "") || "/";
+    document.querySelectorAll(".doc-nav a.dsx-pressable[href]").forEach(function (link) {
+      if (link.getAttribute("href") === path) link.setAttribute("aria-current", "page");
+      else link.removeAttribute("aria-current");
+    });
+  }
+  markCurrentPage();
+  window.addEventListener("popstate", markCurrentPage);
 
   // ── page actions: "Copy page" copies the page's markdown sibling ────────────
   // The sibling is the page's own path plus .md (/ -> /index.md), the same bytes

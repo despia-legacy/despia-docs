@@ -174,6 +174,16 @@ function secure(res: Response, noindex: boolean): Response {
   return out;
 }
 
+//  Declare once, render everywhere: the console's docs panel (and any other Despia surface) reads
+//  the same nav model and markdown siblings this site renders. They are public, credential-free
+//  documents, so they answer any origin; pages and /mcp keep their own rules.
+function readable(path: string, res: Response): Response {
+  if (!(path === "/nav.json" || path.endsWith(".md"))) return res;
+  const out = new Response(res.body, res);
+  out.headers.set("Access-Control-Allow-Origin", "*");
+  return out;
+}
+
 export default {
   fetch(request: Request, env: WorkersEnv, ctx: WorkersExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -191,7 +201,7 @@ export default {
     if (typeof env["SITE_ORIGIN"] === "string" && env["SITE_ORIGIN"] !== "") siteOrigin = String(env["SITE_ORIGIN"]).replace(/\/+$/, "");
     const binding = env["ASSETS"];
     if (assets === null && typeof binding === "object" && binding !== null) assets = binding as AssetsBinding;
-    return handler.fetch(request, env, ctx).then((res) => secure(res, noindex));
+    return handler.fetch(request, env, ctx).then((res) => readable(url.pathname, secure(res, noindex)));
   },
   scheduled: handler.scheduled,
 };
