@@ -15,7 +15,8 @@
     "redirects": "node scripts/redirects.mjs",
     "parity": "node scripts/setup-parity.mjs",
     "bench": "node --experimental-strip-types --no-warnings scripts/bench-search.mjs",
-    "integrations": "node scripts/sync-integrations.mjs"
+    "integrations": "node scripts/sync-integrations.mjs",
+    "hub": "node scripts/sync-hub.mjs"
   },
   "dependencies": {
     "@despia-native/compiler": "0.1.0",

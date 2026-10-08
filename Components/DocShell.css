@@ -21,6 +21,7 @@
 
 .doc-help, .doc-chips { flex-wrap: wrap; gap: 0.5rem; align-items: center; }
 .doc-legacy { gap: 0.25rem; align-items: flex-start; }
+.doc-news { gap: 0.25rem; align-items: stretch; }
 .doc-pager { gap: 0.75rem; align-items: stretch; margin-block-start: 2rem; }
 .doc-pager > * { flex: 1; min-width: 0; }
 

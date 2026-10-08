@@ -38,6 +38,7 @@
     <variable as="scope">return 'This space'</variable>
     <variable as="vector">return []</variable>
     <variable as="moreOpen">return false</variable>
+    <variable as="newsClosed">return ''</variable>
     <variable as="agentsOpen">return false</variable>
     <variable as="spacePick">
       const names = { modern: 'Modern', legacy: 'Legacy v3', migrate: 'Migration', troubleshooting: 'Troubleshooting', releases: 'Releases', 'app-review': 'App Review' }
@@ -46,6 +47,15 @@
     <api as="searchIndex" url="/search-index.json"/>
     <!-- The version menu's list (public/versions.json: latest at /, each older version under /v/<v>/). -->
     <api as="versions" url="/versions.json"/>
+    <!-- The Help hub's docs announcements (scripts/sync-hub.mjs writes public/announcements.json): the newest one sits
+         above the page until the reader closes it. Same origin and served with the page, so it never arrives late. -->
+    <api as="announcements" url="/announcements.json"/>
+    <variable as="news" computed="true">
+      const d = dsx.api.announcements.data
+      const items = d &amp;&amp; Array.isArray(d.items) ? d.items : []
+      const top = items.length &gt; 0 ? items[0] : null
+      return top == null || top.id === dsx.variable.newsClosed ? null : top
+    </variable>
     <formula as="spaceLabel" input:space="dsx.attribute.space">
       if (space === 'legacy') { return 'Legacy v3' }
       if (space === 'migrate') { return 'Migration' }
@@ -251,6 +261,13 @@
           <chip label="{{ 'Removed in ' + dsx.attribute.removed }}" role="danger" visible-if="dsx.attribute.removed !== ''"/>
           <button repeat="dsx.formula.improvedRows" key="id" label="{{ 'Improved in ' + dsx.this.version + ': ' + dsx.this.title }}" variant="plain" href="{{ dsx.this.url }}"/>
         </hstack>
+
+        <vstack class="doc-news" visible-if="dsx.variable.news != null">
+          <Callout tone="info" title="{{ dsx.variable.news == null ? '' : dsx.variable.news.title }}" message="{{ dsx.variable.news == null ? '' : dsx.variable.news.body }}"
+                   dismissible="true" on:dismiss="dsx.variable.newsClosed = dsx.variable.news.id"/>
+          <button label="Learn more" icon="arrow.right" variant="plain" href="{{ dsx.variable.news == null || dsx.variable.news.link == null ? '' : dsx.variable.news.link }}"
+                  visible-if="dsx.variable.news != null &amp;&amp; dsx.variable.news.link != null"/>
+        </vstack>
 
         <vstack class="doc-legacy" visible-if="dsx.attribute.space === 'legacy'">
           <Banner type="info" title="Legacy docs (Despia v3)" message="This page documents despia-native on the v3 runtime."/>
