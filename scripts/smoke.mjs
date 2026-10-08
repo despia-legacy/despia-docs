@@ -49,7 +49,10 @@ async function worker() {
       if ((await page.locator('[role="heading"][aria-level="1"]').count()) === 0) problems.push("no page title drawn");
       // the frame (owner 2026-10-09): a header on every page, no Back button, the appearance control in the sidebar
       if ((await page.locator(".doc-header").count()) === 0) problems.push("no docs header");
-      if ((await page.locator('.dsx-split-back, button[aria-label="Back"]:visible').count()) > 0) problems.push("a Back button");
+      // a Back button of the docs chrome (a live example may draw its own, as the split's example does)
+      const backs = await page.evaluate(() => [...document.querySelectorAll('.dsx-split-back, .dsx-route-back, button[aria-label="Back"]')]
+        .filter((e) => e.getBoundingClientRect().width > 0 && e.closest(".doc-example") === null).length);
+      if (backs > 0) problems.push("a Back button");
       if ((await page.locator(".doc-sidebar .doc-theme-toggle").count()) === 0) problems.push("no appearance control in the sidebar");
       if (problems.length > 0) failures.push(`${route}: ${problems.join("; ")}`);
     } catch (error) {

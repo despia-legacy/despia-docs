@@ -1357,7 +1357,7 @@ function navMarkup(items, sectionIcon, depth, vars) {
     const n = vars.push(`    <variable as="r${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(rows))})</variable>`) - 1;
     out.push(`${pad}<pressable repeat="dsx.variable.r${n}" key="route" href="{{ dsx.this.route }}">
 ${ownIcons ? `${pad}  <image style="font-size: 15px" icon="{{ dsx.this.icon }}" a11yHidden="true"/>\n` : ""}${pad}  <text value="{{ dsx.this.label }}" lineLimit="2"/>
-${run.some((i) => i.alpha) ? `${pad}  <text class="doc-nav-badge" value="Alpha" visible-if="dsx.this.alpha === true"/>\n` : ""}
+
 ${pad}</pressable>`);
     run = [];
   };

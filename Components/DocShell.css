@@ -42,7 +42,7 @@
 @media (width >= 64rem) {
   .doc-subbar, .doc-header-search { display: none; }
 }
-.doc-hits, .doc-nav-slot { flex: 1; min-height: 0; }
+.doc-hits, .doc-nav-slot { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .doc-brand { padding-block: 0.25rem; }
 .doc-agent-row { gap: 0.625rem; align-items: center; }
 
@@ -145,3 +145,7 @@
 .doc-header-row, .doc-subbar, .doc-body { min-width: 0; width: 100%; }
 .doc-body > *, .doc-detail-row, .doc-page { min-width: 0; }
 .doc-ask-panel { max-width: 40vw; }
+
+/* a step's title and its first block breathe like the rest of the page (the stock step's own knob) */
+.doc-page { --dsx-markdown-step-gap: 0.625rem; --dsx-markdown-step-title-leading: 1.4; }
+.doc-nav-section-label .doc-nav-badge { margin-inline-start: 0.25rem; }
