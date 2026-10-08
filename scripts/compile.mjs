@@ -578,7 +578,8 @@ function cardGrid(node, indent) {
       `${indent}  </pressable>`,
     ].join("\n");
   });
-  return `${indent}<grid class="doc-cards doc-cards-${cols}">\n${rows.join("\n")}\n${indent}</grid>`;
+  // the stock adaptive grid: the grid's own width decides the column count (two on a wide page, one on a phone)
+  return `${indent}<grid class="doc-cards" columns="adaptive" minimum="${cols >= 3 ? 220 : 280}" scroll="false">\n${rows.join("\n")}\n${indent}</grid>`;
 }
 /** A run of lines as stock <markdown> (tags lowered to directives), with two exceptions drawn as DSX: a card
  *  group (an icon card grid) and a LIVE EXAMPLE (```xml live: its source becomes a generated component of this
@@ -599,7 +600,7 @@ function compileBody(page, lines, startLine, indent) {
       writeFileSync(join(generatedDir, `${name}.dsx`), `${source}\n`);
       liveOf.set(name, page.component);
       out.push(`${indent}<vstack class="doc-live">`, `${indent}  <stack class="doc-live-preview" role="figure" a11yLabel="Live example"><${name}/></stack>`);
-      out.push(`${indent}  <markdown bind="dsx.variable.md${pushMdVar(page, "```xml\n" + source + "\n```")}"/>`, `${indent}</vstack>`);
+      out.push(`${indent}  <markdown bind="dsx.variable.md${pushMdVar(page, "```dsx\n" + source + "\n```")}"/>`, `${indent}</vstack>`);
       rest = rest.slice(live.index + live[0].length);
     }
     markdown(rest);
@@ -968,8 +969,10 @@ const writeMd = (route, text) => {
 function splitRow(line) {
   return line.trim().replace(/^\|/, "").replace(/\|$/, "").split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
 }
-function apiPage(body) {
+function apiPage(body, label) {
   const lines = body.split("\n");
+  const h1 = lines.findIndex((l) => /^# /.test(l));
+  if (h1 >= 0) lines[h1] = `# ${label}`;
   const out = [];
   let section = "";
   let liveDone = false;
@@ -982,7 +985,8 @@ function apiPage(body) {
       const end = lines.indexOf("```", i + 1);
       const snippet = lines.slice(i + 1, end).join("\n");
       // live only when the snippet stands alone: one root, no state, no bindings to anything it does not declare
-      if (end > i && !/dsx\.|bind=|<head>|\{\{/.test(snippet) && /^<[a-zA-Z]/.test(snippet.trim())) {
+      // the live gate (lint, below) decides whether it draws; here only: one root element
+      if (end > i && /^<[a-zA-Z]/.test(snippet.trim())) {
         out.push("```xml live", snippet, "```");
         i = end;
         liveDone = true;
@@ -995,9 +999,12 @@ function apiPage(body) {
         i += 1;
         const [name, type, def, notes] = splitRow(lines[i]);
         const clean = (v) => (v ?? "").replace(/`/g, "").trim();
-        out.push(`<ParamField name="${clean(name)}" type="${clean(type).replace(/"/g, "'")}"${clean(def) !== "" ? ` default="${clean(def).replace(/"/g, "'")}"` : ""}>`);
-        if (notes && notes.trim() !== "") out.push(notes);
-        out.push("</ParamField>", "");
+        // Stripe's parameter list: the name in code weight, its type and default beside it, what it does below,
+        // a hairline between parameters
+        const meta = [clean(type) !== "" ? `\`${clean(type)}\`` : "", clean(def) !== "" ? `default \`${clean(def)}\`` : ""].filter(Boolean).join(" · ");
+        out.push(`**\`${clean(name)}\`** ${meta}`, "");
+        if (notes && notes.trim() !== "") out.push(notes, "");
+        out.push("---", "");
       }
       continue;
     }
@@ -1007,7 +1014,7 @@ function apiPage(body) {
 }
 
 for (const page of pages) {
-  if (page.meta?.element !== undefined && page.route.startsWith("/components/")) page.body = apiPage(page.body);
+  if (page.meta?.element !== undefined && page.route.startsWith("/components/")) page.body = apiPage(page.body, componentLabel(page.route, page.title));
   const chunks = sectionize(page.body, page.bodyStart);
   const toc = chunks.filter((c) => c.level > 0).map((c) => ({ id: c.id, title: c.title, level: c.level }));
   page.mdVars = [];
@@ -1558,7 +1565,7 @@ if (liveOf.size > 0) {
   }
   const broken = new Map();
   for (const f of findings) {
-    if (f.level !== "error") continue;
+    if (f.level !== "error" && f.level !== "warning") continue;
     const name = /(Live[0-9a-f]+)\.dsx$/.exec(f.file)?.[1];
     if (name !== undefined && !broken.has(name)) broken.set(name, f.message.split(". ")[0]);
   }

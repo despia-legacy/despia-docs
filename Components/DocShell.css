@@ -58,8 +58,7 @@
 
 /* Card groups (compile.mjs cardGrid): stock Cards in a grid, each one link with its icon, title and one line.
    Hover is a background tint only (owner taste); the icon is neutral ink, the title the label ink. */
-.doc-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.75rem; margin-block: 0.5rem 1rem; }
-.doc-cards-3 { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+.doc-cards { margin-block: 0.5rem 1rem; --dsx-card-background: var(--dsx-grouped-background); }
 .doc-card { display: flex; align-items: stretch; text-decoration: none; color: inherit; border-radius: var(--dsx-surface-radius, 14px); }
 .doc-card > * { flex: 1; }
 .doc-card:hover .dsx-card { background: color-mix(in srgb, var(--dsx-label) 6%, var(--dsx-list-cell, var(--dsx-secondary-grouped-background))); }
@@ -76,3 +75,7 @@
 /* Reading rhythm: a wider measure for prose, generous space between sections */
 .doc-page { gap: 1.25rem; }
 .doc-section { margin-block-start: 1.5rem; }
+
+/* Titles: a page title that reads as one, section titles a step below (system type scale) */
+.doc-page [role="heading"][aria-level="1"] { font-size: 2rem; line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; }
+.doc-page [role="heading"][aria-level="2"] { font-size: 1.375rem; line-height: 1.25; font-weight: 650; letter-spacing: -0.01em; }
