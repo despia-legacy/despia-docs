@@ -1,0 +1,5 @@
+{
+  "name": "Notes",
+  "host": "help.example.com",
+  "entry": { "root": "/", "surfaces": ["App"] }
+}

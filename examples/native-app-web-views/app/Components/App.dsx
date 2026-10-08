@@ -1,0 +1,27 @@
+<!-- Notes: the native home screen (stock list, inset grouped). The plan lives in dsx.global.plan so the
+     web help center reads it; the help center writes back the last topic the reader opened. -->
+<vstack style="flex: 1; align-items: stretch">
+  <head>
+    <variable as="notes">
+      return [
+        { id: 'n1', title: 'Groceries', detail: 'Oat milk, lemons, basil' },
+        { id: 'n2', title: 'Trip to Lisbon', detail: 'Book the tram tour' },
+        { id: 'n3', title: 'Ideas', detail: 'A widget for the lock screen' }
+      ]
+    </variable>
+    <variable as="plans">return ['Free', 'Pro']</variable>
+  </head>
+
+  <NavBar title="Notes" large="true"/>
+  <list style="flex: 1">
+    <sectionHeader value="Recent"/>
+    <SettingsRow repeat="dsx.variable.notes" key="id" icon="note.text" title="{{ dsx.this.title }}" subtitle="{{ dsx.this.detail }}"/>
+    <sectionHeader value="Account"/>
+    <SettingsRow icon="star" title="Plan">
+      <segmented bind="dsx.global.plan" options="{{ dsx.variable.plans }}" label="Plan"/>
+    </SettingsRow>
+    <SettingsRow icon="questionmark.circle" title="Help Center" value="{{ dsx.global.support.lastTopic || '' }}" chevron="true"
+                 tappable="true" on:tap="dsx.module.route.push({ path: '/help' })"/>
+    <sectionFooter value="The Help Center is a web page from your own site, shown in the app."/>
+  </list>
+</vstack>

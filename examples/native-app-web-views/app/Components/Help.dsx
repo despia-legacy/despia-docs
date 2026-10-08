@@ -1,0 +1,3 @@
+<!-- Help: a route that is a web view. The page is your existing help center; it reads and writes
+     the same dsx.global store as the native screens. -->
+<DSXWebView origin="https://help.example.com" path="/help" style="width: 100%; height: 100%"/>

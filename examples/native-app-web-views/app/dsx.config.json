@@ -1,0 +1,13 @@
+{
+  "name": "Notes",
+  "description": "A native notes app with its help center as a web view route.",
+  "command": "notes",
+  "schemaVersion": 1,
+  "entry": "App",
+  "outDir": "dist",
+  "modules": ["global"],
+  "routes": [
+    { "path": "/", "component": "notes.App", "meta": { "title": "Notes" } },
+    { "path": "/help", "component": "notes.Help", "meta": { "title": "Help" } }
+  ]
+}
