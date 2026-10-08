@@ -117,11 +117,11 @@
       <list bind="dsx.variable.rows" key="id">
         <row>
           <hstack style="gap: 0.75rem; align-items: center" a11yGroup="true">
-            <image style="color: var(--dsx-accent)" icon="{{ dsx.this.icon }}" iconSize="18"/>
+            <image style="font-size: 18px; color: var(--dsx-accent)" icon="{{ dsx.this.icon }}"/>
             <text bind="dsx.this.title"/>
             <spacer/>
             <text bind="dsx.this.detail" style="color: var(--dsx-secondary-label)"/>
-            <image style="color: var(--dsx-tertiary-label)" icon="chevron.right" iconSize="13"/>
+            <image style="font-size: 13px; color: var(--dsx-tertiary-label)" icon="chevron.right"/>
           </hstack>
         </row>
       </list>
@@ -148,11 +148,11 @@
       </hstack>
       <hstack style="gap: 1.5rem; align-items: center">
         <stack style="display: grid">
-          <image icon="bell.fill" iconSize="24" style="grid-area: 1 / 1; color: var(--dsx-secondary-label)"/>
+          <image icon="bell.fill" style="font-size: 24px; grid-area: 1 / 1; color: var(--dsx-secondary-label)"/>
           <stack style="grid-area: 1 / 1; justify-self: end; align-self: start; width: 0.6rem; height: 0.6rem; border-radius: 999px; background: var(--dsx-destructive); margin: -0.15rem -0.15rem 0 0"/>
         </stack>
         <stack style="display: grid">
-          <image icon="tray" iconSize="24" style="grid-area: 1 / 1; color: var(--dsx-secondary-label)"/>
+          <image icon="tray" style="font-size: 24px; grid-area: 1 / 1; color: var(--dsx-secondary-label)"/>
           <stack style="grid-area: 1 / 1; justify-self: end; align-self: start; display: grid; place-items: center; min-width: 1.1rem; min-height: 1.1rem; padding: 0 0.25rem; border-radius: 999px; background: var(--dsx-destructive); margin: -0.45rem -0.55rem 0 0">
             <text value="3" style="font-size: 0.68rem; font-weight: 600; color: var(--dsx-on-destructive)"/>
           </stack>
@@ -165,16 +165,16 @@
       <stack style="gap: 0.75rem">
         <hstack role="navigation" a11yLabel="Breadcrumb, chevron style" style="gap: 0.375rem; align-items: center; flex-wrap: wrap">
           <pressable href="/"><text value="Docs" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
-          <image style="color: var(--dsx-tertiary-label)" icon="chevron.right" iconSize="11" a11yHidden="true"/>
+          <image style="font-size: 11px; color: var(--dsx-tertiary-label)" icon="chevron.right" a11yHidden="true"/>
           <pressable href="/quickstart"><text value="Quickstart" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
-          <image style="color: var(--dsx-tertiary-label)" icon="chevron.right" iconSize="11" a11yHidden="true"/>
+          <image style="font-size: 11px; color: var(--dsx-tertiary-label)" icon="chevron.right" a11yHidden="true"/>
           <text value="Requirements" style="font-size: 0.875rem; font-weight: 600"/>
         </hstack>
         <hstack role="navigation" a11yLabel="Breadcrumb, dot style" style="gap: 0.5rem; align-items: center; flex-wrap: wrap">
           <pressable href="/"><text value="Docs" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
-          <image style="color: var(--dsx-tertiary-label)" icon="circle.fill" iconSize="4" a11yHidden="true"/>
+          <image style="font-size: 4px; color: var(--dsx-tertiary-label)" icon="circle.fill" a11yHidden="true"/>
           <pressable href="/system"><text value="System" style="font-size: 0.875rem; color: var(--dsx-secondary-label)"/></pressable>
-          <image style="color: var(--dsx-tertiary-label)" icon="circle.fill" iconSize="4" a11yHidden="true"/>
+          <image style="font-size: 4px; color: var(--dsx-tertiary-label)" icon="circle.fill" a11yHidden="true"/>
           <text value="Badge" style="font-size: 0.875rem; font-weight: 600"/>
         </hstack>
       </stack>
@@ -189,7 +189,7 @@
         <button label="Next" variant="bordered" tooltip="Continue to review" tooltipSide="trailing"/>
       </hstack>
       <hstack style="gap: 0.6rem; align-items: center">
-        <image style="color: var(--dsx-secondary-label)" icon="info.circle.fill" iconSize="18" tooltip="Any element can carry a hint, icons included"/>
+        <image style="font-size: 18px; color: var(--dsx-secondary-label)" icon="info.circle.fill" tooltip="Any element can carry a hint, icons included"/>
         <text value="Hover the row above and hold still a moment, or tab through it: the hint appears beside its side word."
               style="color: var(--dsx-secondary-label); font-size: 0.85rem; flex: 1"/>
       </hstack>

@@ -34,3 +34,8 @@
 .doc-ts-list, .doc-ts-fixed-list { gap: 0.75rem; }
 .doc-ts-card-meta, .doc-fixed-top { gap: 0.5rem; align-items: center; flex-wrap: wrap; }
 .doc-ar-search > * { width: 100%; }
+
+/* On this page (stock list, plain): a footnote-size title, rows in the secondary ink, h3 rows indented */
+.doc-rail-title { font-size: var(--dsx-type-footnote-size, 0.8125rem); font-weight: 600; color: var(--dsx-secondary-label); }
+.doc-outline { font-size: var(--dsx-type-subheadline-size, 0.9375rem); color: var(--dsx-secondary-label); }
+.doc-outline-sub { padding-inline-start: 0.75rem; }

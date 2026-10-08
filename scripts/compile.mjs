@@ -575,7 +575,9 @@ function spaceOf(route) {
   for (const s of SPACES.slice(1)) if (route === s.prefix || route.startsWith(s.prefix + "/")) return s.id;
   return "modern";
 }
-const site = "https://docs.despia.com";
+// The canonical origin pages, the sitemap and dsx.config.json name. DOCS_SITE_URL points a build at
+// another origin (the private noindex preview on workers.dev) without touching content.
+const site = (process.env.DOCS_SITE_URL ?? "https://docs.despia.com").replace(/\/+$/, "");
 // The Despia Support origin (vector search + the Ask AI widget): one knob, DOCS_SUPPORT_ORIGIN,
 // read here and written to both consumers (the DocShell attribute and the web.head meta docs.js
 // reads). Empty turns vector search off; the keyword index always works.
@@ -1215,7 +1217,7 @@ function navMarkup(items, sectionIcon, depth, vars) {
     const rows = run.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sectionIcon ?? "doc.text" }));
     const n = vars.push(`    <variable as="r${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(rows))})</variable>`) - 1;
     out.push(`${pad}<pressable repeat="dsx.variable.r${n}" key="route" href="{{ dsx.this.route }}">
-${ownIcons ? `${pad}  <image icon="{{ dsx.this.icon }}" iconSize="15" a11yHidden="true"/>\n` : ""}${pad}  <text value="{{ dsx.this.label }}" lineLimit="2"/>
+${ownIcons ? `${pad}  <image style="font-size: 15px" icon="{{ dsx.this.icon }}" a11yHidden="true"/>\n` : ""}${pad}  <text value="{{ dsx.this.label }}" lineLimit="2"/>
 ${pad}</pressable>`);
     run = [];
   };
@@ -1225,7 +1227,7 @@ ${pad}</pressable>`);
     const routes = JSON.stringify(flatItems(item.items).map((i) => i.route)).replace(/"/g, "'");
     out.push(`${pad}<row>
 ${pad}  <Accordion title="${escapeForDsxAttr(item.group)}" icon="${escapeForDsxAttr(item.icon ?? sectionIcon ?? "folder")}" open="${item.defaultOpen ? "true" : `{{ ${routes}.includes(dsx.attribute.route) }}`}">
-${pad}    <list style="appearance: sidebar" selection="dsx.variable.current" scroll="false">
+${pad}    <list style="appearance: none" selection="dsx.variable.current" scroll="false">
 ${navMarkup(item.items, item.icon ?? sectionIcon, depth + 2, vars)}
 ${pad}    </list>
 ${pad}  </Accordion>
@@ -1252,7 +1254,7 @@ for (const s of SPACES) {
     <variable as="current">return dsx.attribute.route</variable>
 ${vars.join("\n")}
   </head>
-  <list style="appearance: sidebar" selection="dsx.variable.current" scroll="false">
+  <list style="appearance: none" selection="dsx.variable.current" scroll="false">
 ${body}
   </list>
 </vstack>

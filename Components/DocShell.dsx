@@ -132,8 +132,8 @@
          not just the space's own name, then the page -->
     <formula as="crumbs" input:section="dsx.attribute.section" input:label="dsx.attribute.label" input:title="dsx.attribute.title" input:route="dsx.attribute.route" input:home="dsx.formula.spaceHome" input:spaceName="dsx.formula.spaceLabel">
       const rows = []
-      if (section !== '' && section !== spaceName) { rows.push({ label: section, path: home }) }
-      rows.push({ label: label !== '' ? label : title, path: route })
+      if (section !== '' && section !== spaceName) { rows.push({ title: section, href: home }) }
+      rows.push({ title: label !== '' ? label : title, current: true })
       return JSON.stringify(rows)
     </formula>
     <formula as="spaceNames" input:list="dsx.formula.spaceList">return list.map((s) => s.label).join(',')</formula>
@@ -199,7 +199,7 @@
     </pressable>
     <searchbar bind="dsx.variable.query" placeholder="Search"/>
     <segmented bind="dsx.variable.scope" options="This space,All spaces" label="Search scope" visible-if="dsx.variable.query.length >= 2"/>
-    <list bind="dsx.formula.hitRows" key="id" group_by="group" class="doc-hits" style="appearance: sidebar" visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length > 0">
+    <list bind="dsx.formula.hitRows" key="id" group_by="group" class="doc-hits" style="appearance: none" visible-if="dsx.variable.query.length >= 2 &amp;&amp; dsx.formula.hitRows.length > 0">
       <row href="{{ dsx.this.route }}" on:tap="dsx.variable.query = ''">
         <text value="{{ dsx.this.title }}" lineLimit="2"/>
       </row>
@@ -224,7 +224,7 @@
     </NavBar>
     <hstack class="doc-detail-row">
       <vstack class="doc-page">
-        <Breadcrumb bind="{{ dsx.formula.crumbs }}" visible-if="dsx.attribute.route !== dsx.formula.spaceHome &amp;&amp; JSON.parse(dsx.formula.crumbs).length > 1"/>
+        <Breadcrumbs items="{{ dsx.formula.crumbs }}" visible-if="dsx.attribute.route !== dsx.formula.spaceHome &amp;&amp; JSON.parse(dsx.formula.crumbs).length > 1"/>
 
         <!-- Page help: ONE copy button and ONE menu (owner taste: never a strip of 3+ buttons). The menu
              holds the agents (the page goes as context), Ask AI, and the page's own links. Rows with a
@@ -234,7 +234,7 @@
           <popover present="dsx.variable.moreOpen" on:dismiss="dsx.variable.moreOpen = false" arrow="top">
             <button icon="ellipsis" variant="bordered" a11yLabel="More ways to use this page" on:tap="dsx.variable.moreOpen = !dsx.variable.moreOpen"/>
             <scroll slot="content">
-              <list bind="dsx.formula.pageRows" key="id" group_by="group" scroll="false" style="appearance: sidebar">
+              <list bind="dsx.formula.pageRows" key="id" group_by="group" scroll="false" style="appearance: none">
                 <row href="{{ dsx.this.href }}" on:tap="dsx.variable.moreOpen = false">
                   <hstack class="doc-agent-row">
                     <image src="{{ dsx.this.mark }}" visible-if="dsx.this.mark !== ''" a11yHidden="true" style="width: 20px; height: 20px"/>
@@ -278,7 +278,13 @@
       </vstack>
 
       <vstack class="doc-rail" visible-if="dsx.formula.tocRows.length >= 2">
-        <Outline title="On this page" items="{{ dsx.attribute.toc }}"/>
+        <!-- On this page: a stock plain list of in-page links (h3 rows indented by class) -->
+        <text value="On this page" class="doc-rail-title"/>
+        <list bind="dsx.formula.tocRows" key="id" scroll="false" class="doc-outline" style="appearance: none" a11yLabel="On this page">
+          <row href="{{ '#' + dsx.this.id }}" class="{{ dsx.this.level > 2 ? 'doc-outline-sub' : '' }}">
+            <text value="{{ dsx.this.title }}" lineLimit="2"/>
+          </row>
+        </list>
       </vstack>
     </hstack>
   </scroll>

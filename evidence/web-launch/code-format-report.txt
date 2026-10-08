@@ -1,3 +1,12 @@
+content/framework/guides/styling.md:~135 json block does not parse; left as written
+content/framework/skills/audio.md:~61 js one-liner of 106 chars; needs a JS formatter
+content/framework/skills/audio.md:~78 js one-liner of 103 chars; needs a JS formatter
+content/framework/skills/cookies.md:~86 json block does not parse; left as written
+content/framework/skills/localization.md:~101 json block does not parse; left as written
+content/framework/skills/manifest-dsl.md:~638 json block does not parse; left as written
+content/framework/skills/manifest-dsl.md:~712 json block does not parse; left as written
+content/framework/skills/module-state.md:~163 json block does not parse; left as written
+content/framework/skills/writing-a-module.md:~12 json block does not parse; left as written
 content/legacy/lovable/native-features/quick-actions.md:~13 javascript one-liner of 111 chars; needs a JS formatter
 content/legacy/lovable/native-features/print-documents.md:~66 javascript one-liner of 102 chars; needs a JS formatter
 content/legacy/lovable/native-features/print-documents.md:~66 javascript one-liner of 108 chars; needs a JS formatter
