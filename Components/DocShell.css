@@ -152,3 +152,4 @@
 /* a section row holds its whole DisclosureGroup: block layout, it grows with the open group */
 .doc-nav .doc-nav-section { display: block; padding: 0; }
 .doc-nav .doc-nav-section:hover { background-color: transparent; }
+.doc-nav-section .dsx-accordion-header { padding-inline: 0.75rem; min-height: 2rem; }
