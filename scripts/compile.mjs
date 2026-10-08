@@ -553,27 +553,63 @@ function formatFences(page, text, startLine) {
 /** A run of lines as stock <markdown> (tags lowered to directives). A LIVE EXAMPLE (```xml live) is the one
  *  exception: its source becomes a generated component of this site, drawn by the same runtime the reader is
  *  using, above the same source as a code block. One DSX document, rendered and shown. */
+const liveOf = new Map();                     // Live<hash> -> the page component that draws it
 const LIVE_FENCE = /^```(?:xml|dsx) live\n([\s\S]*?)\n```[ \t]*$/m;
+/** A card group as a grid of stock Cards, each a link with its icon, title and one line (data: the Card's own
+ *  `icon`, else data/icons.json for the page it links to). */
+function cardGrid(node, indent) {
+  const cards = node.children.filter((k) => k.tag === "Card");
+  const cols = Math.min(3, Math.max(1, Number(attrValue(node.attrs, "cols") ?? 2) || 2));
+  const rows = cards.map((card) => {
+    const title = decodeAttr(attrValue(card.attrs, "title")) ?? "";
+    const href = decodeAttr(attrValue(card.attrs, "href")) ?? "";
+    const target = byRoute.get(href);
+    const icon = declaredIcon(decodeAttr(attrValue(card.attrs, "icon")) ?? undefined) ?? (target !== undefined ? pageIconOf(target) : ICONS.fallback);
+    const line = mdText(card.children).replace(/\s+/g, " ").trim();
+    return [
+      `${indent}  <pressable class="doc-card" href="${escapeForDsxAttr(href)}" a11yLabel="${escapeForDsxAttr(title)}">`,
+      `${indent}    <Card>`,
+      `${indent}      <vstack class="doc-card-body">`,
+      `${indent}        <image class="doc-card-icon" icon="${icon}" a11yHidden="true"/>`,
+      `${indent}        <text class="doc-card-title" value="${escapeForDsxAttr(title)}"/>`,
+      ...(line !== "" ? [`${indent}        <text class="doc-card-line" value="${escapeForDsxAttr(line)}"/>`] : []),
+      `${indent}      </vstack>`,
+      `${indent}    </Card>`,
+      `${indent}  </pressable>`,
+    ].join("\n");
+  });
+  return `${indent}<grid class="doc-cards doc-cards-${cols}">\n${rows.join("\n")}\n${indent}</grid>`;
+}
+/** A run of lines as stock <markdown> (tags lowered to directives), with two exceptions drawn as DSX: a card
+ *  group (an icon card grid) and a LIVE EXAMPLE (```xml live: its source becomes a generated component of this
+ *  site, drawn by the same runtime the reader is using, above the same source as a code block). */
 function compileBody(page, lines, startLine, indent) {
-  const text = formatFences(page, emitDirectives(tagTree(page, lines, startLine)).replace(/^\n+|\n+$/g, ""), startLine);
-  if (text.trim() === "") return [];
   const out = [];
   const markdown = (md) => {
     if (md.trim() === "") return;
     const field = md.includes(":field[") ? ` components="${MD_COMPONENTS}"` : "";
     out.push(`${indent}<markdown bind="dsx.variable.md${pushMdVar(page, md)}"${field}/>`);
   };
-  let rest = text;
-  for (let live = LIVE_FENCE.exec(rest); live !== null; live = LIVE_FENCE.exec(rest)) {
-    markdown(rest.slice(0, live.index));
-    const source = live[1];
-    const name = `Live${createHash("sha256").update(source).digest("hex").slice(0, 10)}`;
-    writeFileSync(join(generatedDir, `${name}.dsx`), `${source}\n`);
-    out.push(`${indent}<vstack class="doc-live">`, `${indent}  <stack class="doc-live-preview" role="figure" a11yLabel="Live example"><${name}/></stack>`);
-    out.push(`${indent}  <markdown bind="dsx.variable.md${pushMdVar(page, "```xml\n" + source + "\n```")}"/>`, `${indent}</vstack>`);
-    rest = rest.slice(live.index + live[0].length);
+  const prose = (nodes) => {
+    let rest = formatFences(page, emitDirectives(nodes).replace(/^\n+|\n+$/g, ""), startLine);
+    for (let live = LIVE_FENCE.exec(rest); live !== null; live = LIVE_FENCE.exec(rest)) {
+      markdown(rest.slice(0, live.index));
+      const source = live[1];
+      const name = `Live${createHash("sha256").update(source).digest("hex").slice(0, 10)}`;
+      writeFileSync(join(generatedDir, `${name}.dsx`), `${source}\n`);
+      liveOf.set(name, page.component);
+      out.push(`${indent}<vstack class="doc-live">`, `${indent}  <stack class="doc-live-preview" role="figure" a11yLabel="Live example"><${name}/></stack>`);
+      out.push(`${indent}  <markdown bind="dsx.variable.md${pushMdVar(page, "```xml\n" + source + "\n```")}"/>`, `${indent}</vstack>`);
+      rest = rest.slice(live.index + live[0].length);
+    }
+    markdown(rest);
+  };
+  let run = [];
+  for (const node of tagTree(page, lines, startLine)) {
+    if (node.tag === "CardGroup") { prose(run); run = []; out.push(cardGrid(node, indent)); continue; }
+    run.push(node);
   }
-  markdown(rest);
+  prose(run);
   return out;
 }
 
@@ -794,22 +830,30 @@ const FA_TO_SF = {
   "pen-nib": "pencil", book: "book", "bullseye-arrow": "target", stamp: "checkmark.seal", google: "globe", alt: "doc.text",
 };
 const sfIcon = (fa) => (fa ? FA_TO_SF[fa] ?? "doc.text" : undefined);
-// Modern and the other spaces: by section, then a few routes of their own.
-const SECTION_ICONS = {
-  Start: "house", Guides: "book", Components: "cube", Styling: "paintbrush", Skills: "hammer", Services: "server.rack",
-  "Move to v4": "arrow.down.doc", Modules: "shippingbox", Troubleshooting: "ladybug", Releases: "newspaper", "App Review": "checkmark.seal",
-};
-const ROUTE_ICONS = {
-  "/": "house", "/quickstart": "bolt", "/system": "paintbrush", "/writing-docs": "pencil",
-  "/migrate": "info.circle", "/migrate/guide": "list.bullet", "/migrate/map": "map",
-  "/troubleshooting": "list.bullet", "/framework/modules": "shippingbox", "/framework/guides/build-a-module": "hammer", "/releases": "newspaper", "/app-review": "list.bullet",
-};
+// Every page, section and card: data/icons.json, declared once (owner 2026-10-08: no page without an icon).
+const ICONS = JSON.parse(readFileSync(join(root, "data", "icons.json"), "utf8"));
+const SECTION_ICONS = ICONS.sections;
+const ROUTE_ICONS = ICONS.routes;
+const ICON_RULES = ICONS.rules.map((r) => ({ re: new RegExp(r.match, "i"), icon: r.icon }));
+const onFallback = [];
+/** A front matter `icon:` may be an SF name or a Mintlify FontAwesome name. */
+const declaredIcon = (name) => (name === undefined || name === "" ? undefined : FA_TO_SF[name] ?? name);
+function pageIconOf(p, sectionName) {
+  const own = declaredIcon(p.meta?.icon);
+  if (own !== undefined) return own;
+  if (ROUTE_ICONS[p.route] !== undefined) return ROUTE_ICONS[p.route];
+  const rule = ICON_RULES.find((r) => r.re.test(p.route) || r.re.test(String(p.title)));
+  if (rule !== undefined) return rule.icon;
+  if (sectionName !== undefined && SECTION_ICONS[sectionName] !== undefined) return SECTION_ICONS[sectionName];
+  onFallback.push(p.route);
+  return ICONS.fallback;
+}
 
 // ── the nav model, per space ──────────────────────────────────────────────────────────────
 // A section is { name, items }; an item is a page { route, title, label } or a nested group
 // { group, items }. Modern keeps its reading-rank sections; Legacy replays docs.json's own
 // groups and order; Migration and Troubleshooting group by front-matter section.
-const navItem = (p, icon) => ({ route: p.route, title: p.title, label: pageLabel(p), icon: icon ?? ROUTE_ICONS[p.route] ?? (p.space === "modern" ? undefined : "doc.text") });
+const navItem = (p, icon, sectionName) => ({ route: p.route, title: p.title, label: pageLabel(p), icon: icon !== undefined && icon !== "doc.text" ? icon : pageIconOf(p, sectionName) });
 const byRoute = new Map(entries.map((p) => [p.route, p]));
 const navBySpace = {};
 {
@@ -818,7 +862,7 @@ const navBySpace = {};
     const name = page.section === "" ? "Start" : page.section.replace(/(^|-)([a-z])/g, (_, __, c) => " " + c.toUpperCase()).trim();
     let section = sections.find((s) => s.name === name);
     if (section === undefined) { section = { name, rank: SECTION_RANK[page.section] ?? 9, items: [] }; sections.push(section); }
-    section.items.push(navItem(page));
+    section.items.push(navItem(page, undefined, name));
   }
   sections.sort((a, b) => a.rank - b.rank);
   navBySpace.modern = sections;
@@ -844,7 +888,7 @@ for (const id of ["migrate", "troubleshooting", "app-review", "releases"]) {
     const name = page.section === "" ? spaceById[id].label : page.section;
     let section = sections.find((s) => s.name === name);
     if (section === undefined) { section = { name, items: [] }; sections.push(section); }
-    section.items.push(navItem(page));
+    section.items.push(navItem(page, undefined, name));
   }
   navBySpace[id] = sections;
 }
@@ -917,7 +961,53 @@ const writeMd = (route, text) => {
   }
 };
 
+// ── the component reference, as an API reference (owner 2026-10-08: Stripe/Mintlify quality) ──────────────────
+// A generated component page (front matter `element:`) reads like an API page: the usage drawn LIVE above its source
+// when it stands alone, every attribute a field row (name, type, default, then what it does), and no internal audit
+// table (the States evidence stays in the framework repo). The markdown twin keeps the page as written.
+function splitRow(line) {
+  return line.trim().replace(/^\|/, "").replace(/\|$/, "").split(/(?<!\\)\|/).map((c) => c.trim().replace(/\\\|/g, "|"));
+}
+function apiPage(body) {
+  const lines = body.split("\n");
+  const out = [];
+  let section = "";
+  let liveDone = false;
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = lines[i];
+    const heading = /^## (.+)$/.exec(line);
+    if (heading !== null) section = heading[1].trim();
+    if (section === "States") continue;
+    if (section === "Usage" && !liveDone && /^```dsx\s*$/.test(line)) {
+      const end = lines.indexOf("```", i + 1);
+      const snippet = lines.slice(i + 1, end).join("\n");
+      // live only when the snippet stands alone: one root, no state, no bindings to anything it does not declare
+      if (end > i && !/dsx\.|bind=|<head>|\{\{/.test(snippet) && /^<[a-zA-Z]/.test(snippet.trim())) {
+        out.push("```xml live", snippet, "```");
+        i = end;
+        liveDone = true;
+        continue;
+      }
+    }
+    if (section === "Attributes" && /^\| Attribute \|/.test(line)) {
+      i += 1;                                                   // the |---| rule
+      while (i + 1 < lines.length && lines[i + 1].startsWith("|")) {
+        i += 1;
+        const [name, type, def, notes] = splitRow(lines[i]);
+        const clean = (v) => (v ?? "").replace(/`/g, "").trim();
+        out.push(`<ParamField name="${clean(name)}" type="${clean(type).replace(/"/g, "'")}"${clean(def) !== "" ? ` default="${clean(def).replace(/"/g, "'")}"` : ""}>`);
+        if (notes && notes.trim() !== "") out.push(notes);
+        out.push("</ParamField>", "");
+      }
+      continue;
+    }
+    out.push(line);
+  }
+  return out.join("\n");
+}
+
 for (const page of pages) {
+  if (page.meta?.element !== undefined && page.route.startsWith("/components/")) page.body = apiPage(page.body);
   const chunks = sectionize(page.body, page.bodyStart);
   const toc = chunks.filter((c) => c.level > 0).map((c) => ({ id: c.id, title: c.title, level: c.level }));
   page.mdVars = [];
@@ -1232,7 +1322,8 @@ function navMarkup(items, sectionIcon, depth, vars) {
     if (run.length === 0) return;
     // a run whose pages carry no icon of their own shows none: thirty copies of the section's icon
     // (or the generic page glyph) down a column is noise, not wayfinding (polish pass 2026-10-03)
-    const ownIcons = run.some((i) => i.icon !== undefined && i.icon !== "doc.text");
+    // every row wears its own icon (data/icons.json): the reader scans by shape as much as by word
+    const ownIcons = true;
     const rows = run.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sectionIcon ?? "doc.text" }));
     const n = vars.push(`    <variable as="r${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(rows))})</variable>`) - 1;
     out.push(`${pad}<pressable repeat="dsx.variable.r${n}" key="route" href="{{ dsx.this.route }}">
@@ -1267,8 +1358,13 @@ for (const s of SPACES) {
     if (quiet(section.name, i)) return navMarkup(section.items, section.icon ?? SECTION_ICONS[section.name], 0, vars);
     const rows = navMarkup(section.items, section.icon ?? SECTION_ICONS[section.name], 1, vars);
     const n = vars.push(`    <variable as="sec${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(flatItems(section.items).map((x) => x.route)))})</variable>`) - 1;
+    const sectionIcon = section.icon ?? SECTION_ICONS[section.name] ?? ICONS.fallback;
     return `    <row class="doc-nav-section">
       <Accordion title="${escapeForDsxAttr(section.name)}" open="{{ dsx.variable.sec${n}.includes(dsx.attribute.route) }}">
+        <hstack slot="header" class="doc-nav-section-label">
+          <image icon="${sectionIcon}" style="font-size: 15px" a11yHidden="true"/>
+          <text value="${escapeForDsxAttr(section.name)}"/>
+        </hstack>
         <list style="appearance: none" selection="dsx.variable.current" scroll="false">
 ${rows}
         </list>
@@ -1447,4 +1543,33 @@ writeFileSync(join(root, "evidence", "web-launch", "code-format-report.txt"),
   formatReport.length === 0 ? "every json block parsed; no one-line JS/TS over 100 chars\n" : formatReport.join("\n") + "\n");
 
 const counts = SPACES.map((s) => `${s.id} ${entries.filter((p) => p.space === s.id).length}`).join(", ");
+// ── live examples are proven before they ship: each generated Live<hash> is linted with the real toolchain, and
+//    one that does not lint (an example teaching a retired attribute, a component this site does not carry) stays a
+//    code block only, named here so its source gets fixed. A page never draws a broken example. ──
+if (liveOf.size > 0) {
+  const files = [...liveOf.keys()].map((name) => join(generatedDir, `${name}.dsx`));
+  let findings = [];
+  try {
+    const out = execFileSync(process.execPath, [join(root, "node_modules", "@despia-native", "cli", "dist", "bin", "despia.js"), "lint", "--json", ...files],
+      { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"], maxBuffer: 16 << 20 });
+    findings = JSON.parse(out).findings ?? [];
+  } catch (error) {
+    findings = JSON.parse(String(error.stdout ?? "{}")).findings ?? [];
+  }
+  const broken = new Map();
+  for (const f of findings) {
+    if (f.level !== "error") continue;
+    const name = /(Live[0-9a-f]+)\.dsx$/.exec(f.file)?.[1];
+    if (name !== undefined && !broken.has(name)) broken.set(name, f.message.split(". ")[0]);
+  }
+  for (const [name, why] of broken) {
+    const pageFile = join(generatedDir, `${liveOf.get(name)}.dsx`);
+    writeFileSync(pageFile, readFileSync(pageFile, "utf8").split("\n").filter((l) => !l.includes(`<${name}/>`)).join("\n"));
+    rmSync(join(generatedDir, `${name}.dsx`), { force: true });
+    formatReport.push(`live example not drawn (${liveOf.get(name)}): ${why}`);
+  }
+  console.log(`[docs.compile] live examples: ${liveOf.size - broken.size} drawn, ${broken.size} kept as code only (they do not lint: fix their source)`);
+  for (const [name, why] of broken) console.log(`  ${liveOf.get(name)}: ${why}`);
+}
+if (onFallback.length > 0) console.log(`[docs.compile] ${onFallback.length} page(s) on the fallback icon (add a data/icons.json row): ${onFallback.slice(0, 12).join(" ")}`);
 console.log(`[docs.compile] ${entries.length} route(s) (${counts}) → Components/pages (+ DocNav per space, SystemCards), routes, nav, search index, md siblings, llms per space, sitemap`);

@@ -1,6 +1,6 @@
 /*
-  DocShell: LAYOUT ONLY (owner ruling 2026-10-03). Every look is the stock component's: no colour,
-  radius, shadow, border or type size is declared here.
+  DocShell: layout first (owner ruling 2026-10-03). Looks come from the stock components; the few inks
+  and sizes here are the system tokens (cards, sidebar labels, the live example surface).
 */
 
 .doc-shell {
@@ -55,3 +55,24 @@
 /* A live example: the document drawn by this runtime, on the grouped surface, above its source */
 .doc-live { gap: 0.5rem; align-items: stretch; }
 .doc-live-preview { padding: 1.5rem; border-radius: var(--dsx-surface-radius, 14px); background: var(--dsx-grouped-background); align-items: center; justify-content: center; }
+
+/* Card groups (compile.mjs cardGrid): stock Cards in a grid, each one link with its icon, title and one line.
+   Hover is a background tint only (owner taste); the icon is neutral ink, the title the label ink. */
+.doc-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 0.75rem; margin-block: 0.5rem 1rem; }
+.doc-cards-3 { grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr)); }
+.doc-card { display: flex; align-items: stretch; text-decoration: none; color: inherit; border-radius: var(--dsx-surface-radius, 14px); }
+.doc-card > * { flex: 1; }
+.doc-card:hover .dsx-card { background: color-mix(in srgb, var(--dsx-label) 6%, var(--dsx-list-cell, var(--dsx-secondary-grouped-background))); }
+.doc-card-body { gap: 0.375rem; align-items: flex-start; }
+.doc-card-icon { font-size: 1.375rem; color: var(--dsx-secondary-label); margin-block-end: 0.25rem; }
+.doc-card-title { font-size: 1.0625rem; font-weight: 600; color: var(--dsx-label); }
+.doc-card-line { font-size: 0.9375rem; line-height: 1.4; color: var(--dsx-secondary-label); }
+
+/* Sidebar sections: the stock DisclosureGroup with its section icon (data/icons.json) */
+.doc-nav-section-label { gap: 0.625rem; align-items: center; font-weight: 600; color: var(--dsx-label); }
+.doc-nav-section-label .dsx-icon { color: var(--dsx-secondary-label); }
+.doc-nav-section .dsx-list { padding-inline-start: 0.25rem; }
+
+/* Reading rhythm: a wider measure for prose, generous space between sections */
+.doc-page { gap: 1.25rem; }
+.doc-section { margin-block-start: 1.5rem; }
