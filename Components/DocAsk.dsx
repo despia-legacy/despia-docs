@@ -1,0 +1,54 @@
+<!-- DocAsk: Ask AI over these docs, structured like the best docs assistants (a side panel on a wide window, a
+     full-height sheet on a phone): suggested questions, the answer as the docs pages that match (cited, each a link),
+     and the composer at the bottom. HONEST SCOPE: this site runs no language model. The matches come from the same
+     search index the docs search uses (and the Support knowledge vectors when configured); a written answer opens the
+     question in Claude or ChatGPT with this page as context, and agents get the docs MCP server (/mcp). -->
+<vstack class="doc-ask">
+  <head>
+    <attribute as="asked" default="''"/>
+    <attribute as="sources"/>
+    <attribute as="claudeHref" default="''"/>
+    <attribute as="chatgptHref" default="''"/>
+    <event as="ask" payload="value"/>
+    <variable as="draft">return ''</variable>
+    <variable as="suggestions">return ['How do I add a native screen to my web app?', 'How do I send a push notification?', 'How do I move my V3 app to V4?']</variable>
+    <variable as="rows" computed="true">return Array.isArray(dsx.attribute.sources) ? dsx.attribute.sources : []</variable>
+    <action as="send" input:text="dsx.this.value">
+      const q = String(text || dsx.variable.draft || '').trim()
+      if (q === '') { return }
+      dsx.variable.draft = ''
+      dsx.event('ask', { value: q })
+    </action>
+    <action as="suggest" input:text="dsx.this.title">dsx.event('ask', { value: text })</action>
+  </head>
+  <scroll class="doc-ask-thread">
+    <vstack class="doc-ask-content">
+      <text class="doc-ask-intro" value="Ask about Despia. The answer is the documentation itself: the pages that match, each one a link."
+            visible-if="dsx.attribute.asked === ''"/>
+      <list bind="dsx.variable.suggestions" key="index" scroll="false" style="appearance: none" class="doc-ask-suggest" visible-if="dsx.attribute.asked === ''">
+        <row on:tap="dsx.action.suggest({ title: dsx.this })">
+          <hstack class="doc-ask-row">
+            <image icon="sparkles" a11yHidden="true"/>
+            <text value="{{ dsx.this }}"/>
+          </hstack>
+        </row>
+      </list>
+      <text class="doc-ask-question" value="{{ dsx.attribute.asked }}" visible-if="dsx.attribute.asked !== ''"/>
+      <text class="doc-ask-label" value="{{ dsx.variable.rows.length > 0 ? 'From the docs' : 'Nothing in the docs matches that yet.' }}" visible-if="dsx.attribute.asked !== ''"/>
+      <list bind="dsx.variable.rows" key="id" scroll="false" style="appearance: none" class="doc-ask-sources" visible-if="dsx.attribute.asked !== ''">
+        <row href="{{ dsx.this.route }}">
+          <vstack class="doc-ask-source">
+            <text value="{{ dsx.this.title }}" class="doc-ask-source-title" lineLimit="2"/>
+            <text value="{{ dsx.this.line }}" class="doc-ask-source-line" lineLimit="2" visible-if="dsx.this.line !== ''"/>
+          </vstack>
+        </row>
+      </list>
+      <hstack class="doc-ask-open" visible-if="dsx.attribute.asked !== ''">
+        <button label="Answer in Claude" icon="arrow.up.right" variant="bordered" href="{{ dsx.attribute.claudeHref }}"/>
+        <button label="Answer in ChatGPT" icon="arrow.up.right" variant="bordered" href="{{ dsx.attribute.chatgptHref }}"/>
+      </hstack>
+    </vstack>
+  </scroll>
+  <PromptInput value="{{ dsx.variable.draft }}" placeholder="Ask a question" attach="false" enterSends="true" maxLines="4"
+               on:change="dsx.variable.draft = dsx.this.value" on:submit="dsx.action.send()"/>
+</vstack>

@@ -1,0 +1,54 @@
+<!-- DocSidebar: the documentation's navigation, ONE component drawn in two places by DocShell (the left column on a
+     wide window, the menu sheet on a phone). The space and version on top, search, the space's sections (DocNav,
+     collapsible groups with icons), and the appearance control in the footer. Stock components only; the search
+     state lives in DocShell (events up), so both places show the same query and results. -->
+<vstack class="doc-sidebar-body">
+  <head>
+    <attribute as="route" default="''"/>
+    <attribute as="space" default="'modern'"/>
+    <attribute as="spaceNames" default="''"/>
+    <attribute as="spacePick" default="''"/>
+    <attribute as="version" default="'0.1.0'"/>
+    <attribute as="versionMenu"/>
+    <attribute as="query" default="''"/>
+    <attribute as="scope" default="'This space'"/>
+    <attribute as="hits"/>
+    <attribute as="themeLabel" default="'System'"/>
+    <event as="search" payload="value"/>
+    <event as="scope" payload="value"/>
+    <event as="space" payload="value"/>
+    <event as="theme"/>
+    <variable as="q">return dsx.attribute.query</variable>
+    <variable as="pick">return dsx.attribute.spacePick</variable>
+    <variable as="scopePick">return dsx.attribute.scope</variable>
+    <variable as="rows" computed="true">return Array.isArray(dsx.attribute.hits) ? dsx.attribute.hits : []</variable>
+    <action as="searched">dsx.event('search', { value: dsx.variable.q })</action>
+    <action as="picked">if (dsx.variable.pick !== dsx.attribute.spacePick) { dsx.event('space', { value: dsx.variable.pick }) }</action>
+    <action as="scoped">dsx.event('scope', { value: dsx.variable.scopePick })</action>
+    <watch value="dsx.variable.q" on:change="dsx.action.searched()"/>
+    <watch value="dsx.variable.pick" on:change="dsx.action.picked()"/>
+    <watch value="dsx.variable.scopePick" on:change="dsx.action.scoped()"/>
+  </head>
+  <hstack class="doc-sidebar-top">
+    <picker bind="dsx.variable.pick" options="{{ dsx.attribute.spaceNames }}" label="Docs space"/>
+    <menu menu="dsx.attribute.versionMenu">
+      <button label="{{ 'v' + dsx.attribute.version }}" a11yLabel="{{ 'v' + dsx.attribute.version + ', docs version' }}"/>
+    </menu>
+  </hstack>
+  <searchbar bind="dsx.variable.q" placeholder="Search"/>
+  <segmented bind="dsx.variable.scopePick" options="This space,All spaces" label="Search scope" visible-if="dsx.variable.q.length >= 2"/>
+  <list bind="dsx.variable.rows" key="id" group_by="group" class="doc-hits" style="appearance: none" visible-if="dsx.variable.q.length >= 2 &amp;&amp; dsx.variable.rows.length > 0">
+    <row href="{{ dsx.this.route }}">
+      <text value="{{ dsx.this.title }}" lineLimit="2"/>
+    </row>
+  </list>
+  <EmptyState visible-if="dsx.variable.q.length >= 2 &amp;&amp; dsx.variable.rows.length === 0" icon="magnifyingglass"
+              title="No results" message="{{ dsx.variable.scopePick === 'All spaces' ? 'Nothing matches in any space.' : 'Nothing here. Try All spaces.' }}"/>
+  <scroll class="doc-nav-slot" visible-if="dsx.variable.q.length &lt; 2">
+    <DocNav route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}"/>
+  </scroll>
+  <hstack class="doc-sidebar-footer">
+    <button icon="circle.lefthalf.filled" label="{{ 'Appearance: ' + dsx.attribute.themeLabel }}" variant="plain"
+            class="doc-theme-toggle" on:tap="dsx.event('theme')"/>
+  </hstack>
+</vstack>

@@ -34,7 +34,7 @@
     <formula as="pct" input:v="dsx.variable.brightness">return Math.round(v * 100) + '%'</formula>
   </head>
 
-  <DocShell title="System" label="Design system" route="/system" section="Start"
+  <DocShell title="System" label="Design system" route="/system" section="Start" stability="alpha"
             prev="/quickstart" prevLabel="Quickstart"
             next="/framework/guides" nextLabel="Overview">
     <stack style="gap: 0.4rem">

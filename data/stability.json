@@ -1,0 +1,42 @@
+{
+  "_note": "WHICH PAGES DOCUMENT NATIVE UI, the early-alpha part of Despia (owner 2026-10-09: native UI rendering works and is welcome for experiments, not production, until 1.0.0). A page is alpha when its front matter says `stability: alpha`, or its route is listed in `routes`, or starts with a `prefixes` entry; everything else is stable (DSX DOM, the web view, Legacy compatibility, and the packages and services that ship in 0.1.0). Alpha pages sit in the `section` named below, carry the `callout` at the top and an `Alpha` badge in the sidebar and in search. Each entry says why, so the classification can be reviewed.",
+  "section": "Native UI (early alpha)",
+  "icon": "iphone",
+  "callout": "**Early alpha.** Native UI rendering already works, and you are welcome to experiment with it, but it is not production ready. Do not depend on it for a production app before version 1.0.0, the first release with stable native UI. Until then, use native UI and the cross-platform component system for learning and research.",
+  "prefixes": {
+    "/components": "the cross-platform component system: every element drawn as SwiftUI, Compose and the web from one document",
+    "/components/native-only": "components that exist only on the native renderers"
+  },
+  "routes": {
+    "/system": "the design system gallery: the cross-platform components rendered live",
+    "/guides/web-app-with-native-screens": "native screens shipped over the air (DSXView) inside a web app",
+    "/guides/native-app-with-web-views": "a native DSX app that hosts web views",
+    "/framework/guides/adaptive-native-shells": "native shells (SwiftUI and Compose app frames)",
+    "/framework/guides/native-export": "exporting native iOS and Android projects from DSX",
+    "/framework/guides/adaptive-layout": "cross-platform layout of DSX components on every renderer",
+    "/framework/guides/rendering": "how DSX renders natively on each platform",
+    "/framework/guides/platform-support": "the native renderer parity map",
+    "/framework/guides/designing-high-end-screens": "designing native DSX screens",
+    "/framework/guides/despia-design-system": "the cross-platform component design system",
+    "/framework/guides/transitions": "native view transitions",
+    "/framework/guides/combinations/c1-pure-dsx-app": "a pure DSX app rendered natively",
+    "/framework/guides/combinations/c2-web-app-plus-native": "native DSX screens beside a web app",
+    "/framework/skills/native-components": "authoring native components",
+    "/framework/skills/native-languages": "Swift and Kotlin facets of components",
+    "/framework/skills/mounting-components": "mounting DSX components into native apps",
+    "/framework/skills/live-activities-and-widgets": "native widgets and Live Activities drawn from DSX",
+    "/framework/skills/android": "the Android (Compose) renderer",
+    "/framework/skills/android/api-mapping": "the Android (Compose) renderer",
+    "/framework/skills/android/containers": "the Android (Compose) renderer",
+    "/framework/skills/android/js-core-parity": "the Android (Compose) renderer",
+    "/framework/skills/android/manifest-and-build": "the Android (Compose) renderer",
+    "/framework/skills/containers": "native container elements",
+    "/framework/skills/custom-ux": "custom native UX on top of the component system",
+    "/framework/skills/building-a-despia-platform-surface": "native platform surfaces",
+    "/framework/skills/surface-bridges": "bridges between native surfaces",
+    "/framework/skills/designing-great-apps": "designing native DSX apps",
+    "/framework/skills/designing-an-app": "designing native DSX apps",
+    "/framework/skills/writing-an-app": "writing a native DSX app",
+    "/framework/skills/thinking-in-dsx": "the cross-platform component model"
+  }
+}

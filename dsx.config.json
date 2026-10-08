@@ -3576,5 +3576,8 @@
   },
   "owner": {
     "workspace": "despia"
-  }
+  },
+  "modules": [
+    "clipboard"
+  ]
 }

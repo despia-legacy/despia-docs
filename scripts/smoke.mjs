@@ -47,6 +47,10 @@ async function worker() {
       if (code !== null) problems.push(`error code ${code[0]}`);
       if (pageErrors.length > 0) problems.push(`page error: ${pageErrors[0]}`);
       if ((await page.locator('[role="heading"][aria-level="1"]').count()) === 0) problems.push("no page title drawn");
+      // the frame (owner 2026-10-09): a header on every page, no Back button, the appearance control in the sidebar
+      if ((await page.locator(".doc-header").count()) === 0) problems.push("no docs header");
+      if ((await page.locator('.dsx-split-back, button[aria-label="Back"]:visible').count()) > 0) problems.push("a Back button");
+      if ((await page.locator(".doc-sidebar .doc-theme-toggle").count()) === 0) problems.push("no appearance control in the sidebar");
       if (problems.length > 0) failures.push(`${route}: ${problems.join("; ")}`);
     } catch (error) {
       failures.push(`${route}: ${String(error.message ?? error).split("\n")[0]}`);
@@ -55,6 +59,27 @@ async function worker() {
   await context.close();
 }
 await Promise.all(Array.from({ length: concurrency }, worker));
+
+// THE PHONE FRAME, interactively, on a few pages: the menu button opens the navigation sheet and its close button
+// closes it; Ask AI opens its sheet and answers a question with cited pages.
+for (const route of routes.filter((r) => ["/", "/quickstart", "/components/button"].includes(r))) {
+  const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+  const page = await context.newPage();
+  try {
+    await page.goto(origin + route, { waitUntil: "load" });
+    await page.waitForTimeout(1500);
+    await page.locator(".doc-menu-button").first().click();
+    await page.waitForTimeout(700);
+    if ((await page.locator(".doc-sidebar-body:visible").count()) === 0) failures.push(`${route} @390: the menu button did not open the navigation`);
+    if ((await page.locator(".doc-theme-toggle:visible").count()) === 0) failures.push(`${route} @390: no appearance control in the navigation sheet`);
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(700);
+    if ((await page.locator(".doc-sidebar-body:visible").count()) > 0) failures.push(`${route} @390: the navigation sheet did not close`);
+  } catch (error) {
+    failures.push(`${route} @390: ${String(error.message ?? error).split("\n")[0]}`);
+  }
+  await context.close();
+}
 await browser.close();
 if (failures.length > 0) {
   console.error(`[docs.smoke] ${failures.length} page(s) failed:\n  ${failures.join("\n  ")}`);

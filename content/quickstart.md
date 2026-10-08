@@ -53,8 +53,9 @@ This one runs right here: tap the button.
 </stack>
 ```
 
-The same document is a SwiftUI screen on iPhone and a Material 3 screen on Android. Markup is never
-written twice.
+The same document draws as a SwiftUI screen on iPhone and a Material 3 screen on Android. Native UI
+rendering is in early alpha: experiment with it freely, and ship production apps on the web view and
+DSX DOM, which are stable in 0.1.0. Native UI becomes stable in 1.0.0.
 
 ## Ship it
 

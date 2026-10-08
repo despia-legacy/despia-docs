@@ -10,6 +10,9 @@ section:
 Build a native iOS app, a native Android app, a web app and its back end from one set of DSX
 documents. Pick what you want to do.
 
+DSX DOM, the web view, Legacy compatibility and the packages and services that ship in 0.1.0 are
+stable. Native UI rendering is in early alpha and becomes stable in 1.0.0.
+
 <CardGroup cols="2">
 <Card title="Build a new app" href="/quickstart">
 From an empty folder to a running app in five minutes.

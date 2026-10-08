@@ -1,0 +1,34 @@
+<!-- DocExample: ONE example box for every docs page that shows a component (owner 2026-10-09, the CodePen /
+     Mintlify / Stripe example). A stock Card with a slim header (Preview | Code as the stock segmented control, copy,
+     expand) over a hairline, then the stage: the live component (the slot: a generated component drawn by this same
+     runtime) centred on a quiet neutral surface, or its source in the stock CodeBlock. Both faces share one grid cell,
+     so the box always has the height of the taller face: switching tabs never moves the page. The box sizes itself to
+     its content up to 30rem; beyond that it clips with a fade until Expand. Fed by data: compile.mjs turns every
+     ```xml live / ```dsx preview fence and every component page's usage into one of these. -->
+<stack class="doc-example">
+  <head>
+    <attribute as="code" default="''"/>
+    <variable as="tab">return 'Preview'</variable>
+    <variable as="expanded">return false</variable>
+  </head>
+  <Card>
+  <vstack class="doc-example-inner">
+    <hstack class="doc-example-head">
+      <segmented bind="dsx.variable.tab" options="Preview,Code" label="Example view"/>
+      <spacer/>
+      <CopyButton value="{{ dsx.attribute.code }}" label="Copy the example's code"/>
+      <button icon="{{ dsx.variable.expanded ? 'arrow.down.right.and.arrow.up.left' : 'arrow.up.left.and.arrow.down.right' }}" variant="plain"
+              a11yLabel="{{ dsx.variable.expanded ? 'Collapse the example' : 'Expand the example' }}" class="doc-example-expand"
+              on:tap="dsx.variable.expanded = !dsx.variable.expanded"/>
+    </hstack>
+    <stack class="{{ 'doc-example-stage' + (dsx.variable.expanded ? ' doc-example-open' : '') }}">
+      <stack class="{{ 'doc-example-preview' + (dsx.variable.tab === 'Preview' ? '' : ' doc-example-away') }}" role="figure" a11yLabel="Live example">
+        <slot/>
+      </stack>
+      <stack class="{{ 'doc-example-code' + (dsx.variable.tab === 'Code' ? '' : ' doc-example-away') }}">
+        <CodeBlock value="{{ dsx.attribute.code }}" language="xml" copy="false"/>
+      </stack>
+    </stack>
+  </vstack>
+  </Card>
+</stack>

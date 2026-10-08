@@ -554,7 +554,7 @@ function formatFences(page, text, startLine) {
  *  exception: its source becomes a generated component of this site, drawn by the same runtime the reader is
  *  using, above the same source as a code block. One DSX document, rendered and shown. */
 const liveOf = new Map();                     // Live<hash> -> the page component that draws it
-const LIVE_FENCE = /^```(?:xml|dsx) live\n([\s\S]*?)\n```[ \t]*$/m;
+const LIVE_FENCE = /^```(?:xml|dsx) (?:live|preview)\n([\s\S]*?)\n```[ \t]*$/m;
 /** A card group as a grid of stock Cards, each a link with its icon, title and one line (data: the Card's own
  *  `icon`, else data/icons.json for the page it links to). */
 function cardGrid(node, indent) {
@@ -598,9 +598,12 @@ function compileBody(page, lines, startLine, indent) {
       const source = live[1];
       const name = `Live${createHash("sha256").update(source).digest("hex").slice(0, 10)}`;
       writeFileSync(join(generatedDir, `${name}.dsx`), `${source}\n`);
-      liveOf.set(name, page.component);
-      out.push(`${indent}<vstack class="doc-live">`, `${indent}  <stack class="doc-live-preview" role="figure" a11yLabel="Live example"><${name}/></stack>`);
-      out.push(`${indent}  <markdown bind="dsx.variable.md${pushMdVar(page, "```dsx\n" + source + "\n```")}"/>`, `${indent}</vstack>`);
+      // the example box (DocExample): the live component in the slot, its source as data; the plain code block is
+      // kept as a fallback the lint gate below swaps in when the example does not lint
+      const codeVar = pushMdVar(page, source);
+      const fenced = pushMdVar(page, "```dsx\n" + source + "\n```");
+      liveOf.set(name, { component: page.component, fenced });
+      out.push(`${indent}<DocExample code="{{ dsx.variable.md${codeVar} }}"><${name}/></DocExample>`);
       rest = rest.slice(live.index + live[0].length);
     }
     markdown(rest);
@@ -738,6 +741,7 @@ const handAuthored = [
     space: "modern",
     section: "",
     order: 2,
+    meta: { stability: "alpha" },
     description: "The design system as a living page: every element in its states.",
     search: "design system gallery elements states buttons fields selection toggle segmented picker slider stepper list rows cards surfaces tabs sheet typography color tokens spacing radius",
   },
@@ -806,12 +810,12 @@ const FA_TO_SF = {
   "compass-drafting": "hammer", "user-robot": "iphone", "thumbs-up": "hand.thumbsup", "circle-nodes": "circle.grid.3x3",
   "chart-tree-map": "chart.pie", cat: "creditcard", cowbell: "bell", "wifi-slash": "wifi.slash", globe: "globe",
   sparkle: "sparkles", database: "cpu", "box-open": "shippingbox", shield: "lock.shield", "arrow-right-from-arc": "link",
-  "dollar-sign": "dollarsign.circle", coins: "bitcoinsign.circle", "money-bill-1-wave": "banknote", "money-bill-wave": "banknote",
+  "dollar-sign": "dollarsign", coins: "banknote", "money-bill-1-wave": "banknote", "money-bill-wave": "banknote",
   code: "chevron.left.forwardslash.chevron.right", "chart-mixed": "chart.bar", "chart-pie-simple": "chart.pie",
   "chart-column": "chart.bar", "chart-line": "chart.line.uptrend.xyaxis", "chart-pyramid": "chart.bar", plug: "powerplug",
   "heart-pulse": "heart.text.square", webhook: "link", "head-side-gear": "brain", eye: "eye", "eye-slash": "eye.slash",
   "walkie-talkie": "antenna.radiowaves.left.and.right", wallet: "creditcard", "credit-card": "creditcard",
-  "bolt-lightning": "bolt", bolt: "bolt", "bell-ring": "bell.badge", bell: "bell.fill", key: "key", "clapperboard-play": "play.rectangle",
+  "bolt-lightning": "bolt", bolt: "bolt", "bell-ring": "bell.badge", bell: "bell.fill", key: "key", "clapperboard-play": "play.rectangle.fill",
   "leaf-heart": "leaf", edit: "pencil", bug: "ladybug", "apple-whole": "apple.logo", apple: "apple.logo",
   "lightbulb-gear": "lightbulb", lightbulb: "lightbulb", "brake-warning": "exclamationmark.octagon", "octagon-xmark": "xmark.octagon",
   "message-dots": "bubble.left", trophy: "trophy", heart: "heart", "circle-info": "info.circle", "align-left": "text.alignleft",
@@ -827,10 +831,20 @@ const FA_TO_SF = {
   "arrow-right-from-bracket": "rectangle.portrait.and.arrow.right", compass: "safari", headphones: "headphones", star: "star",
   "moon-stars": "moon.stars", "bezier-curve": "pencil", bluetooth: "antenna.radiowaves.left.and.right",
   "file-magnifying-glass": "doc.text.magnifyingglass", ellipsis: "ellipsis", paperclip: "paperclip", keyboard: "keyboard",
-  music: "music.note", tiktok: "play.rectangle", scroll: "doc.plaintext", "person-running-fast": "figure.run", frame: "square.dashed",
+  music: "music.note", tiktok: "play.rectangle.fill", scroll: "doc.plaintext", "person-running-fast": "figure.run", frame: "square.dashed",
   "pen-nib": "pencil", book: "book", "bullseye-arrow": "target", stamp: "checkmark.seal", google: "globe", alt: "doc.text",
 };
 const sfIcon = (fa) => (fa ? FA_TO_SF[fa] ?? "doc.text" : undefined);
+// NATIVE UI IS EARLY ALPHA (owner 2026-10-09): data/stability.json says which pages, and why. An alpha page sits in
+// the alpha section, opens with the alpha callout and wears an Alpha badge in the sidebar and in search.
+const STABILITY = JSON.parse(readFileSync(join(root, "data", "stability.json"), "utf8"));
+function isAlpha(p) {
+  if (p.meta?.stability === "alpha") return true;
+  if (p.meta?.stability === "stable" || p.space !== "modern") return false;
+  if (STABILITY.routes[p.route] !== undefined) return true;
+  return Object.keys(STABILITY.prefixes).some((prefix) => p.route === prefix || p.route.startsWith(prefix + "/"));
+}
+
 // Every page, section and card: data/icons.json, declared once (owner 2026-10-08: no page without an icon).
 const ICONS = JSON.parse(readFileSync(join(root, "data", "icons.json"), "utf8"));
 const SECTION_ICONS = ICONS.sections;
@@ -854,15 +868,16 @@ function pageIconOf(p, sectionName) {
 // A section is { name, items }; an item is a page { route, title, label } or a nested group
 // { group, items }. Modern keeps its reading-rank sections; Legacy replays docs.json's own
 // groups and order; Migration and Troubleshooting group by front-matter section.
-const navItem = (p, icon, sectionName) => ({ route: p.route, title: p.title, label: pageLabel(p), icon: icon !== undefined && icon !== "doc.text" ? icon : pageIconOf(p, sectionName) });
+const navItem = (p, icon, sectionName) => ({ route: p.route, title: p.title, label: pageLabel(p), icon: icon !== undefined && icon !== "doc.text" ? icon : pageIconOf(p, sectionName), ...(isAlpha(p) ? { alpha: true } : {}) });
 const byRoute = new Map(entries.map((p) => [p.route, p]));
 const navBySpace = {};
 {
   const sections = [];
   for (const page of entries.filter((p) => p.space === "modern")) {
-    const name = page.section === "" ? "Start" : page.section.replace(/(^|-)([a-z])/g, (_, __, c) => " " + c.toUpperCase()).trim();
+    const alpha = isAlpha(page);
+    const name = alpha ? STABILITY.section : page.section === "" ? "Start" : page.section.replace(/(^|-)([a-z])/g, (_, __, c) => " " + c.toUpperCase()).trim();
     let section = sections.find((s) => s.name === name);
-    if (section === undefined) { section = { name, rank: SECTION_RANK[page.section] ?? 9, items: [] }; sections.push(section); }
+    if (section === undefined) { section = { name, rank: alpha ? 8 : SECTION_RANK[page.section] ?? 9, items: [], ...(alpha ? { icon: STABILITY.icon } : {}) }; sections.push(section); }
     section.items.push(navItem(page, undefined, name));
   }
   sections.sort((a, b) => a.rank - b.rank);
@@ -920,8 +935,9 @@ function shellAttrs(page, toc) {
   const improvedVar = improved.length > 0 ? page.attrVars.push(JSON.stringify(improved)) - 1 : -1;
   const legacyHome = page.meta?.legacy !== undefined;
   return [
-    shellAttr(page, "title", page.title),
+    shellAttr(page, "title", page.route.startsWith("/components/") ? componentLabel(page.route, page.title) : page.title),
     shellAttr(page, "label", pageLabel(page)),
+    ...(isAlpha(page) ? [`stability="alpha"`] : []),
     `route="${page.route}"`,
     `space="${page.space}"`,
     ...(supportOrigin !== "https://support.despia.com" ? [`supportOrigin="${escapeForDsxAttr(supportOrigin)}"`] : []),
@@ -975,13 +991,13 @@ function apiPage(body, label) {
   if (h1 >= 0) lines[h1] = `# ${label}`;
   const out = [];
   let section = "";
-  let liveDone = false;
+  const liveDone = new Set();
   for (let i = 0; i < lines.length; i += 1) {
     const line = lines[i];
     const heading = /^## (.+)$/.exec(line);
     if (heading !== null) section = heading[1].trim();
     if (section === "States") continue;
-    if (section === "Usage" && !liveDone && /^```dsx\s*$/.test(line)) {
+    if ((section === "Usage" || section === "Catalog specimen") && !liveDone.has(section) && /^```dsx\s*$/.test(line)) {
       const end = lines.indexOf("```", i + 1);
       const snippet = lines.slice(i + 1, end).join("\n");
       // live only when the snippet stands alone: one root, no state, no bindings to anything it does not declare
@@ -989,7 +1005,7 @@ function apiPage(body, label) {
       if (end > i && /^<[a-zA-Z]/.test(snippet.trim())) {
         out.push("```xml live", snippet, "```");
         i = end;
-        liveDone = true;
+        liveDone.add(section);
         continue;
       }
     }
@@ -1015,6 +1031,9 @@ function apiPage(body, label) {
 
 for (const page of pages) {
   if (page.meta?.element !== undefined && page.route.startsWith("/components/")) page.body = apiPage(page.body, componentLabel(page.route, page.title));
+  // the page title is DocShell's title block (beside the page actions), so the body's own first heading is not drawn
+  // twice; the markdown twin keeps it
+  { const lines = page.body.split("\n"); const h1 = lines.findIndex((l) => /^# /.test(l)); if (h1 >= 0 && lines.slice(0, h1).every((l) => l.trim() === "" || /^<\/?[A-Za-z]/.test(l) === false)) { lines[h1] = ""; page.body = lines.join("\n"); } }
   const chunks = sectionize(page.body, page.bodyStart);
   const toc = chunks.filter((c) => c.level > 0).map((c) => ({ id: c.id, title: c.title, level: c.level }));
   page.mdVars = [];
@@ -1307,6 +1326,9 @@ for (const page of handAuthored) {
   writeMd(page.route, `# ${page.title}\n\n${page.description}\n\nThis page is a live DSX document (${site}${page.route}); it has no markdown source.\n`);
 }
 
+// ── the alpha note (data/stability.json): ONE stock warning Callout every alpha page's DocShell draws on top ──
+writeFileSync(join(generatedDir, "AlphaNote.dsx"), `<Callout tone="warning" title="Early alpha" message="${escapeForDsxAttr(STABILITY.callout.replace(/\*\*Early alpha\.\*\* /, ""))}"/>\n`);
+
 // ── the generated sidebars (DocNav + one per space) ───────────────────────────────────────
 // Every nav as static markup: every row a real SSR'd anchor, grouped under uppercase
 // micro-labels, nested groups under quieter sub-labels, the active row resolved from the
@@ -1331,10 +1353,11 @@ function navMarkup(items, sectionIcon, depth, vars) {
     // (or the generic page glyph) down a column is noise, not wayfinding (polish pass 2026-10-03)
     // every row wears its own icon (data/icons.json): the reader scans by shape as much as by word
     const ownIcons = true;
-    const rows = run.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sectionIcon ?? "doc.text" }));
+    const rows = run.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sectionIcon ?? "doc.text", ...(i.alpha ? { alpha: true } : {}) }));
     const n = vars.push(`    <variable as="r${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(rows))})</variable>`) - 1;
     out.push(`${pad}<pressable repeat="dsx.variable.r${n}" key="route" href="{{ dsx.this.route }}">
 ${ownIcons ? `${pad}  <image style="font-size: 15px" icon="{{ dsx.this.icon }}" a11yHidden="true"/>\n` : ""}${pad}  <text value="{{ dsx.this.label }}" lineLimit="2"/>
+${run.some((i) => i.alpha) ? `${pad}  <text class="doc-nav-badge" value="Alpha" visible-if="dsx.this.alpha === true"/>\n` : ""}
 ${pad}</pressable>`);
     run = [];
   };
@@ -1426,6 +1449,8 @@ config.siteUrl = site;
 // Despia's own docs: a project of Despia's own workspace (first-party dogfooding, constitution Article 16), so the
 // build accepts its despia.com origin; a customer project naming despia.com is still refused.
 config.owner = { workspace: "despia" };
+// the platform packages the docs' own components reach: the example box's copy (CopyButton -> dsx.module.clipboard)
+config.modules = [...new Set([...(config.modules ?? []), "clipboard"])];
 const head = (config.web?.head ?? []).filter((row) => row.meta?.name !== "despia-support-origin");
 config.web = { ...(config.web ?? {}), head: [...head, { meta: { name: "despia-support-origin", content: supportOrigin } }] };
 config.routes = entries.map((p) => ({
@@ -1453,7 +1478,8 @@ writeFileSync(join(publicDir, "search-index.json"), JSON.stringify({
     title: p.title,
     label: pageLabel(p),
     space: p.space,
-    section: p.space === "modern" ? p.section : sectionNameOf(p.space, p.route),
+    section: p.space === "modern" ? (isAlpha(p) ? STABILITY.section : p.section) : sectionNameOf(p.space, p.route),
+    ...(isAlpha(p) ? { alpha: true } : {}),
     text: (p.body === undefined || p.search !== undefined ? (p.search ?? p.description) : searchText(p.body)).slice(0, p.space === "modern" ? 4000 : 2000),
   })),
 }) + "\n");
@@ -1570,13 +1596,15 @@ if (liveOf.size > 0) {
     if (name !== undefined && !broken.has(name)) broken.set(name, f.message.split(". ")[0]);
   }
   for (const [name, why] of broken) {
-    const pageFile = join(generatedDir, `${liveOf.get(name)}.dsx`);
-    writeFileSync(pageFile, readFileSync(pageFile, "utf8").split("\n").filter((l) => !l.includes(`<${name}/>`)).join("\n"));
+    const { component, fenced } = liveOf.get(name);
+    const pageFile = join(generatedDir, `${component}.dsx`);
+    writeFileSync(pageFile, readFileSync(pageFile, "utf8").split("\n").map((l) => (l.includes(`<${name}/>`)
+      ? `${l.slice(0, l.indexOf("<DocExample"))}<markdown bind="dsx.variable.md${fenced}"/>` : l)).join("\n"));
     rmSync(join(generatedDir, `${name}.dsx`), { force: true });
-    formatReport.push(`live example not drawn (${liveOf.get(name)}): ${why}`);
+    formatReport.push(`live example not drawn (${component}): ${why}`);
   }
   console.log(`[docs.compile] live examples: ${liveOf.size - broken.size} drawn, ${broken.size} kept as code only (they do not lint: fix their source)`);
-  for (const [name, why] of broken) console.log(`  ${liveOf.get(name)}: ${why}`);
+  for (const [name, why] of broken) console.log(`  ${liveOf.get(name).component}: ${why}`);
 }
 if (onFallback.length > 0) console.log(`[docs.compile] ${onFallback.length} page(s) on the fallback icon (add a data/icons.json row): ${onFallback.slice(0, 12).join(" ")}`);
 console.log(`[docs.compile] ${entries.length} route(s) (${counts}) → Components/pages (+ DocNav per space, SystemCards), routes, nav, search index, md siblings, llms per space, sitemap`);
