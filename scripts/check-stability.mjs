@@ -4,6 +4,7 @@
 //  (data/stability.json, front matter) sits in the alpha section of the sidebar and opens with the alpha callout,
 //  and no stable page tells a reader native UI is production ready. Exit 1 names every page that breaks a rule.
 //
+import { claimsNativeProductionReady } from "./stability-claims.mjs";
 import { readFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,7 +32,7 @@ for (const page of index.pages) {
     if (!inAlphaSection.has(page.route)) problems.push(`${page.route}: alpha, but not in the "${stability.section}" section`);
     // DocShell draws the alpha note (AlphaNote, from data/stability.json) on every page it is told is alpha
     if (file === undefined || !file[1].includes('stability="alpha"')) problems.push(`${page.route}: alpha, but no alpha callout`);
-  } else if (/native[^.]{0,80}production.ready|production.ready[^.]{0,80}native/i.test(page.text)) {
+  } else if (claimsNativeProductionReady(page.text)) {
     problems.push(`${page.route}: a stable page says native UI is production ready`);
   }
 }
