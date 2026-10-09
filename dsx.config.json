@@ -28,6 +28,14 @@
       }
     },
     {
+      "path": "/lingo",
+      "component": "docs.PageLingo",
+      "meta": {
+        "title": "Lingo",
+        "description": "The dictionary of DSX words: what each one refers to, which word we use in the console, the docs and in code, and which words to avoid."
+      }
+    },
+    {
       "path": "/migrate",
       "component": "docs.PageMigrate",
       "meta": {
@@ -81,6 +89,14 @@
       "meta": {
         "title": "Build a module",
         "description": "Write your own Despia module, from an empty folder to a release: the manifest, the Swift, Kotlin and web facets, components, state, tests, versioning and publishing."
+      }
+    },
+    {
+      "path": "/lingo/package-vs-module",
+      "component": "docs.PageLingo_PackageVsModule",
+      "meta": {
+        "title": "Package or module?",
+        "description": "Why the console says package and the code says module, and how to tell a DSX package from an npm package, a Swift package and a Gradle artifact."
       }
     },
     {

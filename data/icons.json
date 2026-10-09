@@ -28,6 +28,8 @@
     "/releases": "newspaper",
     "/app-review": "list.bullet",
     "/framework/modules": "shippingbox",
+    "/lingo": "book",
+    "/lingo/package-vs-module": "shippingbox",
     "/framework/guides/build-a-module": "hammer",
     "/guides/web-app-with-native-screens": "iphone",
     "/guides/native-app-with-web-views": "globe",
