@@ -159,7 +159,7 @@ function sectionFor(route, meta) {
   if (route.startsWith("/framework/reference/style")) return "styling";
   return route === "/" ? "" : route.split("/")[1];
 }
-const SECTION_RANK = { "": 0, guides: 1, services: 1.2, modules: 1.5, components: 2, styling: 3, skills: 4 };
+const SECTION_RANK = { "": 0, guides: 1, services: 1.2, modules: 1.5, components: 2, styling: 3, lingo: 3.5, skills: 4 };
 
 // ── the section splitter (rail anchors) ───────────────────────────────────────────────────
 // A page body splits at its h2/h3 headings (fence-aware) so each section renders as its
