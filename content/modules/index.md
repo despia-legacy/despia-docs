@@ -33,6 +33,7 @@ Full-stack modules and the backends a Despia app deploys to your own provider.
 
 ## Related pages
 
+- [Package or module?](/lingo/package-vs-module): the console and conversation say package, code says module, and why.
 - [Calling another module](/framework/skills/cross-module-calls): the three call shapes.
 - [Module context](/framework/skills/module-state): values a module declares and others read.
 - [Extracting a module](/framework/skills/extracting-a-module): turning app code into a module.
