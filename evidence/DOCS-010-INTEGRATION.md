@@ -15,7 +15,7 @@ Generated route/config and code-format-report changes are from those normal scri
 Supported canonical CLI lint passed: 891 files, zero errors, zero warnings, 544 notices.
 The existing npm lint --strict invocation is unsupported by this CLI and remains an explicit script/tool mismatch.
 
-Tests: 10 executed/selected, 8 pass, 1 fail (DocShell spacePick expected Legacy v3, got empty),
+Tests: 10 selected (9 executed), 8 pass, 1 fail (DocShell spacePick expected Legacy v3, got empty),
 1 skip (no matching final glossary checkout). DocShell and its test source are byte-identical to
 baseline; that does not substitute for a baseline runtime test or waive the failure.
 Build uses the existing 5b canonical CLI with a 1 GiB heap cap; status is recorded separately.
@@ -35,3 +35,11 @@ Scope guard on the actual 5b-synced content: RED, two stable imported pages asse
 production readiness (/framework/guides/quickstart and /framework/guides/release-status).
 These framework pages were not edited or stripped in the docs repository. Final framework
 source sync must pass this guard before release; zero lint errors does not waive it.
+
+Final preparation build: supported canonical `despia build` EXIT 0, 3,239 output files.
+Normal assemble EXIT 0: 736 pages relinked with shared stylesheet, docs.js, canonical and
+markdown alternate links, strict CSP. Fourteen jse_budget_exhausted refusals remain recorded;
+this successful process exit is not a rendering acceptance or release waiver.
+Static output is available in this owned worktree's dist/ for later qualified preview.
+No browser/server was started. Normal npm scripts still require the final CLI alias/flag
+compatibility; this run used the supported canonical command directly, not a fake dsx shim.
