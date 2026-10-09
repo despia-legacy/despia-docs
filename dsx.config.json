@@ -20,6 +20,14 @@
       }
     },
     {
+      "path": "/framework/guides/api/overview",
+      "component": "docs.PageFramework_Guides_Api_Overview",
+      "meta": {
+        "title": "The Despia API",
+        "description": "Everything the despia CLI and the MCP server do against your account is an HTTP call. Create projects, read catalogs, build and ship from code."
+      }
+    },
+    {
       "path": "/framework/modules",
       "component": "docs.PageFramework_Modules",
       "meta": {
@@ -81,6 +89,14 @@
       "meta": {
         "title": "Use these docs with your agent",
         "description": "Give Claude Code, Cursor, Codex or any MCP client the Despia documentation: an MCP server, llms.txt and a markdown twin of every page."
+      }
+    },
+    {
+      "path": "/framework/guides/api/authentication",
+      "component": "docs.PageFramework_Guides_Api_Authentication",
+      "meta": {
+        "title": "Authentication and scopes",
+        "description": "Workspace access tokens for automation, person tokens for people, the scopes, expiry, rotation and revocation."
       }
     },
     {
@@ -876,6 +892,14 @@
       }
     },
     {
+      "path": "/framework/guides/api/creating-a-project",
+      "component": "docs.PageFramework_Guides_Api_CreatingAProject",
+      "meta": {
+        "title": "Creating a project",
+        "description": "Create a project from a template with inputs, from a GitHub repository, or blank. Dry run first, then create."
+      }
+    },
+    {
       "path": "/migrate/map",
       "component": "docs.PageMigrate_Map",
       "meta": {
@@ -889,6 +913,54 @@
       "meta": {
         "title": "Writing docs",
         "description": "The authoring system, markdown plus components, documented with itself."
+      }
+    },
+    {
+      "path": "/framework/guides/api/templates-and-versions",
+      "component": "docs.PageFramework_Guides_Api_TemplatesAndVersions",
+      "meta": {
+        "title": "Templates and versions",
+        "description": "List the templates, read a template's inputs and its version history, and see which version a project was made from."
+      }
+    },
+    {
+      "path": "/framework/guides/api/packages-and-versions",
+      "component": "docs.PageFramework_Guides_Api_PackagesAndVersions",
+      "meta": {
+        "title": "Packages and versions",
+        "description": "The package catalog with versions and release history, and a project's installed packages."
+      }
+    },
+    {
+      "path": "/framework/guides/api/builds",
+      "component": "docs.PageFramework_Guides_Api_Builds",
+      "meta": {
+        "title": "Builds",
+        "description": "Dry run, start a cloud build with an idempotency key, follow it, read the log, download the artifact."
+      }
+    },
+    {
+      "path": "/framework/guides/api/errors",
+      "component": "docs.PageFramework_Guides_Api_Errors",
+      "meta": {
+        "title": "Errors",
+        "description": "The error shape and the stable codes you can match on."
+      }
+    },
+    {
+      "path": "/framework/guides/api/rate-limits",
+      "component": "docs.PageFramework_Guides_Api_RateLimits",
+      "meta": {
+        "title": "Rate limits",
+        "description": "The ceilings per address and per credential, and how to back off."
+      }
+    },
+    {
+      "path": "/framework/guides/api/changelog",
+      "component": "docs.PageFramework_Guides_Api_Changelog",
+      "meta": {
+        "title": "API changelog",
+        "description": "What changed in the Despia API."
       }
     },
     {
@@ -936,7 +1008,7 @@
       "component": "docs.PageGuides_LocalHttpsCdn",
       "meta": {
         "title": "Local CDN over HTTPS on iOS",
-        "description": "Cached files from the local CDN now load inside an HTTPS website on iOS, with no Cloudflare Worker, no DNS change and no certificate to install. Your existing localcdn:// calls keep working."
+        "description": "Cached files from the local CDN load inside your HTTPS website on iOS from a private HTTPS address served by the app, with no Cloudflare Worker, no DNS change and no certificate to install. Your existing localcdn:// calls keep working."
       }
     },
     {
@@ -1240,6 +1312,20 @@
       }
     },
     {
+      "path": "/framework/guides/messaging-cost",
+      "component": "docs.PageFramework_Guides_MessagingCost",
+      "meta": {
+        "title": "What Despia Messaging costs to run"
+      }
+    },
+    {
+      "path": "/framework/guides/migrating-from-onesignal",
+      "component": "docs.PageFramework_Guides_MigratingFromOnesignal",
+      "meta": {
+        "title": "Despia Messaging with OneSignal, or on your own server"
+      }
+    },
+    {
       "path": "/framework/guides/native-export",
       "component": "docs.PageFramework_Guides_NativeExport",
       "meta": {
@@ -1258,6 +1344,13 @@
       "component": "docs.PageFramework_Guides_OauthHttpsCallback",
       "meta": {
         "title": "OAuth HTTPS Callback: Cross-Platform Specification"
+      }
+    },
+    {
+      "path": "/framework/guides/overlay-mount",
+      "component": "docs.PageFramework_Guides_OverlayMount",
+      "meta": {
+        "title": "Mounting a component over your app"
       }
     },
     {
@@ -1296,6 +1389,13 @@
       }
     },
     {
+      "path": "/framework/guides/release-status",
+      "component": "docs.PageFramework_Guides_ReleaseStatus",
+      "meta": {
+        "title": "What is stable in 0.1.0"
+      }
+    },
+    {
       "path": "/framework/guides/rendering",
       "component": "docs.PageFramework_Guides_Rendering",
       "meta": {
@@ -1328,6 +1428,20 @@
       "component": "docs.PageFramework_Guides_SecureBiometrics",
       "meta": {
         "title": "Secure biometrics"
+      }
+    },
+    {
+      "path": "/framework/guides/services-connecting",
+      "component": "docs.PageFramework_Guides_ServicesConnecting",
+      "meta": {
+        "title": "Connecting Despia services together"
+      }
+    },
+    {
+      "path": "/framework/guides/services-standalone",
+      "component": "docs.PageFramework_Guides_ServicesStandalone",
+      "meta": {
+        "title": "Using a Despia service on its own"
       }
     },
     {
@@ -2077,6 +2191,2038 @@
       "component": "docs.PageFramework_Skills_WritingUnitTests",
       "meta": {
         "title": "Writing unit tests: self-contained actions in `dsx.json`"
+      }
+    },
+    {
+      "path": "/packages",
+      "component": "docs.PagePackages",
+      "meta": {
+        "title": "Packages",
+        "description": "Every package you can add to a Despia app, with what it does and where it runs."
+      }
+    },
+    {
+      "path": "/packages/actionsheet",
+      "component": "docs.PagePackages_Actionsheet",
+      "meta": {
+        "title": "ActionSheet",
+        "description": "Show the system's own action sheet and find out which option the user picked."
+      }
+    },
+    {
+      "path": "/packages/adjust",
+      "component": "docs.PagePackages_Adjust",
+      "meta": {
+        "title": "Adjust",
+        "description": "Find out which ad or campaign brought each install, using Adjust."
+      }
+    },
+    {
+      "path": "/packages/admob",
+      "component": "docs.PagePackages_Admob",
+      "meta": {
+        "title": "Google AdMob",
+        "description": "Show banner, interstitial, rewarded and native ads from Google AdMob."
+      }
+    },
+    {
+      "path": "/packages/ageassurance",
+      "component": "docs.PagePackages_Ageassurance",
+      "meta": {
+        "title": "AgeAssurance",
+        "description": "Ask the phone's operating system for the user's age range."
+      }
+    },
+    {
+      "path": "/packages/airbridge",
+      "component": "docs.PagePackages_Airbridge",
+      "meta": {
+        "title": "Airbridge",
+        "description": "Attribute installs to ad campaigns and open deep links with Airbridge."
+      }
+    },
+    {
+      "path": "/packages/alarms",
+      "component": "docs.PagePackages_Alarms",
+      "meta": {
+        "title": "Alarms and timers",
+        "description": "Set alarms and timers that ring even when the phone is on silent or locked."
+      }
+    },
+    {
+      "path": "/packages/amplitude",
+      "component": "docs.PagePackages_Amplitude",
+      "meta": {
+        "title": "Amplitude",
+        "description": "Send your app's analytics events to Amplitude."
+      }
+    },
+    {
+      "path": "/packages/analytics",
+      "component": "docs.PagePackages_Analytics",
+      "meta": {
+        "title": "Firebase Analytics",
+        "description": "Send user properties and events to Google Analytics for Firebase."
+      }
+    },
+    {
+      "path": "/packages/announcements",
+      "component": "docs.PagePackages_Announcements",
+      "meta": {
+        "title": "Announcements",
+        "description": "Show announcements in your app as a dismissible banner and a What's new list."
+      }
+    },
+    {
+      "path": "/packages/app",
+      "component": "docs.PagePackages_App",
+      "meta": {
+        "title": "App",
+        "description": "The app's own identity: its links, domains, copyright and export settings."
+      }
+    },
+    {
+      "path": "/packages/appcheck",
+      "component": "docs.PagePackages_Appcheck",
+      "meta": {
+        "title": "Firebase App Check",
+        "description": "Get Firebase App Check tokens so Firebase and your backend accept only your real app."
+      }
+    },
+    {
+      "path": "/packages/appclip",
+      "component": "docs.PagePackages_Appclip",
+      "meta": {
+        "title": "AppClip",
+        "description": "Offer a small App Clip that loads part of your app without a full install."
+      }
+    },
+    {
+      "path": "/packages/appearance",
+      "component": "docs.PagePackages_Appearance",
+      "meta": {
+        "title": "Appearance",
+        "description": "Let people choose light, dark or the system look for the whole app."
+      }
+    },
+    {
+      "path": "/packages/appicon",
+      "component": "docs.PagePackages_Appicon",
+      "meta": {
+        "title": "AppIcon",
+        "description": "Let people choose the app icon shown on their home screen."
+      }
+    },
+    {
+      "path": "/packages/appleauth",
+      "component": "docs.PagePackages_Appleauth",
+      "meta": {
+        "title": "Sign in with Apple",
+        "description": "Let people sign in to your app with their Apple ID."
+      }
+    },
+    {
+      "path": "/packages/applock",
+      "component": "docs.PagePackages_Applock",
+      "meta": {
+        "title": "AppLock",
+        "description": "Lock your app behind Face ID, Touch ID or the device passcode."
+      }
+    },
+    {
+      "path": "/packages/apprating",
+      "component": "docs.PagePackages_Apprating",
+      "meta": {
+        "title": "AppRating",
+        "description": "Ask the system to show its in-app rating prompt."
+      }
+    },
+    {
+      "path": "/packages/apps",
+      "component": "docs.PagePackages_Apps",
+      "meta": {
+        "title": "Apps",
+        "description": "See which Despia app surfaces are on the screen right now."
+      }
+    },
+    {
+      "path": "/packages/appsflyer",
+      "component": "docs.PagePackages_Appsflyer",
+      "meta": {
+        "title": "AppsFlyer",
+        "description": "Attribute installs and purchases to ad campaigns with AppsFlyer."
+      }
+    },
+    {
+      "path": "/packages/apptracking",
+      "component": "docs.PagePackages_Apptracking",
+      "meta": {
+        "title": "AppTracking",
+        "description": "Ask the user for tracking permission and read their answer."
+      }
+    },
+    {
+      "path": "/packages/appupdate",
+      "component": "docs.PagePackages_Appupdate",
+      "meta": {
+        "title": "App updates",
+        "description": "Tell users when a newer version is available and take them to it."
+      }
+    },
+    {
+      "path": "/packages/ar",
+      "component": "docs.PagePackages_Ar",
+      "meta": {
+        "title": "AR",
+        "description": "Run an augmented reality session on the phone camera."
+      }
+    },
+    {
+      "path": "/packages/assistants",
+      "component": "docs.PagePackages_Assistants",
+      "meta": {
+        "title": "Assistants",
+        "description": "Let Siri, Shortcuts, Spotlight and Gemini run actions from your app."
+      }
+    },
+    {
+      "path": "/packages/audio",
+      "component": "docs.PagePackages_Audio",
+      "meta": {
+        "title": "Audio",
+        "description": "Play music, podcasts and audiobooks with lock screen controls and background playback."
+      }
+    },
+    {
+      "path": "/packages/audioplayer",
+      "component": "docs.PagePackages_Audioplayer",
+      "meta": {
+        "title": "LegacyAudioPlayer",
+        "description": "Keeps the old audio:// player calls from version 3 pages working."
+      }
+    },
+    {
+      "path": "/packages/auth",
+      "component": "docs.PagePackages_Auth",
+      "meta": {
+        "title": "Sign-in",
+        "description": "Add sign-in to your app with one set of screens and actions, whichever service holds the account."
+      }
+    },
+    {
+      "path": "/packages/authfirebase",
+      "component": "docs.PagePackages_Authfirebase",
+      "meta": {
+        "title": "Firebase Auth",
+        "description": "Sign people in with Firebase Authentication using email and password, Google or Apple."
+      }
+    },
+    {
+      "path": "/packages/authidentity",
+      "component": "docs.PagePackages_Authidentity",
+      "meta": {
+        "title": "Despia Identity",
+        "description": "Sign people in with emailed codes using your own self-hosted identity service."
+      }
+    },
+    {
+      "path": "/packages/automotive",
+      "component": "docs.PagePackages_Automotive",
+      "meta": {
+        "title": "Automotive",
+        "description": "Run your app on cars that have Android built in, using Android Automotive OS."
+      }
+    },
+    {
+      "path": "/packages/background",
+      "component": "docs.PagePackages_Background",
+      "meta": {
+        "title": "Background",
+        "description": "Runs your app's declared tasks in the background and tells you honestly when they ran."
+      }
+    },
+    {
+      "path": "/packages/backgroundlocation",
+      "component": "docs.PagePackages_Backgroundlocation",
+      "meta": {
+        "title": "Background Location",
+        "description": "Add the declarations an app needs to track location in the background."
+      }
+    },
+    {
+      "path": "/packages/base",
+      "component": "docs.PagePackages_Base",
+      "meta": {
+        "title": "Base",
+        "description": "A private on-device database for your app's own data, with documents, queries, backups and vector search."
+      }
+    },
+    {
+      "path": "/packages/biometric",
+      "component": "docs.PagePackages_Biometric",
+      "meta": {
+        "title": "Face ID and Touch ID",
+        "description": "Confirm it is really the user with Face ID, Touch ID or the device passcode."
+      }
+    },
+    {
+      "path": "/packages/blocks",
+      "component": "docs.PagePackages_Blocks",
+      "meta": {
+        "title": "Block editor",
+        "description": "Add a Notion-style editor where people write notes and documents in blocks."
+      }
+    },
+    {
+      "path": "/packages/bluetooth",
+      "component": "docs.PagePackages_Bluetooth",
+      "meta": {
+        "title": "Bluetooth",
+        "description": "Connect your app to nearby Bluetooth Low Energy devices."
+      }
+    },
+    {
+      "path": "/packages/branch",
+      "component": "docs.PagePackages_Branch",
+      "meta": {
+        "title": "Branch",
+        "description": "Find out which Branch link brought each install."
+      }
+    },
+    {
+      "path": "/packages/braze",
+      "component": "docs.PagePackages_Braze",
+      "meta": {
+        "title": "Braze",
+        "description": "Send events to Braze and show its push, content cards and in-app messages."
+      }
+    },
+    {
+      "path": "/packages/brightness",
+      "component": "docs.PagePackages_Brightness",
+      "meta": {
+        "title": "ScreenBrightness",
+        "description": "Raise or lower the screen brightness and put it back afterwards."
+      }
+    },
+    {
+      "path": "/packages/browser",
+      "component": "docs.PagePackages_Browser",
+      "meta": {
+        "title": "Browser",
+        "description": "Open web links in the system's in-app browser tab."
+      }
+    },
+    {
+      "path": "/packages/bugsnag",
+      "component": "docs.PagePackages_Bugsnag",
+      "meta": {
+        "title": "Bugsnag",
+        "description": "Send your app's crash and error reports to your own Bugsnag project."
+      }
+    },
+    {
+      "path": "/packages/calendar",
+      "component": "docs.PagePackages_Calendar",
+      "meta": {
+        "title": "Calendar and reminders",
+        "description": "Add events to the user's calendar and read events and reminders."
+      }
+    },
+    {
+      "path": "/packages/call",
+      "component": "docs.PagePackages_Call",
+      "meta": {
+        "title": "Calls",
+        "description": "Add voice and video calls that ring like real phone calls."
+      }
+    },
+    {
+      "path": "/packages/calldespia",
+      "component": "docs.PagePackages_Calldespia",
+      "meta": {
+        "title": "Despia Calls",
+        "description": "Carry your app's calls over WebRTC through your own Despia Calls service."
+      }
+    },
+    {
+      "path": "/packages/calllivekit",
+      "component": "docs.PagePackages_Calllivekit",
+      "meta": {
+        "title": "LiveKit Calls",
+        "description": "Run your app's calls and group rooms on LiveKit."
+      }
+    },
+    {
+      "path": "/packages/calllivekit-modules-backend",
+      "component": "docs.PagePackages_CalllivekitModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "The server side of LiveKit calls: it creates join tokens and receives LiveKit events."
+      }
+    },
+    {
+      "path": "/packages/calltwilio",
+      "component": "docs.PagePackages_Calltwilio",
+      "meta": {
+        "title": "Twilio Voice",
+        "description": "Make and receive voice calls with Twilio."
+      }
+    },
+    {
+      "path": "/packages/calltwilio-modules-backend",
+      "component": "docs.PagePackages_CalltwilioModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "The server half of Twilio voice calls: hands out call tokens and answers Twilio's webhooks."
+      }
+    },
+    {
+      "path": "/packages/camera",
+      "component": "docs.PagePackages_Camera",
+      "meta": {
+        "title": "Camera burst",
+        "description": "Capture photos from the camera in code, with no preview screen."
+      }
+    },
+    {
+      "path": "/packages/capture",
+      "component": "docs.PagePackages_Capture",
+      "meta": {
+        "title": "Capture",
+        "description": "Turn any element or screen into an image, a PDF or a screen recording."
+      }
+    },
+    {
+      "path": "/packages/car",
+      "component": "docs.PagePackages_Car",
+      "meta": {
+        "title": "Car",
+        "description": "Show lists, grids and messages on the car's screen with CarPlay and Android Auto."
+      }
+    },
+    {
+      "path": "/packages/cast",
+      "component": "docs.PagePackages_Cast",
+      "meta": {
+        "title": "Cast to TV",
+        "description": "Let users play your app's video and audio on a TV or speaker."
+      }
+    },
+    {
+      "path": "/packages/cdn",
+      "component": "docs.PagePackages_Cdn",
+      "meta": {
+        "title": "ContentServer",
+        "description": "Keeps the old local content server and file store working for apps converted from the previous Despia version."
+      }
+    },
+    {
+      "path": "/packages/charts",
+      "component": "docs.PagePackages_Charts",
+      "meta": {
+        "title": "Charts",
+        "description": "Draw line, bar, area and point charts from your data with a single chart element."
+      }
+    },
+    {
+      "path": "/packages/chat",
+      "component": "docs.PagePackages_Chat",
+      "meta": {
+        "title": "Chat",
+        "description": "Add messaging to your app with conversations, replies, attachments and typing."
+      }
+    },
+    {
+      "path": "/packages/chatdespia",
+      "component": "docs.PagePackages_Chatdespia",
+      "meta": {
+        "title": "Despia Chat",
+        "description": "Run your app's chat on your own self-hosted Despia Chat service."
+      }
+    },
+    {
+      "path": "/packages/chatmls",
+      "component": "docs.PagePackages_Chatmls",
+      "meta": {
+        "title": "Encrypted chat",
+        "description": "Make chat messages end-to-end encrypted so only the people in the conversation can read them."
+      }
+    },
+    {
+      "path": "/packages/chatsendbird",
+      "component": "docs.PagePackages_Chatsendbird",
+      "meta": {
+        "title": "Sendbird Chat",
+        "description": "Run your app's chat on Sendbird."
+      }
+    },
+    {
+      "path": "/packages/chatsendbird-modules-backend",
+      "component": "docs.PagePackages_ChatsendbirdModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "Run the small server relay that lets your app chat through Sendbird without exposing your keys."
+      }
+    },
+    {
+      "path": "/packages/chatstream",
+      "component": "docs.PagePackages_Chatstream",
+      "meta": {
+        "title": "Stream Chat",
+        "description": "Run your app's chat on Stream."
+      }
+    },
+    {
+      "path": "/packages/chatstream-modules-backend",
+      "component": "docs.PagePackages_ChatstreamModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "The server half of Stream chat and video that keeps your Stream secret off devices."
+      }
+    },
+    {
+      "path": "/packages/clerk",
+      "component": "docs.PagePackages_Clerk",
+      "meta": {
+        "title": "Clerk",
+        "description": "Add sign-in, sign-up and account screens to your app with Clerk."
+      }
+    },
+    {
+      "path": "/packages/clipboard",
+      "component": "docs.PagePackages_Clipboard",
+      "meta": {
+        "title": "Clipboard",
+        "description": "Read from and write to the system clipboard, with a way to peek without triggering the paste alert."
+      }
+    },
+    {
+      "path": "/packages/commerce",
+      "component": "docs.PagePackages_Commerce",
+      "meta": {
+        "title": "Despia Commerce",
+        "description": "Verify purchases and keep entitlements on your own server, with no third party in between."
+      }
+    },
+    {
+      "path": "/packages/compose",
+      "component": "docs.PagePackages_Compose",
+      "meta": {
+        "title": "Compose",
+        "description": "Opens the system text message or email composer with your message filled in, for the user to send."
+      }
+    },
+    {
+      "path": "/packages/connect",
+      "component": "docs.PagePackages_Connect",
+      "meta": {
+        "title": "Stripe Connect",
+        "description": "Put Stripe's onboarding, payouts and payments screens for connected accounts inside your platform app."
+      }
+    },
+    {
+      "path": "/packages/consent",
+      "component": "docs.PagePackages_Consent",
+      "meta": {
+        "title": "Tracking consent",
+        "description": "Ask users for tracking consent and hold back analytics events until they agree."
+      }
+    },
+    {
+      "path": "/packages/console",
+      "component": "docs.PagePackages_Console",
+      "meta": {
+        "title": "Console",
+        "description": "See what your telemetry would send, written to the log with nothing leaving the device."
+      }
+    },
+    {
+      "path": "/packages/contacts",
+      "component": "docs.PagePackages_Contacts",
+      "meta": {
+        "title": "Contacts",
+        "description": "Let users share a contact, or read and edit the address book."
+      }
+    },
+    {
+      "path": "/packages/contentsafety",
+      "component": "docs.PagePackages_Contentsafety",
+      "meta": {
+        "title": "Image safety check",
+        "description": "Detect explicit images on the device so your content rules can hold or block them."
+      }
+    },
+    {
+      "path": "/packages/converse",
+      "component": "docs.PagePackages_Converse",
+      "meta": {
+        "title": "Converse",
+        "description": "Hold a spoken conversation with an AI model entirely on the device, with no network."
+      }
+    },
+    {
+      "path": "/packages/crashlytics",
+      "component": "docs.PagePackages_Crashlytics",
+      "meta": {
+        "title": "Firebase Crashlytics",
+        "description": "Report app crashes to Firebase Crashlytics."
+      }
+    },
+    {
+      "path": "/packages/criticalalerts",
+      "component": "docs.PagePackages_Criticalalerts",
+      "meta": {
+        "title": "CriticalAlerts",
+        "description": "Let urgent push notifications break through silent mode and Do Not Disturb on iPhone."
+      }
+    },
+    {
+      "path": "/packages/crypto",
+      "component": "docs.PagePackages_Crypto",
+      "meta": {
+        "title": "Crypto",
+        "description": "Hash, sign, encrypt and generate random values with the phone's own crypto."
+      }
+    },
+    {
+      "path": "/packages/customerio",
+      "component": "docs.PagePackages_Customerio",
+      "meta": {
+        "title": "Customer.io",
+        "description": "Send your app's analytics events to Customer.io."
+      }
+    },
+    {
+      "path": "/packages/data",
+      "component": "docs.PagePackages_Data",
+      "meta": {
+        "title": "Data",
+        "description": "Declare the data tables your packages need, once, for any database you choose."
+      }
+    },
+    {
+      "path": "/packages/datadog",
+      "component": "docs.PagePackages_Datadog",
+      "meta": {
+        "title": "Datadog",
+        "description": "Send your app's error and event logs to Datadog through your own relay."
+      }
+    },
+    {
+      "path": "/packages/dev",
+      "component": "docs.PagePackages_Dev",
+      "meta": {
+        "title": "DevSettings",
+        "description": "A hidden developer panel for switching a test build between staging and production."
+      }
+    },
+    {
+      "path": "/packages/device",
+      "component": "docs.PagePackages_Device",
+      "meta": {
+        "title": "Device",
+        "description": "Read the device, the app's own identity, the screen, locale, battery and display capabilities."
+      }
+    },
+    {
+      "path": "/packages/deviceusage",
+      "component": "docs.PagePackages_Deviceusage",
+      "meta": {
+        "title": "DeviceUsage",
+        "description": "Block chosen apps and websites for a set time, on a daily schedule, or after a daily limit is used up."
+      }
+    },
+    {
+      "path": "/packages/devsettings-modules-livestream",
+      "component": "docs.PagePackages_DevsettingsModulesLivestream",
+      "meta": {
+        "title": "Stream",
+        "description": "Watch your app's logs live from a test device on your own relay."
+      }
+    },
+    {
+      "path": "/packages/dom",
+      "component": "docs.PagePackages_Dom",
+      "meta": {
+        "title": "Dom",
+        "description": "Control the web view that shows your web app: load pages, navigate, run scripts."
+      }
+    },
+    {
+      "path": "/packages/downloads",
+      "component": "docs.PagePackages_Downloads",
+      "meta": {
+        "title": "Downloads",
+        "description": "Watch file downloads as they start, progress and finish."
+      }
+    },
+    {
+      "path": "/packages/dsxview",
+      "component": "docs.PagePackages_Dsxview",
+      "meta": {
+        "title": "DSXView",
+        "description": "Show a screen fetched from your server as a native view inside the app."
+      }
+    },
+    {
+      "path": "/packages/dsxwebview",
+      "component": "docs.PagePackages_Dsxwebview",
+      "meta": {
+        "title": "DSXWebView",
+        "description": "Show your web pages inside the app in one shared web view."
+      }
+    },
+    {
+      "path": "/packages/ecosystem",
+      "component": "docs.PagePackages_Ecosystem",
+      "meta": {
+        "title": "Ecosystem",
+        "description": "Remember a value across all of a person's own devices, with no sign-in."
+      }
+    },
+    {
+      "path": "/packages/edit",
+      "component": "docs.PagePackages_Edit",
+      "meta": {
+        "title": "Edit",
+        "description": "Mixes an audio project down to a file, and measures loudness, peaks and silences in a file."
+      }
+    },
+    {
+      "path": "/packages/externalapps",
+      "component": "docs.PagePackages_Externalapps",
+      "meta": {
+        "title": "ExternalApps",
+        "description": "Hand a link to another app on the phone, such as Maps, Instagram or the phone dialer."
+      }
+    },
+    {
+      "path": "/packages/face",
+      "component": "docs.PagePackages_Face",
+      "meta": {
+        "title": "WatchFace",
+        "description": "Show a short text and value on the watch face complication."
+      }
+    },
+    {
+      "path": "/packages/files",
+      "component": "docs.PagePackages_Files",
+      "meta": {
+        "title": "Files",
+        "description": "Save, read, download, upload and zip files in your app's own storage."
+      }
+    },
+    {
+      "path": "/packages/files-modules-backend",
+      "component": "docs.PagePackages_FilesModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "Let devices upload files straight to your own storage bucket with short-lived signed links."
+      }
+    },
+    {
+      "path": "/packages/filesharing",
+      "component": "docs.PagePackages_Filesharing",
+      "meta": {
+        "title": "FileSharing",
+        "description": "Send a file to other apps through the system share sheet."
+      }
+    },
+    {
+      "path": "/packages/fileupload",
+      "component": "docs.PagePackages_Fileupload",
+      "meta": {
+        "title": "FileUpload",
+        "description": "Make file inputs in your web pages open the camera, photo library, scanner or file picker."
+      }
+    },
+    {
+      "path": "/packages/fileviewer",
+      "component": "docs.PagePackages_Fileviewer",
+      "meta": {
+        "title": "FileViewer",
+        "description": "Preview PDFs, images and documents in a native viewer."
+      }
+    },
+    {
+      "path": "/packages/firebase",
+      "component": "docs.PagePackages_Firebase",
+      "meta": {
+        "title": "Firebase Cloud Messaging",
+        "description": "Send push notifications to your app's users through Firebase Cloud Messaging."
+      }
+    },
+    {
+      "path": "/packages/firebaseperformance",
+      "component": "docs.PagePackages_Firebaseperformance",
+      "meta": {
+        "title": "Firebase Performance",
+        "description": "Measure how long key flows and network requests take with Firebase Performance Monitoring."
+      }
+    },
+    {
+      "path": "/packages/firestore",
+      "component": "docs.PagePackages_Firestore",
+      "meta": {
+        "title": "Firestore",
+        "description": "Store your server data in Google Cloud Firestore and get matching access rules."
+      }
+    },
+    {
+      "path": "/packages/flashlight",
+      "component": "docs.PagePackages_Flashlight",
+      "meta": {
+        "title": "Flashlight",
+        "description": "Turn the device flashlight on and off."
+      }
+    },
+    {
+      "path": "/packages/focus",
+      "component": "docs.PagePackages_Focus",
+      "meta": {
+        "title": "Focus",
+        "description": "Know when the app moves to the foreground or the background."
+      }
+    },
+    {
+      "path": "/packages/font",
+      "component": "docs.PagePackages_Font",
+      "meta": {
+        "title": "Fonts",
+        "description": "Use custom fonts in your app and measure text before it is drawn."
+      }
+    },
+    {
+      "path": "/packages/foundation",
+      "component": "docs.PagePackages_Foundation",
+      "meta": {
+        "title": "Foundation",
+        "description": "The built-in set of screen building blocks every DSX app uses."
+      }
+    },
+    {
+      "path": "/packages/geo",
+      "component": "docs.PagePackages_Geo",
+      "meta": {
+        "title": "Location",
+        "description": "Get the user's location, track movement and trigger geofences."
+      }
+    },
+    {
+      "path": "/packages/global",
+      "component": "docs.PagePackages_Global",
+      "meta": {
+        "title": "State",
+        "description": "Read, write and watch the app-wide shared store from your web page."
+      }
+    },
+    {
+      "path": "/packages/google",
+      "component": "docs.PagePackages_Google",
+      "meta": {
+        "title": "Sign in with Google",
+        "description": "Let people sign in to your app with their Google account."
+      }
+    },
+    {
+      "path": "/packages/googleadsconversions",
+      "component": "docs.PagePackages_Googleadsconversions",
+      "meta": {
+        "title": "GoogleAdsConversions",
+        "description": "Send purchases and sign-ups to Google Ads as conversions, from your server."
+      }
+    },
+    {
+      "path": "/packages/googlecast",
+      "component": "docs.PagePackages_Googlecast",
+      "meta": {
+        "title": "Google Cast",
+        "description": "Cast your app's media to Chromecast and other Google Cast TVs."
+      }
+    },
+    {
+      "path": "/packages/growth",
+      "component": "docs.PagePackages_Growth",
+      "meta": {
+        "title": "Product analytics",
+        "description": "Track what users do in your app and send it to the analytics tool you pick."
+      }
+    },
+    {
+      "path": "/packages/growth-modules-backend",
+      "component": "docs.PagePackages_GrowthModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "Receive Apple ad postbacks and mint deep links on your own server."
+      }
+    },
+    {
+      "path": "/packages/growth-modules-posthog",
+      "component": "docs.PagePackages_GrowthModulesPosthog",
+      "meta": {
+        "title": "PostHog",
+        "description": "Send your app's analytics events to PostHog."
+      }
+    },
+    {
+      "path": "/packages/gyroscope",
+      "component": "docs.PagePackages_Gyroscope",
+      "meta": {
+        "title": "LegacyGyroscope",
+        "description": "Keeps old pages that read the gyroscope and compass heading working."
+      }
+    },
+    {
+      "path": "/packages/handoff",
+      "component": "docs.PagePackages_Handoff",
+      "meta": {
+        "title": "Handoff",
+        "description": "Let people start in your app on an iPhone and continue on a Mac or iPad."
+      }
+    },
+    {
+      "path": "/packages/haptic",
+      "component": "docs.PagePackages_Haptic",
+      "meta": {
+        "title": "Haptics",
+        "description": "Add vibration feedback to taps and results."
+      }
+    },
+    {
+      "path": "/packages/health",
+      "component": "docs.PagePackages_Health",
+      "meta": {
+        "title": "WatchHealth",
+        "description": "Read heart rate, steps, workouts and other health readings from the paired watch."
+      }
+    },
+    {
+      "path": "/packages/healthkit",
+      "component": "docs.PagePackages_Healthkit",
+      "meta": {
+        "title": "HealthKit",
+        "description": "Read and write Apple Health and Android Health Connect data."
+      }
+    },
+    {
+      "path": "/packages/iap",
+      "component": "docs.PagePackages_Iap",
+      "meta": {
+        "title": "LegacyIAP",
+        "description": "Keeps old v1 and v2 in-app purchase links working by answering them with the store package."
+      }
+    },
+    {
+      "path": "/packages/identityvault",
+      "component": "docs.PagePackages_Identityvault",
+      "meta": {
+        "title": "IdentityVault",
+        "description": "Stores small secrets on the device in the system keychain, with an optional Face ID or fingerprint lock."
+      }
+    },
+    {
+      "path": "/packages/imagewidget",
+      "component": "docs.PagePackages_Imagewidget",
+      "meta": {
+        "title": "V3 image widget",
+        "description": "Keep your V3 image home-screen widget working after moving your app over from V3."
+      }
+    },
+    {
+      "path": "/packages/imessage",
+      "component": "docs.PagePackages_Imessage",
+      "meta": {
+        "title": "IMessage",
+        "description": "Add an iMessage app to your product that renders your own screens inside Messages."
+      }
+    },
+    {
+      "path": "/packages/import",
+      "component": "docs.PagePackages_Import",
+      "meta": {
+        "title": "Import",
+        "description": "Use an npm package from your backend code."
+      }
+    },
+    {
+      "path": "/packages/integrity",
+      "component": "docs.PagePackages_Integrity",
+      "meta": {
+        "title": "App integrity check",
+        "description": "Prove to your server that a request comes from a genuine, unmodified copy of your app."
+      }
+    },
+    {
+      "path": "/packages/integrity-modules-backend",
+      "component": "docs.PagePackages_IntegrityModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "Server-side half of device integrity: reads and writes per-device flags that survive reinstalls."
+      }
+    },
+    {
+      "path": "/packages/intelligence",
+      "component": "docs.PagePackages_Intelligence",
+      "meta": {
+        "title": "On-device AI",
+        "description": "Run a language model and speech-to-text directly on the user's device, with no server."
+      }
+    },
+    {
+      "path": "/packages/intents",
+      "component": "docs.PagePackages_Intents",
+      "meta": {
+        "title": "Intents",
+        "description": "Open Android system screens and other apps by intent, and check which apps can handle one."
+      }
+    },
+    {
+      "path": "/packages/intercom",
+      "component": "docs.PagePackages_Intercom",
+      "meta": {
+        "title": "Intercom",
+        "description": "Add Intercom's Messenger so users can chat with support, read help articles and track tickets."
+      }
+    },
+    {
+      "path": "/packages/issuing",
+      "component": "docs.PagePackages_Issuing",
+      "meta": {
+        "title": "Stripe Issuing",
+        "description": "Let people add your Stripe-issued cards to Apple Wallet or Google Wallet."
+      }
+    },
+    {
+      "path": "/packages/jsengine",
+      "component": "docs.PagePackages_Jsengine",
+      "meta": {
+        "title": "JsEngine",
+        "description": "Run heavier page logic safely in a separate JavaScript sandbox on Android."
+      }
+    },
+    {
+      "path": "/packages/keepawake",
+      "component": "docs.PagePackages_Keepawake",
+      "meta": {
+        "title": "KeepAwake",
+        "description": "Keep the screen from dimming or locking while something on screen needs to stay visible."
+      }
+    },
+    {
+      "path": "/packages/keyboard",
+      "component": "docs.PagePackages_Keyboard",
+      "meta": {
+        "title": "Keyboard",
+        "description": "Ship your own system-wide iOS keyboard, drawn from your own layout."
+      }
+    },
+    {
+      "path": "/packages/kiosk",
+      "component": "docs.PagePackages_Kiosk",
+      "meta": {
+        "title": "Kiosk",
+        "description": "Lock an Android device to your app so people cannot leave it, for shared or public devices."
+      }
+    },
+    {
+      "path": "/packages/legacy",
+      "component": "docs.PagePackages_Legacy",
+      "meta": {
+        "title": "V3 compatibility",
+        "description": "Keep the old window.despia calls from your V3 app working after you move to V4."
+      }
+    },
+    {
+      "path": "/packages/legacy-modules-location",
+      "component": "docs.PagePackages_LegacyModulesLocation",
+      "meta": {
+        "title": "LegacyLocation",
+        "description": "Keeps old location tracking pages working on the new location package."
+      }
+    },
+    {
+      "path": "/packages/legacycrypto",
+      "component": "docs.PagePackages_Legacycrypto",
+      "meta": {
+        "title": "LegacyCrypto",
+        "description": "Lets Android check the signatures on over-the-air updates that use the Ed25519 signing algorithm."
+      }
+    },
+    {
+      "path": "/packages/licensecheck",
+      "component": "docs.PagePackages_Licensecheck",
+      "meta": {
+        "title": "LicenseCheck",
+        "description": "Check your app's license on launch and show a blocking screen if it was revoked."
+      }
+    },
+    {
+      "path": "/packages/lifecycle",
+      "component": "docs.PagePackages_Lifecycle",
+      "meta": {
+        "title": "Lifecycle",
+        "description": "The app shell's shared lifecycle and screen-ready events."
+      }
+    },
+    {
+      "path": "/packages/light",
+      "component": "docs.PagePackages_Light",
+      "meta": {
+        "title": "LightSensor",
+        "description": "Read the ambient light level around the device, in lux and in simple words like dark or sunlight."
+      }
+    },
+    {
+      "path": "/packages/liveactivity",
+      "component": "docs.PagePackages_Liveactivity",
+      "meta": {
+        "title": "Live Activities",
+        "description": "Show live progress on the iPhone Lock Screen and Dynamic Island, and as ongoing notifications on Android."
+      }
+    },
+    {
+      "path": "/packages/liveactivitypush",
+      "component": "docs.PagePackages_Liveactivitypush",
+      "meta": {
+        "title": "Live Activity updates via OneSignal",
+        "description": "Update a running iPhone Live Activity from your server through OneSignal."
+      }
+    },
+    {
+      "path": "/packages/livepreview",
+      "component": "docs.PagePackages_Livepreview",
+      "meta": {
+        "title": "LivePreview",
+        "description": "Shows a live, safe, working DSX example inside a document or page."
+      }
+    },
+    {
+      "path": "/packages/localpush",
+      "component": "docs.PagePackages_Localpush",
+      "meta": {
+        "title": "LegacyLocalPush",
+        "description": "Keeps the old local push calls working for web pages written for the previous Despia version."
+      }
+    },
+    {
+      "path": "/packages/loginhelper",
+      "component": "docs.PagePackages_Loginhelper",
+      "meta": {
+        "title": "LoginHelper",
+        "description": "Keeps Google and Facebook sign-in links out of your web view and opens them in the system sign-in sheet."
+      }
+    },
+    {
+      "path": "/packages/logrocket",
+      "component": "docs.PagePackages_Logrocket",
+      "meta": {
+        "title": "LogRocket",
+        "description": "Send errors and logs to LogRocket, with optional session replay."
+      }
+    },
+    {
+      "path": "/packages/lottie",
+      "component": "docs.PagePackages_Lottie",
+      "meta": {
+        "title": "Lottie animations",
+        "description": "Play Lottie animations in your screens, such as onboarding art, empty states and success moments."
+      }
+    },
+    {
+      "path": "/packages/mac",
+      "component": "docs.PagePackages_Mac",
+      "meta": {
+        "title": "Mac",
+        "description": "Give your app a proper Mac window with sensible minimum size and the standard reload shortcut."
+      }
+    },
+    {
+      "path": "/packages/map",
+      "component": "docs.PagePackages_Map",
+      "meta": {
+        "title": "Maps",
+        "description": "Show maps with pins, routes and your user's location."
+      }
+    },
+    {
+      "path": "/packages/mapbox",
+      "component": "docs.PagePackages_Mapbox",
+      "meta": {
+        "title": "Mapbox",
+        "description": "Draw your app's maps with Mapbox styles and tiles."
+      }
+    },
+    {
+      "path": "/packages/maplibre",
+      "component": "docs.PagePackages_Maplibre",
+      "meta": {
+        "title": "MapLibre",
+        "description": "Draw your app's maps with the open source MapLibre renderer."
+      }
+    },
+    {
+      "path": "/packages/math",
+      "component": "docs.PagePackages_Math",
+      "meta": {
+        "title": "Math formulas",
+        "description": "Show math formulas, written in TeX, as properly typeset equations in your app."
+      }
+    },
+    {
+      "path": "/packages/mcp",
+      "component": "docs.PagePackages_Mcp",
+      "meta": {
+        "title": "MCP",
+        "description": "Let AI agents call chosen actions of your app as Model Context Protocol tools."
+      }
+    },
+    {
+      "path": "/packages/media",
+      "component": "docs.PagePackages_Media",
+      "meta": {
+        "title": "Photos and videos",
+        "description": "Let users pick, crop, save and upload photos and videos."
+      }
+    },
+    {
+      "path": "/packages/menubar",
+      "component": "docs.PagePackages_Menubar",
+      "meta": {
+        "title": "MenuBar",
+        "description": "A native bottom menu bar and a slide-over sidebar that your web page controls."
+      }
+    },
+    {
+      "path": "/packages/meta",
+      "component": "docs.PagePackages_Meta",
+      "meta": {
+        "title": "Sign in with Facebook",
+        "description": "Let people sign in to your iOS app with Facebook."
+      }
+    },
+    {
+      "path": "/packages/metaads",
+      "component": "docs.PagePackages_Metaads",
+      "meta": {
+        "title": "Meta Audience Network",
+        "description": "Show full-screen Meta Audience Network ads in your app."
+      }
+    },
+    {
+      "path": "/packages/metaconversions",
+      "component": "docs.PagePackages_Metaconversions",
+      "meta": {
+        "title": "MetaConversions",
+        "description": "Send your app's conversion events to Meta ads from your own server."
+      }
+    },
+    {
+      "path": "/packages/microphone",
+      "component": "docs.PagePackages_Microphone",
+      "meta": {
+        "title": "Microphone",
+        "description": "Let your web page use the microphone, with the permission text and Android grant it needs."
+      }
+    },
+    {
+      "path": "/packages/mixpanel",
+      "component": "docs.PagePackages_Mixpanel",
+      "meta": {
+        "title": "Mixpanel",
+        "description": "Send your app's analytics events to Mixpanel."
+      }
+    },
+    {
+      "path": "/packages/motion",
+      "component": "docs.PagePackages_Motion",
+      "meta": {
+        "title": "Motion sensors",
+        "description": "Read accelerometer, gyroscope, steps and activity from the device."
+      }
+    },
+    {
+      "path": "/packages/mount",
+      "component": "docs.PagePackages_Mount",
+      "meta": {
+        "title": "Mount",
+        "description": "Places a component or a piece of markup over your screen or web page and tells you how much space it uses."
+      }
+    },
+    {
+      "path": "/packages/mux",
+      "component": "docs.PagePackages_Mux",
+      "meta": {
+        "title": "Mux Data",
+        "description": "Measure how well your videos play with Mux Data."
+      }
+    },
+    {
+      "path": "/packages/nearby",
+      "component": "docs.PagePackages_Nearby",
+      "meta": {
+        "title": "Nearby",
+        "description": "Connect two phones running your app directly and send them data, with no server."
+      }
+    },
+    {
+      "path": "/packages/net",
+      "component": "docs.PagePackages_Net",
+      "meta": {
+        "title": "Net",
+        "description": "Know what kind of connection the device has and whether your app can really reach the internet."
+      }
+    },
+    {
+      "path": "/packages/nfc",
+      "component": "docs.PagePackages_Nfc",
+      "meta": {
+        "title": "NFC tags",
+        "description": "Read and write NFC tags from your app."
+      }
+    },
+    {
+      "path": "/packages/notify",
+      "component": "docs.PagePackages_Notify",
+      "meta": {
+        "title": "Push notifications",
+        "description": "Receive and show push and local notifications in your app without a third-party push SDK."
+      }
+    },
+    {
+      "path": "/packages/oauth",
+      "component": "docs.PagePackages_Oauth",
+      "meta": {
+        "title": "OAuth",
+        "description": "Sign users in with Google, Apple, GitHub or any other OAuth provider in the system sign-in sheet."
+      }
+    },
+    {
+      "path": "/packages/onesignal",
+      "component": "docs.PagePackages_Onesignal",
+      "meta": {
+        "title": "OneSignal",
+        "description": "Send push notifications to your app's users through OneSignal."
+      }
+    },
+    {
+      "path": "/packages/orientation",
+      "component": "docs.PagePackages_Orientation",
+      "meta": {
+        "title": "Orientation",
+        "description": "Lock or unlock the screen orientation while the app runs."
+      }
+    },
+    {
+      "path": "/packages/passkeys",
+      "component": "docs.PagePackages_Passkeys",
+      "meta": {
+        "title": "Passkeys",
+        "description": "Sign people in with passkeys from the phone's own authenticator, with any backend."
+      }
+    },
+    {
+      "path": "/packages/pay",
+      "component": "docs.PagePackages_Pay",
+      "meta": {
+        "title": "Pay",
+        "description": "Take payments with the Apple Pay and Google Pay sheet."
+      }
+    },
+    {
+      "path": "/packages/payments",
+      "component": "docs.PagePackages_Payments",
+      "meta": {
+        "title": "Payments",
+        "description": "Take payments in your app with one set of calls, whichever payment provider you use."
+      }
+    },
+    {
+      "path": "/packages/payments-modules-stripe-modules-backend",
+      "component": "docs.PagePackages_PaymentsModulesStripeModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "The server side of Stripe: payments, checkout, Connect, Identity and Issuing."
+      }
+    },
+    {
+      "path": "/packages/permissions",
+      "component": "docs.PagePackages_Permissions",
+      "meta": {
+        "title": "Permissions",
+        "description": "Find out which permissions your app build is allowed to ask for, so you can hide features it can never turn on."
+      }
+    },
+    {
+      "path": "/packages/persona",
+      "component": "docs.PagePackages_Persona",
+      "meta": {
+        "title": "Persona",
+        "description": "Verify your users' identity with Persona's checks inside your app."
+      }
+    },
+    {
+      "path": "/packages/photolibrary",
+      "component": "docs.PagePackages_Photolibrary",
+      "meta": {
+        "title": "PhotoLibrary",
+        "description": "Lets your web pages pick photos from, and save images to, the user's photo library."
+      }
+    },
+    {
+      "path": "/packages/plaid",
+      "component": "docs.PagePackages_Plaid",
+      "meta": {
+        "title": "Plaid",
+        "description": "Let users link their bank account with Plaid."
+      }
+    },
+    {
+      "path": "/packages/platform",
+      "component": "docs.PagePackages_Platform",
+      "meta": {
+        "title": "Platform",
+        "description": "Despia's own hosted platform backend, written in DSX, kept as a working example of a full server."
+      }
+    },
+    {
+      "path": "/packages/player",
+      "component": "docs.PagePackages_Player",
+      "meta": {
+        "title": "Player",
+        "description": "Play videos and streams in your app, with offline downloads."
+      }
+    },
+    {
+      "path": "/packages/policy",
+      "component": "docs.PagePackages_Policy",
+      "meta": {
+        "title": "Content policy",
+        "description": "Set your own rules for what users may send, and flag, hold or block anything that breaks them."
+      }
+    },
+    {
+      "path": "/packages/postgres",
+      "component": "docs.PagePackages_Postgres",
+      "meta": {
+        "title": "Postgres",
+        "description": "Store your server data in a Postgres database with row-level security."
+      }
+    },
+    {
+      "path": "/packages/preventdefault",
+      "component": "docs.PagePackages_Preventdefault",
+      "meta": {
+        "title": "PreventDefault",
+        "description": "Stop iOS from scrolling the page when the keyboard opens."
+      }
+    },
+    {
+      "path": "/packages/preview",
+      "component": "docs.PagePackages_Preview",
+      "meta": {
+        "title": "Preview",
+        "description": "Turn a pasted web link into a preview card with title, description and picture."
+      }
+    },
+    {
+      "path": "/packages/print",
+      "component": "docs.PagePackages_Print",
+      "meta": {
+        "title": "PrintDocuments",
+        "description": "Print a PDF or other document through the system print sheet."
+      }
+    },
+    {
+      "path": "/packages/ptt",
+      "component": "docs.PagePackages_Ptt",
+      "meta": {
+        "title": "Push to talk",
+        "description": "Add walkie-talkie voice channels where people hold a button to speak."
+      }
+    },
+    {
+      "path": "/packages/pulltorefresh",
+      "component": "docs.PagePackages_Pulltorefresh",
+      "meta": {
+        "title": "PullToRefresh",
+        "description": "Let people pull down on a web page in your app to reload it."
+      }
+    },
+    {
+      "path": "/packages/pushrouting",
+      "component": "docs.PagePackages_Pushrouting",
+      "meta": {
+        "title": "PushRouting",
+        "description": "Delivers the notification a user tapped to your app's pages once they are ready."
+      }
+    },
+    {
+      "path": "/packages/pushwoosh",
+      "component": "docs.PagePackages_Pushwoosh",
+      "meta": {
+        "title": "Pushwoosh",
+        "description": "Send push notifications to your app's users through Pushwoosh."
+      }
+    },
+    {
+      "path": "/packages/quickactions",
+      "component": "docs.PagePackages_Quickactions",
+      "meta": {
+        "title": "QuickActions",
+        "description": "Add shortcuts to your app icon's long-press menu on the Home screen."
+      }
+    },
+    {
+      "path": "/packages/record",
+      "component": "docs.PagePackages_Record",
+      "meta": {
+        "title": "Record",
+        "description": "Record a voice note or audio message and get the file back, with a live level meter."
+      }
+    },
+    {
+      "path": "/packages/remoteconfig",
+      "component": "docs.PagePackages_Remoteconfig",
+      "meta": {
+        "title": "Firebase Remote Config",
+        "description": "Change app settings and switch features off without releasing a new version."
+      }
+    },
+    {
+      "path": "/packages/remotehosts",
+      "component": "docs.PagePackages_Remotehosts",
+      "meta": {
+        "title": "RemoteHosts",
+        "description": "Move your app to a new domain without shipping a new app version."
+      }
+    },
+    {
+      "path": "/packages/revenuecat",
+      "component": "docs.PagePackages_Revenuecat",
+      "meta": {
+        "title": "RevenueCat",
+        "description": "Sell subscriptions and in-app purchases with RevenueCat."
+      }
+    },
+    {
+      "path": "/packages/rive",
+      "component": "docs.PagePackages_Rive",
+      "meta": {
+        "title": "Rive animations",
+        "description": "Add interactive Rive animations that react to your app's data and send events back."
+      }
+    },
+    {
+      "path": "/packages/routing",
+      "component": "docs.PagePackages_Routing",
+      "meta": {
+        "title": "Routing",
+        "description": "Keeps your app's list of screens and addresses up to date from your server, even over the air."
+      }
+    },
+    {
+      "path": "/packages/rudderstack",
+      "component": "docs.PagePackages_Rudderstack",
+      "meta": {
+        "title": "RudderStack",
+        "description": "Send your app's analytics events to your RudderStack data plane."
+      }
+    },
+    {
+      "path": "/packages/scanner",
+      "component": "docs.PagePackages_Scanner",
+      "meta": {
+        "title": "Scanner",
+        "description": "Scan QR codes, barcodes and paper documents with the camera."
+      }
+    },
+    {
+      "path": "/packages/scanner-components-preview",
+      "component": "docs.PagePackages_ScannerComponentsPreview",
+      "meta": {
+        "title": "Preview",
+        "description": "Show a live camera view inside your own screen that reads QR codes and barcodes."
+      }
+    },
+    {
+      "path": "/packages/scene",
+      "component": "docs.PagePackages_Scene",
+      "meta": {
+        "title": "Scene",
+        "description": "Inspect and control the 3D scenes on screen from code, markup or an AI agent."
+      }
+    },
+    {
+      "path": "/packages/scene-modules-ar",
+      "component": "docs.PagePackages_SceneModulesAr",
+      "meta": {
+        "title": "SceneAR",
+        "description": "Place 3D scene content on real surfaces seen through the camera."
+      }
+    },
+    {
+      "path": "/packages/scene3d",
+      "component": "docs.PagePackages_Scene3d",
+      "meta": {
+        "title": "3D models and AR",
+        "description": "Show 3D models people can spin and zoom, and place them in the real world with AR."
+      }
+    },
+    {
+      "path": "/packages/screenshield",
+      "component": "docs.PagePackages_Screenshield",
+      "meta": {
+        "title": "Screenshot protection",
+        "description": "Hide your app's content in screenshots and screen recordings, and find out when someone tries."
+      }
+    },
+    {
+      "path": "/packages/search",
+      "component": "docs.PagePackages_Search",
+      "meta": {
+        "title": "Spotlight",
+        "description": "Make your app's content findable from the phone's own search, and open the right screen when it is tapped."
+      }
+    },
+    {
+      "path": "/packages/security",
+      "component": "docs.PagePackages_Security",
+      "meta": {
+        "title": "Security",
+        "description": "Switch on app security policies such as blocking jailbroken devices and screenshots."
+      }
+    },
+    {
+      "path": "/packages/see",
+      "component": "docs.PagePackages_See",
+      "meta": {
+        "title": "See",
+        "description": "Describe and understand images with an AI model that runs on the device."
+      }
+    },
+    {
+      "path": "/packages/segment",
+      "component": "docs.PagePackages_Segment",
+      "meta": {
+        "title": "Segment",
+        "description": "Send your app's analytics events to Segment."
+      }
+    },
+    {
+      "path": "/packages/sentry",
+      "component": "docs.PagePackages_Sentry",
+      "meta": {
+        "title": "Sentry",
+        "description": "Send your app's errors and crash reports to your own Sentry project."
+      }
+    },
+    {
+      "path": "/packages/server",
+      "component": "docs.PagePackages_Server",
+      "meta": {
+        "title": "Server",
+        "description": "The backend settings for your app: sign-in, data, address and where it is deployed."
+      }
+    },
+    {
+      "path": "/packages/server-modules-http",
+      "component": "docs.PagePackages_ServerModulesHttp",
+      "meta": {
+        "title": "Http",
+        "description": "Server routes for health checks, webhooks, live updates and a small notes example."
+      }
+    },
+    {
+      "path": "/packages/settings",
+      "component": "docs.PagePackages_Settings",
+      "meta": {
+        "title": "AppSettings",
+        "description": "Open your app's page in the system Settings."
+      }
+    },
+    {
+      "path": "/packages/share",
+      "component": "docs.PagePackages_Share",
+      "meta": {
+        "title": "Share sheet",
+        "description": "Let people share text, links and files from your app through the phone's share sheet."
+      }
+    },
+    {
+      "path": "/packages/sharedsession",
+      "component": "docs.PagePackages_Sharedsession",
+      "meta": {
+        "title": "Watch together",
+        "description": "Let people watch or listen together with playback in sync."
+      }
+    },
+    {
+      "path": "/packages/shareplay",
+      "component": "docs.PagePackages_Shareplay",
+      "meta": {
+        "title": "SharePlay",
+        "description": "Start shared sessions from FaceTime with SharePlay."
+      }
+    },
+    {
+      "path": "/packages/sharetarget",
+      "component": "docs.PagePackages_Sharetarget",
+      "meta": {
+        "title": "ShareExtension",
+        "description": "Lets people share text, links, photos and files into your app from the system share sheet."
+      }
+    },
+    {
+      "path": "/packages/siri",
+      "component": "docs.PagePackages_Siri",
+      "meta": {
+        "title": "LegacySiri",
+        "description": "Let people add a spoken Siri phrase that opens your app and tells it what to do."
+      }
+    },
+    {
+      "path": "/packages/snapconversions",
+      "component": "docs.PagePackages_Snapconversions",
+      "meta": {
+        "title": "SnapConversions",
+        "description": "Send purchases and sign-ups to Snapchat as conversions, from your server."
+      }
+    },
+    {
+      "path": "/packages/sounds",
+      "component": "docs.PagePackages_Sounds",
+      "meta": {
+        "title": "Sounds",
+        "description": "Ship your own notification sounds with the app."
+      }
+    },
+    {
+      "path": "/packages/speechrecognition",
+      "component": "docs.PagePackages_Speechrecognition",
+      "meta": {
+        "title": "SpeechRecognition",
+        "description": "Turn the user's speech into text with the standard web speech API."
+      }
+    },
+    {
+      "path": "/packages/speechsynthesis",
+      "component": "docs.PagePackages_Speechsynthesis",
+      "meta": {
+        "title": "SpeechSynthesis",
+        "description": "Speaks text aloud with the device voices, or turns text into audio files."
+      }
+    },
+    {
+      "path": "/packages/spinner",
+      "component": "docs.PagePackages_Spinner",
+      "meta": {
+        "title": "Spinner",
+        "description": "Show or hide the page-load activity indicator."
+      }
+    },
+    {
+      "path": "/packages/splash",
+      "component": "docs.PagePackages_Splash",
+      "meta": {
+        "title": "Splash",
+        "description": "The launch screen shown while your app starts, with your logo and background."
+      }
+    },
+    {
+      "path": "/packages/storage",
+      "component": "docs.PagePackages_Storage",
+      "meta": {
+        "title": "Key-value storage",
+        "description": "Save small settings and values on the device so they are still there next time the app opens."
+      }
+    },
+    {
+      "path": "/packages/store",
+      "component": "docs.PagePackages_Store",
+      "meta": {
+        "title": "In-app purchases and paywalls",
+        "description": "Sell subscriptions and purchases with a native paywall and one simple way to check what a user owns."
+      }
+    },
+    {
+      "path": "/packages/store-modules-backend",
+      "component": "docs.PagePackages_StoreModulesBackend",
+      "meta": {
+        "title": "Backend",
+        "description": "The server side of App Store promotional offers."
+      }
+    },
+    {
+      "path": "/packages/store-modules-revenuecat",
+      "component": "docs.PagePackages_StoreModulesRevenuecat",
+      "meta": {
+        "title": "RevenueCat",
+        "description": "Sell subscriptions and in-app purchases with RevenueCat."
+      }
+    },
+    {
+      "path": "/packages/stream",
+      "component": "docs.PagePackages_Stream",
+      "meta": {
+        "title": "Stream Video",
+        "description": "Run your app's video calls on Stream."
+      }
+    },
+    {
+      "path": "/packages/stripe",
+      "component": "docs.PagePackages_Stripe",
+      "meta": {
+        "title": "Stripe",
+        "description": "Take card, Apple Pay and bank payments with Stripe."
+      }
+    },
+    {
+      "path": "/packages/supabase",
+      "component": "docs.PagePackages_Supabase",
+      "meta": {
+        "title": "Supabase Auth",
+        "description": "Give every visitor an account from first launch with Supabase and keep it when they sign in."
+      }
+    },
+    {
+      "path": "/packages/swiftygif",
+      "component": "docs.PagePackages_Swiftygif",
+      "meta": {
+        "title": "Animated GIFs",
+        "description": "Add the SwiftyGif library so iOS apps can play animated GIF images."
+      }
+    },
+    {
+      "path": "/packages/systembars",
+      "component": "docs.PagePackages_Systembars",
+      "meta": {
+        "title": "SystemBars",
+        "description": "Control the status bar, the navigation bar and fullscreen mode from your screens."
+      }
+    },
+    {
+      "path": "/packages/tabletsupport",
+      "component": "docs.PagePackages_Tabletsupport",
+      "meta": {
+        "title": "TabletSupport",
+        "description": "Make your iOS app run natively on iPad as well as iPhone."
+      }
+    },
+    {
+      "path": "/packages/taptopay",
+      "component": "docs.PagePackages_Taptopay",
+      "meta": {
+        "title": "Tap to Pay",
+        "description": "Turn the phone itself into a card reader for in-person payments."
+      }
+    },
+    {
+      "path": "/packages/telemetry",
+      "component": "docs.PagePackages_Telemetry",
+      "meta": {
+        "title": "Error and crash reporting",
+        "description": "Report crashes, hangs and errors from your app to the monitoring service you choose."
+      }
+    },
+    {
+      "path": "/packages/telemetry-modules-http",
+      "component": "docs.PagePackages_TelemetryModulesHttp",
+      "meta": {
+        "title": "Http",
+        "description": "Sends your app's error and crash reports to a web address you control, with no outside service."
+      }
+    },
+    {
+      "path": "/packages/telemetry-modules-posthog",
+      "component": "docs.PagePackages_TelemetryModulesPosthog",
+      "meta": {
+        "title": "PostHog",
+        "description": "Sends your app's error and crash reports to PostHog."
+      }
+    },
+    {
+      "path": "/packages/terminal",
+      "component": "docs.PagePackages_Terminal",
+      "meta": {
+        "title": "Stripe Terminal",
+        "description": "Take in-person card payments with Stripe card readers."
+      }
+    },
+    {
+      "path": "/packages/terra",
+      "component": "docs.PagePackages_Terra",
+      "meta": {
+        "title": "Terra Health",
+        "description": "Pull Apple Health and wearable data into your app through Terra."
+      }
+    },
+    {
+      "path": "/packages/tiktokevents",
+      "component": "docs.PagePackages_Tiktokevents",
+      "meta": {
+        "title": "TikTokEvents",
+        "description": "Report purchases and sign-ups to TikTok from your server, only for people who agreed."
+      }
+    },
+    {
+      "path": "/packages/toast",
+      "component": "docs.PagePackages_Toast",
+      "meta": {
+        "title": "Toast",
+        "description": "Show short messages and undo bars that disappear on their own."
+      }
+    },
+    {
+      "path": "/packages/translate",
+      "component": "docs.PagePackages_Translate",
+      "meta": {
+        "title": "Translate",
+        "description": "Translate text between languages, on the device first."
+      }
+    },
+    {
+      "path": "/packages/tv",
+      "component": "docs.PagePackages_Tv",
+      "meta": {
+        "title": "TV",
+        "description": "Ship your app to Apple TV and Android TV with screens you write once in DSX."
+      }
+    },
+    {
+      "path": "/packages/uuid",
+      "component": "docs.PagePackages_Uuid",
+      "meta": {
+        "title": "DeviceUUID",
+        "description": "Gives your app a stable anonymous id for each install, with no permission prompt."
+      }
+    },
+    {
+      "path": "/packages/verification",
+      "component": "docs.PagePackages_Verification",
+      "meta": {
+        "title": "Stripe Identity",
+        "description": "Check who your users are with an ID document and selfie, using Stripe Identity."
+      }
+    },
+    {
+      "path": "/packages/verticalplayer",
+      "component": "docs.PagePackages_Verticalplayer",
+      "meta": {
+        "title": "VerticalPlayerStack",
+        "description": "A full-screen vertical video player for short dramas, with paywalls, coins and offline downloads."
+      }
+    },
+    {
+      "path": "/packages/video",
+      "component": "docs.PagePackages_Video",
+      "meta": {
+        "title": "Video",
+        "description": "A video player element you place in a screen and drive from state."
+      }
+    },
+    {
+      "path": "/packages/viewport",
+      "component": "docs.PagePackages_Viewport",
+      "meta": {
+        "title": "Viewport",
+        "description": "Keep chat boxes and footers visible when the on-screen keyboard opens."
+      }
+    },
+    {
+      "path": "/packages/vision",
+      "component": "docs.PagePackages_Vision",
+      "meta": {
+        "title": "Text recognition and body pose",
+        "description": "Read text out of photos and scans, and track body movement from the camera, on the device."
+      }
+    },
+    {
+      "path": "/packages/voice",
+      "component": "docs.PagePackages_Voice",
+      "meta": {
+        "title": "Voice",
+        "description": "Speak text aloud and list the available voices."
+      }
+    },
+    {
+      "path": "/packages/wallet",
+      "component": "docs.PagePackages_Wallet",
+      "meta": {
+        "title": "Wallet",
+        "description": "Let people add a boarding pass, ticket or card to Apple Wallet."
+      }
+    },
+    {
+      "path": "/packages/watch",
+      "component": "docs.PagePackages_Watch",
+      "meta": {
+        "title": "Watch",
+        "description": "Adds an Apple Watch and Wear OS companion to your app and lets the phone control it."
+      }
+    },
+    {
+      "path": "/packages/webextension",
+      "component": "docs.PagePackages_Webextension",
+      "meta": {
+        "title": "WebExtension",
+        "description": "Ship a Safari web extension with your app and share state and a sign-in with it."
+      }
+    },
+    {
+      "path": "/packages/webplatform-bluetooth",
+      "component": "docs.PagePackages_WebplatformBluetooth",
+      "meta": {
+        "title": "Bluetooth",
+        "description": "Lets your web page ask for Bluetooth on iOS by adding the permission text the system requires."
+      }
+    },
+    {
+      "path": "/packages/webplatform-camera",
+      "component": "docs.PagePackages_WebplatformCamera",
+      "meta": {
+        "title": "Camera",
+        "description": "Lets web pages inside your app use the camera with getUserMedia."
+      }
+    },
+    {
+      "path": "/packages/webplatform-location",
+      "component": "docs.PagePackages_WebplatformLocation",
+      "meta": {
+        "title": "Location",
+        "description": "Lets a web page in your app ask for the person's location through the browser's own location call."
+      }
+    },
+    {
+      "path": "/packages/webplatform-nfc",
+      "component": "docs.PagePackages_WebplatformNfc",
+      "meta": {
+        "title": "NFC",
+        "description": "Adds the NFC permission text iOS needs when a page or package touches NFC."
+      }
+    },
+    {
+      "path": "/packages/websocket",
+      "component": "docs.PagePackages_Websocket",
+      "meta": {
+        "title": "WebSocket",
+        "description": "Keep a WebSocket connection open that reconnects by itself and never loses a message."
+      }
+    },
+    {
+      "path": "/packages/webview",
+      "component": "docs.PagePackages_Webview",
+      "meta": {
+        "title": "WebView",
+        "description": "Show any web page inside your app."
+      }
+    },
+    {
+      "path": "/packages/widget",
+      "component": "docs.PagePackages_Widget",
+      "meta": {
+        "title": "Home screen widgets",
+        "description": "Put your app on the home screen and lock screen with widgets you design in DSX."
       }
     },
     {

@@ -7,6 +7,20 @@ content/framework/skills/manifest-dsl.md:~638 json block does not parse; left as
 content/framework/skills/manifest-dsl.md:~712 json block does not parse; left as written
 content/framework/skills/module-state.md:~163 json block does not parse; left as written
 content/framework/skills/writing-a-module.md:~12 json block does not parse; left as written
+content/packages/airbridge.md:~259 js one-liner of 104 chars; needs a JS formatter
+content/packages/airbridge.md:~795 js one-liner of 102 chars; needs a JS formatter
+content/packages/bluetooth.md:~456 js one-liner of 142 chars; needs a JS formatter
+content/packages/cdn.md:~97 js one-liner of 104 chars; needs a JS formatter
+content/packages/dom.md:~230 js one-liner of 116 chars; needs a JS formatter
+content/packages/dom.md:~296 js one-liner of 106 chars; needs a JS formatter
+content/packages/dom.md:~398 js one-liner of 105 chars; needs a JS formatter
+content/packages/fileupload.md:~40 js one-liner of 101 chars; needs a JS formatter
+content/packages/healthkit.md:~38 js one-liner of 190 chars; needs a JS formatter
+content/packages/healthkit.md:~38 js one-liner of 135 chars; needs a JS formatter
+content/packages/healthkit.md:~288 js one-liner of 101 chars; needs a JS formatter
+content/packages/motion.md:~316 js one-liner of 109 chars; needs a JS formatter
+content/packages/speechrecognition.md:~197 js one-liner of 135 chars; needs a JS formatter
+content/packages/verticalplayer.md:~312 js one-liner of 152 chars; needs a JS formatter
 content/legacy/lovable/native-features/quick-actions.md:~13 javascript one-liner of 111 chars; needs a JS formatter
 content/legacy/lovable/native-features/print-documents.md:~66 javascript one-liner of 102 chars; needs a JS formatter
 content/legacy/lovable/native-features/print-documents.md:~66 javascript one-liner of 108 chars; needs a JS formatter
