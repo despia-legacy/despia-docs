@@ -8,11 +8,11 @@ order: 1
 
 # Lingo
 
-The words DSX uses, 83 of them, and what each one means. The console and public conversation say **package**; code and APIs say **module** (`dsx.module.*`). It is the same thing: read [Package or module?](/lingo/package-vs-module).
+The words DSX uses, 85 of them, and what each one means. The console and public conversation say **package**; code and APIs say **module** (`dsx.module.*`). It is the same thing: read [Package or module?](/lingo/package-vs-module).
 
 The same dictionary is available to tools: `despia define <term>`, `despia glossary --json`, and the toolchain MCP tools `glossary` and `define`.
 
-Lingo 0.1.0, 83 terms. Generated from the glossary dataset; edit the dataset, not this file.
+Lingo 0.1.0, 85 terms. Generated from the glossary dataset; edit the dataset, not this file.
 
 ## The units you build with
 
@@ -931,6 +931,25 @@ Decided 2026-10-09 (hybrid): the library is @despia-native/project, and the name
 
 Related: project-core, store-core, engine-library, npm-package, kernel.
 
+### template apply
+
+The offline CLI command that applies a template to a local folder through the same code as the Despia service.
+
+We say **template apply**. In code it is `despia template apply`.
+
+`despia template apply <template> --dir <path>` plans the change by default and writes only with --apply. It refuses secrets, because only the service can seal them. It is not despia create or despia new: those start a project, this applies a template to a folder you already have.
+
+| Where | How we say it |
+|---|---|
+| cli | despia template apply <template> --dir <path> (add --apply to write) |
+| docs | template apply |
+
+Do not say:
+
+- "despia create --template" (cli, docs, conversation): the command is despia template apply.
+
+Related: template, cli, project.
+
 ## The product and the cloud
 
 ### DSX WebView
@@ -1218,6 +1237,21 @@ Retired words: Despia Native app.
 
 Related: dsx-webview, native-ui-app, template, package.
 
+### callout
+
+A notice a template declares to show before a config group, block or field: a short title and body plus a Read more MDX body, optionally conditional. _(proposed)_
+
+We say **callout**. In code it is `callout`.
+
+Callouts are structured metadata that the API, the CLI and the MCP expose, so every surface can show the same notice. The final schema is being defined by the TEMPLATE-CALLOUTS lane; this entry names the concept and will follow that schema. Not the docs Callout component (Note, Info, Tip), which is page styling.
+
+| Where | How we say it |
+|---|---|
+| ui | callout (a notice above a setting) |
+| docs | template callout |
+
+Related: template, package.
+
 ## How we work
 
 ### constitution
@@ -1338,4 +1372,4 @@ Google calls an Android app's id its package name, and the CLI mirrors that in f
 
 Related: package.
 
-_Generated from the DSX glossary (lingo 0.1.0, 83 terms)._
+_Generated from the DSX glossary (lingo 0.1.0, 85 terms)._
