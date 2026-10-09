@@ -30,3 +30,8 @@ first-unlock proof limits remain governed by the native receipts, not inferred f
 Private logs: lane-reports/private/codex-docs-010-integration (compile, sync, tests, lint and build).
 Next: final framework/toolchain sync, reconcile npm script flags/alias, DocShell test and expression
 budget refusals, complete build/assembly and SSR/MCP probes before any separately approved deploy.
+
+Scope guard on the actual 5b-synced content: RED, two stable imported pages assert native UI
+production readiness (/framework/guides/quickstart and /framework/guides/release-status).
+These framework pages were not edited or stripped in the docs repository. Final framework
+source sync must pass this guard before release; zero lint errors does not waive it.
