@@ -916,6 +916,14 @@
       }
     },
     {
+      "path": "/guides/local-https-cdn",
+      "component": "docs.PageGuides_LocalHttpsCdn",
+      "meta": {
+        "title": "Local CDN over HTTPS on iOS",
+        "description": "Cached files from the local CDN now load inside an HTTPS website on iOS, with no Cloudflare Worker, no DNS change and no certificate to install. Your existing localcdn:// calls keep working."
+      }
+    },
+    {
       "path": "/troubleshooting/white-screen-on-launch",
       "component": "docs.PageTroubleshooting_WhiteScreenOnLaunch",
       "meta": {
