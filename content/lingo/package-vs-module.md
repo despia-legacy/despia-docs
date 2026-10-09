@@ -61,6 +61,6 @@ A versioned Android or JVM library resolved by Maven coordinates in a Gradle bui
 
 Native dependencies of a DSX package on Android are Gradle artifacts, written as Maven coordinates (group:name:version). The DSX package declares them; the Android build resolves them. Say Gradle artifact or Maven coordinate, never package, for this meaning.
 
-See the full [Lingo](/lingo) for every word.
+Writing one? See [Build a module](/framework/guides/build-a-module). For every word, see the full [Lingo](/lingo).
 
 _Generated from the DSX glossary (lingo 0.1.0). The same data answers `despia define package`._

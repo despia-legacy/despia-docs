@@ -19,11 +19,9 @@ it carries the same recipe, written for an agent.
 
 ## Why "module"
 
-You will see two words. The thing you write is a **module**: its base class is `Module` and apps
-call it through `dsx.module.<command>`. The thing you distribute is often called a **package**, and
-the command line uses that word (`despia package check`, `despia add`). The code never names a type
-`package`, because `package` is a reserved word in Java and Kotlin, and the same module has to
-compile on the Android lane.
+A **package** is a **module**, and a module is a package: one installable piece of functionality. The console, the docs prose and the command line say package (`despia add`, `despia package check`) because that is the word people use when they install, version and publish one. Code says module (`dsx.module.<command>`, the `Module` base class) because `package` is a reserved word in Java and Kotlin, so no type or API can carry it on the Android lane, and Swift overloads it too; `module` is reserved nowhere, so one name works on iOS, Android and the web.
+
+This guide is for people writing code, so it says module when it shows code and package when it talks about installing or publishing. [Package or module?](/lingo/package-vs-module) explains the choice, and how a DSX package differs from an npm package, a Swift package and a Gradle artifact.
 
 ## Anatomy
 
@@ -292,8 +290,9 @@ The copy is the app's own DSX from then on, and records where it came from.
 - **Calling another module.** Use `dsx.module.<command>.<action>(args)`. Await it for the result,
   call it bare for fire and forget, and on Swift write `try?`, so the call is a no-op when that
   module is not in the build.
-  - To announce something any number of modules may care about, use `dsx.fire("name")` and
-    `dsx.hook("name")`. Never use a fire as a disguised call.
+  - To announce something any number of modules may care about, use `dsx.broadcast("name")`
+    (pages listen with `dsx.on`), or `dsx.delegate.send` and `dsx.delegate.listen` to ask a question.
+    Never use either as a disguised call.
   - [Calling another module](/framework/skills/cross-module-calls) covers all three shapes.
 - **Reading another module's value.** Read the state it declares,
   `dsx.module.<command>.context.<var>`, never a magic string

@@ -8,11 +8,11 @@ order: 1
 
 # Lingo
 
-The words DSX uses, 80 of them, and what each one means. The console and public conversation say **package**; code and APIs say **module** (`dsx.module.*`). It is the same thing: read [Package or module?](/lingo/package-vs-module).
+The words DSX uses, 81 of them, and what each one means. The console and public conversation say **package**; code and APIs say **module** (`dsx.module.*`). It is the same thing: read [Package or module?](/lingo/package-vs-module).
 
 The same dictionary is available to tools: `despia define <term>`, `despia glossary --json`, and the toolchain MCP tools `glossary` and `define`.
 
-Lingo 0.1.0, 80 terms. Generated from the glossary dataset; edit the dataset, not this file.
+Lingo 0.1.0, 81 terms. Generated from the glossary dataset; edit the dataset, not this file.
 
 ## The units you build with
 
@@ -540,7 +540,7 @@ Everything else is a package. kernel names three things: the concept; the folder
 
 Also heard: engine.
 
-Related: engine, npm-package, bus, renderer.
+Related: engine, npm-package, bus, renderer, project-library.
 
 ### engine
 
@@ -564,7 +564,7 @@ One of the four implementations of the DSX contract: Swift/SwiftUI, Kotlin/Compo
 
 We say **renderer**. In code it is `Swift/SwiftUI`, `Kotlin/Compose`, `Compose Desktop`, `TypeScript/DOM`.
 
-Article 10 requires one feature on every renderer: the same behaviour and look, even though the four implementations differ. A renderer is not a platform (a platform is the OS you ship to) and not a package.
+Article 10 requires one feature on every renderer: the same behaviour and look, even though the four implementations differ. A renderer is not a platform (a platform is the OS you ship to) and not a package. The four renderers run on three kernel implementations (Swift, Kotlin, TypeScript): Compose Desktop shares the Kotlin kernel. Phrases like all three renderers in older pages mean those three kernels.
 
 | Where | How we say it |
 |---|---|
@@ -853,21 +853,27 @@ Not the toolchain MCP, which serves the despia verbs to coding agents.
 
 Related: mcp, server-document.
 
-### ADT graph
+### application graph
 
-The structured model of a project that authoring operates on: describe, graph and the structural verbs read and change it, and verify checks the result. _(needs-owner-confirmation)_
+The structured model of an app that authoring operates on: describe and graph read it, the structural verbs change it, and verify checks the result.
 
-We say **ADT graph**. In code it is `despia describe`, `despia graph`.
+We say **application graph**. In code it is `despia describe`, `despia graph`.
 
-Authoring is CLI and MCP through this graph; there is no editor deliverable. The underlying derived structure is the DSXGraph (a derived union, never a second editable source).
+Authoring is CLI and MCP through this graph; there is no editor deliverable. The CLI and docs call it the application graph (despia graph <kind>, despia describe). The derived structure underneath is the DSXGraph, never a second editable source.
 
 | Where | How we say it |
 |---|---|
-| docs | project graph |
+| docs | application graph |
+| cli | despia graph, despia describe |
+
+Do not say:
+
+- "ADT graph" (ui, cli, docs, conversation): the public name is application graph.
+- "project graph" (ui, cli, docs, conversation): the public name is application graph.
+
+Retired words: ADT graph, project graph.
 
 Related: cli, mcp.
-
-> Open question: What does ADT stand for, and should public docs use the label ADT graph or just say the project graph?
 
 ### @despia-native/project-core
 
@@ -875,7 +881,7 @@ The pure domain core of a Despia project (render, parse, validate, diff, three-w
 
 In code: `@despia-native/project-core`.
 
-It has no IO, no clock, no randomness and no dependencies, so every surface reads the same rules. It is private to the monorepo; the CLI also publishes the pieces it needs (the lingo core, the template engine) and project-core re-exports them. Never call it a module or a package of an app.
+It has no IO, no clock, no randomness and no dependencies, so every surface reads the same rules. It is private to the monorepo today. Decided 2026-10-09: the shared library every surface imports becomes the published pure library @despia-native/project (see project-library), which takes over this role; until it lands, project-core is what the CLI, api Worker and CI import. Never call it a module or a package of an app.
 
 | Where | How we say it |
 |---|---|
@@ -895,7 +901,7 @@ Released alongside the CLI. An npm library, not a DSX package.
 |---|---|
 | docs | store-core (an npm library) |
 
-Related: project-core, engine-library.
+Related: project-core, engine-library, project-library.
 
 ### engine library
 
@@ -909,7 +915,21 @@ Everything in it is an npm package (@despia-native/*). None of them is a DSX pac
 |---|---|
 | docs | the engine library (an npm workspace) |
 
-Related: npm-package, kernel, project-core, dsx-dom.
+Related: npm-package, kernel, project-core, dsx-dom, project-library.
+
+### @despia-native/project
+
+The shared TypeScript core that every surface imports: a published, pure npm library (@despia-native/project) for reading, validating, diffing and changing a project; an npm workspace library, not a DSX module or package. _(proposed)_
+
+In code: `@despia-native/project`.
+
+Decided 2026-10-09 (hybrid): the library is @despia-native/project, and the name Core/Project is reserved for a later thin wrapper package that exposes it to apps. It replaces the role project-core has today. The skeleton is being created on the branch wip/claude/build-sot-1; until it lands, use project-core. Never call it a module.
+
+| Where | How we say it |
+|---|---|
+| docs | the project library (@despia-native/project), an npm library |
+
+Related: project-core, store-core, engine-library, npm-package, kernel.
 
 ## The product and the cloud
 
@@ -930,19 +950,17 @@ Related: webview, bridge, dom-module, surface.
 
 ### DSX View
 
-The native counterpart of DSX WebView: it renders .dsx screens as native SwiftUI and Compose. _(needs-owner-confirmation)_
+The product name for native UI rendering of .dsx on SwiftUI and Compose; the <DSXView/> component is only the part that renders one screen natively.
 
 We say **DSX View**. In code it is `<DSXView/>`.
 
-DSX View (native UI rendering) is early alpha: usable to experiment, not production ready, and hidden from new-app templates until it is stable.
+DSX View (native UI rendering) is early alpha: usable to experiment, not production ready, and hidden from new-app templates until it is stable. Say DSX View for the capability and <DSXView/> only for the component. It is the native counterpart of DSX WebView.
 
 | Where | How we say it |
 |---|---|
 | docs | DSX View |
 
 Related: dsx-webview, dsx-dom, renderer.
-
-> Open question: Is DSX View the product name for native UI rendering in general, or only the <DSXView/> component that fetches and renders a remote screen?
 
 ### DSX DOM
 
@@ -1208,7 +1226,7 @@ Do not confuse it with the <canvas> drawing primitive, which stays.
 |---|---|
 | docs | not used |
 
-Related: adt-graph, cli.
+Related: application-graph, cli.
 
 ## Words that mean something else elsewhere
 
@@ -1225,7 +1243,7 @@ When someone says package in a JavaScript context they mean this. The @despia-na
 | docs | npm package. |
 | code | npm package; its manifest is package.json. |
 
-Related: package, engine-library, project-core.
+Related: package, engine-library, project-core, project-library.
 
 ### Swift package
 
@@ -1274,4 +1292,4 @@ Google calls an Android app's id its package name, and the CLI mirrors that in f
 
 Related: package.
 
-_Generated from the DSX glossary (lingo 0.1.0, 80 terms)._
+_Generated from the DSX glossary (lingo 0.1.0, 81 terms)._
