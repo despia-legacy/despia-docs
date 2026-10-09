@@ -8,11 +8,11 @@ order: 1
 
 # Lingo
 
-The words DSX uses, 81 of them, and what each one means. The console and public conversation say **package**; code and APIs say **module** (`dsx.module.*`). It is the same thing: read [Package or module?](/lingo/package-vs-module).
+The words DSX uses, 83 of them, and what each one means. The console and public conversation say **package**; code and APIs say **module** (`dsx.module.*`). It is the same thing: read [Package or module?](/lingo/package-vs-module).
 
 The same dictionary is available to tools: `despia define <term>`, `despia glossary --json`, and the toolchain MCP tools `glossary` and `define`.
 
-Lingo 0.1.0, 81 terms. Generated from the glossary dataset; edit the dataset, not this file.
+Lingo 0.1.0, 83 terms. Generated from the glossary dataset; edit the dataset, not this file.
 
 ## The units you build with
 
@@ -1172,6 +1172,52 @@ The first public release is 0.1.0, a pre-release that is stable for the web view
 
 Related: v3, dsx.
 
+### native UI app
+
+An app whose screens are drawn natively from .dsx: SwiftUI on iOS and Jetpack Compose on Android (DSX View), plus native features through packages.
+
+We say **native UI app**. In code it is `<DSXView/>`.
+
+This is one of the two app shapes. Native UI rendering is early alpha until 1.0.0. A native UI app can still show a web page in places and call native features, because both app shapes use packages for native features.
+
+| Where | How we say it |
+|---|---|
+| ui | native UI app |
+| docs | native UI app (DSX View) |
+| conversation | a native UI app |
+
+Do not say:
+
+- "Despia Native app" (ui, cli, docs, conversation): not a term: say native UI app or web view app.
+
+Retired words: Despia Native app.
+
+Related: dsx-view, web-view-app, package, renderer.
+
+### web view app
+
+An app built around a web view, as thin as the author wants, plus native features through packages; a smaller, thinner web view is still a hybrid app.
+
+We say **web view app**. In code it is `<DSXWebView/>`.
+
+The other app shape, and the one the Web App to Mobile App template builds (stable for 0.1.0). The web view is DSX WebView with the bridge, so the page calls packages through window.dsx. Hybrid app is the same thing said generally; nothing changes when the web view shrinks to a few screens.
+
+| Where | How we say it |
+|---|---|
+| ui | web view app, or hybrid app |
+| docs | web view app (hybrid app) |
+| conversation | a hybrid app |
+
+Do not say:
+
+- "Despia Native app" (ui, cli, docs, conversation): not a term: say native UI app or web view app.
+
+Also heard: hybrid app.
+
+Retired words: Despia Native app.
+
+Related: dsx-webview, native-ui-app, template, package.
+
 ## How we work
 
 ### constitution
@@ -1292,4 +1338,4 @@ Google calls an Android app's id its package name, and the CLI mirrors that in f
 
 Related: package.
 
-_Generated from the DSX glossary (lingo 0.1.0, 81 terms)._
+_Generated from the DSX glossary (lingo 0.1.0, 83 terms)._
