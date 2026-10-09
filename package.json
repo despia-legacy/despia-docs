@@ -9,8 +9,8 @@
   "scripts": {
     "sync": "node scripts/sync-content.mjs",
     "compile": "node scripts/port-legacy.mjs && node scripts/migrate-map.mjs && node scripts/compile.mjs && node --experimental-strip-types --no-warnings scripts/mcp-tools.mjs",
-    "build": "npm run compile && dsx build && node scripts/assemble.mjs",
-    "dev": "npm run compile && dsx dev",
+    "build": "npm run compile && despia build && node scripts/assemble.mjs",
+    "dev": "npm run compile && despia dev",
     "lint": "npm run compile && despia lint",
     "redirects": "node scripts/redirects.mjs",
     "parity": "node scripts/setup-parity.mjs",
