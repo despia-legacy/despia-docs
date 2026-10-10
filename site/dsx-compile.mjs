@@ -14,6 +14,7 @@
 //    node site/dsx-compile.mjs            # writes Components/v2/*.dsx and merges the routes into dsx.config.json
 //    node site/dsx-compile.mjs --only a,b # only these routes (fast iteration builds); the rest of the config untouched
 //
+import { execFileSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync, existsSync, rmSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -450,6 +451,36 @@ cfg.routes = routes.concat(cfg.routes.filter((r) => !owned.has(r.path) && !moved
 cfg.entry = "V2Home";
 cfg.siteUrl = SITE;
 writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + "\n");
+
+// canonical links and sitemap rows for the V4 pages: scripts/compile.mjs writes public/canonical.json and
+// public/sitemap.xml for the spaces it still builds, and assemble.mjs stamps <link rel="canonical"> from the former, so
+// the V4 rows join both here (a row's lastmod is the last commit of its source, else the build's date)
+{
+  const lastCommit = new Map();
+  try {
+    let date = null;
+    for (const line of execFileSync("git", ["log", "--format=@%cI", "--name-only", "--", "content-v2", "data/packages.json"], { cwd: repo, encoding: "utf8", maxBuffer: 64 << 20 }).split("\n")) {
+      if (line.startsWith("@")) date = line.slice(1);
+      else if (line !== "" && !lastCommit.has(line)) lastCommit.set(line, date);
+    }
+  } catch { /* not a git checkout: the build date stands */ }
+  const now = new Date().toISOString();
+  const sourceOf = (route) => {
+    if (route.startsWith("/packages/")) return "data/packages.json";
+    if (route === "/") return "content-v2/index.md";
+    const f = [`content-v2${route}.md`, `content-v2${route}/index.md`].find((x) => existsSync(join(repo, x)));
+    return f ?? null;
+  };
+  const canonicalFile = join(repo, "public", "canonical.json");
+  const canonical = existsSync(canonicalFile) ? JSON.parse(readFileSync(canonicalFile, "utf8")) : {};
+  for (const r of routes) canonical[r.path] = SITE + (r.path === "/" ? "" : r.path);
+  writeFileSync(canonicalFile, JSON.stringify(canonical) + "\n");
+  const sitemapFile = join(repo, "public", "sitemap.xml");
+  const prior = existsSync(sitemapFile) ? readFileSync(sitemapFile, "utf8") : "";
+  const rows = (prior.match(/  <url>.*<\/url>/g) ?? []).filter((row) => !routes.some((r) => row.includes(`<loc>${SITE + (r.path === "/" ? "" : r.path)}</loc>`)));
+  for (const r of routes) rows.push(`  <url><loc>${SITE + (r.path === "/" ? "" : r.path)}</loc><lastmod>${lastCommit.get(sourceOf(r.path)) ?? now}</lastmod></url>`);
+  writeFileSync(sitemapFile, [`<?xml version="1.0" encoding="UTF-8"?>`, `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`, ...rows, `</urlset>`, ""].join("\n"));
+}
 writeFileSync(join(repo, "Components", "DocsShell.css"), `/*
   DocsShell: the one rule the console has no screen for: a long-form article keeps a reading width. Everything else on a
   docs page is the console's own components, unstyled.
