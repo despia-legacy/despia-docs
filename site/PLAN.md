@@ -23,6 +23,25 @@ Repo despia-native/docs, branch `wip/claude/docs-v2` (from 5097c09). Worktree `/
   is untouched (pixel identical by construction).
 - One marked workaround in DocsShell.css (the article's inline inset) until the framework's prose layout lands.
 
+## Rulings folded in (2026-10-10 night)
+
+- **One sample form**: every native call in every sample is `await dsx.module.<package>.<action>(...)`, the same in a DSX
+  app and in any web app inside Despia; one sample per package page. `window.dsx?.` appears only on
+  /web-apps/outside-despia. Enforced by site/check-samples.mjs (fails on a call without `await`, and on `window.dsx`
+  anywhere else in content-v2).
+- **Web apps section** (lane webapp-howto, branch wip/claude/webapp-howto from 81fbc58): /web-apps/*; the old
+  /convert/native-features, /convert/react, /convert/detect 301 to its pages.
+- **Hosting at https://despia.com/docs** (data/site.json: origin + base). Canonical, sitemap (siteUrl), llms.txt,
+  docs-index.json URLs, the setup.despia.com table (-> https://despia.com/docs/legacy/...) and the worker (BASE stripped
+  on the way in, put back on every redirect; docs.despia.com 301s every path under despia.com/docs) are done.
+  FRAMEWORK GAP: DSX has no base path. The build already writes page-relative script and registry URLs (../main.js,
+  ../_registry/...), but absolute /icon.svg, /manifest.webmanifest, /fonts/..., every route href (/dsx/...) and the client
+  router's paths assume the site root. Needed in the framework: a `basePath` in dsx.config.json honoured by the SSR head,
+  route hrefs, dsx.module.route and the service worker scope.
+  The marketing site must add `Sitemap: https://despia.com/docs/sitemap.xml` to despia.com/robots.txt.
+  OWNER HARD RULE: nothing on despia.com (no route, DNS or Worker) and no deploy until the owner says go; previews only
+  on workers.dev or a staging host.
+
 ## Information architecture (top tabs = sections; every page title)
 
 ```
@@ -51,10 +70,12 @@ Convert  /convert
   Get started
     Convert overview            /convert
     Quickstart                  /convert/quickstart
+  Your web app
+    Native features from JavaScript  /convert/native-features   (old /web-apps content, condensed)
+    React and Next.js           /convert/react
+    Running inside Despia       /convert/detect
   Moving over
     Moving from Despia V3       /convert/from-v3
-Web apps  /web-apps                      (lane webapp-howto: quickstart, native-features, frameworks, typescript,
-                                          hosted-and-bundled, preview, outside-despia (the ONLY window.dsx?. page), packages)
 Packages  /packages                       (written, Phase A) catalog: search, status segmented control, category chips, dense grid
   <one page per package>        /packages/<slug>  (generated: DSX sample + Convert JS sample, when to use, actions, params, results)
 Build and ship  /ship
