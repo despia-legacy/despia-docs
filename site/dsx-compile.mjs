@@ -30,6 +30,8 @@ const ONLY = onlyAt > 0 ? new Set(process.argv[onlyAt + 1].split(",")) : null;
 const RELEASE = JSON.parse(readFileSync(join(repo, "data", "release.json"), "utf8"));
 const ICONS = JSON.parse(readFileSync(join(repo, "data", "icons.json"), "utf8"));
 const WAITLIST = "https://api.despia.com/v1/waitlist";
+const SITE_CFG = JSON.parse(readFileSync(join(repo, "data", "site.json"), "utf8"));
+const SITE = `${SITE_CFG.origin}${SITE_CFG.base}`;
 
 // ── escaping ────────────────────────────────────────────────────────────────────────────────────────
 // a value carried inside a code body (<variable>, <script>): JSON, with every character XML or the linter would read
@@ -238,7 +240,7 @@ function shell() {
 
 // ── a page ──────────────────────────────────────────────────────────────────────────────────────────
 function pageMenu(md) {
-  const ask = encodeURIComponent(`Read https://docs.despia.com${md} so I can ask questions about it.`);
+  const ask = encodeURIComponent(`Read ${SITE}${md} so I can ask questions about it.`);
   return `[{ header: true, title: 'This page' }, { title: 'View as Markdown', icon: 'doc.plaintext', href: '${md}' }, { separator: true }, { header: true, title: 'Ask about it in' }, { title: 'Claude', icon: 'sparkles', href: 'https://claude.ai/new?q=${ask}' }, { title: 'ChatGPT', icon: 'bubble.left', href: 'https://chatgpt.com/?q=${ask}' }]`;
 }
 const navBar = ({ title, description, md, large = true }) => `  <NavBar title="${attr(title)}"${large ? ` large="true" description="${attr(description)}"` : ""}>
@@ -437,6 +439,7 @@ const owned = new Set(routes.map((r) => r.path));
 const moved = new Set(Object.keys(JSON.parse(readFileSync(join(repo, "redirects", "v2-moves.json"), "utf8")).moves));
 cfg.routes = routes.concat(cfg.routes.filter((r) => !owned.has(r.path) && !moved.has(r.path) && !r.component.startsWith("docs.V2")));
 cfg.entry = "V2Home";
+cfg.siteUrl = SITE;
 writeFileSync(cfgPath, JSON.stringify(cfg, null, 2) + "\n");
 writeFileSync(join(repo, "Components", "DocsShell.css"), `/*
   DocsShell: the one rule the console has no screen for: a long-form article keeps a reading width. Everything else on a
@@ -487,11 +490,11 @@ if (existsSync(join(v2out, "docs-index.json"))) {
     }
   }
   const spaces = ["", "## Other spaces", "",
-    "- [Legacy (V3)](https://docs.despia.com/legacy/llms.txt): despia-native and the V3 runtime",
-    "- [Migration](https://docs.despia.com/migrate/llms.txt): move a V3 app to V4",
-    "- [Troubleshooting](https://docs.despia.com/troubleshooting/llms.txt): symptom, cause, fix",
-    "- [Releases](https://docs.despia.com/releases/llms.txt): release notes",
-    "- [App Review](https://docs.despia.com/app-review/llms.txt): Apple and Google review guidelines", ""];
+    `- [Legacy (V3)](${SITE}/legacy/llms.txt): despia-native and the V3 runtime`,
+    `- [Migration](${SITE}/migrate/llms.txt): move a V3 app to V4`,
+    `- [Troubleshooting](${SITE}/troubleshooting/llms.txt): symptom, cause, fix`,
+    `- [Releases](${SITE}/releases/llms.txt): release notes`,
+    `- [App Review](${SITE}/app-review/llms.txt): Apple and Google review guidelines`, ""];
   writeFileSync(join(pub, "llms.txt"), readFileSync(join(v2out, "llms.txt"), "utf8") + spaces.join("\n"));
   console.log(`[docs.v2] export: public/docs-index.json (${index.pages.length} pages), llms.txt, Markdown twins`);
 } else console.warn("[docs.v2] dist-v2/docs-index.json missing: run `node site/build.mjs` first for the export and the twins");

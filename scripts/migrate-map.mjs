@@ -13,7 +13,7 @@ import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const map = JSON.parse(readFileSync(join(root, "migrate", "map.json"), "utf8"));
-const site = "https://docs.despia.com";
+const site = (() => { const c = JSON.parse(readFileSync(join(root, "data", "site.json"), "utf8")); return `${c.origin}${c.base}`; })();
 
 const STATUS_LABEL = { mapped: "Mapped", partial: "Partial", "not-applicable": "Not applicable", unknown: "Unknown" };
 const cell = (s) => String(s ?? "").replace(/\|/g, "\\|").replace(/\n/g, " ").trim();

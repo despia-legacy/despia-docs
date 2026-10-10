@@ -19,7 +19,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const DOCS = "https://docs.despia.com";
+const DOCS = (() => { const c = JSON.parse(readFileSync(join(root, "data", "site.json"), "utf8")); return `${c.origin}${c.base}`; })();
 const dist = join(root, "dist");
 const liveAt = process.argv.indexOf("--live");
 const live = liveAt === -1 ? null : process.argv[liveAt + 1].replace(/\/+$/, "");

@@ -30,6 +30,14 @@ import troubleshooting from "../public/troubleshooting.json";
 import integrations from "../public/integrations.json";
 import versions from "../public/versions.json";
 import rootRedirects from "../redirects/docs-root.json";
+import siteCfg from "../data/site.json";
+
+//  WHERE THE DOCS LIVE (owner 2026-10-10): https://despia.com/docs. This worker answers under BASE; the app inside it
+//  is root-relative, so a request's BASE is taken off before the tables and the site handler see it, and put back on
+//  every redirect it answers. The old host docs.despia.com 301s every path to the same page under BASE.
+//  NOTHING IS DEPLOYED and despia.com is not touched until the owner says go (owner hard rule).
+const BASE = siteCfg.base.replace(/\/+$/, "");
+const SITE = `${siteCfg.origin}${BASE}`;
 import { createTools, SPACES, type Cache, type IndexPage, type VectorHit } from "./search.ts";
 
 interface AssetsBinding { fetch(request: Request): Promise<Response> }
@@ -74,7 +82,7 @@ async function supportSearch(q: string, space: string, limit: number, extra: Rec
 let improvementsMemo: { at: number; rows: Array<Record<string, unknown>> } | null = null;
 
 const tools = createTools({
-  site: "https://docs.despia.com",
+  site: SITE,
   version: versions.latest,
   contentVersion: knowledge.contentVersion,
   pages: searchIndex.pages as IndexPage[],
@@ -105,7 +113,7 @@ async function fetchPage(args: Record<string, unknown>) {
   if (assets === null) throw new Error("assets binding not captured yet");
   const res = await assets.fetch(new Request(`https://assets.local${mdPath}`));
   if (res.status !== 200) throw { reason: "not_found", message: `no page at ${route}` };
-  return { route, url: `https://docs.despia.com${route}`, version: versions.latest, markdown: await res.text() };
+  return { route, url: `${SITE}${route}`, version: versions.latest, markdown: await res.text() };
 }
 
 const handler = createWorkersHandler(
@@ -169,8 +177,21 @@ function readable(path: string, res: Response): Response {
 }
 
 export default {
-  fetch(request: Request, env: WorkersEnv, ctx: WorkersExecutionContext): Promise<Response> {
-    const url = new URL(request.url);
+  fetch(incoming: Request, env: WorkersEnv, ctx: WorkersExecutionContext): Promise<Response> {
+    const original = new URL(incoming.url);
+    // the old host: every path to the same page under despia.com/docs (one hop: the root table is applied first)
+    if (original.hostname === "docs.despia.com") {
+      const path = original.pathname.length > 1 ? original.pathname.replace(/\/+$/, "") : original.pathname;
+      const moved = (rootRedirects as Record<string, string>)[path];
+      const target = moved === undefined ? `${SITE}${path === "/" ? "" : path}${original.search}` : (/^https?:\/\//.test(moved) ? moved : `${SITE}${moved}${original.search}`);
+      return Promise.resolve(Response.redirect(target, incoming.method === "GET" || incoming.method === "HEAD" ? 301 : 308));
+    }
+    // under BASE: strip it for everything below (a preview host without BASE in the path works unchanged)
+    const underBase = BASE !== "" && (original.pathname === BASE || original.pathname.startsWith(`${BASE}/`));
+    const url = new URL(original.href);
+    if (underBase) url.pathname = original.pathname.slice(BASE.length) || "/";
+    const prefix = underBase ? BASE : "";
+    const request = underBase ? new Request(url.href, incoming) : incoming;
     const noindex = env["NOINDEX"] === "1";
     if (noindex && url.pathname === "/robots.txt") {
       return Promise.resolve(new Response("User-agent: *\nDisallow: /\n", { headers: { "content-type": "text/plain; charset=utf-8", "X-Robots-Tag": "noindex, nofollow" } }));
@@ -178,7 +199,7 @@ export default {
     const moved = (rootRedirects as Record<string, string>)[url.pathname.length > 1 ? url.pathname.replace(/\/+$/, "") : url.pathname];
     // an absolute target leaves the site (/mcp -> the general Despia MCP); 308 for a POST so an MCP client follows with its body
     if (moved !== undefined) {
-      const target = /^https?:\/\//.test(moved) ? moved : `${url.origin}${moved}${url.search}`;
+      const target = /^https?:\/\//.test(moved) ? moved : `${url.origin}${prefix}${moved}${url.search}`;
       return Promise.resolve(Response.redirect(target, request.method === "GET" || request.method === "HEAD" ? 301 : 308));
     }
     if (typeof env["SUPPORT_ORIGIN"] === "string" && env["SUPPORT_ORIGIN"] !== "") supportOrigin = String(env["SUPPORT_ORIGIN"]).replace(/\/+$/, "");

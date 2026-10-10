@@ -669,7 +669,8 @@ function spaceOf(route) {
 }
 // The canonical origin pages, the sitemap and dsx.config.json name. DOCS_SITE_URL points a build at
 // another origin (the private noindex preview on workers.dev) without touching content.
-const site = (process.env.DOCS_SITE_URL ?? "https://docs.despia.com").replace(/\/+$/, "");
+const siteCfg = JSON.parse(readFileSync(join(root, "data", "site.json"), "utf8"));
+const site = (process.env.DOCS_SITE_URL ?? `${siteCfg.origin}${siteCfg.base}`).replace(/\/+$/, "");
 // The Despia Support origin (vector search + the Ask AI widget): one knob, DOCS_SUPPORT_ORIGIN,
 // read here and written to both consumers (the DocShell attribute and the web.head meta docs.js
 // reads). Empty turns vector search off; the keyword index always works.
@@ -684,7 +685,7 @@ const DOCS_VERSION = process.env.DOCS_VERSION ?? RELEASE.version;
 const improvementsFile = process.env.DOCS_IMPROVEMENTS ?? join(root, "data", "improvements.json");
 const improvements = existsSync(improvementsFile) ? (JSON.parse(readFileSync(improvementsFile, "utf8")).entries ?? []) : [];
 function improvementsFor(route) {
-  const url = `https://docs.despia.com${route}`;
+  const url = `${site}${route}`;
   return improvements.filter((e) => (e.links?.docs ?? []).some((d) => d === route || d === url))
     .map((e) => ({ id: e.id ?? e.slug ?? "", version: e.version ?? "", title: e.title ?? "", url: e.url ?? `https://despia.com/improvements#${e.id ?? e.slug ?? ""}` }));
 }

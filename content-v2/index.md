@@ -9,10 +9,10 @@ Despia V4 is a framework for iOS, Android and the web. You write DSX: markup, CS
 
 ## Two routes
 
-- [Build a native app with DSX](https://docs.despia.com/dsx) (research preview): screens, navigation, data and native features, for every platform at once.
-- [Convert your web app](https://docs.despia.com/convert) (available today): put an existing web app in a native iOS and Android app and call native features from JavaScript.
+- [Build a native app with DSX](/dsx) (research preview): screens, navigation, data and native features, for every platform at once.
+- [Convert your web app](/convert) (available today): put an existing web app in a native iOS and Android app and call native features from JavaScript.
 
 ## Also
 
-- [Packages](https://docs.despia.com/packages): every native feature, with one example for DSX and one for a converted web app.
-- [Build and ship](https://docs.despia.com/ship): store credentials, builds and releases.
+- [Packages](/packages): every native feature, with one example for DSX and one for a converted web app.
+- [Build and ship](/ship): store credentials, builds and releases.

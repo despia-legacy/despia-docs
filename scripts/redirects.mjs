@@ -23,7 +23,8 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const DOCS = "https://docs.despia.com";
+const siteCfg = JSON.parse(readFileSync(join(root, "data", "site.json"), "utf8"));
+const DOCS = `${siteCfg.origin}${siteCfg.base}`; // https://despia.com/docs (owner 2026-10-10), was docs.despia.com
 const out = join(root, "redirects");
 
 const inventory = readFileSync(join(out, "inventory", "setup.despia.com.tsv"), "utf8").split("\n").slice(1)

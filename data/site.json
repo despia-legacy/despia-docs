@@ -1,0 +1,5 @@
+{
+  "_note": "Where the docs live (owner 2026-10-10): https://despia.com/docs, a subfolder for SEO. Every absolute URL the build writes (canonical, sitemap, llms.txt, docs-index.json, the .md twins' links, the 301 targets) is origin + base + route; routes inside the app stay root-relative. The old hosts docs.despia.com and setup.despia.com 301 here. Nothing is deployed and despia.com is not touched until the owner says go.",
+  "origin": "https://despia.com",
+  "base": "/docs"
+}
