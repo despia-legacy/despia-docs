@@ -35,6 +35,12 @@ for (const line of ref) {
     for (const t of tags) elements[t] ??= [];
     continue;
   }
+  // an element section may list its attributes as a sentence: "`bind` (two-way Bool), `color`, `label`, `on:change`."
+  if (section === "elements" && /^`[\w:-]+`/.test(line) && tags.length) {
+    const words = [...line.matchAll(/`([A-Za-z][\w:-]*)`/g)].map((m) => m[1]);
+    for (const t of tags) elements[t].push(...words);
+    continue;
+  }
   if (!/^\|\s*`/.test(line)) continue;
   const attrs = attrsOfRow(line);
   if (section === "universal" || section === "a11y") attrs.forEach((a) => universal.add(a));

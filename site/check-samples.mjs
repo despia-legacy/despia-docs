@@ -21,6 +21,10 @@ const cliAt = process.argv.indexOf("--cli");
 const cli = cliAt > 0 ? process.argv[cliAt + 1] : null;
 const pkgs = JSON.parse(readFileSync(join(repo, "data", "packages.json"), "utf8")).packages;
 const CALLS = new Set(pkgs.flatMap((p) => (p.actions ?? []).map((a) => a.call)));
+// Mandatory modules every app has without `despia add` (not in the package catalog). Source: the framework's
+// OpenSource/Documentation/guides/routing.md, "Navigating".
+const MANDATORY = ["dsx.module.route.push", "dsx.module.route.pop", "dsx.module.route.replace", "dsx.module.route.reset"];
+MANDATORY.forEach((c) => CALLS.add(c));
 const commandOf = (call) => pkgs.find((p) => (p.actions ?? []).some((a) => a.call === call))?.command;
 
 const samples = []; // { where, lang, text, fragment }
@@ -40,7 +44,7 @@ for (const s of samples) {
   for (const m of s.text.matchAll(/\bdsx\??\.module((?:\??\.[A-Za-z_$][\w$]*)+)\s*\(/g)) {
     const call = `dsx.module${m[1].replace(/\?\./g, ".")}`;
     if (!CALLS.has(call)) problems.push(`${s.where}: ${call} is not an action in the package catalog`);
-    else used.add(commandOf(call));
+    else if (!MANDATORY.includes(call)) used.add(commandOf(call));
   }
 }
 

@@ -43,7 +43,13 @@
   "visible-if"
  ],
  "elements": {
-  "stack": [],
+  "stack": [
+   "align",
+   "column-gap",
+   "flex-grow",
+   "gap",
+   "row-gap"
+  ],
   "vstack": [
    "align",
    "spacing"
@@ -83,17 +89,31 @@
    "overscroll",
    "paging",
    "snap",
-   "threshold"
+   "threshold",
+   "zoom"
   ],
   "spacer": [],
   "divider": [],
-  "card": [],
+  "card": [
+   "Card",
+   "GroupBox"
+  ],
   "screenHeader": [],
-  "footerCopy": [],
+  "footerCopy": [
+   "screenHeader"
+  ],
   "sectionHeader": [],
   "sectionFooter": [],
-  "chip": [],
-  "scopeBar": [],
+  "chip": [
+   "danger",
+   "info",
+   "warning"
+  ],
+  "scopeBar": [
+   "bind",
+   "on:change",
+   "optionsKey"
+  ],
   "text": [
    "bind",
    "color",
@@ -117,24 +137,31 @@
   "image": [
    "allowDownscaling",
    "cachePolicy",
+   "cacheType",
    "color",
    "contentFit",
    "fallback",
    "font-size",
    "fontSize",
+   "height",
    "icon",
+   "mediaType",
    "on:error",
    "on:load",
    "placeholder",
    "placeholderFit",
    "priority",
    "recyclingKey",
+   "source",
    "sources",
    "src",
    "systemImage",
-   "transition"
+   "transition",
+   "width"
   ],
   "button": [
+   "backdrop-filter",
+   "background",
    "color",
    "icon",
    "label",
@@ -143,6 +170,8 @@
    "variant"
   ],
   "glassButton": [
+   "backdrop-filter",
+   "background",
    "color",
    "icon",
    "label",
@@ -151,6 +180,8 @@
    "variant"
   ],
   "transport": [
+   "backdrop-filter",
+   "background",
    "color",
    "icon",
    "label",
@@ -158,8 +189,16 @@
    "role",
    "variant"
   ],
-  "pressable": [],
-  "row": [],
+  "pressable": [
+   "on:doubleTap",
+   "on:longPress",
+   "on:tap"
+  ],
+  "row": [
+   "on:doubleTap",
+   "on:longPress",
+   "on:tap"
+  ],
   "progress": [
    "bind",
    "color",
@@ -172,8 +211,14 @@
    "height",
    "value"
   ],
-  "spinner": [],
-  "activity": [],
+  "spinner": [
+   "disabled",
+   "disabled-if"
+  ],
+  "activity": [
+   "disabled",
+   "disabled-if"
+  ],
   "textfield": [
    "autocapitalize",
    "bind",
@@ -211,9 +256,28 @@
    "on:focus",
    "placeholder"
   ],
-  "toggle": [],
-  "switch": [],
-  "slider": [],
+  "toggle": [
+   "accent",
+   "bind",
+   "color",
+   "label",
+   "on:change"
+  ],
+  "switch": [
+   "accent",
+   "bind",
+   "color",
+   "label",
+   "on:change"
+  ],
+  "slider": [
+   "bind",
+   "color",
+   "max",
+   "measure",
+   "min",
+   "on:drag"
+  ],
   "picker": [
    "bind",
    "color",
@@ -236,7 +300,13 @@
   ],
   "datepicker": [],
   "date": [],
-  "stepper": [],
+  "stepper": [
+   "accent",
+   "color",
+   "label",
+   "on:change",
+   "step"
+  ],
   "Signature": [
    "baseline",
    "bind",
@@ -321,6 +391,8 @@
    "back",
    "close",
    "detents",
+   "flex-grow",
+   "justify-content",
    "mode",
    "on:action",
    "on:back",
@@ -406,6 +478,7 @@
    "mode",
    "model",
    "on:ready",
+   "on:tap",
    "plane",
    "sphere",
    "text3d"
