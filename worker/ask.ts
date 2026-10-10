@@ -108,7 +108,7 @@ export function selectPassages(question: string, hits: PageHit[], chunks: Chunk[
     if (s.overlap === 0 && terms.length > 0) continue;
     const used = perPage.get(s.c.route) ?? 0;
     if (used >= LIMITS.perPage) continue;
-    const text = clip(s.c.text, Math.min(LIMITS.passageChars, budget));
+    const text = clip(tidy(s.c.text), Math.min(LIMITS.passageChars, budget));
     budget -= text.length;
     perPage.set(s.c.route, used + 1);
     const anchor = s.c.id.includes("#") ? s.c.id.slice(s.c.id.indexOf("#")) : "";
@@ -116,6 +116,9 @@ export function selectPassages(question: string, hits: PageHit[], chunks: Chunk[
   }
   return out;
 }
+
+/** A docs component wrapper alone on its line (<CodeTabs>, </Steps>) is layout, not content: drop it, keep what it holds. */
+export const tidy = (text: string): string => text.replace(/^[ \t]*<\/?[A-Z][A-Za-z]*(\s[^>]*)?\/?>[ \t]*$/gm, "").replace(/\n{3,}/g, "\n\n").trim();
 
 /** Clip at a line or sentence boundary, never inside an open code fence. */
 export function clip(text: string, max: number): string {
@@ -200,11 +203,14 @@ export function refusalText(related: PageHit[]): string {
 /** The labelled stand-in for a model: what the passages say, first sentence each, cited. Never pretends to be AI. */
 export function stubText(passages: Passage[]): string {
   const lines = passages.map((p) => {
-    const plain = p.text.replace(/```[\s\S]*?```/g, " ").replace(/^#+\s.*$/gm, " ").replace(/[*_`>#]/g, "").replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\s+/g, " ").trim();
-    const first = (plain.match(/^.{20,240}?[.!?](\s|$)/) ?? [plain.slice(0, 200)])[0].trim();
-    return `- **${p.heading !== "" ? p.heading : p.title}**: ${first} [${p.n}]`;
+    const plain = p.text.replace(/```[\s\S]*?```/g, " ").replace(/^#+\s.*$/gm, " ").replace(/<[^>]+>/g, " ").replace(/[*_`>#]/g, "")
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1").replace(/\s+/g, " ").trim();
+    const label = `- **${p.heading !== "" ? p.heading : p.title}**`;
+    if (plain.length >= 12) return `${label}: ${(plain.match(/^.{12,240}?[.!?](\s|$)/) ?? [plain.slice(0, 200)])[0].trim()} [${p.n}]`;
+    const code = /```[^\n]*\n[\s\S]*?```/.exec(p.text);
+    return code !== null ? `${label} [${p.n}]\n\n${code[0].replace(/^```(\w+)[^\n]*/, "```$1")}` : `${label} [${p.n}]`;
   });
-  return `_Stub model: no AI key is set on this deployment, so this is not a written answer. These are the passages a model would answer from._\n\n${lines.join("\n")}`;
+  return `_Stub model: no AI key is set on this deployment, so this is not a written answer. These are the passages a model would answer from._\n\n${lines.join("\n\n")}`;
 }
 
 // ── rate limit (per client, hashed) ───────────────────────────────────────────────────────────────

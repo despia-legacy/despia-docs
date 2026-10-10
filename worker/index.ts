@@ -120,7 +120,10 @@ let chunksMemo: Promise<Chunk[]> | null = null;
 const ask = createAsk({
   site: "https://docs.despia.com",
   retrieve: async (question, space) => {
-    const r = await tools.docs_search({ query: question, space, limit: 6 }) as { hits?: Array<{ route: string; title: string; url: string }> };
+    // the reader's space picks the platform, not one space: a V4 reader gets V4, migrate, troubleshooting and App
+    // Review pages, never V3 answers; a reader on a legacy page gets the V3 side
+    const platform = space === "legacy" ? "legacy" : space === "all" ? "" : "v4";
+    const r = await tools.docs_search({ query: question, ...(platform !== "" ? { platform } : {}), limit: 6 }) as { hits?: Array<{ route: string; title: string; url: string }> };
     return (r.hits ?? []).map((h) => ({ route: h.route, title: h.title, url: h.url }));
   },
   chunks: () => {

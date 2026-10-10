@@ -16,7 +16,9 @@
     "parity": "node scripts/setup-parity.mjs",
     "bench": "node --experimental-strip-types --no-warnings scripts/bench-search.mjs",
     "integrations": "node scripts/sync-integrations.mjs",
-    "hub": "node scripts/sync-hub.mjs"
+    "hub": "node scripts/sync-hub.mjs",
+    "dev:worker": "wrangler dev --port 5311 --ip 127.0.0.1 --var SUPPORT_ORIGIN:none",
+    "test": "node --test tests/"
   },
   "dependencies": {
     "@despia-native/compiler": "0.1.0",

@@ -30,6 +30,27 @@ npm run build      # compile + dsx build + assemble the servable tree in dist/
 npx wrangler deploy
 ```
 
+### Ask AI
+
+The "Ask AI" panel (`Components/DocAsk.dsx`) asks the Worker's `POST /api/ask` (`worker/ask.ts`): the docs search picks
+the pages, their sections become numbered passages, and the model answers from those passages only, streamed, with
+`[n]` citations that link to the sections. Provider and model are the API's Support AI ones (OpenRouter,
+`anthropic/claude-sonnet-4.5`, zero-retention routing). The account spend guard (`SPEND_GUARD` service binding) is read
+first; when it pauses AI, or cannot be read, the panel shows the matching pages instead (fail closed).
+
+```sh
+npm run build                 # once (or after changing pages or components)
+npm run dev:worker            # the Worker on http://127.0.0.1:5311: site + /api/ask + search + /mcp
+npm test                      # includes tests/ask.test.mjs and tests/askpanel.test.mjs
+```
+
+Without a key the Worker answers with a clearly labelled **stub model** (the real passages and citations, no written
+answer, nothing spent). To try a real model locally, put `OPENROUTER_API_KEY=...` in a git-ignored `.dev.vars`
+file next to `wrangler.jsonc`; AI then stays paused until a spend guard is bound (fail closed), so also run the guard
+Worker locally (`despia-spend-guard`, `wrangler dev` in its own folder) or test the paused fallback on purpose.
+`npm run dev:worker -- --var DOCS_AI_PAUSED:1` shows the paused fallback. In production the key is a secret
+(`npx wrangler secret put OPENROUTER_API_KEY`), never a file or a var.
+
 CI builds from the public registry, boots the worker with `wrangler dev`, and probes SSR,
 the markdown routes, `llms.txt` and the MCP face on every push; it goes green with the
 0.1.0 registry wave.
