@@ -6,6 +6,7 @@
     "Guides": "book",
     "Services": "server.rack",
     "Modules": "shippingbox",
+    "Packages": "shippingbox",
     "Components": "square.grid.2x2",
     "Styling": "paintbrush",
     "Skills": "hammer",
@@ -15,7 +16,22 @@
     "Releases": "newspaper",
     "App Review": "checkmark.seal"
   },
+  "groups": {
+    "Purchases and payments": "creditcard",
+    "Sign-in and identity": "key",
+    "Notifications": "bell",
+    "Analytics and attribution": "sparkles",
+    "Device and system": "iphone",
+    "Media, files and sharing": "camera",
+    "Health": "faceid",
+    "Connectivity": "network",
+    "Speech": "mic",
+    "Data and contacts": "externaldrive",
+    "Compliance": "checkmark.seal"
+  },
   "routes": {
+    "/web-apps": "globe",
+    "/packages": "shippingbox",
     "/": "house",
     "/quickstart": "bolt",
     "/agents": "sparkles",

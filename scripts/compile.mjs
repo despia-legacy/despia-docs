@@ -24,6 +24,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+import { expandPackagePage } from "./packages-lib.mjs";
 
 // The component reference pages are NOT generated here. They are written into content/
 // components/ by the framework's own generator (ClosedSource/scripts/generate_component_docs.rb
@@ -159,7 +160,7 @@ function sectionFor(route, meta) {
   if (route.startsWith("/framework/reference/style")) return "styling";
   return route === "/" ? "" : route.split("/")[1];
 }
-const SECTION_RANK = { "": 0, guides: 1, services: 1.2, modules: 1.5, components: 2, styling: 3, skills: 4 };
+const SECTION_RANK = { "": 0, packages: 0.5, guides: 1, services: 1.2, modules: 1.5, components: 2, styling: 3, skills: 4 };
 
 // ── the section splitter (rail anchors) ───────────────────────────────────────────────────
 // A page body splits at its h2/h3 headings (fence-aware) so each section renders as its
@@ -244,8 +245,11 @@ function jseStringLiteral(source) {
 // carry no content components of their own (rule 10: default UI only).
 const CALLOUT_SUGAR = { Note: "note", Info: "note", Tip: "tip", Warning: "warning", Danger: "caution", Check: "tip" };
 const KIND_TO_TONE = { note: "note", info: "note", tip: "tip", warning: "warning", danger: "caution" };
-const KNOWN_COMPONENTS = new Set(["Callout", "Card", "CardGroup", "Steps", "Step", "Tabs", "Tab", "CodeGroup", "Accordion",
+const KNOWN_COMPONENTS = new Set(["Callout", "Card", "CardGroup", "Steps", "Step", "Tabs", "Tab", "CodeGroup", "CodeTabs", "Accordion",
   "AccordionGroup", "Frame", "ParamField", "ResponseField", "Update", "Video", "RefMeta", ...Object.keys(CALLOUT_SUGAR)]);
+
+/** CodeTabs pane titles: where the reader writes the code. Renderers (DSXView, DSXDom) are internals and never a tab. */
+const CODE_TAB_TITLES = ["DSX markup", "JavaScript (any web app)"];
 
 const OPEN_TAG = /^\s{0,3}<([A-Z][A-Za-z0-9]*)(?=[\s/>])/;
 const CLOSE_TAG = /^\s{0,3}<\/([A-Z][A-Za-z0-9]*)>\s*$/;
@@ -452,6 +456,16 @@ function emitDirectives(nodes) {
         break;
       }
       case "Tab": out.push(mdText(kids)); break;
+      case "CodeTabs": {
+        // The docs model (owner 2026-10-10): code tabs exist only where the code truly differs, keyed by WHERE you
+        // write it. Every pane is in the served HTML (crawlers and agents read all of them); the reader's choice is
+        // remembered by docs.js (the shared "despia.docs.tab" choice), so one pick holds on every page.
+        const panes = fencesOf(kids);
+        const bad = panes.filter((p) => !CODE_TAB_TITLES.includes(p.title));
+        if (panes.length < 2 || bad.length > 0) throw new Error(`<CodeTabs> takes two or more fences titled ${CODE_TAB_TITLES.map((t) => `"${t}"`).join(" or ")}${bad.length > 0 ? `; found "${bad[0].title}"` : ""}`);
+        out.push(`\n::::tabs\n${panes.map((p) => `:::tab{title=${dirAttr(p.title)}}\n${p.text}\n:::`).join("\n")}\n::::\n`);
+        break;
+      }
       case "CodeGroup": {
         const panes = fencesOf(kids);
         out.push(`\n::::tabs\n${panes.map((p) => `:::tab{title=${dirAttr(p.title)}}\n${p.text}\n:::`).join("\n")}\n::::\n`);
@@ -701,8 +715,16 @@ const pages = files.map((file) => {
   const parsed = frontMatter(source);
   const meta = parsed.meta;
   if (!inThisVersion(meta)) return null;
-  const body = withPageNote(meta.route ?? routeFor(file), parsed.body);
+  let body = withPageNote(meta.route ?? routeFor(file), parsed.body);
   const route = meta.route ?? routeFor(file);
+  // A package page (front matter `package: <manifest path>`): the chip row and the reference are generated from
+  // data/packages.json, so the HTML, the markdown twin, search and llms all carry the manifest's facts.
+  let expanded = null;
+  if (meta.package !== undefined && meta.package !== "") {
+    const out = expandPackagePage(body, meta.package, relative(root, file));
+    body = out.text;
+    expanded = source.slice(0, source.length - parsed.body.length) + out.text;
+  }
   const space = meta.space ?? spaceOf(route);
   const title = meta.title ?? firstHeading(body) ?? relative(contentDir, file);
   return {
@@ -718,6 +740,7 @@ const pages = files.map((file) => {
     bodyStart: source.split("\n").length - body.split("\n").length + 1,
     component: componentNameFor(route),
     meta,
+    ...(expanded !== null ? { mdSource: expanded } : {}),
   };
 }).filter((p) => p !== null);
 
@@ -878,6 +901,14 @@ const navBySpace = {};
     const name = alpha ? STABILITY.section : page.section === "" ? "Start" : page.section.replace(/(^|-)([a-z])/g, (_, __, c) => " " + c.toUpperCase()).trim();
     let section = sections.find((s) => s.name === name);
     if (section === undefined) { section = { name, rank: alpha ? 8 : SECTION_RANK[page.section] ?? 9, items: [], ...(alpha ? { icon: STABILITY.icon } : {}) }; sections.push(section); }
+    // front matter `group:` nests a page under a collapsible group inside its section (the package catalogue's categories)
+    const groupName = alpha ? undefined : page.meta?.group;
+    if (groupName !== undefined && groupName !== "") {
+      let group = section.items.find((i) => i.group === groupName);
+      if (group === undefined) { group = { group: groupName, icon: ICONS.groups?.[groupName] ?? SECTION_ICONS[name] ?? ICONS.fallback, defaultOpen: false, items: [] }; section.items.push(group); }
+      group.items.push(navItem(page, undefined, name));
+      continue;
+    }
     section.items.push(navItem(page, undefined, name));
   }
   sections.sort((a, b) => a.rank - b.rank);
@@ -1044,7 +1075,7 @@ for (const page of pages) {
   }).filter((block) => block !== "").join("\n");
   page.shell = shellAttrs(page, toc);
   writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, [], blocks));
-  writeMd(page.route, defang(readFileSync(page.file, "utf8")));
+  writeMd(page.route, page.mdSource ?? defang(readFileSync(page.file, "utf8")));
 }
 
 // ── the generated Troubleshooting index ───────────────────────────────────────────────────
