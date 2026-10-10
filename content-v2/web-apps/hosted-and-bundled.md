@@ -11,7 +11,7 @@ A Despia app shows your web app in one of two ways. The Dom package's `web_sourc
 | A change goes live | when you deploy | with the next app build |
 | Works offline | what your site caches | yes |
 | Server code, API routes | yes | no, static files only |
-| Page origin | your domain | a local app origin (see below) |
+| Page origin | your domain | a local origin |
 
 ## Hosted: the app loads your address
 
