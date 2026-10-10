@@ -48,6 +48,23 @@ for (const s of samples) {
   }
 }
 
+// THE ONE FORM (owner 2026-10-10): every native call in every sample is `await dsx.module.<package>.<action>(...)`,
+// the same in a DSX app and in any web app inside Despia. `window.dsx` appears in ONE place only: the web-app guide's
+// section for sites that also run outside Despia (content-v2/web-apps/outside-despia.md).
+const WINDOW_DSX_HOME = "content-v2/web-apps/outside-despia.md";
+for (const s of samples) {
+  if (!["js", "ts", "tsx", "jsx", "javascript", "typescript", "dsx", "html", "vue"].includes(s.lang)) continue;
+  if (/window\.dsx/.test(s.text) && s.where !== WINDOW_DSX_HOME && !/^interface Window/m.test(s.text)) problems.push(`${s.where}: a sample uses window.dsx (only ${WINDOW_DSX_HOME} may)`);
+  for (const m of s.text.matchAll(/(\S+\s+)?\bdsx\??\.module((?:\??\.[A-Za-z_$][\w$]*)+)\s*\(/g)) {
+    if (!/await\s+$/.test(m[1] ?? "")) problems.push(`${s.where}: dsx.module${m[2]}(...) without await (write \`await dsx.module${m[2]}(...)\`)`);
+  }
+}
+// and nowhere else in the prose either
+for (const f of walk(join(repo, "content-v2"))) {
+  const rel = relative(repo, f);
+  if (rel !== WINDOW_DSX_HOME && /window\.dsx/.test(readFileSync(f, "utf8"))) problems.push(`${rel}: mentions window.dsx (only ${WINDOW_DSX_HOME} may)`);
+}
+
 const whole = samples.filter((s) => s.lang === "dsx" && !s.fragment);
 
 // ── the vocabulary check (what `despia lint` lets through): every attribute on an element whose attribute table the

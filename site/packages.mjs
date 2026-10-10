@@ -4,7 +4,7 @@
 //  status is the manifest's `published` flag, the samples are built from each action's first manifest example.
 //  Every package page shows the same call twice: in a DSX document, and from a converted web app (dsx.module in JS).
 //
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadPackages, groupOf, GROUP_ORDER } from "../scripts/packages-lib.mjs";
@@ -74,7 +74,7 @@ function samples(p, a) {
   </head>
   <button label="${escapeAttr(labelFor(p, a))}" on:tap="dsx.action.run()"/>
 </stack>`;
-  const js = `${resultVar}${call.replace(/\n {4}/g, "\n")}`;
+  const js = `${resultVar}${call.replace(/\n {4}/g, "\n")};`;
   return { dsx, js };
 }
 const escapeAttr = (s) => s.replace(/"/g, "'");
@@ -91,14 +91,17 @@ function packageMarkdown(p) {
   if (p.description) md.push(p.description, "");
   if (lead) {
     const s = samples(p, lead);
-    md.push("## Use it", "", `One call, the same in a DSX app and in a converted web app.`, "", "::: code-group",
-      "```dsx title=\"DSX\"", s.dsx, "```", "```js title=\"Convert (JavaScript)\"", s.js, "```", ":::", "");
+    md.push("## Use it", "", "One call, the same in a DSX app (inside an action) and in any web app inside Despia.", "",
+      "```js", s.js, "```", "");
   }
   if (p.whenToUse || p.nativeValue) {
     md.push("## When to use it", "");
     if (p.whenToUse) md.push(p.whenToUse, "");
     if (p.nativeValue) md.push(`**Why native:** ${p.nativeValue}`, "");
   }
+  // hand-written sections for a package (content-v2/packages/<slug>.md, front matter removed), before the reference
+  const extra = join(repo, "content-v2", "packages", `${p.slug}.md`);
+  if (existsSync(extra)) md.push(readFileSync(extra, "utf8").replace(/^---\n[\s\S]*?\n---\n/, "").trim(), "");
   if (actions.length) {
     md.push("## Actions", "");
     for (const a of actions) {

@@ -12,7 +12,7 @@ export const HOME_SAMPLE = `<stack class="counter">
     <variable as="count">return 0</variable>
     <action as="add">
       dsx.variable.count = dsx.variable.count + 1;
-      dsx.module.haptic.light();
+      await dsx.module.haptic.light();
     </action>
     <style>
       .counter { gap: 12px; padding: 32px; align-items: center; }

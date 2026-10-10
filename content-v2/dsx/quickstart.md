@@ -72,7 +72,7 @@ This pins the Haptics package and adds it to `"modules"` in `dsx.config.json`. N
     <variable as="count">return 0</variable>
     <action as="bump">
       dsx.variable.count = dsx.variable.count + 1;
-      dsx.module.haptic.light();
+      await dsx.module.haptic.light();
     </action>
     <style>
       .screen { gap: 16px; padding: 32px; }

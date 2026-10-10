@@ -37,10 +37,10 @@ Navigation is state. The route module's verbs change it:
 <stack style="gap: 12px; padding: 20px">
   <head>
     <action as="open">
-      dsx.module.route.push({ path: '/trail/42' });
+      await dsx.module.route.push({ path: '/trail/42' });
     </action>
     <action as="home">
-      dsx.module.route.reset({ path: '/' });
+      await dsx.module.route.reset({ path: '/' });
     </action>
   </head>
   <button label="Open trail" on:tap="dsx.action.open()"/>

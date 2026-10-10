@@ -11,7 +11,7 @@ DSX is how you build an app with Despia V4. A screen is a `.dsx` document: its m
     <variable as="count">return 0</variable>
     <action as="add">
       dsx.variable.count = dsx.variable.count + 1;
-      dsx.module.haptic.light();
+      await dsx.module.haptic.light();
     </action>
     <style>
       .counter { gap: 12px; padding: 32px; align-items: center; }
