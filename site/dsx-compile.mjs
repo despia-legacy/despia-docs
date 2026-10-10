@@ -124,7 +124,7 @@ const compName = (route) => "V2" + (route === "/" ? "Home" : route.split("/").fi
 const pkgs = loadPackages().packages.filter((p) => p.listed !== false && !/\/Modules\/(Backend|Http)$/.test(p.path));
 const parentOf = (p) => (/\/Modules\//.test(p.path) ? p.path.split("/Modules/").slice(-2)[0].split("/").pop() : null);
 const titleOf = (p) => (parentOf(p) ? `${p.title} (${parentOf(p)})` : p.title);
-const SECTION_ICON = { dsx: "chevron.left.forwardslash.chevron.right", convert: "globe", packages: "shippingbox", ship: "paperplane" };
+const SECTION_ICON = { dsx: "chevron.left.forwardslash.chevron.right", convert: "globe", "web-apps": "safari", packages: "shippingbox", ship: "paperplane" };
 const GROUP_ICON = (g) => ICONS.groups[g] ?? "shippingbox";
 const PAGE_ICON = {
   "/dsx": "sparkles", "/dsx/quickstart": "bolt", "/dsx/project": "folder", "/dsx/documents": "doc.text", "/dsx/data": "curlybraces",
@@ -134,6 +134,9 @@ const PAGE_ICON = {
   "/web-apps/frameworks": "chevron.left.forwardslash.chevron.right", "/web-apps/outside-despia": "safari", "/convert/from-v3": "arrow.up.circle",
   "/ship": "paperplane", "/ship/app-store-connect": "key", "/ship/google-play": "key", "/ship/builds": "hammer", "/ship/releases": "square.stack",
   "/app-review": "checkmark.shield",
+  "/web-apps": "bolt", "/web-apps/native-features": "curlybraces", "/web-apps/frameworks": "chevron.left.forwardslash.chevron.right",
+  "/web-apps/typescript": "textformat", "/web-apps/outside-despia": "globe", "/web-apps/hosted-and-bundled": "shippingbox",
+  "/web-apps/preview": "iphone", "/web-apps/packages": "list.bullet",
 };
 const navData = {
   areas: [{ id: "home", title: "Home", icon: "house", path: "/" }].concat(SECTIONS.map((s) => ({ id: s.id, title: s.id === "ship" ? "Ship" : s.label, icon: SECTION_ICON[s.id], path: s.href }))),
@@ -308,7 +311,7 @@ const want = (r) => ONLY === null || ONLY.has(r);
 const emit = (route, src, meta) => {
   const name = compName(route);
   writeFileSync(join(OUT, `${name}.dsx`), src);
-  routes.push({ path: route, component: `docs.${name}`, meta, tabRoot: [ "/", "/dsx", "/convert", "/packages", "/ship"].includes(route) || undefined });
+  routes.push({ path: route, component: `docs.${name}`, meta, tabRoot: [ "/", "/dsx", "/convert", "/web-apps", "/packages", "/ship"].includes(route) || undefined });
 };
 writeFileSync(join(repo, "Components", "DocsShell.dsx"), shell());
 
