@@ -141,7 +141,7 @@ const PAGE_ICON = {
   "/web-apps/preview": "iphone", "/web-apps/packages": "list.bullet",
 };
 const navData = {
-  areas: [{ id: "home", title: "Home", icon: "house", path: "/" }].concat(SECTIONS.map((s) => ({ id: s.id, title: s.id === "ship" ? "Ship" : s.label, icon: SECTION_ICON[s.id], path: s.href }))),
+  areas: [{ id: "home", title: "Home", icon: "house", path: "/" }].concat(SECTIONS.map((s) => ({ id: s.id, title: s.tab ?? s.label, icon: SECTION_ICON[s.id], path: s.href }))),
   groups: SECTIONS.flatMap((s) => s.id === "packages"
     ? GROUP_ORDER.map((g) => ({ id: `packages-${g}`, section: "packages", title: g,
       rows: pkgs.filter((p) => p.published && groupOf(p) === g).sort((a, b) => titleOf(a).localeCompare(titleOf(b)))

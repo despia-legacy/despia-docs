@@ -930,7 +930,10 @@ generatedPages.push({
   search: "releases release notes changelog version " + relNotes.map((p) => `${p.title} ${p.meta.version ?? ""} ${p.meta.package ?? ""}`).join(" "),
 });
 
-const entries = [...pages, ...handAuthored, ...generatedPages].sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
+// The modern space (Despia V4) is built by site/dsx-compile.mjs from content-v2/; this compiler keeps the other spaces
+// (legacy, migrate, troubleshooting, releases, app-review), so no old V4 page, twin or sitemap row outlives its move.
+const entries = [...pages, ...handAuthored, ...generatedPages].filter((p) => p.space !== "modern")
+  .sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
 
 const duplicate = entries.map((p) => p.route).filter((r, i, all) => all.indexOf(r) !== i);
 if (duplicate.length > 0) {
@@ -1178,6 +1181,7 @@ function apiPage(body, label) {
 }
 
 for (const page of pages) {
+  if (page.space === "modern") continue;
   if (page.meta?.element !== undefined && page.route.startsWith("/components/")) page.body = apiPage(page.body, componentLabel(page.route, page.title));
   // the page title is DocShell's title block (beside the page actions), so the body's own first heading is not drawn
   // twice; the markdown twin keeps it
@@ -1196,8 +1200,9 @@ for (const page of pages) {
 }
 
 // ── the generated skills index (/agents/skills): data/skills.json ───────────────────────────────────────────────
-{
+skillsIndex: {
   const page = generatedPages.find((p) => p.route === "/agents/skills");
+  if (page.space === "modern") break skillsIndex;
   const rows = SKILLS.skills.map((x) => ({ name: x.name, folder: x.folder, line: String(x.description).split(/(?<=\.)\s/)[0], url: `/agents/skills/${x.folder}`, badge: x.mirrored ? "" : "Soon" }));
   page.body = [`# Agent skills`, "", page.description, "", "```sh", `npx skills add ${SKILLS.repo}`, "```", "",
     ...rows.map((r) => `- [${r.name}](${site}${r.url}.md): ${r.line}`), ""].join("\n");
@@ -1218,8 +1223,9 @@ for (const page of pages) {
 }
 
 // ── the generated package catalog (/packages): data/packages.json, never hand listed ─────────────────────────────
-{
+packageCatalog: {
   const page = generatedPages.find((p) => p.route === "/packages");
+  if (page.space === "modern") break packageCatalog;
   const listed = loadPackages().packages.filter((x) => x.listed);
   const rows = listed.map((x) => {
     const pageOf = entries.find((e) => e.route === x.url);

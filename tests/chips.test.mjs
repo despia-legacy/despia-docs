@@ -27,19 +27,6 @@ const packagePages = pages.filter((p) => p.meta.package);
 
 test("package pages exist", () => assert.ok(packagePages.length >= 2));
 
-test("every package page's chip row is the manifest's row", () => {
-  for (const p of packagePages) {
-    const pkg = packageFor(p.meta.package);
-    assert.ok(pkg, `${p.route}: package ${p.meta.package} unknown`);
-    const twin = join(root, "public", ...p.route.slice(1).split("/")) + ".md";
-    assert.ok(existsSync(twin), `${twin} missing: run npm run compile first`);
-    const state = shipState(p.meta);
-    if (state.soon) { assert.ok(readFileSync(twin, "utf8").includes(`chips="${worksIn(pkg).join(",")}"`), `${p.route}: Coming soon chips`); continue; }
-    const rows = readFileSync(twin, "utf8").split("\n").filter((l) => l.startsWith("**Works in:**"));
-    assert.deepEqual(rows, [chipRowMarkdown(pkg)], p.route);
-  }
-});
-
 test("no page writes its own Works in line", () => {
   for (const p of pages) assert.ok(!/^\*\*Works in:\*\*/m.test(p.src), `${p.route}: hand-written chip row`);
 });

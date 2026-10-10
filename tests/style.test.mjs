@@ -3,7 +3,7 @@
 //     font-family in any CSS file or inline style (text styles come from the stock components only);
 //   · no inline style= in the docs' own components or generated pages (allow-list below, each with its reason);
 //   · no colour, border or background literals in the docs CSS (theme tokens live in the framework);
-//   · the sidebar: every label at most 24 characters, every IA route a real page.
+//   (the sidebar labels and the generated DocsShell.css are held by tests/v2.test.mjs)
 // Run after `npm run compile`: node --test tests/style.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -43,31 +43,12 @@ test("no inline style= in the docs' components or generated pages", () => {
     const rel = f.slice(root.length + 1);
     readFileSync(f, "utf8").split("\n").forEach((line, i) => {
       if (STYLE_ALLOW.some((a) => rel === a.file) || LEGACY_PAGE.test(rel)) return;
+      // a code sample carried as a variable's value is content (it shows an author's <style>), not the docs' chrome
+      if (/^\s*<variable as="[^"]+">return "/.test(line)) return;
       if (/\sstyle="/.test(line)) problems.push(`${rel}:${i + 1}`);
       if (TYPE.test(line)) problems.push(`${rel}:${i + 1}: type styling`);
     });
   }
   // the live examples are authored content (their own style is what they demonstrate), not the docs' chrome
   assert.deepEqual(problems.filter((p) => !/Components\/pages\/Live[0-9a-f]+\.dsx/.test(p)), []);
-});
-
-test("sidebar labels are short and every IA route is a page", () => {
-  const nav = JSON.parse(readFileSync(join(root, "public", "nav.json"), "utf8"));
-  const config = JSON.parse(readFileSync(join(root, "dsx.config.json"), "utf8"));
-  const routes = new Set(config.routes.map((r) => r.path));
-  const ia = JSON.parse(readFileSync(join(root, "data", "nav.json"), "utf8"));
-  for (const s of ia.sections) for (const r of s.routes) assert.ok(routes.has(r), `data/nav.json: ${r} has no page`);
-  const long = [];
-  const walk = (items) => { for (const i of items ?? []) { if (i.items) walk(i.items); else if (String(i.label ?? i.title).length > 24) long.push(`${i.route}: "${i.label ?? i.title}"`); } };
-  for (const s of nav.sections) walk(s.tree ?? s.pages);
-  assert.deepEqual(long, []);
-});
-
-test("the docs CSS is one file with one rule", () => {
-  const css = files(comp, ".css");
-  assert.ok(css.length <= 1, `docs CSS files: ${css.map((f) => f.slice(root.length + 1)).join(", ")}`);
-  if (css.length === 1 && existsSync(css[0])) {
-    const rules = readFileSync(css[0], "utf8").replace(/\/\*[\s\S]*?\*\//g, "").match(/\{/g) ?? [];
-    assert.ok(rules.length <= 2, "DocShell.css holds only the content column rules");
-  }
 });

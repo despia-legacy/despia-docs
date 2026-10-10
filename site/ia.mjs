@@ -73,7 +73,7 @@ export const SECTIONS = [
     groups: [], // the catalog builds its own sidebar from data/packages.json (site/packages.mjs)
   },
   {
-    id: "ship", label: "Build and ship", href: "/ship",
+    id: "ship", label: "Build and ship", tab: "Ship", href: "/ship",
     groups: [
       { title: "Before your first build", pages: [
         ["/ship", "Shipping overview", "From a project to the App Store and Google Play."],

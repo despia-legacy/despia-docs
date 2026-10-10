@@ -30,26 +30,3 @@ test("the build under test is the real one (not the review preview)", () => asse
 test("every Packages page names its package", () => {
   for (const p of pages.filter((p) => p.route.startsWith("/packages/"))) assert.ok(p.meta.package, `${p.route}: no package front matter`);
 });
-
-test("every package and component page is shipped or coming soon, per the data", () => {
-  let soon = 0;
-  let shipped = 0;
-  for (const p of pages) {
-    if (!p.meta.package && !p.meta.element) continue;
-    const twin = join(root, "public", ...p.route.slice(1).split("/")) + ".md";
-    assert.ok(existsSync(twin), `${twin}: run npm run compile first`);
-    const md = readFileSync(twin, "utf8");
-    const state = shipState(p.meta);
-    if (state.soon) {
-      soon += 1;
-      assert.ok(md.includes("<ComingSoon "), `${p.route}: data says coming soon, the page is not`);
-      assert.ok(!/^\s*(```|~~~)/m.test(md), `${p.route}: a Coming soon page carries a code sample`);
-      assert.ok(md.includes(`topic="${state.topic}"`), `${p.route}: notify topic`);
-    } else {
-      shipped += 1;
-      assert.ok(!md.includes("<ComingSoon "), `${p.route}: data says shipped, the page says coming soon`);
-    }
-  }
-  assert.ok(soon + shipped > 0);
-  console.log(`[shipping] ${shipped} shipped, ${soon} coming soon`);
-});

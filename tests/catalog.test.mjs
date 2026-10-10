@@ -1,5 +1,5 @@
 // The public package catalog (owner 2026-10-10): every catalog package (data/packages.json `listed`) has exactly one page,
-// at its framework address, and /packages lists every one of them. /modules and /catalog lead to /packages.
+// at its framework address (/packages listing them is held by tests/v2.test.mjs). /modules and /catalog lead to /packages.
 // Run after `npm run compile`: node --test tests/catalog.test.mjs
 import { test } from "node:test";
 import assert from "node:assert/strict";
@@ -19,10 +19,6 @@ test("every catalog package has exactly one page at its address", () => {
   assert.equal(pkgRoutes.length, listed.length, "a /packages/ route with no catalog package");
 });
 
-test("the catalog index lists every package", () => {
-  const md = readFileSync(join(root, "public", "packages.md"), "utf8");
-  for (const p of listed) assert.ok(md.includes(`${p.url}.md)`), `/packages misses ${p.url}`);
-});
 
 test("/modules and /catalog lead to /packages", () => {
   const aliases = JSON.parse(readFileSync(join(root, "redirects", "modern-aliases.json"), "utf8")).aliases;
