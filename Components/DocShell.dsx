@@ -1,10 +1,12 @@
-<!-- DocShell: the docs' one frame, the console's frame (owner 2026-10-10: "make the docs look like the console").
-     The same stock parts the console's Shell uses, nothing hand-styled: a <scaffold shell="automatic"> (NavigationSplitView
-     on a regular window, a stack on a phone), the stock SidebarList with the docs space and version pinned at its top,
-     the search field, the space's sections (generated DocNav: SidebarSections of SidebarItems), and Appearance pinned at
-     its foot; the page brings the stock NavBar (large title, one-line description, the page actions) and its content.
-     <DocShell title="…" description="…" route="/x" space="modern" md="/x.md" …> …page content… </DocShell> -->
-<scaffold shell="automatic" sidebarLabel="Despia docs" contentLabel="Page">
+<!-- DocShell: the docs' one frame (owner 2026-10-10: the console's parts, the density and layout of the best docs sites).
+     A <scaffold shell="automatic"> holds the stock SidebarList (space + version and search pinned on top, the generated
+     DocNav sections, Appearance at the foot) and the page. The page releases the system route bar (a docs page is never
+     "Back" to anything) and draws its own header: on a phone a top bar (logo, search, menu opening the sidebar as a sheet),
+     on every width the article header (section, title, description, page actions). The article is one reading column
+     (~760px) beside a sticky "On this page" rail on wide windows. Look: Components/DocShell.css (the docs design layer).
+     <DocShell title="…" description="…" route="/x" space="modern" md="/x.md" toc="[…]" …> …page content… </DocShell> -->
+<scaffold shell="automatic" sidebarLabel="Despia docs" contentLabel="Page" collapse="content" sidebarIdeal="260" sidebarMin="240" sidebarMax="300"
+          class="doc-shell" on:appear="dsx.module.route.chrome({ show: 'false' })">
   <head>
     <attribute as="title" default="'Despia docs'"/>
     <attribute as="label" default="''"/>
@@ -33,8 +35,10 @@
     <attribute as="improved" default="'[]'"/>
 
     <variable as="query">return ''</variable>
+    <variable as="navOpen">return false</variable>
     <variable as="askOpen">return false</variable>
     <variable as="askQ">return ''</variable>
+    <variable as="compact" computed="true">return dsx.screen.width &lt; 760</variable>
     <api as="searchIndex" url="/search-index.json"/>
 
     <formula as="spaceList" input:raw="dsx.attribute.spaces">return raw ? JSON.parse(raw) : []</formula>
@@ -67,7 +71,8 @@
       const inText = pool.filter((page) => !page.title.toLowerCase().includes(needle) &amp;&amp; page.text.toLowerCase().includes(needle))
       return inTitle.concat(inText).slice(0, 12).map((page) => ({ id: page.route, route: page.route, title: page.label ? page.label : page.title }))
     </formula>
-    <!-- the page menu (the console's "…" menu shape): every row carries a symbol, links open in place or in a new tab -->
+    <formula as="tocRows" input:raw="dsx.attribute.toc">return raw ? JSON.parse(raw).filter((t) => t.level === 2 || t.level === 3) : []</formula>
+    <!-- the page menu (the console's "…" menu shape): every row carries a symbol -->
     <formula as="pageMenu" input:md="dsx.attribute.md">
       const ask = encodeURIComponent('Read https://docs.despia.com' + md + ' so I can ask questions about it.')
       return [
@@ -80,7 +85,10 @@
         { title: 'Your editor (MCP)', icon: 'terminal', href: '/agents' }
       ]
     </formula>
-    <action as="open" input:path="dsx.this.value">dsx.module.route.select({ path: path })</action>
+    <action as="open" input:path="dsx.this.value">
+      dsx.variable.navOpen = false
+      dsx.module.route.select({ path: path })
+    </action>
   </head>
 
   <SidebarList pane="sidebar" value="{{ dsx.attribute.route }}" a11yLabel="Documentation" on:change="dsx.action.open()">
@@ -89,43 +97,78 @@
                    valueIcon="chevron.up.chevron.down" tappable="true"/>
     </menu>
     <searchbar slot="top" bind="dsx.variable.query" placeholder="Search docs"/>
-
     <SidebarSection title="Results" visible-if="dsx.variable.query.length &gt;= 2">
       <SidebarItem repeat="dsx.formula.hitRows" key="id" value="{{ dsx.this.route }}" title="{{ dsx.this.title }}"/>
     </SidebarSection>
     <DocNav route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}" visible-if="dsx.variable.query.length &lt; 2"/>
-
     <menu slot="bottom" menu="{{ dsx.formula.appearanceMenu }}">
       <SettingsRow icon="circle.lefthalf.filled" title="Appearance" valueIcon="chevron.up.chevron.down" tappable="true"/>
     </menu>
   </SidebarList>
 
-  <scroll pane="content">
-    <NavBar title="{{ dsx.attribute.title }}" large="true" description="{{ dsx.attribute.description }}">
-      <button slot="trailing" label="Copy page" icon="doc.on.doc" variant="bordered" class="doc-actions-copy" a11yLabel="Copy this page as Markdown"
-              visible-if="dsx.attribute.md !== ''"/>
-      <menu slot="trailing" menu="{{ dsx.formula.pageMenu }}" visible-if="dsx.attribute.md !== ''">
-        <button icon="chevron.down" variant="bordered" a11yLabel="More ways to use this page"/>
-      </menu>
-      <button slot="trailing" icon="sparkles" label="Ask AI" variant="bordered" on:tap="dsx.variable.askOpen = true"/>
-    </NavBar>
+  <scroll pane="content" class="doc-content">
+    <!-- the phone's top bar: the mark, search and the menu that opens the navigation -->
+    <hstack class="doc-topbar" visible-if="dsx.variable.compact" role="banner">
+      <pressable href="/" a11yLabel="Despia docs home" class="doc-topbar-home">
+        <image icon="despia.logo.mono" a11yHidden="true"/>
+        <text value="Despia docs" type="headline"/>
+      </pressable>
+      <spacer/>
+      <button icon="magnifyingglass" variant="plain" a11yLabel="Search the docs" on:tap="dsx.variable.navOpen = true"/>
+      <button icon="line.3.horizontal" variant="plain" a11yLabel="Open the navigation" on:tap="dsx.variable.navOpen = true"/>
+    </hstack>
 
-    <Callout tone="info" title="Legacy (V3)" message="This page documents Despia V3 and the despia-native package."
-             action="{{ dsx.attribute.modern !== '' ? 'Despia V4 equivalent' : 'Migration map' }}"
-             visible-if="dsx.attribute.space === 'legacy'"
-             on:action="dsx.module.route.select({ path: dsx.attribute.modern !== '' ? dsx.attribute.modern : '/migrate/map' })"/>
+    <hstack class="doc-layout">
+      <vstack class="doc-article">
+        <!-- the article header: where the page sits, the page actions, the title and its one sentence -->
+        <hstack class="doc-article-bar">
+          <text class="doc-eyebrow" value="{{ dsx.attribute.section }}" type="footnote"/>
+          <spacer/>
+          <hstack class="doc-actions" role="toolbar" a11yLabel="Page actions" visible-if="dsx.attribute.md !== ''">
+            <button label="Copy page" icon="doc.on.doc" variant="bordered" controlSize="small" class="doc-actions-copy" a11yLabel="Copy this page as Markdown"/>
+            <menu menu="{{ dsx.formula.pageMenu }}">
+              <button icon="chevron.down" variant="bordered" controlSize="small" a11yLabel="More ways to use this page"/>
+            </menu>
+            <button icon="sparkles" label="Ask AI" variant="bordered" controlSize="small" on:tap="dsx.variable.askOpen = true"/>
+          </hstack>
+        </hstack>
+        <text class="doc-title" value="{{ dsx.attribute.title }}" type="largeTitle" a11yTrait="header"/>
+        <text class="doc-description" value="{{ dsx.attribute.description }}" type="body" visible-if="dsx.attribute.description !== ''"/>
 
-    <vstack class="doc-page">
-      <slot/>
-    </vstack>
+        <Callout tone="info" title="Legacy (V3)" message="This page documents Despia V3 and the despia-native package."
+                 action="{{ dsx.attribute.modern !== '' ? 'Despia V4 equivalent' : 'Migration map' }}"
+                 visible-if="dsx.attribute.space === 'legacy'"
+                 on:action="dsx.module.route.select({ path: dsx.attribute.modern !== '' ? dsx.attribute.modern : '/migrate/map' })"/>
 
-    <ListGroup visible-if="dsx.attribute.prev !== '' || dsx.attribute.next !== ''">
-      <SettingsRow icon="chevron.left" title="{{ dsx.attribute.prevLabel }}" subtitle="Previous" tappable="true" visible-if="dsx.attribute.prev !== ''"
-                   on:tap="dsx.module.route.select({ path: dsx.attribute.prev })"/>
-      <SettingsRow icon="chevron.right" title="{{ dsx.attribute.nextLabel }}" subtitle="Next" chevron="true" tappable="true" visible-if="dsx.attribute.next !== ''"
-                   on:tap="dsx.module.route.select({ path: dsx.attribute.next })"/>
-    </ListGroup>
+        <vstack class="doc-page">
+          <slot/>
+        </vstack>
+
+        <hstack class="doc-pager" visible-if="dsx.attribute.prev !== '' || dsx.attribute.next !== ''">
+          <LinkCard title="{{ dsx.attribute.prevLabel }}" description="Previous" href="{{ dsx.attribute.prev }}" visible-if="dsx.attribute.prev !== ''"/>
+          <LinkCard title="{{ dsx.attribute.nextLabel }}" description="Next" href="{{ dsx.attribute.next }}" visible-if="dsx.attribute.next !== ''"/>
+        </hstack>
+      </vstack>
+
+      <vstack class="doc-rail" visible-if="dsx.formula.tocRows.length &gt;= 2" role="navigation" a11yLabel="On this page">
+        <text value="On this page" type="footnote" class="doc-rail-title"/>
+        <pressable repeat="dsx.formula.tocRows" key="id" href="{{ '#' + dsx.this.id }}" class="{{ 'doc-rail-row doc-rail-level-' + dsx.this.level }}">
+          <text value="{{ dsx.this.title }}" type="footnote" lineLimit="2"/>
+        </pressable>
+      </vstack>
+    </hstack>
   </scroll>
+
+  <!-- the navigation as a sheet on a phone (the same sidebar) -->
+  <sheet present="dsx.variable.navOpen" detents="full" title="Despia docs" close="trailing" on:dismiss="dsx.variable.navOpen = false">
+    <SidebarList value="{{ dsx.attribute.route }}" a11yLabel="Documentation" on:change="dsx.action.open()">
+      <searchbar slot="top" bind="dsx.variable.query" placeholder="Search docs"/>
+      <SidebarSection title="Results" visible-if="dsx.variable.query.length &gt;= 2">
+        <SidebarItem repeat="dsx.formula.hitRows" key="id" value="{{ dsx.this.route }}" title="{{ dsx.this.title }}"/>
+      </SidebarSection>
+      <DocNav route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}" visible-if="dsx.variable.query.length &lt; 2"/>
+    </SidebarList>
+  </sheet>
 
   <sheet present="dsx.variable.askOpen" detents="full" title="Ask AI" close="trailing" on:dismiss="dsx.variable.askOpen = false">
     <DocAsk asked="{{ dsx.variable.askQ }}" sources="[]" on:ask="dsx.variable.askQ = dsx.this.value"/>
