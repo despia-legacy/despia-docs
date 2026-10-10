@@ -2,7 +2,7 @@
 //
 //  port-legacy.mjs - the v3 (Mintlify) docs, ported into this site's own content pipeline.
 //
-//  Input:  legacy/mintlify/ - a read-only snapshot of despia-native/docs (SOURCE.json names the
+//  Input:  legacy/mintlify/ - a read-only snapshot of despia-legacy/docs (SOURCE.json names the
 //          commit): .mdx pages, docs.json (the navigation), images.
 //  Output: content/legacy/<path>.md - one markdown page per .mdx, at the SAME path under /legacy
 //          (case preserved: /local-intelligence/Introduction -> /legacy/local-intelligence/Introduction),

@@ -9,7 +9,7 @@
 //  fact is written once, in the manifest, and a page can never drift from it.
 //
 //  Read from git, never from a working tree (no checkout needed, nobody's uncommitted edits):
-//    DESPIA_FRAMEWORK      a clone of the framework repository (despia-native/despia-framework)
+//    DESPIA_FRAMEWORK      a clone of the framework repository (despia-native/framework)
 //    DESPIA_FRAMEWORK_REF  the ref to read (default origin/dev)
 //  `--check` exits 1 when data/packages.json differs from what the ref says (CI drift gate).
 //

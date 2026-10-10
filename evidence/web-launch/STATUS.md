@@ -16,7 +16,7 @@ Later commits on this branch: see `git log`; the proof numbers below are from th
 
 ## Pipeline
 
-`npm run compile` = `port-legacy.mjs` (Mintlify snapshot `legacy/mintlify/` at despia-native/docs
+`npm run compile` = `port-legacy.mjs` (Mintlify snapshot `legacy/mintlify/` at despia-legacy/docs
 origin/main baa4c05 -> `content/legacy/**.md`, leak-checked) -> `migrate-map.mjs` (`migrate/map.json`
 -> `/migrate/map` + `/migrate-map.json`) -> `compile.mjs` (all spaces) -> `mcp-tools.mjs`.
 Then `dsx build` + `assemble.mjs` (canonical + markdown alternate stamped per page, docs.js).
