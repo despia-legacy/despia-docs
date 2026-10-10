@@ -10,7 +10,10 @@ You can try your page's `dsx` calls before you build anything, without changing 
 `despia dev` and `despia run` work on your app's Despia project. For a web app it is small: the app's screen is one web view showing your site, and the config lists the packages.
 
 ```dsx title="Components/App.dsx"
-<DSXWebView origin="https://your-app.com" path="/" style="width: 100%; height: 100%"/>
+<DSXWebView
+  origin="https://your-app.com"
+  path="/"
+  style="width: 100%; height: 100%"/>
 ```
 
 ```json title="dsx.config.json"

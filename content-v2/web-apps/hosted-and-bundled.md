@@ -7,11 +7,11 @@ A Despia app shows your web app in one of two ways. The Dom package's `web_sourc
 
 | | Hosted (`remote`, the default) | Bundled (`bundled`) |
 | :-- | :-- | :-- |
-| The app loads | your site's HTTPS address | a static export shipped inside the app |
-| A change goes live | when you deploy your site | with the next app build |
-| Works offline | only what your site caches | yes, the files are on the phone |
-| Server rendering, API routes | yes, your server runs them | no, static files only |
-| Page origin | your domain | `app://localhost` (iOS), `https://appassets.androidplatform.net` (Android) |
+| The app loads | your HTTPS address | files inside the app |
+| A change goes live | when you deploy | with the next app build |
+| Works offline | what your site caches | yes |
+| Server code, API routes | yes | no, static files only |
+| Page origin | your domain | a local app origin (see below) |
 
 ## Hosted: the app loads your address
 
