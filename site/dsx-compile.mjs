@@ -134,7 +134,7 @@ const PAGE_ICON = {
   "/app-review": "checkmark.shield",
 };
 const navData = {
-  areas: [{ id: "home", title: "Home", icon: "house", path: "/" }].concat(SECTIONS.map((s) => ({ id: s.id, title: s.label, icon: SECTION_ICON[s.id], path: s.href }))),
+  areas: [{ id: "home", title: "Home", icon: "house", path: "/" }].concat(SECTIONS.map((s) => ({ id: s.id, title: s.id === "ship" ? "Ship" : s.label, icon: SECTION_ICON[s.id], path: s.href }))),
   groups: SECTIONS.flatMap((s) => s.id === "packages"
     ? GROUP_ORDER.map((g) => ({ id: `packages-${g}`, section: "packages", title: g,
       rows: pkgs.filter((p) => p.published && groupOf(p) === g).sort((a, b) => titleOf(a).localeCompare(titleOf(b)))
@@ -391,7 +391,7 @@ writeFileSync(join(repo, "Components", "DocsShell.css"), `/*
   DocsShell: the one rule the console has no screen for: a long-form article keeps a reading width. Everything else on a
   docs page is the console's own components, unstyled.
 */
-.doc-article { align-items: stretch; max-width: 46rem; }
+.doc-article { align-items: stretch; max-width: 46rem; margin-block-start: var(--dsx-page-header-spacing, 1.5rem); }
 
 /* THE CONSOLE'S OWN PAGE RHYTHM (despia-native/platform Components/HelpSheet.css, owner 2026-10-10): a notice in the
    page's flow keeps the page's spacing token from what follows it; a list group brings its own section spacing. */
