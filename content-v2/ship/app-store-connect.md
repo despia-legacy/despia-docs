@@ -14,7 +14,7 @@ You need an [Apple Developer Program](https://developer.apple.com/programs/) mem
 1. Open [App Store Connect](https://appstoreconnect.apple.com), then **Users and Access**, then **Integrations**, then **App Store Connect API**.
 2. Under **Team Keys**, add a key. Give it a name you will recognise, such as `Despia`.
 3. Choose the **App Manager** role.
-4. Download the key. It is a file named `AuthKey_<Key ID>.p8`. Apple lets you download it only once, so keep it somewhere safe.
+4. Download the key. Its file name starts with `AuthKey_` and ends with the Key ID. Apple lets you download it only once, so keep it somewhere safe.
 
 ### Note the two ids
 
@@ -28,8 +28,8 @@ On the same page:
 In the [console](https://console.despia.com), open **App Stores** and add App Store Connect: choose the `.p8` file and enter the Key ID and the Issuer ID. From a terminal:
 
 ```sh
-npx @despia-native/cli stores add asc --file AuthKey_ABC123DEFG.p8 --issuer-id <issuer-id> --key-id ABC123DEFG
-npx @despia-native/cli stores add asc --file AuthKey_ABC123DEFG.p8 --issuer-id <issuer-id> --key-id ABC123DEFG --apply
+npx @despia-native/cli stores add asc --file ./AuthKey.p8 --issuer-id <issuer-id> --key-id <key-id>
+npx @despia-native/cli stores add asc --file ./AuthKey.p8 --issuer-id <issuer-id> --key-id <key-id> --apply
 ```
 
 The first command checks everything and shows what it would do; `--apply` connects the key. `stores link asc` prints a short-lived link to upload the file in the console instead.

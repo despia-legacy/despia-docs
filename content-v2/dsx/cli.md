@@ -96,8 +96,8 @@ See [Use Despia with your AI agent](/dsx/agents).
 A command that changes something outside your project (a store, a workspace, a payment) prints what it would do and stops. Run it again with `--apply` to do it:
 
 ```sh
-despia stores add asc --file AuthKey_ABC123DEFG.p8 --issuer-id <issuer-id> --key-id ABC123DEFG
-despia stores add asc --file AuthKey_ABC123DEFG.p8 --issuer-id <issuer-id> --key-id ABC123DEFG --apply
+despia stores add asc --file ./AuthKey.p8 --issuer-id <issuer-id> --key-id <key-id>
+despia stores add asc --file ./AuthKey.p8 --issuer-id <issuer-id> --key-id <key-id> --apply
 ```
 
 Keys and secrets are read from a file or from standard input, never from a flag value, and are never printed back.
