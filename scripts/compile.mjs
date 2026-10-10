@@ -24,7 +24,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { expandPackagePage } from "./packages-lib.mjs";
+import { SHOW_UNSHIPPED, comingSoonMarkdown, expandPackagePage, shipState } from "./packages-lib.mjs";
 
 // The component reference pages are NOT generated here. They are written into content/
 // components/ by the framework's own generator (ClosedSource/scripts/generate_component_docs.rb
@@ -246,7 +246,7 @@ function jseStringLiteral(source) {
 const CALLOUT_SUGAR = { Note: "note", Info: "note", Tip: "tip", Warning: "warning", Danger: "caution", Check: "tip" };
 const KIND_TO_TONE = { note: "note", info: "note", tip: "tip", warning: "warning", danger: "caution" };
 const KNOWN_COMPONENTS = new Set(["Callout", "Card", "CardGroup", "Steps", "Step", "Tabs", "Tab", "CodeGroup", "CodeTabs", "Accordion",
-  "AccordionGroup", "Frame", "ParamField", "ResponseField", "Update", "Video", "RefMeta", ...Object.keys(CALLOUT_SUGAR)]);
+  "AccordionGroup", "Frame", "ParamField", "ResponseField", "Update", "Video", "RefMeta", "ComingSoon", ...Object.keys(CALLOUT_SUGAR)]);
 
 /** CodeTabs pane titles: where the reader writes the code. Renderers (DSXView, DSXDom) are internals and never a tab. */
 const CODE_TAB_TITLES = ["DSX markup", "JavaScript (any web app)"];
@@ -598,6 +598,21 @@ function cardGrid(node, indent) {
 /** A run of lines as stock <markdown> (tags lowered to directives), with two exceptions drawn as DSX: a card
  *  group (an icon card grid) and a LIVE EXAMPLE (```xml live: its source becomes a generated component of this
  *  site, drawn by the same runtime the reader is using, above the same source as a code block). */
+/** The Coming soon block: the greyed planned chips and the notify form's place. The form itself is plain HTML that
+ *  scripts/assemble.mjs writes into the .doc-notify stack (it posts with no JavaScript; docs.js enhances it). */
+function comingSoonBlock(node, indent) {
+  const topic = attrValue(node.attrs, "topic") ?? "";
+  const chips = (attrValue(node.attrs, "chips") ?? "").split(",").filter(Boolean);
+  const slug = topic.toLowerCase().replace(/\//g, "--").replace(/[^a-z0-9-]/g, "-");
+  return `${indent}<vstack class="doc-soon" style="align-items: stretch">
+${indent}  <hstack class="doc-soon-chips" role="group" a11yLabel="Planned for">
+${indent}    <chip label="Coming soon" class="doc-soon-badge"/>
+${chips.map((c) => `${indent}    <chip label="${escapeForDsxAttr(c)}" class="doc-soon-chip"/>`).join("\n")}
+${indent}  </hstack>
+${indent}  <stack class="doc-notify doc-notify-topic-${slug}"/>
+${indent}</vstack>`;
+}
+
 function compileBody(page, lines, startLine, indent) {
   const out = [];
   const markdown = (md) => {
@@ -625,6 +640,7 @@ function compileBody(page, lines, startLine, indent) {
   let run = [];
   for (const node of tagTree(page, lines, startLine)) {
     if (node.tag === "CardGroup") { prose(run); run = []; out.push(cardGrid(node, indent)); continue; }
+    if (node.tag === "ComingSoon") { prose(run); run = []; out.push(comingSoonBlock(node, indent)); continue; }
     run.push(node);
   }
   prose(run);
@@ -720,7 +736,13 @@ const pages = files.map((file) => {
   // A package page (front matter `package: <manifest path>`): the chip row and the reference are generated from
   // data/packages.json, so the HTML, the markdown twin, search and llms all carry the manifest's facts.
   let expanded = null;
-  if (meta.package !== undefined && meta.package !== "") {
+  const ship = shipState(meta);
+  if (ship.soon && !SHOW_UNSHIPPED) {
+    // Coming soon (data-decided, scripts/packages-lib.mjs shipState): the authored body stays in the source for the
+    // day it ships; the page, its markdown twin, search and llms carry only the summary and the notify form.
+    body = comingSoonMarkdown(meta.title ?? firstHeading(body) ?? "", ship);
+    expanded = source.slice(0, source.length - parsed.body.length) + body;
+  } else if (meta.package !== undefined && meta.package !== "") {
     const out = expandPackagePage(body, meta.package, relative(root, file));
     body = out.text;
     expanded = source.slice(0, source.length - parsed.body.length) + out.text;
@@ -741,6 +763,7 @@ const pages = files.map((file) => {
     component: componentNameFor(route),
     meta,
     ...(expanded !== null ? { mdSource: expanded } : {}),
+    soon: ship.soon && !SHOW_UNSHIPPED,
   };
 }).filter((p) => p !== null);
 
@@ -891,7 +914,7 @@ function pageIconOf(p, sectionName) {
 // A section is { name, items }; an item is a page { route, title, label } or a nested group
 // { group, items }. Modern keeps its reading-rank sections; Legacy replays docs.json's own
 // groups and order; Migration and Troubleshooting group by front-matter section.
-const navItem = (p, icon, sectionName) => ({ route: p.route, title: p.title, label: pageLabel(p), icon: icon !== undefined && icon !== "doc.text" ? icon : pageIconOf(p, sectionName), ...(isAlpha(p) ? { alpha: true } : {}) });
+const navItem = (p, icon, sectionName) => ({ route: p.route, title: p.title, label: pageLabel(p), icon: icon !== undefined && icon !== "doc.text" ? icon : pageIconOf(p, sectionName), ...(isAlpha(p) ? { alpha: true } : {}), ...(p.soon ? { soon: true } : {}) });
 const byRoute = new Map(entries.map((p) => [p.route, p]));
 const navBySpace = {};
 {
@@ -1384,10 +1407,11 @@ function navMarkup(items, sectionIcon, depth, vars) {
     // (or the generic page glyph) down a column is noise, not wayfinding (polish pass 2026-10-03)
     // every row wears its own icon (data/icons.json): the reader scans by shape as much as by word
     const ownIcons = true;
-    const rows = run.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sectionIcon ?? "doc.text", ...(i.alpha ? { alpha: true } : {}) }));
+    const rows = run.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sectionIcon ?? "doc.text", soon: i.soon === true, ...(i.alpha ? { alpha: true } : {}) }));
     const n = vars.push(`    <variable as="r${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(rows))})</variable>`) - 1;
     out.push(`${pad}<pressable repeat="dsx.variable.r${n}" key="route" href="{{ dsx.this.route }}">
 ${ownIcons ? `${pad}  <image style="font-size: 15px" icon="{{ dsx.this.icon }}" a11yHidden="true"/>\n` : ""}${pad}  <text value="{{ dsx.this.label }}" lineLimit="2"/>
+${pad}  <chip label="Soon" class="doc-nav-soon" visible-if="dsx.this.soon"/>
 
 ${pad}</pressable>`);
     run = [];

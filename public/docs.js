@@ -145,6 +145,51 @@
   else window.addEventListener("load", function () { setTimeout(restore, 300); });
   window.addEventListener("popstate", markCurrentPage);
 
+  // ── Coming soon: the notify form (written into the page by scripts/assemble.mjs) ──
+  // Posts with no JavaScript; with it, the same POST runs as a fetch and the state shows inline. The email is checked
+  // here first. If the runtime re-rendered the placeholder empty, the form is written back from its own class.
+  var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  function notifyForms() {
+    document.querySelectorAll(".doc-notify").forEach(function (box) {
+      if (box.querySelector("form") !== null) return;
+      var m = /doc-notify-topic-([a-z0-9-]+)/.exec(box.className);
+      var tpl = window.__docNotifyTemplate;
+      if (m === null || !tpl) return;
+      box.innerHTML = tpl.replace(/__TOPIC__/g, m[1].replace(/--/g, "/")).replace(/__BACK__/g, location.pathname);
+    });
+    document.querySelectorAll("form.doc-notify-form").forEach(function (form) {
+      if (!window.__docNotifyTemplate) {
+        window.__docNotifyTemplate = form.outerHTML
+          .replace(/name="topic" value="[^"]*"/, 'name="topic" value="__TOPIC__"').replace(/name="back" value="[^"]*"/, 'name="back" value="__BACK__"');
+      }
+      if (form.dataset.enhanced === "1") return;
+      form.dataset.enhanced = "1";
+      var status = form.querySelector(".doc-notify-status");
+      var button = form.querySelector("button");
+      function show(state, text) { status.textContent = text; status.setAttribute("data-state", state); }
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var email = (form.elements.email.value || "").trim();
+        if (!EMAIL.test(email)) { show("error", "Enter a valid email address."); form.elements.email.focus(); return; }
+        button.disabled = true;
+        show("", "Sending...");
+        fetch(form.getAttribute("action"), {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify({ email: email, topic: form.elements.topic.value, back: location.pathname }),
+        }).then(function (res) { return res.json().catch(function () { return { ok: false }; }); }).then(function (r) {
+          if (r && r.ok) { show("ok", r.message || "Thanks. We'll email you when it's ready."); form.elements.email.value = ""; }
+          else show("error", (r && r.message) || "That did not go through. Try again in a moment.");
+        }).catch(function () {
+          show("error", "That did not go through. Try again in a moment.");
+        }).then(function () { button.disabled = false; });
+      });
+    });
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", notifyForms);
+  else notifyForms();
+  window.addEventListener("load", function () { setTimeout(notifyForms, 400); });
+
   // ── page actions: "Copy page" copies the page's markdown sibling ────────────
   // The sibling is the page's own path plus .md (/ -> /index.md), the same bytes
   // the "View as Markdown" row opens. The label confirms for two seconds.

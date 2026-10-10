@@ -11,7 +11,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chipRowMarkdown, loadPackages, packageFor, pageActions, worksIn } from "../scripts/packages-lib.mjs";
+import { chipRowMarkdown, loadPackages, packageFor, pageActions, shipState, worksIn } from "../scripts/packages-lib.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = join(root, "content");
@@ -33,6 +33,8 @@ test("every package page's chip row is the manifest's row", () => {
     assert.ok(pkg, `${p.route}: package ${p.meta.package} unknown`);
     const twin = join(root, "public", ...p.route.slice(1).split("/")) + ".md";
     assert.ok(existsSync(twin), `${twin} missing: run npm run compile first`);
+    const state = shipState(p.meta);
+    if (state.soon) { assert.ok(readFileSync(twin, "utf8").includes(`chips="${worksIn(pkg).join(",")}"`), `${p.route}: Coming soon chips`); continue; }
     const rows = readFileSync(twin, "utf8").split("\n").filter((l) => l.startsWith("**Works in:**"));
     assert.deepEqual(rows, [chipRowMarkdown(pkg)], p.route);
   }

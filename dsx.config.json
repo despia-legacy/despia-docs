@@ -868,6 +868,14 @@
       }
     },
     {
+      "path": "/web-apps",
+      "component": "docs.PageWebApps",
+      "meta": {
+        "title": "Using Despia from your web app",
+        "description": "How dsx.module calls work in React, Next.js, Vue and plain JavaScript inside a Despia app, and every difference from a DSX page, in one place."
+      }
+    },
+    {
       "path": "/writing-docs",
       "component": "docs.PageWritingDocs",
       "meta": {
@@ -892,6 +900,14 @@
       }
     },
     {
+      "path": "/packages/haptic",
+      "component": "docs.PagePackages_Haptic",
+      "meta": {
+        "title": "Haptics",
+        "description": "Add vibration feedback to taps and results, with six built-in styles and custom patterns."
+      }
+    },
+    {
       "path": "/troubleshooting/ota-updates-not-arriving",
       "component": "docs.PageTroubleshooting_OtaUpdatesNotArriving",
       "meta": {
@@ -913,6 +929,14 @@
       "meta": {
         "title": "Website-style design",
         "description": "The app must look and behave like an app on the device: a title bar, bottom tabs or a navigation stack, touch-sized controls. Reviewers often cite this together with 4.2 as \"a repackaged website\"."
+      }
+    },
+    {
+      "path": "/packages/appleauth",
+      "component": "docs.PagePackages_Appleauth",
+      "meta": {
+        "title": "Sign in with Apple",
+        "description": "Apple's native sign-in sheet, returning an identity token your backend verifies."
       }
     },
     {

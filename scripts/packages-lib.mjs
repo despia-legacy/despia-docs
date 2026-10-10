@@ -179,3 +179,40 @@ declare const dsx: DsxSurface;
 interface Window { dsx?: DsxSurface }
 `;
 }
+
+// ── shipped or coming soon (owner 2026-10-10, the 0.0.2 docs scope) ──────────────────────────
+// Decided from data, never by hand:
+//   · a package page ships when its manifest says `"published": true` (the catalog's own "offered to people" flag,
+//     project-core status.ts); otherwise it is Coming soon;
+//   · a component page ships when its generated front matter `platforms` includes `web` (it renders through the web
+//     DOM in 0.0.2); otherwise it is Coming soon.
+// DOCS_SHOW_UNSHIPPED=1 builds every page in full (a review preview, never a deploy).
+const COMPONENT_PLATFORM = { web: "Web apps", ios: "iOS", android: "Android", desktop: "Desktop", macos: "macOS" };
+export function shipState(meta) {
+  if (meta.package) {
+    const pkg = packageFor(meta.package);
+    if (!pkg) return { soon: false };
+    return pkg.published === true ? { soon: false, pkg } : { soon: true, pkg, chips: worksIn(pkg), topic: `packages/${pkg.command}`,
+      summary: [pkg.description ?? pkg.summary, pkg.nativeValue].filter(Boolean).join(" ") };
+  }
+  if (meta.element) {
+    const platforms = String(meta.platforms ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+    if (platforms.includes("web")) return { soon: false };
+    return { soon: true, chips: ["DSX", ...platforms.map((p) => COMPONENT_PLATFORM[p] ?? p)], topic: `components/${String(meta.element).toLowerCase()}`,
+      summary: meta.description ?? "" };
+  }
+  return { soon: false };
+}
+export const SHOW_UNSHIPPED = process.env.DOCS_SHOW_UNSHIPPED === "1";
+
+/** The Coming soon page body: title, the planned chips (greyed), one paragraph, the notify form. */
+export function comingSoonMarkdown(title, state) {
+  return `# ${title}
+
+<ComingSoon topic="${state.topic}" chips="${state.chips.join(",")}"/>
+
+**Coming soon.** ${state.summary}
+
+This page fills in when it ships. Leave your email above and we'll tell you when it's ready.
+`;
+}

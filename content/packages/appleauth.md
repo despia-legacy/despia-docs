@@ -67,7 +67,7 @@ export function AppleSignIn() {
       location.assign("/")
     } catch (err: any) {
       if (err.code === "cancelled") return // the person closed the sheet: stay on this screen
-      setError(err.data?.message ?? err.message)
+      setError(err.message)
     }
   }
 
@@ -105,10 +105,11 @@ export async function POST(request: Request) {
   // 1. the nonce must be one this server issued and has not used yet
   if (!(await consumeNonce(nonce))) return new Response("Unknown nonce", { status: 400 })
 
-  // 2. the token must be signed by Apple, for your app
+  // 2. the token must be signed by Apple, for your app: the native sheet's tokens name your bundle identifier,
+  //    Apple's web flow names your Services ID, so accept both if you use both
   const { payload } = await jwtVerify(idToken, appleKeys, {
     issuer: "https://appleid.apple.com",
-    audience: process.env.APPLE_BUNDLE_ID, // your iOS bundle identifier
+    audience: [process.env.APPLE_BUNDLE_ID, process.env.APPLE_SERVICES_ID],
   })
 
   // 3. Apple put the SHA-256 hex of the raw nonce in the token
@@ -129,7 +130,8 @@ declare function startSession(user: unknown): Response
 ## With Supabase
 
 Supabase verifies Apple tokens itself: pass the token and the **raw** nonce straight through to `signInWithIdToken`.
-Enable the Apple provider in your Supabase project and add your bundle identifier to its client IDs.
+Enable the Apple provider in your Supabase project and add your bundle identifier to its client IDs. With
+`supabase-js` in your web app:
 
 ```ts
 import { createClient } from "@supabase/supabase-js"
@@ -147,6 +149,9 @@ declare const SUPABASE_URL: string
 declare const SUPABASE_ANON_KEY: string
 ```
 
+If your app uses Despia's Supabase package instead of `supabase-js`, the same call is
+`dsx.module.supabase.auth.signInWithIdToken({ provider: "apple", idToken: apple.idToken, nonce: apple.nonce })`.
+
 ## Name and email arrive once
 
 Apple sends `email`, `givenName` and `familyName` only on the **first** sign-in for a given Apple ID in your app, and
@@ -155,14 +160,14 @@ use it as the account key.
 
 ## Errors
 
-The call rejects with an error whose `code` says what happened and whose `data.message` is a sentence you can show.
+The call rejects with an error whose `code` says what happened and whose `message` is a sentence you can show.
 
 | `err.code` | What happened | What to do |
 | :-- | :-- | :-- |
 | `cancelled` | The person closed the sheet. | Nothing: it is a normal choice. Leave them on the sign-in screen. |
 | `busy` | Another Sign in with Apple request is already running. | Wait for the first one; disable the button while it runs. |
 | `invalid_credential` | Apple finished without an identity token (a password or passkey credential). | Ask the person to try again. |
-| `failed` | It did not complete for another reason. | Show `err.data.message` and let them retry. |
+| `failed` | It did not complete for another reason. | Show `err.message` and let them retry. |
 
 ## Where it works
 
@@ -170,10 +175,13 @@ Sign in with Apple uses Apple's own API, so it exists on iOS and macOS only. On 
 `dsx.has("appleauth")` is `false`: send people to your web sign-in there. Ask `dsx.has`, never the operating system.
 
 <Note>
-**Already using Apple's JS SDK?** If your web app calls `AppleID.auth.signIn()` from Apple's JavaScript SDK, you do not
-have to change it: on iOS 17.5 and later, Despia's OAuth package answers that popup with the native Apple sheet and
-hands your page the same response the web flow would. Use `dsx.module.appleauth.signIn()` when you want the token in
-one awaited call.
+**Already using Apple's JS SDK?** If your web app calls `AppleID.auth.signIn()` with `usePopup: true`, you do not have
+to change it. From iOS 17.5 that popup cannot complete inside an app's web view, so Despia's OAuth package answers it
+with the native Apple sheet and resolves the same object the web SDK would (`authorization.id_token`, `code`, `state`,
+and `user` on the first sign-in); closing the sheet rejects with `popup_closed_by_user`, as on the web. It applies on
+your app's own pages only, and the redirect mode is left to Apple's SDK. The token's audience is then your bundle
+identifier rather than your Services ID, so let your backend accept both. Use `dsx.module.appleauth.signIn()` when you
+want the token in one awaited call.
 </Note>
 
 <PackageReference/>

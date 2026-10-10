@@ -68,8 +68,7 @@ const result = await dsx.module.haptic.pattern({
 ## Devices that cannot vibrate
 
 A haptic call never fails: feedback is decoration, so you never need a `try`/`catch` around it. On a device with no
-vibration hardware (an iPad, or a browser without `navigator.vibrate`) the call still resolves, and `pattern` tells you
-what happened in `fallback`. To hide a "Vibrate" setting on such devices, read the package's `supported` value instead
-of calling and checking.
+vibration hardware (an iPad, or a browser without `navigator.vibrate`) the call still resolves and nothing plays;
+`pattern` tells you what happened in `fallback` (`impact` when simple taps stood in, `none` when nothing could play).
 
 <PackageReference/>

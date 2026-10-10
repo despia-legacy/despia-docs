@@ -32,8 +32,8 @@ also run outside Despia, events, and which pages get `dsx` at all.
   `window.dsx?.module...` instead, so the code does nothing where Despia is absent.
 - **A package exists on some builds only** (Sign in with Apple is iOS only): ask `dsx.has("<package>")` and route to
   your fallback. Never check the operating system.
-- **Only your app's own pages get `dsx`.** A page on another domain, or in an iframe, gets nothing: see
-  [Which pages get dsx](#which-pages-get-dsx).
+- **Only your app's own pages can call it.** On another domain, calls fail with `origin_not_allowed`; inside an iframe
+  there is no `dsx`. See [Which pages get dsx](#which-pages-get-dsx).
 
 ## React
 
@@ -129,7 +129,9 @@ For autocompletion of the calls themselves, declare the shape you use:
 interface DsxError {
   event: "error"
   code: string
-  data: { message: string }
+  message?: string
+  recoverable?: boolean
+  data?: unknown
 }
 
 interface Dsx {
@@ -150,17 +152,20 @@ and result.
 
 ## Errors
 
-A call that fails rejects its promise with an error whose `code` is a stable, machine-readable name and whose
-`data.message` is a sentence you can show the person. Each package page lists its codes.
+A call that fails rejects its promise with an error object: `code` is a stable, machine-readable name, and `message`
+is a sentence you can show the person. Each package page lists its codes.
 
 ```js
 try {
   await dsx.module.appleauth.signIn()
 } catch (err) {
   if (err.code === "cancelled") return // the person closed the sheet: a normal choice
-  showMessage(err.data.message)
+  showMessage(err.message)
 }
 ```
+
+The full shape is `{ event: "error", code, message, recoverable, data }`; `data` carries details when a package has
+any. A call with no answer after 30 seconds rejects with the code `timeout`.
 
 ## Feature detection
 
@@ -175,8 +180,8 @@ if (dsx.has("appleauth")) {
 }
 ```
 
-Never decide by operating system or user agent. `dsx.has` answers for the build that is actually running, including
-packages you later remove.
+Never decide by operating system or user agent. `dsx.has` answers for the build that is actually running, so it stays
+right when you add or remove a package later. It answers at once, with no round trip to the app.
 
 ## Events
 
@@ -217,9 +222,9 @@ code that moves between pages and frameworks that render on the server.
 
 ## Which pages get dsx
 
-Despia gives `dsx` only to pages your app trusts. The default policy is `app`: the bridge reaches your app's own
-pages and nothing else. A page that is not trusted is not told so: it gets no `dsx` reply, so an `await` on a call from
-it never finishes. If a call hangs, check this list first.
+Native calls work only from pages your app trusts. The default policy is `app`: the bridge answers your app's own
+pages and nothing else. On any other page `dsx` is still there, but every call rejects at once with the code
+`origin_not_allowed`, and the message names the page's origin. If you see that code, check this list.
 
 Trusted by default:
 
@@ -237,13 +242,17 @@ Not trusted unless you say so:
 - **`http://` when you configured `https://`.** The scheme is part of the origin.
 - **Iframes.** Only the top-level page gets `dsx`. Code inside an iframe cannot call Despia, whatever its origin.
 
-Set these on the **Dom** package in your app's package settings:
+Set these on the **Dom** package, in your project's `dsx.config.json`:
 
-```json
+```json title="dsx.config.json"
 {
-  "bridge_policy": "app",
-  "bridge_origins": ["www.example.com", "*.example.com", "https://checkout.partner.com", "http://localhost:3000"],
-  "bridge_subdomains": false
+  "moduleConfig": {
+    "dom": {
+      "bridge_policy": "app",
+      "bridge_origins": ["www.example.com", "*.example.com", "https://checkout.partner.com"],
+      "bridge_subdomains": false
+    }
+  }
 }
 ```
 

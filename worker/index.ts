@@ -33,6 +33,7 @@ import versions from "../public/versions.json";
 import rootRedirects from "../redirects/docs-root.json";
 import { createTools, SPACES, type Cache, type IndexPage, type VectorHit } from "./search.ts";
 import { DOCS_TOOLS } from "./tools.ts";
+import { handleNotify, notifyStatus } from "./notify.ts";
 
 interface AssetsBinding { fetch(request: Request): Promise<Response> }
 
@@ -197,11 +198,15 @@ export default {
       return Promise.resolve(new Response(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32029, message: "rate limited: 60 calls a minute per client" } }),
         { status: 429, headers: { "content-type": "application/json", "retry-after": "10" } }));
     }
+    if (url.pathname === "/notify") {
+      if (request.method === "POST" && !allow(request.headers.get("cf-connecting-ip") ?? "local")) return Promise.resolve(new Response("Too many requests", { status: 429, headers: { "retry-after": "10" } }));
+      return handleNotify(request, env as Record<string, unknown>);
+    }
     if (typeof env["SUPPORT_ORIGIN"] === "string" && env["SUPPORT_ORIGIN"] !== "") supportOrigin = String(env["SUPPORT_ORIGIN"]).replace(/\/+$/, "");
     if (typeof env["SITE_ORIGIN"] === "string" && env["SITE_ORIGIN"] !== "") siteOrigin = String(env["SITE_ORIGIN"]).replace(/\/+$/, "");
     const binding = env["ASSETS"];
     if (assets === null && typeof binding === "object" && binding !== null) assets = binding as AssetsBinding;
-    return handler.fetch(request, env, ctx).then((res) => readable(url.pathname, secure(res, noindex)));
+    return handler.fetch(request, env, ctx).then((res) => readable(url.pathname, secure(notifyStatus(res, url), noindex)));
   },
   scheduled: handler.scheduled,
 };
