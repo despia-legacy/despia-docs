@@ -20,7 +20,8 @@
     "/mcp": "https://mcp.despia.com/mcp",
     "/convert/native-features": "/web-apps/native-features",
     "/convert/react": "/web-apps/frameworks",
-    "/convert/detect": "/web-apps/outside-despia"
+    "/convert/detect": "/web-apps/outside-despia",
+    "/migrate/guide": "/convert/from-v3"
   },
   "prefixes": {
     "/agents/skills/": "/dsx/agents/skills"

@@ -478,5 +478,7 @@
  "/convert/react": "/web-apps/frameworks",
  "/convert/react.md": "/web-apps/frameworks.md",
  "/convert/detect": "/web-apps/outside-despia",
- "/convert/detect.md": "/web-apps/outside-despia.md"
+ "/convert/detect.md": "/web-apps/outside-despia.md",
+ "/migrate/guide": "/convert/from-v3",
+ "/migrate/guide.md": "/convert/from-v3.md"
 }

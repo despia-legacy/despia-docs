@@ -119,9 +119,7 @@ for (const p of legacyPaths) {
 // each over. A target must be a page of this build; a source must not be one.
 const aliases = JSON.parse(readFileSync(join(out, "modern-aliases.json"), "utf8")).aliases;
 for (const [from, to] of Object.entries(aliases)) {
-  const page = to.split("#")[0];
   if (modernRoutes.has(from)) { console.error(`[docs.redirects] alias ${from} shadows a page`); process.exit(1); }
-  if (!modernRoutes.has(page) && !page.startsWith("/legacy/")) console.warn(`[docs.redirects] alias ${from} -> ${to}: no such page in this build`);
   rootTable[from] = to;
   if (!to.includes("#")) rootTable[`${from}.md`] = `${to}.md`;
 }
@@ -138,6 +136,10 @@ const moveTarget = (to) => {
   return anchor === undefined ? to : to;
 };
 for (const [from, to] of Object.entries(rootTable)) rootTable[from] = moveTarget(to);
+for (const from of Object.keys(aliases)) {
+  const page = rootTable[from].split("#")[0];
+  if (!modernRoutes.has(page) && !page.startsWith("/legacy/") && !page.startsWith("http")) console.warn(`[docs.redirects] alias ${from} -> ${rootTable[from]}: no such page in this build`);
+}
 for (const [from, to] of Object.entries(v2.moves)) {
   if (from.includes("#")) continue;
   rootTable[from] = to;

@@ -18,7 +18,7 @@ You do not have to move everything at once. The optional `Core/Legacy` package k
 `despia()` calls working while you move one page, then the next.
 
 <CardGroup cols="2">
-<Card title="Step-by-step guide" href="/migrate/guide">
+<Card title="Step-by-step guide" href="/convert/from-v3">
 Convert the bundle, read the report, pin the packages and move off the old API page by page.
 </Card>
 <Card title="Feature map" href="/migrate/map">

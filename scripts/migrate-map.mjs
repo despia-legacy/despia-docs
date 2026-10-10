@@ -51,7 +51,7 @@ const lines = [
   "- **Not applicable**: store, deployment or third-party guidance with no Despia API to move.",
   "- **Unknown**: no v4 equivalent found yet. Ask support before you migrate that feature.",
   "",
-  "Old `despia('scheme://...')` calls keep running through the optional `Core/Legacy` package while you move page by page; see the [step-by-step guide](/migrate/guide). The same table is served as JSON at [/migrate-map.json](/migrate-map.json).",
+  "Old `despia('scheme://...')` calls keep running through the optional `Core/Legacy` package while you move page by page; see the [step-by-step guide](/convert/from-v3). The same table is served as JSON at [/migrate-map.json](/migrate-map.json).",
   "",
 ];
 for (const g of groups) {

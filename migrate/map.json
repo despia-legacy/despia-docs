@@ -17,7 +17,7 @@
    "v4": {
     "package": "Core/Legacy",
     "api": "despia init --from-v3; window.dsx.module.<command>.<action>()",
-    "docs": "/framework/guides/from-v3"
+    "docs": "/convert/from-v3"
    },
    "note": "v3 despia() calls keep working through the optional Core/Legacy polyfill; new code calls window.dsx.",
    "evidence": [
@@ -58,7 +58,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/deploying"
+    "docs": "/ship"
    },
    "note": "Store deployment process; v4 deploy flow is documented in the Deploying guide.",
    "evidence": []
@@ -71,7 +71,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/deploying"
+    "docs": "/ship"
    },
    "note": "Store deployment process; v4 deploy flow is documented in the Deploying guide.",
    "evidence": []
@@ -84,7 +84,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/deploying"
+    "docs": "/ship"
    },
    "note": "Store deployment process; v4 deploy flow is documented in the Deploying guide.",
    "evidence": []
@@ -97,7 +97,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/deploying"
+    "docs": "/ship"
    },
    "note": "Store deployment process; v4 deploy flow is documented in the Deploying guide.",
    "evidence": []
@@ -194,7 +194,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/transport-and-ota-integrity"
+    "docs": "/ship#what-ships-where"
    },
    "note": "OTA-vs-binary update guidance; v4 OTA integrity is its own guide (bundleNumber comes from metadata.version via Legacy).",
    "evidence": [
@@ -209,7 +209,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/transport-and-ota-integrity"
+    "docs": "/ship#what-ships-where"
    },
    "note": "OTA-vs-binary update guidance; v4 OTA integrity is its own guide (bundleNumber comes from metadata.version via Legacy).",
    "evidence": [
@@ -224,7 +224,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/transport-and-ota-integrity"
+    "docs": "/ship#what-ships-where"
    },
    "note": "OTA-vs-binary update guidance; v4 OTA integrity is its own guide (bundleNumber comes from metadata.version via Legacy).",
    "evidence": [
@@ -239,7 +239,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/transport-and-ota-integrity"
+    "docs": "/ship#what-ships-where"
    },
    "note": "OTA-vs-binary update guidance; v4 OTA integrity is its own guide (bundleNumber comes from metadata.version via Legacy).",
    "evidence": [
@@ -572,7 +572,7 @@
    "v4": {
     "package": null,
     "api": "a DSX package (dsx.json + Swift/Kotlin/web lanes) installed with `despia add`",
-    "docs": "/framework/skills/writing-a-module"
+    "docs": "/dsx/packages"
    },
    "note": "v3 extensions were scheme handlers; in v4 every native capability is a package called through dsx.module.<command>.",
    "evidence": [
@@ -884,7 +884,7 @@
    "v4": {
     "package": "Core/Dom",
     "api": "Dom config useragent_iphone / useragent_ipad / useragent_android; window.dsx.has(name)",
-    "docs": "/framework/guides/despia-api"
+    "docs": "/web-apps/outside-despia"
    },
    "note": "Custom user agent strings are Dom config; feature detection in v4 is window.dsx.has().",
    "evidence": [
@@ -989,7 +989,7 @@
    "v4": {
     "package": "Core/Auth/OAuth",
     "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
    "evidence": [
@@ -1006,7 +1006,7 @@
    "v4": {
     "package": "Core/Auth/OAuth",
     "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
    "evidence": [
@@ -1023,7 +1023,7 @@
    "v4": {
     "package": "Core/Auth/OAuth",
     "api": "dsx.module.oauth.start({ url }); native Sign in with Apple: dsx.module.appleauth.signIn()",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "Web OAuth goes through oauth.start; the native Apple sheet is Core/Auth/AppleAuth.",
    "evidence": [
@@ -1040,7 +1040,7 @@
    "v4": {
     "package": "Core/Auth/OAuth",
     "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
    "evidence": [
@@ -1057,7 +1057,7 @@
    "v4": {
     "package": "Core/Auth/OAuth",
     "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
    "evidence": [
@@ -1155,7 +1155,7 @@
    "v4": {
     "package": "Mandatory/App",
     "api": "App config `url_schemes`",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "Custom URL schemes are declared in the App package config; HTTPS callbacks are the modern OAuth return path.",
    "evidence": [
@@ -1222,7 +1222,7 @@
    "v4": {
     "package": "Core/Basics/Appearance",
     "api": "dsx.module.appearance.get() / context.resolved; dsx.module.systembars.set({ status: { style } })",
-    "docs": "/framework/guides/theming"
+    "docs": "/packages/appearance"
    },
    "note": "statusbartextcolor:// maps to systembars.set; window.isDarkMode is seeded from appearance.context.resolved.",
    "evidence": [
@@ -1622,7 +1622,7 @@
    "v4": {
     "package": "Core/Legacy/Modules/ImageWidget",
     "api": "dsx.module.legacy.imagewidget.receive() (v3 widget://); modern: dsx.module.widget.update()",
-    "docs": "/framework/skills/live-activities-and-widgets"
+    "docs": "/packages/imagewidget"
    },
    "note": "widget:// is answered by the optional LegacyWidgets package; new widgets are authored in DSX via Core/Widgets.",
    "evidence": [
@@ -1769,7 +1769,7 @@
    "v4": {
     "package": "Core/Basics/ValueStore",
     "api": "dsx.module.storage.get() / set()",
-    "docs": "/framework/guides/files-and-storage"
+    "docs": "/packages/files"
    },
    "note": "writevalue:// and readvalue:// map to storage.set/get under key appSettings.",
    "evidence": [
@@ -1834,7 +1834,7 @@
    "v4": {
     "package": "Core/Audio",
     "api": "dsx.module.audio.play() / pause() / seek() / set(); <Audio> component",
-    "docs": "/components/audio"
+    "docs": "/packages/audio"
    },
    "note": "v4 Audio is a redesigned engine; only the audio event broadcast has a Legacy row, the v3 audio:// config/queue verbs do not.",
    "evidence": [
@@ -1884,7 +1884,7 @@
    "v4": {
     "package": "Core/DevSettings",
     "api": "dsx.module.dev.set() / reset() (shake-to-open dev panel)",
-    "docs": "/framework/guides/staging-and-testing"
+    "docs": "/packages/dev"
    },
    "note": "DevSettings switches a test install to a staging origin and back; no Legacy row for sandbox://set|clear or window.isSandbox.",
    "evidence": [
@@ -1900,7 +1900,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/deploying"
+    "docs": "/ship"
    },
    "note": "v3 editor versioning process; v4 releases go through despia deploy.",
    "evidence": []
@@ -1913,7 +1913,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/deploying"
+    "docs": "/ship"
    },
    "note": "v3 editor publish process; v4 releases go through despia deploy.",
    "evidence": []
@@ -1947,7 +1947,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/provisioning"
+    "docs": "/ship/app-store-connect"
    },
    "note": "Bundle id troubleshooting.",
    "evidence": []
@@ -1969,7 +1969,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/transport-and-ota-integrity"
+    "docs": "/ship#what-ships-where"
    },
    "note": "OTA troubleshooting for v3.",
    "evidence": []
@@ -1993,7 +1993,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "OAuth troubleshooting; v4 uses oauth.start with HTTPS callbacks.",
    "evidence": []
@@ -2042,7 +2042,7 @@
    "v4": {
     "package": "Core/Legacy",
     "api": "Core/Legacy polyfill answers window.despia; new code uses window.dsx",
-    "docs": "/framework/guides/from-v3"
+    "docs": "/convert/from-v3"
    },
    "note": "The window.despia setups this page warns about are what the optional Legacy package polyfills.",
    "evidence": [
@@ -2166,7 +2166,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/building-with-agents"
+    "docs": "/dsx/agents"
    },
    "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
    "evidence": []
@@ -2179,7 +2179,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/building-with-agents"
+    "docs": "/dsx/agents"
    },
    "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
    "evidence": []
@@ -2192,7 +2192,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/building-with-agents"
+    "docs": "/dsx/agents"
    },
    "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
    "evidence": []
@@ -2205,7 +2205,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/building-with-agents"
+    "docs": "/dsx/agents"
    },
    "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
    "evidence": []
@@ -2218,7 +2218,7 @@
    "v4": {
     "package": null,
     "api": null,
-    "docs": "/framework/guides/building-with-agents"
+    "docs": "/dsx/agents"
    },
    "note": "AI-builder setup guide; v4 agent workflow is its own guide.",
    "evidence": []
@@ -2231,7 +2231,7 @@
    "v4": {
     "package": "Core/Legacy",
     "api": "window.dsx.module.<command>.<action>(); Legacy answers old despia() calls",
-    "docs": "/framework/guides/despia-api"
+    "docs": "/web-apps"
    },
    "note": "The despia-native URL-scheme model becomes window.dsx module calls; Legacy keeps old calls working.",
    "evidence": [
@@ -2247,7 +2247,7 @@
    "v4": {
     "package": "Core/Dom",
     "api": "Dom config useragent_iphone / useragent_ipad / useragent_android; window.dsx.has(name)",
-    "docs": "/framework/guides/despia-api"
+    "docs": "/web-apps/outside-despia"
    },
    "note": "Custom user agent strings are Dom config; feature detection in v4 is window.dsx.has().",
    "evidence": [
@@ -2298,7 +2298,7 @@
    "v4": {
     "package": "Core/Auth/OAuth",
     "api": "dsx.module.oauth.start({ url }); native Sign in with Apple: dsx.module.appleauth.signIn()",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "Web OAuth goes through oauth.start; the native Apple sheet is Core/Auth/AppleAuth.",
    "evidence": [
@@ -2315,7 +2315,7 @@
    "v4": {
     "package": "Core/Auth/OAuth",
     "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
    "evidence": [
@@ -2332,7 +2332,7 @@
    "v4": {
     "package": "Core/Auth/OAuth",
     "api": "dsx.module.oauth.start({ url, callback: \"https\" })",
-    "docs": "/framework/guides/oauth-https-callback"
+    "docs": "/packages/oauth"
    },
    "note": "v4 runs the provider in ASWebAuthenticationSession / Custom Tab and resolves in one await; the oauth://?url= wire spelling is still parsed.",
    "evidence": [
@@ -2637,7 +2637,7 @@
    "v4": {
     "package": "Core/Legacy/Modules/ImageWidget",
     "api": "dsx.module.legacy.imagewidget.receive() (v3 widget://); modern: dsx.module.widget.update()",
-    "docs": "/framework/skills/live-activities-and-widgets"
+    "docs": "/packages/imagewidget"
    },
    "note": "widget:// is answered by the optional LegacyWidgets package; new widgets are authored in DSX via Core/Widgets.",
    "evidence": [
@@ -2768,7 +2768,7 @@
    "v4": {
     "package": "Core/Basics/ValueStore",
     "api": "dsx.module.storage.get() / set()",
-    "docs": "/framework/guides/files-and-storage"
+    "docs": "/packages/files"
    },
    "note": "writevalue:// and readvalue:// map to storage.set/get under key appSettings.",
    "evidence": [
@@ -2851,7 +2851,7 @@
    "v4": {
     "package": null,
     "api": "a DSX package (dsx.json + Swift/Kotlin/web lanes) installed with `despia add`",
-    "docs": "/framework/skills/writing-a-module"
+    "docs": "/dsx/packages"
    },
    "note": "v3 extensions were scheme handlers; in v4 every native capability is a package called through dsx.module.<command>.",
    "evidence": [
