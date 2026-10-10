@@ -162,23 +162,24 @@ function shell() {
     <attribute as="md" default="''"/>
     <attribute as="toc" default="'[]'"/>
 
-    <!-- FIXED PER PAGE, so plain variables (evaluated once): a computed variable is re-evaluated on every read, and a
-         repeat reads it once per row (the build profile: 74% of a docs build was re-evaluated computed bodies) -->
+    <!-- nav reads no attribute, so it is a plain variable (evaluated once): a computed variable is re-evaluated on every
+         read, and a repeat reads it once per row (the build profile: 74% of a docs build was re-evaluated computed
+         bodies). The rest depends on the page's attributes, which a plain variable's first value cannot see. -->
     <variable as="nav">return docsNav()</variable>
-    <variable as="areaTitle">
+    <variable as="areaTitle" computed="true">
       const hit = dsx.variable.nav.areas.find(a => a.id == dsx.attribute.area)
       return hit ? hit.title : 'Home'
     </variable>
-    <variable as="areaMenu">
+    <variable as="areaMenu" computed="true">
       return [{ header: true, title: 'Despia V4 ${attr(RELEASE.version ?? "")}' }].concat(dsx.variable.nav.areas.map(a => ({
         title: a.title, icon: a.id == dsx.attribute.area ? 'checkmark' : a.icon, action: 'route.reset', args: { path: a.path } })))
     </variable>
-    <variable as="tocRows">
+    <variable as="tocRows" computed="true">
       const rows = JSON.parse(String(dsx.attribute.toc || '[]'))
       return rows.map(r => ({ id: r.id, title: r.title, href: '#' + r.id }))
     </variable>
-    <variable as="groups">return dsx.variable.nav.groups.filter(g => g.section == dsx.attribute.area)</variable>
-    <variable as="areaPath">
+    <variable as="groups" computed="true">return dsx.variable.nav.groups.filter(g => g.section == dsx.attribute.area)</variable>
+    <variable as="areaPath" computed="true">
       const hit = dsx.variable.nav.areas.find(a => a.id == dsx.attribute.area)
       return hit ? hit.path : '/'
     </variable>
