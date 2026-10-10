@@ -38,8 +38,8 @@
     <variable as="navOpen">return false</variable>
     <variable as="askOpen">return false</variable>
     <variable as="askQ">return ''</variable>
-    <variable as="compact" computed="true">return dsx.screen.width &lt; 760</variable>
     <api as="searchIndex" url="/search-index.json"/>
+    <variable as="compact" computed="true">return dsx.screen.width &lt; 760</variable>
 
     <formula as="spaceList" input:raw="dsx.attribute.spaces">return raw ? JSON.parse(raw) : []</formula>
     <formula as="spaceLabel" input:space="dsx.attribute.space" input:list="dsx.formula.spaceList">
@@ -132,7 +132,7 @@
             <button icon="sparkles" label="Ask AI" variant="bordered" controlSize="small" on:tap="dsx.variable.askOpen = true"/>
           </hstack>
         </hstack>
-        <text class="doc-title" value="{{ dsx.attribute.title }}" type="largeTitle" a11yTrait="header"/>
+        <text class="doc-title" value="{{ dsx.attribute.title }}" type="title1" a11yTrait="header"/>
         <text class="doc-description" value="{{ dsx.attribute.description }}" type="body" visible-if="dsx.attribute.description !== ''"/>
 
         <Callout tone="info" title="Legacy (V3)" message="This page documents Despia V3 and the despia-native package."
