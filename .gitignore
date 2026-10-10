@@ -33,3 +33,4 @@ public/mcp-tools.json
 deploy/
 !public/skills/
 !public/skills/**
+dist-v2/
