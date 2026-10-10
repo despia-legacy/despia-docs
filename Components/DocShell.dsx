@@ -34,7 +34,6 @@
 
     <variable as="query">return ''</variable>
     <variable as="askOpen">return false</variable>
-    <variable as="askQ">return ''</variable>
     <api as="searchIndex" url="/search-index.json"/>
 
     <formula as="spaceList" input:raw="dsx.attribute.spaces">return raw ? JSON.parse(raw) : []</formula>
@@ -127,7 +126,9 @@
     </ListGroup>
   </scroll>
 
-  <sheet present="dsx.variable.askOpen" detents="full" title="Ask AI" close="trailing" on:dismiss="dsx.variable.askOpen = false">
-    <DocAsk asked="{{ dsx.variable.askQ }}" sources="[]" on:ask="dsx.variable.askQ = dsx.this.value"/>
+  <!-- Ask AI (DocAsk, self-contained: it owns its request to /api/ask and its states), the console Copilot's sheet:
+       centred on a wide window, from the bottom on a phone. A source row routes to its page and closes the sheet. -->
+  <sheet present="dsx.variable.askOpen" detents="page" title="Ask AI" close="trailing" on:dismiss="dsx.variable.askOpen = false">
+    <DocAsk space="{{ dsx.attribute.space }}" on:open="dsx.variable.askOpen = false"/>
   </sheet>
 </scaffold>

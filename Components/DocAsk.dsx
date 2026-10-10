@@ -129,7 +129,7 @@
     </action>
     <action as="openRow" input:route="dsx.this.route" input:url="dsx.this.url">
       dsx.event('open', { route: route, url: url })
-      dsx.module.route.push({ path: route })
+      dsx.module.route.select({ path: route })
     </action>
     <action as="startOver">
       dsx.variable.question = ''
@@ -148,8 +148,7 @@
     </script>
   </head>
 
-  <scroll class="doc-ask-thread">
-    <vstack class="doc-ask-content">
+  <vstack class="doc-ask-content">
       <!-- empty -->
       <EmptyState icon="sparkles" title="Ask the Despia docs" message="Answers come from this documentation, with a link to every section they use."
                   visible-if="dsx.variable.phase === 'idle'"/>
@@ -186,8 +185,7 @@
         <SettingsRow repeat="dsx.variable.pageRows" key="id" icon="doc.text" title="{{ dsx.this.title }}" subtitle="{{ dsx.this.subtitle }}"
                      chevron="true" tappable="true" on:tap="dsx.action.openRow({ route: dsx.this.route, url: dsx.this.url })"/>
       </ListGroup>
-    </vstack>
-  </scroll>
+  </vstack>
 
   <PromptInput value="{{ dsx.variable.draft }}" placeholder="Ask a question about Despia" attach="false" enterSends="true" maxLines="4"
                max="500" busy="{{ dsx.variable.busy }}" a11yLabel="Ask the Despia docs"

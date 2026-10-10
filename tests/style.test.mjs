@@ -20,7 +20,6 @@ const TYPE = /\b(font-size|font-weight|letter-spacing|text-transform|font-family
 const PAINT = /\b(color|background(-color)?|border(-[a-z]+)?)\s*:\s*(#|rgb|hsl|black|white)/;
 // inline style= that may stay, with the reason
 const STYLE_ALLOW = [
-  { file: "Components/DocAsk.dsx", why: "owned by the Ask AI lane (wip/claude/docs-askai), which replaces the panel" },
 ];
 // the Legacy (V3) pages are the V3 docs as they were (owner: restyle through the shell, no rewrite); their own inline
 // styles come from the V3 source and are listed by this test's report, not failed
