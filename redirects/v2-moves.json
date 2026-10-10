@@ -1,0 +1,26 @@
+{
+  "_note": "Despia V4 docs v2 IA (2026-10-10): pages of the previous build that moved, old path -> new path (an anchor key maps that section). scripts/redirects.mjs adds each as a 301 on docs.despia.com (the .md twin too) and sends every older alias straight to the new page, so no redirect ever takes two hops. An absolute target leaves the site.",
+  "moves": {
+    "/quickstart": "/convert/quickstart",
+    "/web-apps": "/convert/native-features",
+    "/web-apps#react": "/convert/react#react",
+    "/web-apps#nextjs-app-router": "/convert/react#nextjs-app-router",
+    "/web-apps#vue": "/convert/react#other-frameworks",
+    "/web-apps#plain-javascript": "/convert/native-features",
+    "/web-apps#other-frameworks": "/convert/react#other-frameworks",
+    "/web-apps#events": "/convert/native-features#events",
+    "/agents": "/dsx/agents",
+    "/agents/skills": "/dsx/agents/skills",
+    "/cli": "/dsx/cli",
+    "/cli#builds-and-stores": "/dsx/cli#ship",
+    "/cli#workspace": "/dsx/cli#account-and-workspace",
+    "/console": "/dsx/console",
+    "/deploying": "/ship",
+    "/deploying#the-store-listing": "/ship#before-you-submit",
+    "/native-ui": "/dsx/native-ui",
+    "/mcp": "https://mcp.despia.com/mcp"
+  },
+  "prefixes": {
+    "/agents/skills/": "/dsx/agents/skills"
+  }
+}

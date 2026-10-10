@@ -124,6 +124,24 @@ for (const [from, to] of Object.entries(aliases)) {
   rootTable[from] = to;
   if (!to.includes("#")) rootTable[`${from}.md`] = `${to}.md`;
 }
+// Despia V4 docs v2 (redirects/v2-moves.json): the pages that moved get one 301 each, and every target above that
+// points at a moved page is sent straight to the new address (one hop, never a chain).
+const v2 = JSON.parse(readFileSync(join(out, "v2-moves.json"), "utf8"));
+const moveTarget = (to) => {
+  if (v2.moves[to] !== undefined) return v2.moves[to];
+  const [page, anchor] = to.split("#");
+  const md = page.endsWith(".md") ? page.slice(0, -3) : null;
+  if (md !== null && v2.moves[md] !== undefined && !v2.moves[md].startsWith("http")) return `${v2.moves[md]}.md`;
+  if (v2.moves[page] !== undefined) return v2.moves[page];
+  for (const [prefix, dest] of Object.entries(v2.prefixes)) if (page.startsWith(prefix)) return dest;
+  return anchor === undefined ? to : to;
+};
+for (const [from, to] of Object.entries(rootTable)) rootTable[from] = moveTarget(to);
+for (const [from, to] of Object.entries(v2.moves)) {
+  if (from.includes("#")) continue;
+  rootTable[from] = to;
+  if (!to.startsWith("http")) rootTable[`${from}.md`] = `${to}.md`;
+}
 writeFileSync(join(out, "docs-root.json"), JSON.stringify(rootTable, null, 1) + "\n");
 
 console.log(`[docs.redirects] setup.despia.com: ${rows.length} exact row(s) (Worker adds the catch-all; ${inventory.length}/${inventory.length} live pages covered) -> redirects/setup.despia.com.csv, redirects/setup-worker/; docs root: ${Object.keys(rootTable).length / 2} v3 path(s) -> /legacy (${shadowed} owned by a modern page)`);
