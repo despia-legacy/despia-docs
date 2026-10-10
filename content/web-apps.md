@@ -114,6 +114,25 @@ render.
 </script>
 ```
 
+## Other frameworks
+
+Every framework uses the same `dsx.module...` calls. The only question is where the call may run: in the browser, after
+the page is on screen, or in response to the person. Lovable and Base44 build React apps with Vite, so use the React
+section above.
+
+| Framework | Call `dsx` from |
+| :-- | :-- |
+| React with Vite, Preact | event handlers, `useEffect` |
+| Next.js, TanStack Start, React Router v7, Remix | event handlers, `useEffect` in a client component (`"use client"` where the framework has it) |
+| Vue 3, Nuxt | event handlers, `onMounted` (Nuxt: also `<ClientOnly>`) |
+| Svelte 5, SvelteKit | event handlers, `onMount` or `$effect` |
+| SolidJS, SolidStart | event handlers, `onMount` |
+| Angular | event handlers, `ngAfterViewInit` or `afterNextRender` |
+| Astro | a client island (`client:load`) or a `<script>` tag |
+| Qwik | event handlers (`onClick$`), `useVisibleTask$` |
+| Lit, web components | event handlers, `firstUpdated` or `connectedCallback` |
+| Plain HTML, jQuery, anything else | event handlers, or a script that runs after the page loads |
+
 ## TypeScript
 
 `dsx` is a global the page receives at runtime, so TypeScript needs to be told it exists. The quickest form is one line

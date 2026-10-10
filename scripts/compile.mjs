@@ -24,7 +24,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { SHOW_UNSHIPPED, comingSoonMarkdown, expandPackagePage, shipState } from "./packages-lib.mjs";
+import { SHOW_UNSHIPPED, comingSoonMarkdown, expandPackagePage, generatedPackageSource, loadPackages, packageFor, shipState } from "./packages-lib.mjs";
 
 // The component reference pages are NOT generated here. They are written into content/
 // components/ by the framework's own generator (ClosedSource/scripts/generate_component_docs.rb
@@ -726,11 +726,27 @@ const semver = (v) => String(v).trim().replace(/^v/, "").split(/[.-]/).slice(0, 
 const cmpVersion = (a, b) => { const x = semver(a), y = semver(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return 0; };
 const inThisVersion = (meta) => !(meta.since && cmpVersion(meta.since, DOCS_VERSION) > 0) && !(meta.removed && cmpVersion(meta.removed, DOCS_VERSION) <= 0);
 
-const pages = files.map((file) => {
+// THE PACKAGE CATALOG (owner 2026-10-10): every catalog package (data/packages.json `listed`) has exactly one page at its
+// framework address (package-docs.ts packageDocsPath: /packages/<slug>). A content file naming the package (front matter
+// `package:`) adds the prose; every other package gets a page generated from its manifest alone.
+const authoredPackages = new Set();
+const sources = files.map((file) => {
   const source = defang(readFileSync(file, "utf8"));
+  const pkgRef = frontMatter(source).meta.package;
+  if (pkgRef) authoredPackages.add(packageFor(pkgRef)?.path);
+  return { file, source };
+});
+for (const pkg of loadPackages().packages) {
+  if (!pkg.listed || authoredPackages.has(pkg.path)) continue;
+  sources.push({ file: join(contentDir, "packages", `${pkg.slug}.md`), generated: true, source: generatedPackageSource(pkg) });
+}
+
+const pages = sources.map(({ file, source }) => {
   const parsed = frontMatter(source);
   const meta = parsed.meta;
   if (!inThisVersion(meta)) return null;
+  // a package page lives at its catalog address, whatever its file is called
+  if (meta.package && meta.route === undefined) { const pkg = packageFor(meta.package); if (pkg) meta.route = pkg.url; }
   let body = withPageNote(meta.route ?? routeFor(file), parsed.body);
   const route = meta.route ?? routeFor(file);
   // A package page (front matter `package: <manifest path>`): the chip row and the reference are generated from

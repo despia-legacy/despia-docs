@@ -51,8 +51,15 @@ try {
     const raw = manifestOf(src.path);
     const rawActions = src.manifest.actions ?? {};
     const implemented = d.targets.filter((t) => t.implemented).map((t) => t.target);
+    const icon = raw.listing?.icon ?? {};
     packages.push({
       command,
+      // the catalog address (package-docs.ts packageSlugs: the last word, unique across the catalog) and its page
+      slug: d.slug,
+      url: d.url,
+      // in the catalog: the manifest carries a `listing` (what the console's package explorer shows)
+      listed: raw.listing !== undefined && raw.listing !== null,
+      icon: { symbol: icon.symbol ?? null, tint: icon.tint ?? null, brand: icon.brand ?? null },
       path: src.path,
       title: d.title,
       summary: d.summary,

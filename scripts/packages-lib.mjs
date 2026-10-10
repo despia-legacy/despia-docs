@@ -112,14 +112,26 @@ export function referenceMarkdown(pkg) {
 }
 
 /** Expand a package page body: the chip row under the h1, the reference at the <PackageReference/> line. */
+export const ALPHA_NOTICE = "This package is in Alpha. It is published so you can try it, but it has not been fully tested on every platform and its API can change before it is stable. Do not rely on it in production yet.";
+
+/** The page's lead sample: the first page action that has a declared example (else the first action), as one call. */
+export function leadSample(pkg) {
+  const actions = pageActions(pkg);
+  const a = actions.find((x) => x.examples.length > 0) ?? actions[0];
+  if (a === undefined) return "";
+  return ["```js", callSample(pkg, a, a.examples[0]?.args), "```", ""].join("\n");
+}
+
 export function expandPackagePage(body, ref, where) {
   const pkg = packageFor(ref);
   if (pkg === null || pkg === undefined) throw new Error(`${where}: front matter package "${ref}" is not in data/packages.json (run npm run packages)`);
   let text = body;
   const h1 = /^#\s.*$/m.exec(text);
-  const row = chipRowMarkdown(pkg);
+  // the chip row, and for an Alpha package the catalog's own Alpha notice (project-core status.ts ALPHA_NOTICE wording)
+  const row = chipRowMarkdown(pkg) + (pkg.maturity === "alpha" ? `\n\n<Warning title="Alpha">\n${ALPHA_NOTICE}\n</Warning>` : "");
   text = h1 === null ? `${row}\n\n${text}` : `${text.slice(0, h1.index + h1[0].length)}\n\n${row}\n${text.slice(h1.index + h1[0].length)}`;
   text = text.replace(/^<PackageReference\s*\/>\s*$/m, () => referenceMarkdown(pkg));
+  text = text.replace(/^<PackageSample\s*\/>\s*$/m, () => leadSample(pkg));
   return { text, pkg };
 }
 
@@ -192,13 +204,13 @@ export function shipState(meta) {
   if (meta.package) {
     const pkg = packageFor(meta.package);
     if (!pkg) return { soon: false };
-    return pkg.published === true ? { soon: false, pkg } : { soon: true, pkg, chips: worksIn(pkg), topic: `packages/${pkg.command}`,
+    return pkg.published === true ? { soon: false, pkg } : { soon: true, pkg, chips: worksIn(pkg), topic: pkg.slug,
       summary: [pkg.description ?? pkg.summary, pkg.nativeValue].filter(Boolean).join(" ") };
   }
   if (meta.element) {
     const platforms = String(meta.platforms ?? "").split(",").map((s) => s.trim()).filter(Boolean);
     if (platforms.includes("web")) return { soon: false };
-    return { soon: true, chips: ["DSX", ...platforms.map((p) => COMPONENT_PLATFORM[p] ?? p)], topic: `components/${String(meta.element).toLowerCase()}`,
+    return { soon: true, chips: ["DSX", ...platforms.map((p) => COMPONENT_PLATFORM[p] ?? p)], topic: `native-ui-${String(meta.element).toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       summary: meta.description ?? "" };
   }
   return { soon: false };
@@ -214,5 +226,37 @@ export function comingSoonMarkdown(title, state) {
 **Coming soon.** ${state.summary}
 
 This page fills in when it ships. Leave your email above and we'll tell you when it's ready.
+`;
+}
+
+// ── the catalog: groups by what people want, and the generated page of a package with no prose of its own ──
+const CATEGORY_GROUP = {
+  Auth: "Sign-in", Monetisation: "Payments & subscriptions", Notifications: "Notifications", Device: "Device & sensors",
+  Location: "Device & sensors", Media: "Media", Analytics: "Analytics & ads", Growth: "Analytics & ads", Ads: "Analytics & ads",
+  Storage: "Storage", Privacy: "Privacy", Communication: "Communication", Interface: "Interface", Health: "Health",
+  Intelligence: "Intelligence", Legacy: "Legacy",
+};
+export const GROUP_ORDER = ["Sign-in", "Payments & subscriptions", "Notifications", "Device & sensors", "Media", "Analytics & ads",
+  "Storage", "Privacy", "Communication", "Interface", "Health", "Intelligence", "Legacy", "More"];
+export const groupOf = (pkg) => CATEGORY_GROUP[pkg.category] ?? "More";
+
+/** A catalog package's page from its manifest alone: what it does, when to use it, the lead sample, the reference. */
+export function generatedPackageSource(pkg) {
+  const one = (s) => String(s ?? "").replace(/\s+/g, " ").trim();
+  return `---
+title: ${one(pkg.title)}
+description: ${one(pkg.summary)}
+package: ${pkg.path}
+section: packages
+order: 500
+---
+
+# ${one(pkg.title)}
+
+${one(pkg.description ?? pkg.summary)}
+
+${pkg.whenToUse ? `**When to use it.** ${one(pkg.whenToUse)}\n\n` : ""}<PackageSample/>
+
+<PackageReference/>
 `;
 }
