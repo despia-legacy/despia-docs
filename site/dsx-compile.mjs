@@ -400,7 +400,7 @@ writeFileSync(join(repo, "Components", "DocsShell.css"), `/*
 /* CODE COLOURS: the CodeBlock's public knobs (--dsx-codeblock-*, guides/markdown.md "Code blocks") set to the Despia
    editor themes (OpenSource/CodeEditor/src/theme.js, despia-light / despia-dark), so a .dsx sample reads as markup, CSS
    and JavaScript in one block. The tokens are the kernel's own highlight(); only the palette is the docs'. */
-.dsx-codeblock-sheet {
+.dsx-codeblock, .dsx-codeblock-sheet {
   --dsx-codeblock-keyword: light-dark(#6d28d9, #a78bfa);
   --dsx-codeblock-tag: light-dark(#6d28d9, #a78bfa);
   --dsx-codeblock-string: light-dark(#047857, #34d399);
