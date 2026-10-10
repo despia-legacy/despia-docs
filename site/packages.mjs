@@ -80,6 +80,8 @@ function samples(p, a) {
 const escapeAttr = (s) => s.replace(/"/g, "'");
 const labelFor = (p, a) => `${a.name.charAt(0).toUpperCase()}${a.name.slice(1).replace(/([A-Z])/g, " $1").toLowerCase()}`;
 
+export function packageMarkdownFor(p) { return packageMarkdown(p); }
+
 function packageMarkdown(p) {
   const actions = (p.actions ?? []).filter((a) => a.reach === null || (Array.isArray(a.reach) && a.reach.length));
   const PREFER = ["success", "show", "signIn", "login", "purchase", "request", "start", "open", "get", "play", "pick", "share", "scan"];

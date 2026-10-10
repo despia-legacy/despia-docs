@@ -34,3 +34,6 @@ deploy/
 !public/skills/
 !public/skills/**
 dist-v2/
+Components/v2/
+Components/DocsShell.dsx
+Components/DocsShell.css
