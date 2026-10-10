@@ -34,9 +34,9 @@ const WAITLIST = "https://api.despia.com/v1/waitlist";
 // ── escaping ────────────────────────────────────────────────────────────────────────────────────────
 // a value carried inside a code body (<variable>, <script>): JSON, with every character XML or the linter would read
 // (< > & { } and the `dsx.` head) written as a \u escape, so the bytes are inert text in the document
-const jsLiteral = (v) => JSON.stringify(v)
+const jsLiteral = (v) => JSON.stringify(v).replace(/"(?:[^"\\]|\\.)*"/g, (str) => str
   .replace(/[<>&{}]/g, (c) => `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`)
-  .replace(/dsx\./g, "dsx\\u002e");
+  .replace(/dsx\./g, "dsx\\u002e"));
 // an attribute value: XML-escaped, and no {{ }} hole by accident
 const attr = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\{\{/g, "{ {");
 
