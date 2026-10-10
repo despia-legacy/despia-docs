@@ -333,7 +333,7 @@ if (want("/")) {
   const body = `  <grid bind="dsx.variable.routes" key="id" columns="adaptive" minimum="300" scroll="false">
     <ItemCard title="{{ dsx.this.title }}" summary="{{ dsx.this.summary }}" icon="{{ dsx.this.icon }}" status="{{ dsx.this.status }}" statusIcon="{{ dsx.this.statusIcon }}" href="{{ dsx.this.path }}"/>
   </grid>
-  <vstack class="doc-article">
+  <vstack class="doc-article doc-spaced">
     <markdown bind="dsx.variable.sample" copyCode="true"/>
   </vstack>
   <ListGroup header="Native features" footer="Every package has one example for a DSX app and one for a converted web app."/>
@@ -431,7 +431,8 @@ writeFileSync(join(repo, "Components", "DocsShell.css"), `/*
   DocsShell: the one rule the console has no screen for: a long-form article keeps a reading width. Everything else on a
   docs page is the console's own components, unstyled.
 */
-.doc-article { align-items: stretch; max-width: 46rem; margin-block-start: var(--dsx-page-header-spacing, 1.5rem); }
+.doc-article { align-items: stretch; max-width: 46rem; }
+.doc-spaced { margin-block: var(--dsx-page-header-spacing, 1.5rem); }
 
 /* THE CONSOLE'S OWN PAGE RHYTHM (despia-native/platform Components/HelpSheet.css, owner 2026-10-10): a notice in the
    page's flow keeps the page's spacing token from what follows it; a list group brings its own section spacing. */
