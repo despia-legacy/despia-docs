@@ -183,7 +183,7 @@ function shell() {
       const hit = dsx.variable.nav.areas.find(a => a.id == dsx.attribute.area)
       return hit ? hit.path : '/'
     </variable>
-    <variable as="appearanceMenu">
+    <variable as="appearanceMenu" computed="true">
       return [
         { header: true, title: 'Appearance' },
         { title: 'System', icon: 'circle.lefthalf.filled', action: 'appearance.set', args: { mode: 'system' } },
