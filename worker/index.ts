@@ -8,6 +8,8 @@
 //      integration_get, improvements_list, improvements_get (and the original search,
 //      fetch-page, list-sections). The retrieval core is worker/search.ts (hybrid, cached,
 //      lexical fast path); this file wires the platform: assets, edge cache, rate limit,
+//    · Ask AI at POST /api/ask (worker/ask.ts): grounded answers streamed over SSE, retrieval from the
+//      same search, the Support AI's provider and model, spend guard first (fail closed), stub without a key,
 //    · the API host underneath, empty today and ready for the vector-search route.
 //  One site, five spaces (modern, legacy, migrate, troubleshooting, app-review): every MCP tool takes a
 //  `space` argument, and the old docs root keeps its v3 links: a v3 path asked of this host
@@ -33,6 +35,7 @@ import versions from "../public/versions.json";
 import rootRedirects from "../redirects/docs-root.json";
 import { createTools, SPACES, type Cache, type IndexPage, type VectorHit } from "./search.ts";
 import { DOCS_TOOLS } from "./tools.ts";
+import { createAsk, type AskEnv, type Chunk } from "./ask.ts";
 
 interface AssetsBinding { fetch(request: Request): Promise<Response> }
 
@@ -67,6 +70,7 @@ const edgeCache: Cache = {
 };
 
 async function supportSearch(q: string, space: string, limit: number, extra: Record<string, string> = {}): Promise<VectorHit[]> {
+  if (supportOrigin === "none") return []; // local dev: lexical only, no remote call
   const params = new URLSearchParams({ q, limit: String(limit), ...(space !== "all" ? { space } : {}), ...extra });
   const res = await fetch(`${supportOrigin}/v1/search?${params}`, { signal: AbortSignal.timeout(1500) });
   if (!res.ok) return [];
@@ -109,6 +113,27 @@ async function fetchPage(args: Record<string, unknown>) {
   if (res.status !== 200) throw { reason: "not_found", message: `no page at ${route}` };
   return { route, url: `https://docs.despia.com${route}`, version: versions.latest, markdown: await res.text() };
 }
+
+//  Ask AI (worker/ask.ts): retrieval is the docs_search above (hybrid when the Support vectors answer), the passages are
+//  the knowledge chunks the build writes (public/knowledge/chunks.json, read once per isolate through the assets binding).
+let chunksMemo: Promise<Chunk[]> | null = null;
+const ask = createAsk({
+  site: "https://docs.despia.com",
+  retrieve: async (question, space) => {
+    const r = await tools.docs_search({ query: question, space, limit: 6 }) as { hits?: Array<{ route: string; title: string; url: string }> };
+    return (r.hits ?? []).map((h) => ({ route: h.route, title: h.title, url: h.url }));
+  },
+  chunks: () => {
+    if (chunksMemo === null) {
+      if (assets === null) return Promise.reject(new Error("assets binding not captured yet"));
+      chunksMemo = assets.fetch(new Request("https://assets.local/knowledge/chunks.json"))
+        .then((r) => { if (!r.ok) throw new Error(String(r.status)); return r.json() as Promise<{ chunks: Chunk[] }>; })
+        .then((b) => b.chunks)
+        .catch((e) => { chunksMemo = null; throw e; });
+    }
+    return chunksMemo;
+  },
+});
 
 const handler = createWorkersHandler(
   {
@@ -201,6 +226,7 @@ export default {
     if (typeof env["SITE_ORIGIN"] === "string" && env["SITE_ORIGIN"] !== "") siteOrigin = String(env["SITE_ORIGIN"]).replace(/\/+$/, "");
     const binding = env["ASSETS"];
     if (assets === null && typeof binding === "object" && binding !== null) assets = binding as AssetsBinding;
+    if (url.pathname === "/api/ask") return ask.handle(request, env as unknown as AskEnv);
     return handler.fetch(request, env, ctx).then((res) => readable(url.pathname, secure(res, noindex)));
   },
   scheduled: handler.scheduled,

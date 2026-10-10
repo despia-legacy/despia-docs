@@ -31,3 +31,4 @@ public/knowledge/
 public/mcp-tools.json
 .despia/
 deploy/
+.dev.vars

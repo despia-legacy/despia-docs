@@ -17,6 +17,12 @@
     "html_handling": "drop-trailing-slash"
   },
   "observability": { "enabled": true },
+  // Ask AI (worker/ask.ts). The account spend guard is read over this service binding before any model call; without it
+  // (or when it does not answer) AI answers stay paused: fail closed. Deploy despia-spend-guard first.
+  // Secret (never in this file): `npx wrangler secret put OPENROUTER_API_KEY`, the docs' own OpenRouter key, same
+  // provider and model as the API's Support AI. Optional vars: DOCS_AI_MODEL (default anthropic/claude-sonnet-4.5),
+  // DOCS_AI_PAUSED=1 (manual switch), DOCS_ASK_ORIGINS (extra origins allowed to call /api/ask).
+  "services": [{ "binding": "SPEND_GUARD", "service": "despia-spend-guard" }],
   // A private preview: its own worker on workers.dev, never a despia.com route, noindex everywhere.
   // `npx wrangler deploy --env preview`
   "env": {
@@ -24,7 +30,8 @@
       "name": "despia-docs-preview",
       "vars": { "NOINDEX": "1" },
       "workers_dev": true,
-      "routes": []
+      "routes": [],
+      "services": [{ "binding": "SPEND_GUARD", "service": "despia-spend-guard" }]
     }
   }
 }
