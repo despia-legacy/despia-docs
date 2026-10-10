@@ -8,7 +8,7 @@
   },
   "scripts": {
     "sync": "node scripts/sync-content.mjs",
-    "compile": "node scripts/port-legacy.mjs && node scripts/migrate-map.mjs && node scripts/compile.mjs && node site/build.mjs && node site/dsx-compile.mjs",
+    "compile": "node scripts/port-legacy.mjs && node scripts/migrate-map.mjs && node scripts/compile.mjs && node site/web-apps-packages.mjs && node site/build.mjs && node site/dsx-compile.mjs",
     "build": "npm run compile && dsx build && node scripts/assemble.mjs",
     "dev": "npm run compile && dsx dev",
     "lint": "npm run compile && dsx lint --strict",

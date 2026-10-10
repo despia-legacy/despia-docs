@@ -9,18 +9,11 @@ import { writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadPackages, groupOf, GROUP_ORDER } from "../scripts/packages-lib.mjs";
+import { leadActionOf } from "./packages.mjs";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const parentOf = (p) => (/\/Modules\//.test(p.path) ? p.path.split("/Modules/").slice(-2)[0].split("/").pop() : null);
 const titleOf = (p) => (parentOf(p) ? `${p.title} (${parentOf(p)})` : p.title);
-
-// the package page's lead action, the same choice site/packages.mjs makes for its "Use it" sample
-const PREFER = ["success", "show", "signIn", "login", "purchase", "request", "start", "open", "get", "play", "pick", "share", "scan"];
-function leadActionOf(p) {
-  const actions = (p.actions ?? []).filter((a) => a.reach === null || (Array.isArray(a.reach) && a.reach.length));
-  return PREFER.map((n) => actions.find((a) => a.name === n && a.examples?.length)).find(Boolean)
-    ?? actions.find((a) => a.examples?.length) ?? actions[0];
-}
 
 export function indexRows() {
   const pkgs = loadPackages().packages

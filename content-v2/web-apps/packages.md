@@ -9,12 +9,12 @@ description: Every native feature your web app can call today, with its lead cal
 
 ## Sign-in
 
-- [Clerk](/packages/clerk#use-it) (Alpha): `await dsx.module.clerk.attach(…)`. Add sign-in, sign-up and account screens to your app with Clerk.
+- [Clerk](/packages/clerk#use-it) (Alpha): `await dsx.module.clerk.status()`. Add sign-in, sign-up and account screens to your app with Clerk.
 
 ## Payments & subscriptions
 
 - [In-app purchases and paywalls](/packages/store#use-it) (Alpha): `await dsx.module.store.billingMessages()`. Sell subscriptions and purchases with a native paywall and one simple way to check what a user owns.
-- [Payments](/packages/payments#use-it) (Alpha): `await dsx.module.payments.close(…)`. Take payments in your app with one set of calls, whichever payment provider you use.
+- [Payments](/packages/payments#use-it) (Alpha): `await dsx.module.payments.payment(…)`. Take payments in your app with one set of calls, whichever payment provider you use.
 - [RevenueCat](/packages/revenuecat#use-it): `await dsx.module.revenuecat.login(…)`. Sell subscriptions and in-app purchases with RevenueCat.
 - [RevenueCat (Store)](/packages/store-modules-revenuecat#use-it): `await dsx.module.revenuecat.login(…)`. Sell subscriptions and in-app purchases with RevenueCat.
 
@@ -22,17 +22,17 @@ description: Every native feature your web app can call today, with its lead cal
 
 - [Firebase Cloud Messaging](/packages/firebase#use-it) (Alpha): `await dsx.module.firebase.app()`. Send push notifications to your app's users through Firebase Cloud Messaging.
 - [OneSignal](/packages/onesignal#use-it): `await dsx.module.onesignal.login(…)`. Send push notifications to your app's users through OneSignal.
-- [Push notifications](/packages/notify#use-it): `await dsx.module.notify.badge.get()`. Receive and show push and local notifications in your app without a third-party push SDK.
+- [Push notifications](/packages/notify#use-it): `await dsx.module.notify.schedule(…)`. Receive and show push and local notifications in your app without a third-party push SDK.
 - [Pushwoosh](/packages/pushwoosh#use-it) (Alpha): `await dsx.module.pushwoosh.login(…)`. Send push notifications to your app's users through Pushwoosh.
 
 ## Device & sensors
 
-- [Bluetooth](/packages/bluetooth#use-it) (Alpha): `await dsx.module.bluetooth.scan(…)`. Connect your app to nearby Bluetooth Low Energy devices.
+- [Bluetooth](/packages/bluetooth#use-it) (Alpha): `await dsx.module.bluetooth.connect(…)`. Connect your app to nearby Bluetooth Low Energy devices.
 - [Contacts](/packages/contacts#use-it): `await dsx.module.contacts.get(…)`. Let users share a contact, or read and edit the address book.
 - [Face ID and Touch ID](/packages/biometric#use-it) (Alpha): `await dsx.module.biometric.authenticate(…)`. Confirm it is really the user with Face ID, Touch ID or the device passcode.
 - [Haptics](/packages/haptic#use-it): `await dsx.module.haptic.success()`. Add vibration feedback to taps and results.
 - [Motion sensors](/packages/motion#use-it): `await dsx.module.motion.start(…)`. Read accelerometer, gyroscope, steps and activity from the device.
-- [NFC tags](/packages/nfc#use-it) (Alpha): `await dsx.module.nfc.permission.manage()`. Read and write NFC tags from your app.
+- [NFC tags](/packages/nfc#use-it) (Alpha): `await dsx.module.nfc.read(…)`. Read and write NFC tags from your app.
 
 ## Media
 
@@ -40,8 +40,8 @@ description: Every native feature your web app can call today, with its lead cal
 
 ## Analytics & ads
 
-- [AppsFlyer](/packages/appsflyer#use-it) (Alpha): `await dsx.module.appsflyer.get_attribution()`. Attribute installs and purchases to ad campaigns with AppsFlyer.
-- [Meta App Events](/packages/metaads#use-it) (Alpha): `await dsx.module.metaads.clearUserData()`. Report app events and purchases to Meta ads, match them to people, and open Meta deferred app links.
+- [AppsFlyer](/packages/appsflyer#use-it) (Alpha): `await dsx.module.appsflyer.logEvent(…)`. Attribute installs and purchases to ad campaigns with AppsFlyer.
+- [Meta App Events](/packages/metaads#use-it) (Alpha): `await dsx.module.metaads.send(…)`. Report app events and purchases to Meta ads, match them to people, and open Meta deferred app links.
 - [PostHog (Growth)](/packages/growth-modules-posthog#use-it) (Alpha): `await dsx.module.posthog.send(…)`. Send your app's analytics events to PostHog.
 - [TikTok Ads](/packages/tiktokads#use-it) (Alpha): `await dsx.module.tiktokads.start()`. Measure which TikTok ads bring installs and sales, using the TikTok Business SDK.
 
@@ -65,28 +65,28 @@ description: Every native feature your web app can call today, with its lead cal
 - [AppSettings](/packages/settings#use-it): `await dsx.module.settings.app()`. Open your app's page in the system Settings.
 - [AppTracking](/packages/apptracking#use-it): `await dsx.module.apptracking.permission.openSettings()`. Ask the user for tracking permission and read their answer.
 - [Browser](/packages/browser#use-it) (Alpha): `await dsx.module.browser.open(…)`. Open web links in the system's in-app browser tab.
-- [Clipboard](/packages/clipboard#use-it): `await dsx.module.clipboard.inspect(…)`. Read from and write to the system clipboard, with a way to peek without triggering the paste alert.
+- [Clipboard](/packages/clipboard#use-it): `await dsx.module.clipboard.read(…)`. Read from and write to the system clipboard, with a way to peek without triggering the paste alert.
 - [Device](/packages/device#use-it): `await dsx.module.device.app()`. Read the device, the app's own identity, the screen, locale, battery and display capabilities.
 - [DeviceUUID](/packages/uuid#use-it): `await dsx.module.uuid.get()`. Gives your app a stable anonymous id for each install, with no permission prompt.
 - [FileSharing](/packages/filesharing#use-it) (Alpha): `await dsx.module.filesharing.share(…)`. Send a file to other apps through the system share sheet.
 - [FileUpload](/packages/fileupload#use-it) (Alpha): `await dsx.module.fileupload.captureInfo(…)`. Make file inputs in your web pages open the camera, photo library, scanner or file picker.
 - [FileViewer](/packages/fileviewer#use-it): `await dsx.module.fileviewer.preview(…)`. Preview PDFs, images and documents in a native viewer.
 - [Flashlight](/packages/flashlight#use-it) (Alpha): `await dsx.module.flashlight.set(…)`. Turn the device flashlight on and off.
-- [Health](/packages/healthkit#use-it) (Alpha): `await dsx.module.health.observe(…)`. Read and write Apple Health and Android Health Connect data.
-- [IdentityVault](/packages/identityvault#use-it): `await dsx.module.identityvault.durability()`. Stores small secrets on the device in the system keychain, with an optional Face ID or fingerprint lock.
+- [Health](/packages/healthkit#use-it) (Alpha): `await dsx.module.health.read(…)`. Read and write Apple Health and Android Health Connect data.
+- [IdentityVault](/packages/identityvault#use-it): `await dsx.module.identityvault.read(…)`. Stores small secrets on the device in the system keychain, with an optional Face ID or fingerprint lock.
 - [Nearby](/packages/nearby#use-it) (Alpha): `await dsx.module.nearby.start(…)`. Connect two phones running your app directly and send them data, with no server.
 - [OAuth](/packages/oauth#use-it): `await dsx.module.oauth.start(…)`. Sign users in with Google, Apple, GitHub or any other OAuth provider in the system sign-in sheet.
 - [PostHog (Telemetry)](/packages/telemetry-modules-posthog#use-it) (Alpha): `await dsx.module.posthog.send(…)`. Sends your app's error and crash reports to PostHog.
 - [PreventDefault](/packages/preventdefault#use-it) (Alpha): `await dsx.module.preventdefault.autoscroll(…)`. Stop iOS from scrolling the page when the keyboard opens.
 - [PrintDocuments](/packages/print#use-it): `await dsx.module.print.document(…)`. Print a PDF or other document through the system print sheet.
-- [PullToRefresh](/packages/pulltorefresh#use-it) (Alpha): `await dsx.module.pulltorefresh.refresh()`. Let people pull down on a web page in your app to reload it.
+- [PullToRefresh](/packages/pulltorefresh#use-it) (Alpha): `await dsx.module.pulltorefresh.set(…)`. Let people pull down on a web page in your app to reload it.
 - [QuickActions](/packages/quickactions#use-it) (Alpha): `await dsx.module.quickactions.get()`. Add shortcuts to your app icon's long-press menu on the Home screen.
 - [Scanner](/packages/scanner#use-it) (Alpha): `await dsx.module.scanner.scan(…)`. Scan QR codes, barcodes and paper documents with the camera.
 - [SpeechRecognition](/packages/speechrecognition#use-it) (Alpha): `await dsx.module.speechrecognition.start(…)`. Turn the user's speech into text with the standard web speech API.
 - [SpeechSynthesis](/packages/speechsynthesis#use-it) (Alpha): `await dsx.module.speechsynthesis.start(…)`. Speaks text aloud with the device voices, or turns text into audio files.
 - [Spinner](/packages/spinner#use-it) (Alpha): `await dsx.module.spinner.show()`. Show or hide the page-load activity indicator.
-- [SystemBars](/packages/systembars#use-it): `await dsx.module.systembars.body(…)`. Control the status bar, the navigation bar and fullscreen mode from your screens.
+- [SystemBars](/packages/systembars#use-it): `await dsx.module.systembars.set(…)`. Control the status bar, the navigation bar and fullscreen mode from your screens.
 - [Wallet](/packages/wallet#use-it) (Alpha): `await dsx.module.wallet.pkpass(…)`. Let people add a boarding pass, ticket or card to Apple Wallet.
-- [WebSocket](/packages/websocket#use-it): `await dsx.module.websocket.ack(…)`. Keep a WebSocket connection open that reconnects by itself and never loses a message.
+- [WebSocket](/packages/websocket#use-it): `await dsx.module.websocket.connect(…)`. Keep a WebSocket connection open that reconnects by itself and never loses a message.
 
 The [full catalog](/packages) also lists the packages that are coming soon.

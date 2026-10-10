@@ -80,13 +80,24 @@ function samples(p, a) {
 const escapeAttr = (s) => s.replace(/"/g, "'");
 const labelFor = (p, a) => `${a.name.charAt(0).toUpperCase()}${a.name.slice(1).replace(/([A-Z])/g, " $1").toLowerCase()}`;
 
+// the lead action: the one call a package page (and the Web apps index) shows first
+const PREFER = ["success", "show", "signIn", "login", "purchase", "payment", "request", "start", "open", "connect", "link", "get", "play",
+  "pick", "share", "scan", "read", "send", "track", "trackEvent", "logEvent", "capture", "schedule", "index", "set", "authenticate", "verify", "check", "status"];
+export function leadActionOf(p) {
+  const actions = (p.actions ?? []).filter((a) => a.reach === null || (Array.isArray(a.reach) && a.reach.length));
+  // the sample is what a reader copies first, so it is never a teardown or a permission chore when anything else exists
+  const chore = (a) => /^(close|clear|remove|delete|stop|end|cancel|dismiss|disable|logout|signOut|forget|reset|revoke|unsubscribe|unregister|unwatch|unobserve|ack|terminate|detach|hide|drain|withdraw|deactivate|exit)/.test(a.name)
+    || a.name.startsWith("permission.");
+  const withExamples = actions.filter((a) => a.examples?.length);
+  return PREFER.map((n) => withExamples.find((a) => a.name === n)).find(Boolean)
+    ?? withExamples.find((a) => !chore(a)) ?? withExamples[0] ?? actions[0];
+}
+
 export function packageMarkdownFor(p) { return packageMarkdown(p); }
 
 function packageMarkdown(p) {
   const actions = (p.actions ?? []).filter((a) => a.reach === null || (Array.isArray(a.reach) && a.reach.length));
-  const PREFER = ["success", "show", "signIn", "login", "purchase", "request", "start", "open", "get", "play", "pick", "share", "scan"];
-  const lead = PREFER.map((n) => actions.find((a) => a.name === n && a.examples?.length)).find(Boolean)
-    ?? actions.find((a) => a.examples?.length) ?? actions[0];
+  const lead = leadActionOf(p);
   const md = [];
   if (p.description) md.push(p.description, "");
   if (lead) {

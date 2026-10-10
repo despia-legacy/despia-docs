@@ -55,7 +55,7 @@ const WINDOW_DSX_HOME = "content-v2/web-apps/outside-despia.md";
 for (const s of samples) {
   if (!["js", "ts", "tsx", "jsx", "javascript", "typescript", "dsx", "html", "vue"].includes(s.lang)) continue;
   if (/window\.dsx/.test(s.text) && s.where !== WINDOW_DSX_HOME && !/^interface Window/m.test(s.text)) problems.push(`${s.where}: a sample uses window.dsx (only ${WINDOW_DSX_HOME} may)`);
-  for (const m of s.text.matchAll(/(\S+\s+)?\bdsx\??\.module((?:\??\.[A-Za-z_$][\w$]*)+)\s*\(/g)) {
+  for (const m of s.text.matchAll(/(\S+\s+)?(?:window\.)?\bdsx\??\.module((?:\??\.[A-Za-z_$][\w$]*)+)\s*\(/g)) {
     if (!/await\s+$/.test(m[1] ?? "")) problems.push(`${s.where}: dsx.module${m[2]}(...) without await (write \`await dsx.module${m[2]}(...)\`)`);
   }
 }

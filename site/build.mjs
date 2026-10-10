@@ -158,7 +158,7 @@ function writeMd(route, text) {
 function record({ route, title, description, section, markdown, headings, featured = false }) {
   exportPages.push({ slug: route === "/" ? "index" : route.slice(1), url: route, title, description: description ?? "", section: section ?? "home",
     headings: headings.map(({ id, title: t, level }) => ({ id, title: t, level })), markdown });
-  searchRows.push({ url: route, title, description: description ?? "", section: ({ dsx: "DSX", convert: "Convert", packages: "Packages", ship: "Build and ship" })[section] ?? "Despia docs",
+  searchRows.push({ url: route, title, description: description ?? "", section: ({ dsx: "DSX", convert: "Convert", "web-apps": "Web apps", packages: "Packages", ship: "Build and ship" })[section] ?? "Despia docs",
     headings: headings.map((h) => h.title), text: markdown.replace(/```[\s\S]*?```/g, " ").replace(/[#*`>|_\[\]()-]/g, " ").replace(/\s+/g, " ").slice(0, 1600), featured });
 }
 
@@ -204,14 +204,14 @@ else if (existsSync(join(here, "fonts"))) for (const f of readdirSync(join(here,
 writeFileSync(join(out, "search.json"), JSON.stringify(searchRows));
 writeFileSync(join(out, "docs-index.json"), JSON.stringify({
   format: "despia-docs-index", version: 1, release: RELEASE.version ?? null, site: SITE, generated: new Date().toISOString(),
-  sections: { dsx: "DSX (research preview)", convert: "Convert", packages: "Packages", ship: "Build and ship", home: "Home" },
+  sections: { dsx: "DSX (research preview)", convert: "Convert", "web-apps": "Web apps", packages: "Packages", ship: "Build and ship", home: "Home" },
   pages: exportPages,
 }, null, 0));
 const llms = ["# Despia docs", "", "> Despia V4: build real native iOS, Android and web apps with DSX, or convert an existing web app. Every page has a Markdown twin at <url>.md.", ""];
 for (const s of [...SECTIONS.map((x) => x.id), "home"]) {
   const rows = exportPages.filter((p) => p.section === s);
   if (!rows.length) continue;
-  llms.push(`## ${({ dsx: "DSX", convert: "Convert", packages: "Packages", ship: "Build and ship", home: "Start" })[s]}`, "");
+  llms.push(`## ${({ dsx: "DSX", convert: "Convert", "web-apps": "Web apps", packages: "Packages", ship: "Build and ship", home: "Start" })[s]}`, "");
   for (const p of rows) llms.push(`- [${p.title}](${SITE}${mdUrl(p.url)})${p.description ? `: ${p.description}` : ""}`);
   llms.push("");
 }
