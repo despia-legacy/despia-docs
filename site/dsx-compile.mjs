@@ -276,7 +276,7 @@ for (const p of allPages()) {
 if (want("/")) {
   const tiles = ["haptic", "appleauth", "push", "revenuecat"].map((c) => pkgs.find((p) => p.command === c || p.slug === c)).filter(Boolean);
   const card = (p) => ({ id: p.url, title: titleOf(p), summary: p.summary, brand: p.icon?.brand ?? "", icon: p.icon?.symbol ?? GROUP_ICON(groupOf(p)), path: p.url });
-  const sample = "```dsx title=\"Components/Counter.dsx\"\n" + HOME_SAMPLE + "\n```";
+  const sample = "## One document, three languages\n\nA screen is one `.dsx` file: markup for the structure, a `<style>` sheet in standard CSS, and JavaScript in its actions and holes. The same document runs on iOS, Android and the web.\n\n```dsx title=\"Components/Counter.dsx\"\n" + HOME_SAMPLE + "\n```";
   const head = mdVar("sample", sample)
     + `    <variable as="routes">return ${jsLiteral([
       { id: "dsx", title: "Build a native app with DSX", summary: "Start from nothing and build the whole app in DSX: screens, navigation, data and native features, for every platform at once.", icon: "chevron.left.forwardslash.chevron.right", status: "Research preview", statusIcon: "flask", path: "/dsx" },
@@ -293,7 +293,6 @@ if (want("/")) {
   const body = `  <grid bind="dsx.variable.routes" key="id" columns="adaptive" minimum="300" scroll="false">
     <ItemCard title="{{ dsx.this.title }}" summary="{{ dsx.this.summary }}" icon="{{ dsx.this.icon }}" status="{{ dsx.this.status }}" statusIcon="{{ dsx.this.statusIcon }}" href="{{ dsx.this.path }}"/>
   </grid>
-  <ListGroup header="One document, three languages" footer="Markup is the structure, the style sheet is standard CSS, and the code inside is JavaScript. The same document runs on iOS, Android and the web."/>
   <vstack class="doc-article">
     <markdown bind="dsx.variable.sample" copyCode="true"/>
   </vstack>
@@ -401,7 +400,7 @@ writeFileSync(join(repo, "Components", "DocsShell.css"), `/*
 /* CODE COLOURS: the CodeBlock's public knobs (--dsx-codeblock-*, guides/markdown.md "Code blocks") set to the Despia
    editor themes (OpenSource/CodeEditor/src/theme.js, despia-light / despia-dark), so a .dsx sample reads as markup, CSS
    and JavaScript in one block. The tokens are the kernel's own highlight(); only the palette is the docs'. */
-.doc-article {
+.dsx-codeblock-sheet {
   --dsx-codeblock-keyword: light-dark(#6d28d9, #a78bfa);
   --dsx-codeblock-tag: light-dark(#6d28d9, #a78bfa);
   --dsx-codeblock-string: light-dark(#047857, #34d399);
