@@ -68,6 +68,6 @@ test("the docs CSS is one file with one rule", () => {
   assert.ok(css.length <= 1, `docs CSS files: ${css.map((f) => f.slice(root.length + 1)).join(", ")}`);
   if (css.length === 1 && existsSync(css[0])) {
     const rules = readFileSync(css[0], "utf8").replace(/\/\*[\s\S]*?\*\//g, "").match(/\{/g) ?? [];
-    assert.ok(rules.length <= 1, "DocShell.css holds only the content column rule");
+    assert.ok(rules.length <= 2, "DocShell.css holds only the content column rules");
   }
 });

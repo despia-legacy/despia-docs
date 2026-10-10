@@ -1,12 +1,10 @@
 /*
-  DocShell: the one rule the stock parts do not already give a docs page. Markdown prose is not a list, so it does
-  not get the list's inset or the page header's measure by itself; this column gives it exactly those two values
-  (the framework's own tokens) and one vertical rhythm between the page's blocks (the page header's spacing).
-  No type, colour, border or per-element margin lives here: tests/style.test.mjs holds that.
+  DocShell: the one rule the stock page contract does not give a docs page yet. The framework stands a page's list
+  groups, grids, cards, callouts and code blocks on the platters' edges (structural-controls.ts, ONE PAGE, ONE CONTENT
+  WIDTH); a markdown block is not on that list, so prose would run to the pane's bezels while the cards stand inset.
+  This puts every markdown block of the page on the same edges (the grid inset the framework gives cards) and spaces
+  the page's blocks with one rhythm (the page header's spacing). Remove it when the framework's layout contract covers
+  markdown (lane LAYOUT-CONTRACT). No type, colour or border lives here: tests/style.test.mjs holds that.
 */
-.doc-page {
-  padding-inline: var(--dsx-list-padding-inline, 1rem);
-  max-width: var(--dsx-page-header-measure, 46rem);
-  gap: var(--dsx-page-header-spacing, 1.5rem);
-  align-items: stretch;
-}
+.doc-page { gap: var(--dsx-page-header-spacing, 1.5rem); align-items: stretch; }
+.doc-page > .dsx-markdown, .doc-page > .doc-section > .dsx-markdown { margin-inline: var(--dsx-grid-inset-inline, 16px); }

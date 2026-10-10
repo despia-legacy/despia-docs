@@ -31,3 +31,5 @@ public/knowledge/
 public/mcp-tools.json
 .despia/
 deploy/
+!public/skills/
+!public/skills/**

@@ -76,6 +76,15 @@
       "tabRoot": true
     },
     {
+      "path": "/agents/skills",
+      "component": "docs.PageAgentsSkills",
+      "meta": {
+        "title": "Agent skills",
+        "description": "Skills that teach your coding agent to build Despia apps. Install them with one command."
+      },
+      "tabRoot": true
+    },
+    {
       "path": "/migrate/map",
       "component": "docs.PageMigrate_Map",
       "meta": {
@@ -146,12 +155,39 @@
       "tabRoot": true
     },
     {
+      "path": "/agents/skills/building-dsx-apps-with-agents",
+      "component": "docs.PageAgents_Skills_BuildingDsxAppsWithAgents",
+      "meta": {
+        "title": "building-dsx-apps-with-agents",
+        "description": "Plan and build a large piece of a DSX project with one or many agents, the way the Despia fleet learned to: never estimate an undefined blob; name the pieces, sort them by shape, size them S/M/L in a plan file committed with the project, build two or three hard representatives end to end, record what each really cost, and forecast from the measured repeats, where the first of a shape is architecture and repeats that stay dear are an engine gap."
+      },
+      "tabRoot": true
+    },
+    {
+      "path": "/agents/skills/deleting-dsx-safely",
+      "component": "docs.PageAgents_Skills_DeletingDsxSafely",
+      "meta": {
+        "title": "deleting-dsx-safely",
+        "description": "Delete a file, a component, an action, a formula, a variable, a route, an entity or a package without breaking anything: ask despia impact first, read breaks, degrades, unaffected and cascade, fix what it names and ask again, and use despia impact --unreachable to find what is already dead."
+      },
+      "tabRoot": true
+    },
+    {
       "path": "/packages/store-modules-revenuecat",
       "component": "docs.PagePackages_StoreModulesRevenuecat",
       "meta": {
         "title": "RevenueCat",
         "description": "Sell subscriptions and in-app purchases with RevenueCat."
       }
+    },
+    {
+      "path": "/agents/skills/designing-dsx-apps",
+      "component": "docs.PageAgents_Skills_DesigningDsxApps",
+      "meta": {
+        "title": "designing-dsx-apps",
+        "description": "The design bar for DSX apps: structure before pixels, semantic tokens with one accent job, the type scale, the 4-point grid, the four states every screen has, motion and haptics as punctuation, the accessibility floor, and the flows that decide whether an app sells."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/store",
@@ -162,12 +198,30 @@
       }
     },
     {
+      "path": "/agents/skills/dsx-audio",
+      "component": "docs.PageAgents_Skills_DsxAudio",
+      "meta": {
+        "title": "dsx-audio",
+        "description": "Build audio in a DSX app: one JSON graph of players, buses, taps and live inputs moved by eight verbs (graph.set, set, play, pause, stop, seek, route.pick, route.set), intents and claims instead of ever touching the audio session, ducking as a rule on the node, the lock screen now-playing surface, recording a voice memo or a bus (audio.record), rendering and analysing files (audio.edit), speech in and out, the per-platform limits, and which parts are still in progress."
+      },
+      "tabRoot": true
+    },
+    {
       "path": "/packages/payments",
       "component": "docs.PagePackages_Payments",
       "meta": {
         "title": "Payments",
         "description": "Take payments in your app with one set of calls, whichever payment provider you use."
       }
+    },
+    {
+      "path": "/agents/skills/dsx-components-and-reuse",
+      "component": "docs.PageAgents_Skills_DsxComponentsAndReuse",
+      "meta": {
+        "title": "dsx-components-and-reuse",
+        "description": "Cut a DSX app into one root, panels and a library of configurable primitives, and never write the same markup twice: the InputField worked example (typed attributes down, an event up, no parent binding), despia describe --reuse to rank every group of copies, despia extract --all to make one component of them with attributes and events inferred, despia split to move a panel out with its state as context, the repeated-subtree, attribute-forwarded-unused and flag-family notices, and the advice field editing verbs return."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/oauth",
@@ -178,12 +232,30 @@
       }
     },
     {
+      "path": "/agents/skills/dsx-runtime-traps",
+      "component": "docs.PageAgents_Skills_DsxRuntimeTraps",
+      "meta": {
+        "title": "dsx-runtime-traps",
+        "description": "The DSX spellings that run, report success and do the wrong thing: equality that numbers both operands, plus as total arithmetic, a stored null that is truthy, await in a ternary arm, try inside a lambda, a bare name in setInterval, a positional argument a declared action drops, a watch that settles a tick later, an event payload read through a plane that does not exist, and the data and render traps no gate catches."
+      },
+      "tabRoot": true
+    },
+    {
       "path": "/packages/clerk",
       "component": "docs.PagePackages_Clerk",
       "meta": {
         "title": "Clerk",
         "description": "Add sign-in, sign-up and account screens to your app with Clerk."
       }
+    },
+    {
+      "path": "/agents/skills/dsx-ui-without-flashing",
+      "component": "docs.PageAgents_Skills_DsxUiWithoutFlashing",
+      "meta": {
+        "title": "dsx-ui-without-flashing",
+        "description": "Build DSX screens that never flash, jump or draw a blank, around the eight stable UI laws the runtime keeps on every lane (one action one frame, loading only with nothing to show, swaps in one place, removals that shrink, controls that keep their size, reads that land together, nothing opening onto nothing, a settled first paint) and the part of each that is still yours: the loading, empty and error faces of every api at one height, literal conditional labels, entry and exit poses, framed media, a scroll around a list that can outgrow the page, drawing the state an answer was asked for, and the lint warnings and drive counters that catch each one."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/biometric",
@@ -194,12 +266,30 @@
       }
     },
     {
+      "path": "/agents/skills/integrating-a-native-sdk",
+      "component": "docs.PageAgents_Skills_IntegratingANativeSdk",
+      "meta": {
+        "title": "integrating-a-native-sdk",
+        "description": "Wrap a vendor's proprietary native SDK (an OEM Bluetooth device, a reader, a scanner, a vendor framework) as a DSX package the right way: despia package new --vendor-sdk, one vendor seam file per lane, adapt the capability owner instead of duplicating it, one owner per OS integration, the feature call that asks for its own permission, data in as attributes with the look as a registered CSS knob, the three platform states with a named degradation, tests and fixtures, and the despia package check coaching loop."
+      },
+      "tabRoot": true
+    },
+    {
       "path": "/packages/identityvault",
       "component": "docs.PagePackages_Identityvault",
       "meta": {
         "title": "IdentityVault",
         "description": "Stores small secrets on the device in the system keychain, with an optional Face ID or fingerprint lock."
       }
+    },
+    {
+      "path": "/agents/skills/reviewing-dsx-apps",
+      "component": "docs.PageAgents_Skills_ReviewingDsxApps",
+      "meta": {
+        "title": "reviewing-dsx-apps",
+        "description": "The loop to run before and after every change to a DSX project: despia describe the project and the document, despia graph state --names, despia lint, despia checkpoint before a large change, fix every finding by address with the editing verbs over a revision instead of rewriting files, despia verify --drive every route and api face, then build or deploy."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/notify",
@@ -210,12 +300,30 @@
       }
     },
     {
+      "path": "/agents/skills/structuring-dsx-apps",
+      "component": "docs.PageAgents_Skills_StructuringDsxApps",
+      "meta": {
+        "title": "structuring-dsx-apps",
+        "description": "Where DSX state goes and when one document has become two: local state in the head, attributes down and events up at every boundary, a declared context key for state a subtree shares, dsx.global only for what has no mount tree, every api's loading, empty and error faces, the context, state, loop and api-face lint rules with their levels, and measuring a document with despia describe and despia graph state --names."
+      },
+      "tabRoot": true
+    },
+    {
       "path": "/packages/onesignal",
       "component": "docs.PagePackages_Onesignal",
       "meta": {
         "title": "OneSignal",
         "description": "Send push notifications to your app's users through OneSignal."
       }
+    },
+    {
+      "path": "/agents/skills/thinking-in-dsx",
+      "component": "docs.PageAgents_Skills_ThinkingInDsx",
+      "meta": {
+        "title": "thinking-in-dsx",
+        "description": "The React and React Native to DSX translation table: props to attributes, hooks to declarations, refs to bound values, navigation libraries to the route table, plus the habits to drop entirely."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/pushwoosh",
@@ -226,12 +334,30 @@
       }
     },
     {
+      "path": "/agents/skills/using-the-despia-cli",
+      "component": "docs.PageAgents_Skills_UsingTheDespiaCli",
+      "meta": {
+        "title": "using-the-despia-cli",
+        "description": "The whole despia command surface, structural verbs first: an agent changes an app with one verb at one address, never a free text rewrite."
+      },
+      "tabRoot": true
+    },
+    {
       "path": "/packages/firebase",
       "component": "docs.PagePackages_Firebase",
       "meta": {
         "title": "Firebase",
         "description": "Send push notifications to your app's users through Firebase Cloud Messaging."
       }
+    },
+    {
+      "path": "/agents/skills/writing-dsx-apps",
+      "component": "docs.PageAgents_Skills_WritingDsxApps",
+      "meta": {
+        "title": "writing-dsx-apps",
+        "description": "Write correct DSX app markup: the mental model, the element vocabulary, state in order of preference, lists, navigation (back and close POP, never href), and the mistakes generated code actually makes."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/appsflyer",

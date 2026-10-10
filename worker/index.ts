@@ -181,6 +181,9 @@ function readable(path: string, res: Response): Response {
   if (!(path === "/nav.json" || path.endsWith(".md"))) return res;
   const out = new Response(res.body, res);
   out.headers.set("Access-Control-Allow-Origin", "*");
+  // an agent skill's file (/skills/<name>/SKILL.md, the skills pages' "Download SKILL.md") downloads as a file
+  const skill = /^\/skills\/([a-z0-9-]+)\/SKILL\.md$/.exec(path);
+  if (skill !== null && res.ok) out.headers.set("Content-Disposition", `attachment; filename="SKILL.md"`);
   return out;
 }
 

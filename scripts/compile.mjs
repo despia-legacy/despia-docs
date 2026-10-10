@@ -246,7 +246,7 @@ function jseStringLiteral(source) {
 const CALLOUT_SUGAR = { Note: "note", Info: "note", Tip: "tip", Warning: "warning", Danger: "caution", Check: "tip" };
 const KIND_TO_TONE = { note: "note", info: "note", tip: "tip", warning: "warning", danger: "caution" };
 const KNOWN_COMPONENTS = new Set(["Callout", "Card", "CardGroup", "Steps", "Step", "Tabs", "Tab", "CodeGroup", "CodeTabs", "Accordion",
-  "AccordionGroup", "Frame", "ParamField", "ResponseField", "Update", "Video", "RefMeta", "ComingSoon", ...Object.keys(CALLOUT_SUGAR)]);
+  "AccordionGroup", "Frame", "ParamField", "ResponseField", "Update", "Video", "RefMeta", "ComingSoon", "DownloadButton", ...Object.keys(CALLOUT_SUGAR)]);
 
 /** CodeTabs pane titles: where the reader writes the code. Renderers (DSXView, DSXDom) are internals and never a tab. */
 const CODE_TAB_TITLES = ["DSX markup", "JavaScript (any web app)"];
@@ -639,6 +639,11 @@ function compileBody(page, lines, startLine, indent) {
   for (const node of tagTree(page, lines, startLine)) {
     if (node.tag === "CardGroup") { prose(run); run = []; out.push(cardGrid(node, indent)); continue; }
     if (node.tag === "ComingSoon") { prose(run); run = []; out.push(comingSoonBlock(node, indent)); continue; }
+    if (node.tag === "DownloadButton") {
+      prose(run); run = [];
+      out.push(`${indent}<button label="${escapeForDsxAttr(attrValue(node.attrs, "label") ?? "Download")}" icon="arrow.down.circle" variant="bordered" href="${escapeForDsxAttr(attrValue(node.attrs, "href") ?? "")}"/>`);
+      continue;
+    }
     run.push(node);
   }
   prose(run);
@@ -740,7 +745,54 @@ for (const pkg of loadPackages().packages) {
   sources.push({ file: join(contentDir, "packages", `${pkg.slug}.md`), generated: true, source: generatedPackageSource(pkg) });
 }
 
-const pages = sources.map(({ file, source }) => {
+// THE AGENT SKILLS (owner 2026-10-10): one page per OpenSource/AgentSkills folder, generated from data/skills.json
+// (scripts/sync-skills.mjs), never hand written.
+const SKILLS = existsSync(join(root, "data", "skills.json")) ? JSON.parse(readFileSync(join(root, "data", "skills.json"), "utf8")) : { skills: [], repo: "" };
+const SKILL_HOSTS = "Claude Code · Cursor · Codex · Windsurf · GitHub Copilot";
+for (const sk of SKILLS.skills) {
+  const text = readFileSync(join(publicDir, "skills", sk.folder, "SKILL.md"), "utf8");
+  const longest = Math.max(3, ...[...text.matchAll(/`{3,}/g)].map((m) => m[0].length));
+  const fence = "`".repeat(longest + 1);
+  const one = (x) => String(x ?? "").replace(/\s+/g, " ").trim();
+  sources.push({ file: join(contentDir, "agents", "skills", `${sk.folder}.md`), generated: true, source: `---
+title: ${sk.name}
+description: ${one(sk.description).split(/(?<=\.)\s/)[0]}
+order: ${100 + SKILLS.skills.indexOf(sk)}
+---
+
+# ${sk.name}
+
+${one(sk.description)}
+
+**Works with:** ${SKILL_HOSTS}, and any agent that reads skills.
+
+## Install
+
+${fence}sh title="Terminal"
+npx skills add ${SKILLS.repo} --skill ${sk.folder}
+${fence}
+
+${sk.mirrored ? "" : `<Note>Available with the public release: this skill is not in the public pack (${SKILLS.repo}) yet. Until then, download the file below and put it in your agent's skills folder.</Note>\n\n`}Install every Despia skill at once:
+
+${fence}sh title="Terminal"
+npx skills add ${SKILLS.repo}
+${fence}
+
+## Download
+
+<DownloadButton href="/skills/${sk.folder}/SKILL.md" label="Download SKILL.md"/>
+
+## View the skill
+
+<Accordion title="SKILL.md">
+${fence}md
+${text.replace(/\n+$/, "")}
+${fence}
+</Accordion>
+` });
+}
+
+const pages = sources.map(({ file, source, generated }) => {
   const parsed = frontMatter(source);
   const meta = parsed.meta;
   if (!inThisVersion(meta)) return null;
@@ -777,7 +829,7 @@ const pages = sources.map(({ file, source }) => {
     bodyStart: source.split("\n").length - body.split("\n").length + 1,
     component: componentNameFor(route),
     meta,
-    ...(expanded !== null ? { mdSource: expanded } : {}),
+    ...(expanded !== null ? { mdSource: expanded } : generated ? { mdSource: source } : {}),
     soon: ship.soon && !SHOW_UNSHIPPED,
   };
 }).filter((p) => p !== null);
@@ -811,6 +863,17 @@ const handAuthored = [].concat([]).filter(() => false).concat([
 // The Troubleshooting index is generated (filters + cards over the articles' front matter).
 const tsArticles = pages.filter((p) => p.space === "troubleshooting");
 const generatedPages = [
+  {
+    route: "/agents/skills",
+    component: "PageAgentsSkills",
+    title: "Agent skills",
+    label: "Agent skills",
+    space: "modern",
+    section: "",
+    order: 3,
+    description: "Skills that teach your coding agent to build Despia apps. Install them with one command.",
+    search: "agent skills claude code cursor codex install " + SKILLS.skills.map((x) => `${x.name} ${x.description}`).join(" "),
+  },
   {
     route: "/packages",
     component: "PagePackages",
@@ -1129,6 +1192,28 @@ for (const page of pages) {
   page.shell = shellAttrs(page, toc);
   writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, [], blocks));
   writeMd(page.route, page.mdSource ?? defang(readFileSync(page.file, "utf8")));
+}
+
+// ── the generated skills index (/agents/skills): data/skills.json ───────────────────────────────────────────────
+{
+  const page = generatedPages.find((p) => p.route === "/agents/skills");
+  const rows = SKILLS.skills.map((x) => ({ name: x.name, folder: x.folder, line: String(x.description).split(/(?<=\.)\s/)[0], url: `/agents/skills/${x.folder}`, badge: x.mirrored ? "" : "Soon" }));
+  page.body = [`# Agent skills`, "", page.description, "", "```sh", `npx skills add ${SKILLS.repo}`, "```", "",
+    ...rows.map((r) => `- [${r.name}](${site}${r.url}.md): ${r.line}`), ""].join("\n");
+  page.mdVars = [];
+  page.shell = shellAttrs(page, []);
+  const rowsVar = page.attrVars.push(JSON.stringify(rows)) - 1;
+  const intro = pushMdVar(page, "Skills teach your coding agent how Despia apps are built. Install them all with one command, or pick one below.\n\n```sh title=\"Terminal\"\nnpx skills add " + SKILLS.repo + "\n```");
+  const head = [`    <formula as="rows" input:raw="dsx.variable.a${rowsVar}">return JSON.parse(raw)</formula>`];
+  const body = [
+    `  <markdown bind="dsx.variable.md${intro}"/>`,
+    `  <ListGroup header="Skills">`,
+    `    <SettingsRow repeat="dsx.formula.rows" key="folder" icon="sparkles" title="{{ dsx.this.name }}" subtitle="{{ dsx.this.line }}" lines="2" badge="{{ dsx.this.badge }}"`,
+    `                 chevron="true" tappable="true" on:tap="dsx.module.route.select({ path: dsx.this.url })"/>`,
+    `  </ListGroup>`,
+  ].join("\n");
+  writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
+  writeMd(page.route, page.body);
 }
 
 // ── the generated package catalog (/packages): data/packages.json, never hand listed ─────────────────────────────

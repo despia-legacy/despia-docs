@@ -1,7 +1,7 @@
 {
   "_note": "THE DOCS' INFORMATION ARCHITECTURE for Despia V4 0.0.2 (owner 2026-10-10), declared once. A section lists routes in reading order; `packages: \"shipped\"` expands to the shipped catalog packages grouped by what people want (scripts/packages-lib.mjs groupOf), one collapsed SidebarSection per group. A modern page not named here (and not a shipped package) is reachable by its URL, search and the catalog, but has no sidebar row. Labels are the page's front matter `label` (24 characters at most, tests/nav.test.mjs).",
   "sections": [
-    { "name": "Get started", "routes": ["/", "/quickstart", "/web-apps", "/agents"] },
+    { "name": "Get started", "routes": ["/", "/quickstart", "/web-apps", "/agents", "/agents/skills"] },
     { "name": "Features", "routes": ["/packages"], "packages": "shipped" },
     { "name": "Build and ship", "routes": ["/cli", "/console", "/deploying"] },
     { "name": "Migrate from V3", "routes": ["/migrate"] },
