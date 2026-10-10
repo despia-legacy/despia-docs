@@ -419,4 +419,28 @@ writeFileSync(join(repo, "Components", "DocsShell.css"), `/*
    the console's cards and list groups stand on. */
 .doc-article { margin-inline: var(--dsx-grid-inset-inline, 20px); }
 `);
+// ── the renderer-independent outputs, from the same sources (site/build.mjs writes them; this copies them into public/,
+//    which the build folds into dist): docs-index.json (the export the general Despia MCP reads), llms.txt, and the
+//    Markdown twin of every v2 page at <route>.md and /md/<route>.md (the worker's page fetch reads the latter).
+const v2out = join(repo, "dist-v2");
+if (existsSync(join(v2out, "docs-index.json"))) {
+  const pub = join(repo, "public");
+  const index = JSON.parse(readFileSync(join(v2out, "docs-index.json"), "utf8"));
+  writeFileSync(join(pub, "docs-index.json"), JSON.stringify(index));
+  for (const pg of index.pages) {
+    const twin = readFileSync(join(v2out, pg.url === "/" ? "index.md" : `${pg.url.slice(1)}.md`), "utf8");
+    for (const f of [join(pub, pg.url === "/" ? "index.md" : `${pg.url.slice(1)}.md`), join(pub, "md", pg.url === "/" ? "index.md" : `${pg.url.slice(1)}.md`)]) {
+      mkdirSync(dirname(f), { recursive: true });
+      writeFileSync(f, twin);
+    }
+  }
+  const spaces = ["", "## Other spaces", "",
+    "- [Legacy (V3)](https://docs.despia.com/legacy/llms.txt): despia-native and the V3 runtime",
+    "- [Migration](https://docs.despia.com/migrate/llms.txt): move a V3 app to V4",
+    "- [Troubleshooting](https://docs.despia.com/troubleshooting/llms.txt): symptom, cause, fix",
+    "- [Releases](https://docs.despia.com/releases/llms.txt): release notes",
+    "- [App Review](https://docs.despia.com/app-review/llms.txt): Apple and Google review guidelines", ""];
+  writeFileSync(join(pub, "llms.txt"), readFileSync(join(v2out, "llms.txt"), "utf8") + spaces.join("\n"));
+  console.log(`[docs.v2] export: public/docs-index.json (${index.pages.length} pages), llms.txt, Markdown twins`);
+} else console.warn("[docs.v2] dist-v2/docs-index.json missing: run `node site/build.mjs` first for the export and the twins");
 console.log(`[docs.v2] ${routes.length} page(s) -> Components/v2, routes merged into dsx.config.json (${cfg.routes.length} rows)`);
