@@ -25,6 +25,10 @@ To work against your local dev server instead, point `origin` at it, for example
 
 ## In a browser: despia dev
 
+::: note Available in the next build
+The web-view preview proxy and the simulated answers below ship with the next Despia CLI.
+:::
+
 ```sh
 npx @despia-native/cli dev
 ```

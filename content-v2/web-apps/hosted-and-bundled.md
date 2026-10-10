@@ -19,6 +19,10 @@ This is what **New app** in the console sets up. Your site keeps its hosting and
 
 ## Bundled: the app ships your build
 
+::: note Available in the next build
+Bundled mode and the debug-build dev server described below ship with the next Despia build. Today the app loads your hosted address.
+:::
+
 Export your app as static files, put them in a project folder, and set the Dom package to bundled:
 
 ```json title="dsx.config.json"
