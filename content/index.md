@@ -1,49 +1,44 @@
 ---
-title: Despia documentation
-description: Build native iOS and Android apps, a web app and a back end from one set of DSX documents. Start here, by what you want to do.
+title: Despia docs
+label: Introduction
+description: Turn your web app into an iOS and Android app with native features. Start here.
+icon: house
 order: 0
 section:
 ---
 
-# Despia documentation
+# Despia docs
 
-Build a native iOS app, a native Android app, a web app and its back end from one set of DSX
-documents. Pick what you want to do.
+Despia puts your web app in a real iOS and Android app, and gives it native features from JavaScript:
+sign in with Apple, payments, push notifications, haptics, the camera and more.
 
-DSX DOM, the web view, Legacy compatibility and the packages and services that ship in 0.1.0 are
-stable. Native UI rendering is in early alpha and becomes stable in 1.0.0.
+```js
+await dsx.module.haptic.success()
+```
+
+That one line runs native code on the phone. There is nothing to install in your web app.
 
 <CardGroup cols="2">
-<Card title="Build a new app" href="/quickstart">
-From an empty folder to a running app in five minutes.
+<Card title="Quickstart" href="/quickstart">
+Your web app on a phone in a few minutes.
+</Card>
+<Card title="Web apps" href="/web-apps">
+How native calls work in React, Next.js and plain JavaScript.
+</Card>
+<Card title="Packages" href="/packages">
+Every native feature you can add, with one example each.
 </Card>
 <Card title="Move from Despia V3" href="/migrate">
-Bring a V3 app to V4 in one step: every V3 call keeps working.
-</Card>
-<Card title="Add native screens to a web app" href="/guides/web-app-with-native-screens">
-Keep your web app, make Settings or checkout native, ship them over the air.
-</Card>
-<Card title="Use Despia services" href="/services/on-its-own">
-Push, payments, chat and sync, alone or together, on your own cloud.
-</Card>
-<Card title="Look up an API" href="/components">
-Every component, attribute and package action, with examples.
+Bring a V3 app over. Your V3 calls keep working.
 </Card>
 </CardGroup>
 
-## Five lines to a running app
+## What ships in 0.0.2
 
-```sh title="Terminal"
-npm create despia@latest my-app
-cd my-app
-npm install
-npx despia dev
-```
-
-Then follow the [Quickstart](/quickstart) for your first edit and your first build.
-
-## For AI agents
-
-Every page has a markdown twin (add `.md` to its address), the whole site is summarized at
-[/llms.txt](/llms.txt) and [/llms-full.txt](/llms-full.txt), and the docs answer over MCP at
-`/mcp`. [Use these docs with your agent](/agents) has the setup for Claude Code, Cursor and Codex.
+| Part | Status |
+| :-- | :-- |
+| Your web app in the app's web view | Ready |
+| Native features from JavaScript (`dsx.module`) | Ready, per package (see [Packages](/packages)) |
+| CLI, console and MCP | Ready |
+| Despia V3 compatibility | Ready |
+| Native screens drawn from DSX | [Coming soon](/native-ui) |

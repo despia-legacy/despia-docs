@@ -7,9 +7,10 @@
       "path": "/",
       "component": "docs.PageIndex",
       "meta": {
-        "title": "Despia documentation",
-        "description": "Build native iOS and Android apps, a web app and a back end from one set of DSX documents. Start here, by what you want to do."
-      }
+        "title": "Despia docs",
+        "description": "Turn your web app into an iOS and Android app with native features. Start here."
+      },
+      "tabRoot": true
     },
     {
       "path": "/app-review",
@@ -17,15 +18,8 @@
       "meta": {
         "title": "App Review",
         "description": "Apple App Review guidelines and Google Play policies that Despia apps run into: what each means, why apps hit it, how to fix it on v4 and v3, and a reply for the reviewer."
-      }
-    },
-    {
-      "path": "/framework/modules",
-      "component": "docs.PageFramework_Modules",
-      "meta": {
-        "title": "Modules",
-        "description": "Native capabilities, UI and backends as modules: build your own, let an agent build one, or install one from the catalogue."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/migrate",
@@ -33,15 +27,26 @@
       "meta": {
         "title": "Migrating from v3",
         "description": "Move a Despia v3 app (despia-native, URL-scheme calls) to Despia v4 and DSX, one page at a time."
-      }
+      },
+      "tabRoot": true
+    },
+    {
+      "path": "/packages",
+      "component": "docs.PagePackages",
+      "meta": {
+        "title": "Packages",
+        "description": "Every native feature you can add to a Despia app, from the package catalog. Shipped packages work today; the rest are coming soon."
+      },
+      "tabRoot": true
     },
     {
       "path": "/quickstart",
       "component": "docs.PageQuickstart",
       "meta": {
         "title": "Quickstart",
-        "description": "From an empty folder to a running Despia app, then on your phone, in five minutes."
-      }
+        "description": "Put your web app in an iOS and Android app, call a native feature, and build."
+      },
+      "tabRoot": true
     },
     {
       "path": "/releases",
@@ -49,15 +54,8 @@
       "meta": {
         "title": "Releases",
         "description": "Release notes for every DSX release and every package version, with the docs pages, migration notes and upgrade impact each one touches."
-      }
-    },
-    {
-      "path": "/services/on-its-own",
-      "component": "docs.PageServices_OnItsOwn",
-      "meta": {
-        "title": "Using a Despia service on its own",
-        "description": "Every Despia service runs alone. Use Despia push with your own sign-in (Clerk, Supabase, Firebase, Auth0) or with no sign-in at all."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/troubleshooting",
@@ -65,7 +63,8 @@
       "meta": {
         "title": "Troubleshooting",
         "description": "Symptom, cause and fix for the problems Despia developers actually hit, on v4 and on the v3 runtime."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/agents",
@@ -73,791 +72,8 @@
       "meta": {
         "title": "Use these docs with your agent",
         "description": "Give Claude Code, Cursor, Codex or any MCP client the Despia documentation: an MCP server, llms.txt and a markdown twin of every page."
-      }
-    },
-    {
-      "path": "/framework/guides/build-a-module",
-      "component": "docs.PageFramework_Guides_BuildAModule",
-      "meta": {
-        "title": "Build a module",
-        "description": "Write your own Despia module, from an empty folder to a release: the manifest, the Swift, Kotlin and web facets, components, state, tests, versioning and publishing."
-      }
-    },
-    {
-      "path": "/services/connecting",
-      "component": "docs.PageServices_Connecting",
-      "meta": {
-        "title": "Connecting Despia services together",
-        "description": "Services that run alone also link up. Connect chat to push, and push to Despia Identity, by setting one address each."
-      }
-    },
-    {
-      "path": "/system",
-      "component": "docs.System",
-      "meta": {
-        "title": "System",
-        "description": "The design system as a living page: every element in its states."
-      }
-    },
-    {
-      "path": "/components",
-      "component": "docs.PageComponents",
-      "meta": {
-        "title": "Components",
-        "description": "Every element the DSX language has, one page each, generated from the ledgers that keep them honest."
-      }
-    },
-    {
-      "path": "/components/accordion",
-      "component": "docs.PageComponents_Accordion",
-      "meta": {
-        "title": "Accordion",
-        "description": "The global Web twin provides accessible disclosure semantics, reactive title/open state, toggle events, and the named header slot that REPLACES the default title + chevron."
-      }
-    },
-    {
-      "path": "/components/alert",
-      "component": "docs.PageComponents_Alert",
-      "meta": {
-        "title": "alert",
-        "description": "The overlay twin provides modal alert semantics, focus containment/restoration, bound presentation, normalized actions, and dismissal."
-      }
-    },
-    {
-      "path": "/components/attributes",
-      "component": "docs.PageComponents_Attributes",
-      "meta": {
-        "title": "Universal attributes",
-        "description": "The vocabulary every element carries, whatever it draws: accessibility, animation, class, style and the platform suffixes."
-      }
-    },
-    {
-      "path": "/components/audio",
-      "component": "docs.PageComponents_Audio",
-      "meta": {
-        "title": "audio",
-        "description": "The media Web twin implements the fixture's full transport/readout contract: headless HTMLMediaElement playback, reactive transport/scrubbing bindings, bounded ready/time/buffering/error events, a 15-second load deadline, teardown, feature-detected Media Session commands, and the session= playback/ambient category applied through the page-scoped Audio Session API where the engine has one."
-      }
-    },
-    {
-      "path": "/components/button",
-      "component": "docs.PageComponents_Button",
-      "meta": {
-        "title": "button",
-        "description": "The base Web twin renders real button/anchor semantics with label, icon, iconSize, bordered/prominent variants, destructive/cancel roles, href navigation, disabled gating, and tap/double-tap activation - the full button.json attribute contract."
-      }
-    },
-    {
-      "path": "/components/calendar",
-      "component": "docs.PageComponents_Calendar",
-      "meta": {
-        "title": "calendar",
-        "description": "The data-control twin renders a localized, keyboard-operable month grid with ISO binding, range constraints, marks, and month events."
-      }
-    },
-    {
-      "path": "/components/canvas",
-      "component": "docs.PageComponents_Canvas",
-      "meta": {
-        "title": "canvas",
-        "description": "The `<canvas>` surface renders the shared display list into an HTML canvas, with the SSR SVG path byte-identical to the native twins."
-      }
-    },
-    {
-      "path": "/components/card",
-      "component": "docs.PageComponents_Card",
-      "meta": {
-        "title": "card",
-        "description": "The base Web twin renders the surface word: the card corner, the raised ground, the elevation and the INSET, which is the part the two helper classes deliberately do not carry because their wearers pad themselves."
-      }
-    },
-    {
-      "path": "/components/carousel",
-      "component": "docs.PageComponents_Carousel",
-      "meta": {
-        "title": "carousel",
-        "description": "The structural twin renders accessible slides with two-way current-page binding, snap paging, selection dots, peek and spacing geometry, and change events - the full carousel.json attribute contract."
-      }
-    },
-    {
-      "path": "/components/chart",
-      "component": "docs.PageComponents_Chart",
-      "meta": {
-        "title": "chart",
-        "description": "The rich Web twin renders accessible SVG line, area, bar and point charts from bound data - multi-series with palette or single color=, stacked= areas and bars (domain from the stack totals, bands closing on the previous layer), legend= at the census positions (a figcaption, so assistive tech reads it as the caption), xType=time positioning by parsed timestamps with the kernel timeTicks ladder, y2Key/y2Color riding a labeled secondary axis, animate= draw-in (reduced-motion instant), interpolation=linear|smooth|monotone|step, grids, and deterministic downsampling."
-      }
-    },
-    {
-      "path": "/components/chatbubble",
-      "component": "docs.PageComponents_Chatbubble",
-      "meta": {
-        "title": "ChatBubble",
-        "description": "The global Web twin renders the directional bubble, bound value/children, semantic colors, and bounded width."
-      }
-    },
-    {
-      "path": "/components/checkbox",
-      "component": "docs.PageComponents_Checkbox",
-      "meta": {
-        "title": "Checkbox",
-        "description": "The global Web twin uses a real checkbox input with bound state, label, change write-back, and keyboard/focus semantics."
-      }
-    },
-    {
-      "path": "/components/chip",
-      "component": "docs.PageComponents_Chip",
-      "meta": {
-        "title": "chip",
-        "description": "The base Web twin renders the pill word with its two independent axes: role is the STATUS voice off the system's own semantic pairs (accent, success, warning, danger, info) and selected is the chosen pose, so a chip may be a warning and selected at once."
-      }
-    },
-    {
-      "path": "/components/colorpicker",
-      "component": "docs.PageComponents_Colorpicker",
-      "meta": {
-        "title": "colorpicker",
-        "description": "The browser's own colour control (input type=color) behind the iOS ColorPicker row: the label leading, a 28px well painting the bound colour trailing, the hex round-tripped by the shared core, the colour announced by name, on:change on every write and on:commit once when the browser picker closes."
-      }
-    },
-    {
-      "path": "/components/combobox",
-      "component": "docs.PageComponents_Combobox",
-      "meta": {
-        "title": "combobox",
-        "description": "The native-control twin implements an editable ARIA combobox/listbox with filtering, keyboard navigation, option binding, selection, and disabled state."
-      }
-    },
-    {
-      "path": "/components/confirmdialog",
-      "component": "docs.PageComponents_Confirmdialog",
-      "meta": {
-        "title": "confirmDialog",
-        "description": "The overlay twin provides an adaptive confirm dialog with modal semantics, normalized actions, focus containment/restoration, and dismissal."
-      }
-    },
-    {
-      "path": "/components/contextmenu",
-      "component": "docs.PageComponents_Contextmenu",
-      "meta": {
-        "title": "contextmenu",
-        "description": "The overlay twin supports context-click and long-press opening, nested actions, roles, separators, keyboard traversal and focus restoration, on the same long-press timing the native gesture recognizer uses."
-      }
-    },
-    {
-      "path": "/components/datepicker",
-      "component": "docs.PageComponents_Datepicker",
-      "meta": {
-        "title": "datepicker",
-        "description": "The native-control twin uses browser date/time controls with normalized DSX wire values, label, color, disabled state, and write-back."
-      }
-    },
-    {
-      "path": "/components/declarations",
-      "component": "docs.PageComponents_Declarations",
-      "meta": {
-        "title": "Declarations",
-        "description": "The tags that render nothing and declare everything: state, actions, formulas, events, styles and slots."
-      }
-    },
-    {
-      "path": "/components/divider",
-      "component": "docs.PageComponents_Divider",
-      "meta": {
-        "title": "divider",
-        "description": "The base Web twin renders the semantic-token divider and accepts universal style/color overrides."
-      }
-    },
-    {
-      "path": "/components/drawer",
-      "component": "docs.PageComponents_Drawer",
-      "meta": {
-        "title": "Drawer",
-        "description": "The application-control Web twin implements BOTH declared presentations: the modal drawer (adaptive geometry, focus containment and restoration, background inerting, Escape and scrim dismissal, bounded content, 120px drag dismissal) and, at the shared desktop step, the standing drawer pinned in flow (collapse-to-rail control, keyboard- and pointer-resizable drag hairline within min/max, honest complementary semantics, no scrim or focus trap)."
-      }
-    },
-    {
-      "path": "/components/dsxview",
-      "component": "docs.PageComponents_Dsxview",
-      "meta": {
-        "title": "DSXView",
-        "description": "The rich Web twin mounts the screen component src names from this build's compiled registry (the web reading of the native rule that a shipped tag of the same name always wins), with reactive src re-resolution, the stable dsx-view lifecycle events, and a labelled unavailable state."
-      }
-    },
-    {
-      "path": "/components/dsxwebview",
-      "component": "docs.PageComponents_Dsxwebview",
-      "meta": {
-        "title": "DSXWebView",
-        "description": "The rich Web twin mounts the composed app web surface as the same policy-constrained iframe WebView rides, resolving path against this page's own origin (an explicit origin wins) with the shared lifecycle events and the named-surface controls the Dom facet targets."
-      }
-    },
-    {
-      "path": "/components/field",
-      "component": "docs.PageComponents_Field",
-      "meta": {
-        "title": "field",
-        "description": "The form twin supplies labeled controls, shared form state, touched/dirty/error tracking, validation, secure inputs, and option fields."
-      }
-    },
-    {
-      "path": "/components/flow",
-      "component": "docs.PageComponents_Flow",
-      "meta": {
-        "title": "flow",
-        "description": "The structural twin provides wrapping flow layout with bounded reactive item and line spacing."
-      }
-    },
-    {
-      "path": "/components/footercopy",
-      "component": "docs.PageComponents_Footercopy",
-      "meta": {
-        "title": "footerCopy",
-        "description": "The base Web twin renders the closing line of a screen or a form at the footnote rung in the tertiary ink, the other half of the screen header word."
-      }
-    },
-    {
-      "path": "/components/form",
-      "component": "docs.PageComponents_Form",
-      "meta": {
-        "title": "form",
-        "description": "The form twin manages namespace state, child fields, validity, scrolling, and submit actions/events using a real form element."
-      }
-    },
-    {
-      "path": "/components/grid",
-      "component": "docs.PageComponents_Grid",
-      "meta": {
-        "title": "grid",
-        "description": "The structural/binding twin renders semantic grid rows/cells with responsive columns, keyed reconciliation, spacing, scroll, and reach-end handling - the full grid.json attribute contract (bind/key/columns/spacing/scroll/reachEnd)."
-      }
-    },
-    {
-      "path": "/components/hstack",
-      "component": "docs.PageComponents_Hstack",
-      "meta": {
-        "title": "hstack",
-        "description": "The base Web twin renders a horizontal flex stack with DSX spacing/alignment through the universal style contract."
-      }
-    },
-    {
-      "path": "/components/image",
-      "component": "docs.PageComponents_Image",
-      "meta": {
-        "title": "image",
-        "description": "The base Web twin renders remote and relative images, every icon name in the shared cross-runtime sf-map corpus, the fixture's decorative-by-default accessibility contract, iconSize/fontSize geometry, semantic tint and the cache policy."
-      }
-    },
-    {
-      "path": "/components/lightbox",
-      "component": "docs.PageComponents_Lightbox",
-      "meta": {
-        "title": "lightbox",
-        "description": "The media Web twin provides a shared-top-layer modal gallery with bounded safe sources, reactive presentation/index, focus containment/restoration, keyboard and RTL paging, pointer swipe, interactive drag dismissal, responsive controls, deterministic SSR, and the native zoom ladder: pinch (pointer pairs and trackpad ctrl+wheel) and double-tap zoom toward the focal point (1..4x), pan while zoomed with the native lock (pager and dismiss-drag disabled, chrome hidden), Escape unwinding zoom before dismissal, per-page zoom reset."
-      }
-    },
-    {
-      "path": "/components/list",
-      "component": "docs.PageComponents_List",
-      "meta": {
-        "title": "list",
-        "description": "The structural/binding twin implements the whole fixture contract: semantic rows, keyed identity, write-back scope, spacing/axis/scroll/alignment, reach-end, group_by sections in first-seen order, the swipe-action rails with both firing shapes and per-edge full-swipe commit, drag reorder that writes the moved array back through the bind seam and fires on:move with FINAL indices, and the horizontal autoscroll marquee - under the same construct gating List.swift uses (scroll=\"false\" and a horizontal axis win over all three; a grouped list ignores reorder; an active reorder suppresses swipe) and with an SSR twin that paints the same first frame."
-      }
-    },
-    {
-      "path": "/components/map",
-      "component": "docs.PageComponents_Map",
-      "meta": {
-        "title": "map",
-        "description": "The rich Web twin renders a REAL basemap when tiles= names a source - a self-hosted Protomaps .pmtiles archive (range-read, MVT-decoded, canvas-painted in the Despia neutral language with archive-metadata attribution) or a raster {z}/{x}/{y} template - plus accessible pins and pointer/keyboard pan/zoom; without tiles= it is the honest offline coordinate plane."
-      }
-    },
-    {
-      "path": "/components/menu",
-      "component": "docs.PageComponents_Menu",
-      "meta": {
-        "title": "menu",
-        "description": "The overlay twin provides anchored nested menus with normalized actions, roles, separators, focus management, and keyboard traversal."
-      }
-    },
-    {
-      "path": "/components/menubar",
-      "component": "docs.PageComponents_Menubar",
-      "meta": {
-        "title": "MenuBar",
-        "description": "The application-control Web twin implements bounded keyed items, canonical selection state and write-back, selection events, radio-menu semantics, keyboard and RTL navigation, the compact pill dock, and, at the shared desktop step, the WAI-ARIA menubar presentation: roving roots, per-root shadow-3 flyouts from nested items, submenu keyboard walk with Escape walking up, and right-aligned shortcut hints from the shortcut token grammar."
-      }
-    },
-    {
-      "path": "/components/menusidebar",
-      "component": "docs.PageComponents_Menusidebar",
-      "meta": {
-        "title": "MenuSidebar",
-        "description": "The application-control Web twin of the Sidebar.dsx slide-over: a fixed overlay panel on the leading edge, min(320px, 100% - 56px) wide and padded by the safe area, over a 32% black scrim; rows bound to items (attribute first, then the store) with a 24px icon, the label and a trailing checkmark, the active row carrying aria-current and the 12% selection fill; on:select publishing the whole row as authored and on:dismiss from a scrim tap and from Escape; dark, background and tint as on the natives; focus moved into the panel (the selected row) and restored on close, focus contained, the background inerted, through the shared overlay coordinator; a slide and scrim fade in only after the document settled and a freeze-frame slide out before removal on every close path."
-      }
-    },
-    {
-      "path": "/components/native-only",
-      "component": "docs.PageComponents_NativeOnly",
-      "meta": {
-        "title": "Native first elements",
-        "description": "The rows whose essence is a platform or vendor runtime the web renderer does not ship."
-      }
-    },
-    {
-      "path": "/components/native-only/levelmeter",
-      "component": "docs.PageComponents_NativeOnly_Levelmeter",
-      "meta": {
-        "title": "LevelMeter",
-        "description": "The Studio audio level meter has no Web renderer or audio-analysis seam."
-      }
-    },
-    {
-      "path": "/components/native-only/lottie",
-      "component": "docs.PageComponents_NativeOnly_Lottie",
-      "meta": {
-        "title": "lottie",
-        "description": "No built-in Lottie player ships with the runtime; `<lottie>` is a MODULE element, and the Core/Lottie web facet (the vendored lottie-web light player, MIT, pinned) fills the tag through the module component loader whenever the module is registered."
-      }
-    },
-    {
-      "path": "/components/native-only/rive",
-      "component": "docs.PageComponents_NativeOnly_Rive",
-      "meta": {
-        "title": "rive",
-        "description": "No Rive runtime ships with the web renderer; `<rive>` is a MODULE element, and the Core/Rive web facet fills the tag through the module component loader whenever the module is registered and its pinned @rive-app/canvas player was fetched by the build."
-      }
-    },
-    {
-      "path": "/components/native-only/studiopitcheditor",
-      "component": "docs.PageComponents_NativeOnly_Studiopitcheditor",
-      "meta": {
-        "title": "StudioPitchEditor",
-        "description": "The Studio pitch-editing surface has no Web DSP/editor implementation."
-      }
-    },
-    {
-      "path": "/components/native-only/studioshow",
-      "component": "docs.PageComponents_NativeOnly_Studioshow",
-      "meta": {
-        "title": "StudioShow",
-        "description": "The Studio mode-switching surface has no Web implementation."
-      }
-    },
-    {
-      "path": "/components/native-only/studiotimecode",
-      "component": "docs.PageComponents_NativeOnly_Studiotimecode",
-      "meta": {
-        "title": "StudioTimecode",
-        "description": "The Studio synchronized timecode display has no Web transport-clock integration."
-      }
-    },
-    {
-      "path": "/components/native-only/studiotimeline",
-      "component": "docs.PageComponents_NativeOnly_Studiotimeline",
-      "meta": {
-        "title": "StudioTimeline",
-        "description": "The multi-track Studio timeline/editor has no Web implementation."
-      }
-    },
-    {
-      "path": "/components/native-only/studiotrim",
-      "component": "docs.PageComponents_NativeOnly_Studiotrim",
-      "meta": {
-        "title": "StudioTrim",
-        "description": "The Studio clip-trimming surface has no Web implementation."
-      }
-    },
-    {
-      "path": "/components/native-only/systemfab",
-      "component": "docs.PageComponents_NativeOnly_Systemfab",
-      "meta": {
-        "title": "SystemFAB",
-        "description": "The native half of the shared FAB.dsx wrapper has no Web renderer, and is not asked for one: FAB.dsx gates this tag off web, Windows and Linux and gives those lanes a pressable composition instead, so the floating action button an author writes as `<FAB>` is a real, styled, accessible control on every renderer while this tag itself stays native."
-      }
-    },
-    {
-      "path": "/components/native-only/systemsettingsrow",
-      "component": "docs.PageComponents_NativeOnly_Systemsettingsrow",
-      "meta": {
-        "title": "SystemSettingsRow",
-        "description": "The native half of the shared SettingsRow.dsx wrapper has no Web renderer, and is not asked for one: SettingsRow.dsx gates this tag off web, Windows and Linux and composes the row from standard elements and CSS on those lanes, so the settings row an author writes as `<SettingsRow>` is a real, styled, accessible row on every renderer while this tag itself stays native."
-      }
-    },
-    {
-      "path": "/components/native-only/waveform",
-      "component": "docs.PageComponents_NativeOnly_Waveform",
-      "meta": {
-        "title": "Waveform",
-        "description": "The Studio waveform surface has no Web renderer."
-      }
-    },
-    {
-      "path": "/components/otp",
-      "component": "docs.PageComponents_Otp",
-      "meta": {
-        "title": "otp",
-        "description": "The native-control twin implements a segmented one-time-code input with binding, paste/input normalization, completion event, and accessibility labeling."
-      }
-    },
-    {
-      "path": "/components/pager",
-      "component": "docs.PageComponents_Pager",
-      "meta": {
-        "title": "pager",
-        "description": "The structural/binding twin renders horizontal/vertical snap paging with two-way current-page binding, keyed bound pages, selection dots, and change events - the full pager.json attribute contract."
-      }
-    },
-    {
-      "path": "/components/picker",
-      "component": "docs.PageComponents_Picker",
-      "meta": {
-        "title": "picker",
-        "description": "The native-control twin uses a real select control with static/bound options, labels, disabled state, and value write-back."
-      }
-    },
-    {
-      "path": "/components/popover",
-      "component": "docs.PageComponents_Popover",
-      "meta": {
-        "title": "popover",
-        "description": "The overlay twin provides an anchored, viewport-aware popover with trigger semantics, dismissal, keyboard handling, and focus restoration."
-      }
-    },
-    {
-      "path": "/components/pressable",
-      "component": "docs.PageComponents_Pressable",
-      "meta": {
-        "title": "pressable",
-        "description": "The base Web twin provides whole-area button/anchor semantics with child content and universal tap, double-tap, long-press, and navigation wiring."
-      }
-    },
-    {
-      "path": "/components/progress",
-      "component": "docs.PageComponents_Progress",
-      "meta": {
-        "title": "progress",
-        "description": "The base Web twin provides an accessible determinate progressbar with clamped bound value and semantic track/fill styling."
-      }
-    },
-    {
-      "path": "/components/progressring",
-      "component": "docs.PageComponents_Progressring",
-      "meta": {
-        "title": "ProgressRing",
-        "description": "The global Web twin renders an accessible SVG progress ring with bound value/max, line width, colors, size, and label."
-      }
-    },
-    {
-      "path": "/components/qrcode",
-      "component": "docs.PageComponents_Qrcode",
-      "meta": {
-        "title": "qrcode",
-        "description": "The rich Web twin generates deterministic SVG QR matrices with size, colors, correction level, accessible labeling, and fail-closed input handling."
-      }
-    },
-    {
-      "path": "/components/radiogroup",
-      "component": "docs.PageComponents_Radiogroup",
-      "meta": {
-        "title": "RadioGroup",
-        "description": "The global data-control twin renders real radio inputs from CSV or bound option data and writes the selected value back."
-      }
-    },
-    {
-      "path": "/components/rangeslider",
-      "component": "docs.PageComponents_Rangeslider",
-      "meta": {
-        "title": "rangeslider",
-        "description": "The native-control twin implements two bounded range inputs with normalized low/high constraints, throttled write-back, final commit, and accessible labels."
-      }
-    },
-    {
-      "path": "/components/refreshable",
-      "component": "docs.PageComponents_Refreshable",
-      "meta": {
-        "title": "refreshable",
-        "description": "The data-control twin implements the fixture's on:refresh/busy contract: scroll-contained content, rubber-band pull on touch and fine pointers with the shared overscroll curve, a built-in always-visible 44px refresh control for keyboard and mouse with hover and focus-visible states, a polite live status region, aria-busy reflection, spin progress with reduced-motion collapse, and busy-gated completion."
-      }
-    },
-    {
-      "path": "/components/scaffold",
-      "component": "docs.PageComponents_Scaffold",
-      "meta": {
-        "title": "scaffold",
-        "description": "The base Web twin provides an accessible adaptive split/stack shell with sidebar/content/inspector panes, authored widths, collapse policy, and labels."
-      }
-    },
-    {
-      "path": "/components/scene",
-      "component": "docs.PageComponents_Scene",
-      "meta": {
-        "title": "scene",
-        "description": "The DSX-native scene root renders in the browser through the in-kernel WebGL surface installed by registerSceneSurface, over the same corpus-pinned scene fold (transform composition, projection, picking) the two native lanes and the Compose desktop rasterizer read, so a scene cannot mean one thing here and another on a phone."
-      }
-    },
-    {
-      "path": "/components/scene360",
-      "component": "docs.PageComponents_Scene360",
-      "meta": {
-        "title": "Scene360",
-        "description": "The panorama renders over the kernel `<scene>` engine's WebGL surface: an inside-out sphere textured with the equirectangular src, the camera at its centre, drag to look (yaw/pitch, pitch clamped), wheel and pinch on the field of view (20 to 110), yaw/pitch/fov reactive; loading, ready and failed fire as on iOS."
-      }
-    },
-    {
-      "path": "/components/scene3d",
-      "component": "docs.PageComponents_Scene3d",
-      "meta": {
-        "title": "Scene3D",
-        "description": "The viewer renders over the kernel `<scene>` engine's WebGL surface (packages/dom/src/scene3d.ts): one internal `<scene>` per instance (camera, key and ambient light, the GLB model centred and resting on the floor, one node per models= row) driven through the scene bus with the iOS orbit rig (drag, wheel and pinch, autoRotate), the clip and loop, the live scale and the clip clock hold; loading, ready {ar, animations, bounds}, failed {reason}, tap {node} and animationFinished fire on the element and the scene3d channel, and the scene3d verbs reach it through Core/Scene3D/web."
-      }
-    },
-    {
-      "path": "/components/scopebar",
-      "component": "docs.PageComponents_Scopebar",
-      "meta": {
-        "title": "scopeBar",
-        "description": "The base Web twin renders the scopes under a search field as a wrapping rail of the chip word, with the tablist semantics, a roving tab stop and the two way write back the other option controls carry."
-      }
-    },
-    {
-      "path": "/components/screenheader",
-      "component": "docs.PageComponents_Screenheader",
-      "meta": {
-        "title": "screenHeader",
-        "description": "The base Web twin renders the screen's opening block, a display title over a callout subtitle in the secondary ink, both of them display copy through the localization seam and both painted server side so a reader meets the title rather than a box that grows when the client arrives."
-      }
-    },
-    {
-      "path": "/components/scroll",
-      "component": "docs.PageComponents_Scroll",
-      "meta": {
-        "title": "scroll",
-        "description": "The base Web twin provides vertical or horizontal overflow layout and renders child content through the common binding/style contract."
-      }
-    },
-    {
-      "path": "/components/searchbar",
-      "component": "docs.PageComponents_Searchbar",
-      "meta": {
-        "title": "searchbar",
-        "description": "The Web twin is the composite search field the native reference draws: a leading magnifier, the real search input with binding, the Search placeholder default and submit, and a trailing clear button that writes the bound path back and fires on:clear."
-      }
-    },
-    {
-      "path": "/components/sectionfooter",
-      "component": "docs.PageComponents_Sectionfooter",
-      "meta": {
-        "title": "sectionFooter",
-        "description": "The base Web twin renders the section footer from markup, and the bound twin is the list's group_footer_by attribute, which reads the footer off the section's first row exactly as the header reads the group value."
-      }
-    },
-    {
-      "path": "/components/sectionheader",
-      "component": "docs.PageComponents_Sectionheader",
-      "meta": {
-        "title": "sectionHeader",
-        "description": "The base Web twin renders the list section header from markup, writing the same class and the same part name the bound group_by emitter writes, so one look has two ways in and a reader hears the group's own name either way."
-      }
-    },
-    {
-      "path": "/components/segmented",
-      "component": "docs.PageComponents_Segmented",
-      "meta": {
-        "title": "segmented",
-        "description": "The rich Web twin provides an accessible radiogroup with static/bound options, selection write-back, and arrow/Home/End keyboard behavior."
-      }
-    },
-    {
-      "path": "/components/segmentedbutton",
-      "component": "docs.PageComponents_Segmentedbutton",
-      "meta": {
-        "title": "segmentedButton",
-        "description": "The data-control twin implements single or multiple segmented selection, labels/icons, binding, keyboard traversal, and accessibility state."
-      }
-    },
-    {
-      "path": "/components/sheet",
-      "component": "docs.PageComponents_Sheet",
-      "meta": {
-        "title": "sheet",
-        "description": "The overlay twin implements modal sheet/inset/full modes, normalized detents, title/close/action chrome, focus containment/restoration, and dismissal."
-      }
-    },
-    {
-      "path": "/components/signature",
-      "component": "docs.PageComponents_Signature",
-      "meta": {
-        "title": "Signature",
-        "description": "The global Web twin is a real pointer-driven ink pad: a devicePixelRatio-scaled 2D canvas drawing the SHARED ink law (@despia-native/kernel signature-core: clamp, round-at-capture, midpoint quadratic curve), one bound write per stroke on pointer-up, and a server twin that renders the committed strokes as an inline SVG in the same normalized space, so a signed document has real first paint before the pad mounts."
-      }
-    },
-    {
-      "path": "/components/skeleton",
-      "component": "docs.PageComponents_Skeleton",
-      "meta": {
-        "title": "Skeleton",
-        "description": "The global Web twin renders a size/radius-aware loading placeholder hidden from assistive technology."
-      }
-    },
-    {
-      "path": "/components/slider",
-      "component": "docs.PageComponents_Slider",
-      "meta": {
-        "title": "slider",
-        "description": "The base Web twin uses a real range input with binding, min/max, input write-back, and semantic tint styling."
-      }
-    },
-    {
-      "path": "/components/spacer",
-      "component": "docs.PageComponents_Spacer",
-      "meta": {
-        "title": "spacer",
-        "description": "The base Web twin participates as flexible space in DSX stack layout and accepts universal size constraints."
-      }
-    },
-    {
-      "path": "/components/spinner",
-      "component": "docs.PageComponents_Spinner",
-      "meta": {
-        "title": "spinner",
-        "description": "The base Web twin provides an accessible status spinner with semantic color/scale styling and reduced-motion handling."
-      }
-    },
-    {
-      "path": "/components/split",
-      "component": "docs.PageComponents_Split",
-      "meta": {
-        "title": "split",
-        "description": "The structural twin provides the two/three-pane plan (paneRole resolution, collapseAt/expandAt width classes), the phone stack push with a back pop, the overlay sidebar, ARIA window-splitter dividers with drag and keyboard resize, and value/on:change detail routing."
-      }
-    },
-    {
-      "path": "/components/stack",
-      "component": "docs.PageComponents_Stack",
-      "meta": {
-        "title": "stack",
-        "description": "The base Web twin provides the generic DSX flex/display container and universal spacing/alignment/style contract."
-      }
-    },
-    {
-      "path": "/components/stars",
-      "component": "docs.PageComponents_Stars",
-      "meta": {
-        "title": "stars",
-        "description": "The rich Web twin renders fractional SVG star fills with read-only or radiogroup semantics, binding, and keyboard selection."
-      }
-    },
-    {
-      "path": "/components/stepper",
-      "component": "docs.PageComponents_Stepper",
-      "meta": {
-        "title": "stepper",
-        "description": "The base Web twin provides the visible label caption, named decrement/value/increment controls, semantic tint, fixture-default bounds, bound numeric updates and press-and-hold acceleration."
-      }
-    },
-    {
-      "path": "/components/svg",
-      "component": "docs.PageComponents_Svg",
-      "meta": {
-        "title": "svg",
-        "description": "The media Web twin implements the fixture's full asset/src/d/viewBox/fill/width/height contract over the same static shape/path subset the native renderer draws (rect/circle/ellipse/line/polygon/polyline/path with M L H V C S Q T A Z absolute and relative), with semantic paint tokens, decorative-by-default accessibility, deterministic SSR, and fail-closed canonicalizing sanitization."
-      }
-    },
-    {
-      "path": "/components/table",
-      "component": "docs.PageComponents_Table",
-      "meta": {
-        "title": "Table",
-        "description": "The global Web twin renders the whole native Table contract: a semantic, scroll-contained table from bound rows, declared columns/fields (fields defaulting to the lowercased column labels), semantic tint, header cell traits and one combined accessibility element per row."
-      }
-    },
-    {
-      "path": "/components/tabs",
-      "component": "docs.PageComponents_Tabs",
-      "meta": {
-        "title": "tabs",
-        "description": "The structural twin provides ARIA tabs/tabpanels, bound selection, icons/badges/titles, change events, and keyboard traversal."
-      }
-    },
-    {
-      "path": "/components/text",
-      "component": "docs.PageComponents_Text",
-      "meta": {
-        "title": "text",
-        "description": "The base Web twin renders bound/value/inner content with semantic color and universal typography, the inline markdown vocabulary the native reference renders, and lineLimit tail truncation."
-      }
-    },
-    {
-      "path": "/components/textarea",
-      "component": "docs.PageComponents_Textarea",
-      "meta": {
-        "title": "textarea",
-        "description": "The base Web twin uses a real textarea with binding, placeholder, input, focus and blur events, and grows between minLines and maxLines exactly like the native lineLimit(min...max) contract."
-      }
-    },
-    {
-      "path": "/components/textfield",
-      "component": "docs.PageComponents_Textfield",
-      "meta": {
-        "title": "textfield",
-        "description": "The base Web twin uses a real text/password input with binding, placeholder, change, submit, focus and blur events, and maps the fixture's contentType/keyboard tokens onto autocomplete/inputmode/type."
-      }
-    },
-    {
-      "path": "/components/toggle",
-      "component": "docs.PageComponents_Toggle",
-      "meta": {
-        "title": "toggle",
-        "description": "The base Web twin uses a real checkbox input with switch semantics, bound state, change write-back, and accessible focus handling."
-      }
-    },
-    {
-      "path": "/components/toolbar",
-      "component": "docs.PageComponents_Toolbar",
-      "meta": {
-        "title": "toolbar",
-        "description": "The structural twin provides toolbar semantics, position/spacing, child content, and roving arrow/Home/End focus behavior."
-      }
-    },
-    {
-      "path": "/components/video",
-      "component": "docs.PageComponents_Video",
-      "meta": {
-        "title": "video",
-        "description": "The media Web twin implements the fixture's full contract: native HTML video rendering, active-page ownership, reactive transport/scrubbing/readout bindings, subtitles, bounded load/error state, accurate isolated target-frame previews, best-effort Media Session commands, the audio= playback/ambient category via the page-scoped Audio Session API where present, accessibility, and deterministic SSR."
-      }
-    },
-    {
-      "path": "/components/vstack",
-      "component": "docs.PageComponents_Vstack",
-      "meta": {
-        "title": "vstack",
-        "description": "The base Web twin renders a vertical flex stack with DSX spacing/alignment and slot content through the universal style contract."
-      }
-    },
-    {
-      "path": "/components/webview",
-      "component": "docs.PageComponents_Webview",
-      "meta": {
-        "title": "WebView",
-        "description": "The rich Web twin provides a policy-constrained iframe, lifecycle events, named controls, safe URL schemes, and ephemeral isolation."
-      }
-    },
-    {
-      "path": "/components/wheelpicker",
-      "component": "docs.PageComponents_Wheelpicker",
-      "meta": {
-        "title": "wheelpicker",
-        "description": "A real drum to the shared spec (PickerElements.kt, which carries the UIPickerView metrics): a 216px scroll-snap wheel of 32px rows, the selection band behind the centre row, off-centre rows dimmed, drag/fling/trackpad momentum and snap from the scroller itself, tap-to-centre, arrow/Home/End keys on a listbox role, a settled snap writing through the bind seam once, and bound writes scrolling the drum."
-      }
-    },
-    {
-      "path": "/components/zstack",
-      "component": "docs.PageComponents_Zstack",
-      "meta": {
-        "title": "zstack",
-        "description": "The base Web twin provides layered stack layout and DSX alignment through the universal style contract."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/migrate/map",
@@ -865,7 +81,8 @@
       "meta": {
         "title": "v3 to v4 feature map",
         "description": "Every Despia v3 feature and the v4 package or API it moves to, generated from the legacy navigation and the framework's own names."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/web-apps",
@@ -873,31 +90,17 @@
       "meta": {
         "title": "Using Despia from your web app",
         "description": "How dsx.module calls work in React, Next.js, Vue and plain JavaScript inside a Despia app, and every difference from a DSX page, in one place."
-      }
+      },
+      "tabRoot": true
     },
     {
-      "path": "/writing-docs",
-      "component": "docs.PageWritingDocs",
+      "path": "/cli",
+      "component": "docs.PageCli",
       "meta": {
-        "title": "Writing docs",
-        "description": "The authoring system, markdown plus components, documented with itself."
-      }
-    },
-    {
-      "path": "/app-review/apple-4-2-minimum-functionality",
-      "component": "docs.PageAppReview_Apple42MinimumFunctionality",
-      "meta": {
-        "title": "Minimum functionality",
-        "description": "The app has to be more than a website or a brochure in an app shell: real navigation, real depth, and features people expect from an app in its category. Reviewers judge perceived value, not the technology."
-      }
-    },
-    {
-      "path": "/guides/web-app-with-native-screens",
-      "component": "docs.PageGuides_WebAppWithNativeScreens",
-      "meta": {
-        "title": "A web app with native screens",
-        "description": "Keep your web app as the app, and make a few screens native, such as Settings. The native screens ship over the air, with no App Store or Play review, and share data with your pages."
-      }
+        "title": "CLI",
+        "description": "The despia command line: sign in, add packages, build, connect stores and manage your workspace."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/haptic",
@@ -908,28 +111,22 @@
       }
     },
     {
-      "path": "/troubleshooting/ota-updates-not-arriving",
-      "component": "docs.PageTroubleshooting_OtaUpdatesNotArriving",
+      "path": "/console",
+      "component": "docs.PageConsole",
       "meta": {
-        "title": "OTA updates never reach the app",
-        "description": "Changes deployed to production do not appear in the native app, even after force-closing it."
-      }
+        "title": "Console",
+        "description": "What you do in the Despia console, page by page."
+      },
+      "tabRoot": true
     },
     {
-      "path": "/guides/native-app-with-web-views",
-      "component": "docs.PageGuides_NativeAppWithWebViews",
+      "path": "/deploying",
+      "component": "docs.PageDeploying",
       "meta": {
-        "title": "A native app with web views",
-        "description": "Build the app native, and keep a few screens, such as your help center, as web pages from your own site. The pages share data with the native screens both ways."
-      }
-    },
-    {
-      "path": "/app-review/apple-4-0-non-mobile-design",
-      "component": "docs.PageAppReview_Apple40NonMobileDesign",
-      "meta": {
-        "title": "Website-style design",
-        "description": "The app must look and behave like an app on the device: a title bar, bottom tabs or a navigation stack, touch-sized controls. Reviewers often cite this together with 4.2 as \"a repackaged website\"."
-      }
+        "title": "Deploying",
+        "description": "From a build to TestFlight, Google Play testing and the stores."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/appleauth",
@@ -940,84 +137,13 @@
       }
     },
     {
-      "path": "/troubleshooting/white-screen-on-launch",
-      "component": "docs.PageTroubleshooting_WhiteScreenOnLaunch",
+      "path": "/native-ui",
+      "component": "docs.PageNativeUi",
       "meta": {
-        "title": "White screen on launch, no splash screen",
-        "description": "The app opens to a blank white screen and the splash logo never appears."
-      }
-    },
-    {
-      "path": "/app-review/apple-3-1-1-in-app-purchase",
-      "component": "docs.PageAppReview_Apple311InAppPurchase",
-      "meta": {
-        "title": "In-app purchase",
-        "description": "Digital goods and services sold inside the app go through Apple's in-app purchase (and Google Play Billing on Android), with a working restore, and products that are configured and purchasable."
-      }
-    },
-    {
-      "path": "/troubleshooting/logged-out-after-reopen",
-      "component": "docs.PageTroubleshooting_LoggedOutAfterReopen",
-      "meta": {
-        "title": "Users are logged out when they reopen the app",
-        "description": "Users close the app and land on the login page again when they reopen it."
-      }
-    },
-    {
-      "path": "/app-review/apple-3-1-2-subscriptions-paywalls",
-      "component": "docs.PageAppReview_Apple312SubscriptionsPaywalls",
-      "meta": {
-        "title": "Subscriptions and paywalls",
-        "description": "A paywall must state what is bought, the price and billing period, and the trial terms clearly, be easy to dismiss, and never trick the user into a purchase."
-      }
-    },
-    {
-      "path": "/app-review/apple-5-1-1-privacy-policy",
-      "component": "docs.PageAppReview_Apple511PrivacyPolicy",
-      "meta": {
-        "title": "Privacy policy",
-        "description": "Every app that collects or shares data needs a reachable privacy policy, linked in the store listing and inside the app, that matches what the app and its SDKs actually do."
-      }
-    },
-    {
-      "path": "/app-review/apple-5-1-1-data-minimization",
-      "component": "docs.PageAppReview_Apple511DataMinimization",
-      "meta": {
-        "title": "Collecting data the app does not need",
-        "description": "Only ask for personal data the app's features need; anything optional must be clearly optional and explained."
-      }
-    },
-    {
-      "path": "/app-review/apple-5-1-2-app-tracking-transparency",
-      "component": "docs.PageAppReview_Apple512AppTrackingTransparency",
-      "meta": {
-        "title": "App Tracking Transparency",
-        "description": "Tracking a user across other companies' apps and websites needs the App Tracking Transparency prompt first, the choice must be respected, and the App Store privacy labels must match."
-      }
-    },
-    {
-      "path": "/app-review/apple-5-1-2-ai-data-sharing",
-      "component": "docs.PageAppReview_Apple512AiDataSharing",
-      "meta": {
-        "title": "Sharing personal data with AI services",
-        "description": "Before personal data is sent to a third-party AI service, the app must say so clearly and get the user's permission."
-      }
-    },
-    {
-      "path": "/app-review/apple-4-8-login-services",
-      "component": "docs.PageAppReview_Apple48LoginServices",
-      "meta": {
-        "title": "Login services",
-        "description": "An app that offers third-party or social login (Google, Facebook and so on) must also offer an equivalent login option that meets Apple's privacy requirements; Sign in with Apple is the usual answer."
-      }
-    },
-    {
-      "path": "/app-review/apple-2-1-blank-screens-during-login",
-      "component": "docs.PageAppReview_Apple21BlankScreensDuringLogin",
-      "meta": {
-        "title": "Blank screens during login",
-        "description": "Reviewers reject flows that show blank or white screens or look unresponsive, which often happens during an OAuth redirect."
-      }
+        "title": "Native UI",
+        "description": "Native screens drawn from DSX on iOS and Android."
+      },
+      "tabRoot": true
     },
     {
       "path": "/packages/store-modules-revenuecat",
@@ -1092,14 +218,6 @@
       }
     },
     {
-      "path": "/app-review/apple-4-3-spam",
-      "component": "docs.PageAppReview_Apple43Spam",
-      "meta": {
-        "title": "Spam and copies",
-        "description": "Apps that duplicate others already on the store, or that ship many near-identical variants, are rejected."
-      }
-    },
-    {
       "path": "/packages/pushwoosh",
       "component": "docs.PagePackages_Pushwoosh",
       "meta": {
@@ -1169,14 +287,6 @@
       "meta": {
         "title": "Flashlight",
         "description": "Turn the device flashlight on and off."
-      }
-    },
-    {
-      "path": "/app-review/apple-2-3-accurate-metadata",
-      "component": "docs.PageAppReview_Apple23AccurateMetadata",
-      "meta": {
-        "title": "Accurate metadata",
-        "description": "The name, description, screenshots and previews must show the app as it is, without features it does not have or misleading claims."
       }
     },
     {
@@ -1257,14 +367,6 @@
       "meta": {
         "title": "Camera",
         "description": "Capture photos from the camera in code, with no preview screen."
-      }
-    },
-    {
-      "path": "/app-review/apple-5-1-1-account-deletion",
-      "component": "docs.PageAppReview_Apple511AccountDeletion",
-      "meta": {
-        "title": "Account deletion",
-        "description": "An app that lets people create an account must also let them start deleting that account from inside the app."
       }
     },
     {
@@ -2876,1048 +1978,13 @@
       }
     },
     {
-      "path": "/framework/guides",
-      "component": "docs.PageFramework_Guides",
-      "meta": {
-        "title": "Building an app on DSX"
-      }
-    },
-    {
-      "path": "/framework/guides/adaptive-layout",
-      "component": "docs.PageFramework_Guides_AdaptiveLayout",
-      "meta": {
-        "title": "Adaptive layout in DSX"
-      }
-    },
-    {
-      "path": "/framework/guides/adaptive-native-shells",
-      "component": "docs.PageFramework_Guides_AdaptiveNativeShells",
-      "meta": {
-        "title": "Adaptive native shells"
-      }
-    },
-    {
-      "path": "/framework/guides/build-secrets-setup",
-      "component": "docs.PageFramework_Guides_BuildSecretsSetup",
-      "meta": {
-        "title": "Build secrets: simple setup guide"
-      }
-    },
-    {
-      "path": "/framework/guides/building-with-agents",
-      "component": "docs.PageFramework_Guides_BuildingWithAgents",
-      "meta": {
-        "title": "Building with agents"
-      }
-    },
-    {
-      "path": "/framework/guides/cli",
-      "component": "docs.PageFramework_Guides_Cli",
-      "meta": {
-        "title": "The `despia` command line"
-      }
-    },
-    {
-      "path": "/framework/guides/clickhouse",
-      "component": "docs.PageFramework_Guides_Clickhouse",
-      "meta": {
-        "title": "Analytics at scale: ClickHouse"
-      }
-    },
-    {
-      "path": "/framework/guides/codemagic-build",
-      "component": "docs.PageFramework_Guides_CodemagicBuild",
-      "meta": {
-        "title": "Building an iOS app: Codemagic & the `iOS/` assets folder"
-      }
-    },
-    {
-      "path": "/framework/guides/combinations",
-      "component": "docs.PageFramework_Guides_Combinations",
-      "meta": {
-        "title": "The combination matrix: every integration shape, named and walked"
-      }
-    },
-    {
-      "path": "/framework/guides/combinations/c1-pure-dsx-app",
-      "component": "docs.PageFramework_Guides_Combinations_C1PureDsxApp",
-      "meta": {
-        "title": "C1: the pure DSX app, four surfaces from one codebase"
-      }
-    },
-    {
-      "path": "/framework/guides/combinations/c2-web-app-plus-native",
-      "component": "docs.PageFramework_Guides_Combinations_C2WebAppPlusNative",
-      "meta": {
-        "title": "C2: your web app, plus DSX native parts"
-      }
-    },
-    {
-      "path": "/framework/guides/combinations/c3-existing-app-despia-backend",
-      "component": "docs.PageFramework_Guides_Combinations_C3ExistingAppDespiaBackend",
-      "meta": {
-        "title": "C3: your app, plus a Despia backend only"
-      }
-    },
-    {
-      "path": "/framework/guides/combinations/c5-dsx-frontend-vendor-backend",
-      "component": "docs.PageFramework_Guides_Combinations_C5DsxFrontendVendorBackend",
-      "meta": {
-        "title": "C5: a DSX front end on your vendor's backend, directly"
-      }
-    },
-    {
-      "path": "/framework/guides/combinations/c7-self-hosted-ota",
-      "component": "docs.PageFramework_Guides_Combinations_C7SelfHostedOta",
-      "meta": {
-        "title": "C7: self-hosted OTA, your content, your host, no Despia hosting"
-      }
-    },
-    {
-      "path": "/framework/guides/credentials",
-      "component": "docs.PageFramework_Guides_Credentials",
-      "meta": {
-        "title": "Credentials held by the runner"
-      }
-    },
-    {
-      "path": "/framework/guides/debugging",
-      "component": "docs.PageFramework_Guides_Debugging",
-      "meta": {
-        "title": "Debugging a DSX app"
-      }
-    },
-    {
-      "path": "/framework/guides/deploying",
-      "component": "docs.PageFramework_Guides_Deploying",
-      "meta": {
-        "title": "Deploying"
-      }
-    },
-    {
-      "path": "/framework/guides/deprecating-package-apis",
-      "component": "docs.PageFramework_Guides_DeprecatingPackageApis",
-      "meta": {
-        "title": "Deprecating APIs in your package"
-      }
-    },
-    {
-      "path": "/framework/guides/designing-high-end-screens",
-      "component": "docs.PageFramework_Guides_DesigningHighEndScreens",
-      "meta": {
-        "title": "Designing high-end screens with DSX"
-      }
-    },
-    {
-      "path": "/framework/guides/despia-api",
-      "component": "docs.PageFramework_Guides_DespiaApi",
-      "meta": {
-        "title": "The `window.dsx` API"
-      }
-    },
-    {
-      "path": "/framework/guides/despia-design-system",
-      "component": "docs.PageFramework_Guides_DespiaDesignSystem",
-      "meta": {
-        "title": "Current DSX components and the retired v3 skin"
-      }
-    },
-    {
-      "path": "/framework/guides/device-tests",
-      "component": "docs.PageFramework_Guides_DeviceTests",
-      "meta": {
-        "title": "Device tests: end-to-end tests on the exported app"
-      }
-    },
-    {
-      "path": "/framework/guides/embed-anywhere",
-      "component": "docs.PageFramework_Guides_EmbedAnywhere",
-      "meta": {
-        "title": "Embed a DSX component anywhere"
-      }
-    },
-    {
-      "path": "/framework/guides/files-and-storage",
-      "component": "docs.PageFramework_Guides_FilesAndStorage",
-      "meta": {
-        "title": "Files & storage"
-      }
-    },
-    {
-      "path": "/framework/guides/getting-started",
-      "component": "docs.PageFramework_Guides_GettingStarted",
-      "meta": {
-        "title": "Getting started"
-      }
-    },
-    {
-      "path": "/framework/guides/hosted-platform",
-      "component": "docs.PageFramework_Guides_HostedPlatform",
-      "meta": {
-        "title": "Deploying to your own infrastructure"
-      }
-    },
-    {
-      "path": "/framework/guides/lighthouse",
-      "component": "docs.PageFramework_Guides_Lighthouse",
-      "meta": {
-        "title": "Lighthouse 100 by default"
-      }
-    },
-    {
-      "path": "/framework/guides/markdown",
-      "component": "docs.PageFramework_Guides_Markdown",
-      "meta": {
-        "title": "Extended markdown"
-      }
-    },
-    {
-      "path": "/framework/guides/native-export",
-      "component": "docs.PageFramework_Guides_NativeExport",
-      "meta": {
-        "title": "`despia export`: a real Xcode project, a real Android Studio project"
-      }
-    },
-    {
-      "path": "/framework/guides/navigation",
-      "component": "docs.PageFramework_Guides_Navigation",
-      "meta": {
-        "title": "Navigation in DSX"
-      }
-    },
-    {
-      "path": "/framework/guides/oauth-https-callback",
-      "component": "docs.PageFramework_Guides_OauthHttpsCallback",
-      "meta": {
-        "title": "OAuth HTTPS Callback: Cross-Platform Specification"
-      }
-    },
-    {
-      "path": "/framework/guides/packages",
-      "component": "docs.PageFramework_Guides_Packages",
-      "meta": {
-        "title": "Package catalog"
-      }
-    },
-    {
-      "path": "/framework/guides/patterns",
-      "component": "docs.PageFramework_Guides_Patterns",
-      "meta": {
-        "title": "Common patterns"
-      }
-    },
-    {
-      "path": "/framework/guides/platform-support",
-      "component": "docs.PageFramework_Guides_PlatformSupport",
-      "meta": {
-        "title": "Platform support: what the cross-platform claim is measured to mean"
-      }
-    },
-    {
-      "path": "/framework/guides/provisioning",
-      "component": "docs.PageFramework_Guides_Provisioning",
-      "meta": {
-        "title": "Provisioning: bundle ids, capabilities and App Groups"
-      }
-    },
-    {
-      "path": "/framework/guides/quickstart",
-      "component": "docs.PageFramework_Guides_Quickstart",
-      "meta": {
-        "title": "Quickstart: a DSX app from nothing"
-      }
-    },
-    {
-      "path": "/framework/guides/rendering",
-      "component": "docs.PageFramework_Guides_Rendering",
-      "meta": {
-        "title": "Server rendering"
-      }
-    },
-    {
-      "path": "/framework/guides/reserved-directories",
-      "component": "docs.PageFramework_Guides_ReservedDirectories",
-      "meta": {
-        "title": "The reserved-directory contract"
-      }
-    },
-    {
-      "path": "/framework/guides/routing",
-      "component": "docs.PageFramework_Guides_Routing",
-      "meta": {
-        "title": "Routing"
-      }
-    },
-    {
-      "path": "/framework/guides/running-locally",
-      "component": "docs.PageFramework_Guides_RunningLocally",
-      "meta": {
-        "title": "Running locally: the simulator and emulator you already have"
-      }
-    },
-    {
-      "path": "/framework/guides/secure-biometrics",
-      "component": "docs.PageFramework_Guides_SecureBiometrics",
-      "meta": {
-        "title": "Secure biometrics"
-      }
-    },
-    {
-      "path": "/framework/guides/staging-and-testing",
-      "component": "docs.PageFramework_Guides_StagingAndTesting",
-      "meta": {
-        "title": "Staging, testing & the dev center"
-      }
-    },
-    {
-      "path": "/framework/guides/state-and-events",
-      "component": "docs.PageFramework_Guides_StateAndEvents",
-      "meta": {
-        "title": "State & events"
-      }
-    },
-    {
-      "path": "/framework/guides/styling",
-      "component": "docs.PageFramework_Guides_Styling",
-      "meta": {
-        "title": "Styling DSX with CSS"
-      }
-    },
-    {
-      "path": "/framework/guides/testing",
-      "component": "docs.PageFramework_Guides_Testing",
-      "meta": {
-        "title": "Unit testing a DSX app"
-      }
-    },
-    {
-      "path": "/framework/guides/theming",
-      "component": "docs.PageFramework_Guides_Theming",
-      "meta": {
-        "title": "Theming a DSX app"
-      }
-    },
-    {
-      "path": "/framework/guides/transitions",
-      "component": "docs.PageFramework_Guides_Transitions",
-      "meta": {
-        "title": "Transitions"
-      }
-    },
-    {
-      "path": "/framework/guides/transport-and-ota-integrity",
-      "component": "docs.PageFramework_Guides_TransportAndOtaIntegrity",
-      "meta": {
-        "title": "Transport & OTA integrity: HTTP/HTTPS and signed updates (the visual guide)"
-      }
-    },
-    {
-      "path": "/framework/reference/style",
-      "component": "docs.PageFramework_Reference_Style",
-      "meta": {
-        "title": "Styling reference"
-      }
-    },
-    {
-      "path": "/framework/reference/style/custom-properties",
-      "component": "docs.PageFramework_Reference_Style_CustomProperties",
-      "meta": {
-        "title": "Custom properties and `@property`"
-      }
-    },
-    {
-      "path": "/framework/reference/style/feature-queries",
-      "component": "docs.PageFramework_Reference_Style_FeatureQueries",
-      "meta": {
-        "title": "Feature detection and fallback"
-      }
-    },
-    {
-      "path": "/framework/reference/style/media-features",
-      "component": "docs.PageFramework_Reference_Style_MediaFeatures",
-      "meta": {
-        "title": "The media feature table: what each lane can answer about a @media query"
-      }
-    },
-    {
-      "path": "/framework/reference/style/motion",
-      "component": "docs.PageFramework_Reference_Style_Motion",
-      "meta": {
-        "title": "Motion"
-      }
-    },
-    {
-      "path": "/framework/reference/style/not-in-the-vocabulary",
-      "component": "docs.PageFramework_Reference_Style_NotInTheVocabulary",
-      "meta": {
-        "title": "What the DSX CSS vocabulary deliberately does not accept"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/background",
-      "component": "docs.PageFramework_Reference_Style_Properties_Background",
-      "meta": {
-        "title": "Background"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/border-outline",
-      "component": "docs.PageFramework_Reference_Style_Properties_BorderOutline",
-      "meta": {
-        "title": "Borders, radii and outline"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/cascade",
-      "component": "docs.PageFramework_Reference_Style_Properties_Cascade",
-      "meta": {
-        "title": "Cascade wide"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/filter-mask",
-      "component": "docs.PageFramework_Reference_Style_Properties_FilterMask",
-      "meta": {
-        "title": "Filter, mask, clip and blending"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/flexbox",
-      "component": "docs.PageFramework_Reference_Style_Properties_Flexbox",
-      "meta": {
-        "title": "Flexbox and gaps"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/grid",
-      "component": "docs.PageFramework_Reference_Style_Properties_Grid",
-      "meta": {
-        "title": "Grid"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/interaction",
-      "component": "docs.PageFramework_Reference_Style_Properties_Interaction",
-      "meta": {
-        "title": "Pointer, selection and cursor"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/layout-box",
-      "component": "docs.PageFramework_Reference_Style_Properties_LayoutBox",
-      "meta": {
-        "title": "Layout box, position and size"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/motion-path",
-      "component": "docs.PageFramework_Reference_Style_Properties_MotionPath",
-      "meta": {
-        "title": "Motion path"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/multi-column",
-      "component": "docs.PageFramework_Reference_Style_Properties_MultiColumn",
-      "meta": {
-        "title": "Multi-column"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/overflow-containment",
-      "component": "docs.PageFramework_Reference_Style_Properties_OverflowContainment",
-      "meta": {
-        "title": "Overflow, containment and stacking"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/rendering",
-      "component": "docs.PageFramework_Reference_Style_Properties_Rendering",
-      "meta": {
-        "title": "Replaced content, appearance and color scheme"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/scrolling",
-      "component": "docs.PageFramework_Reference_Style_Properties_Scrolling",
-      "meta": {
-        "title": "Scrolling, snapping and scrollbars"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/shadow-opacity",
-      "component": "docs.PageFramework_Reference_Style_Properties_ShadowOpacity",
-      "meta": {
-        "title": "Shadow, opacity and visibility"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/text",
-      "component": "docs.PageFramework_Reference_Style_Properties_Text",
-      "meta": {
-        "title": "Color, fonts and text"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/transform",
-      "component": "docs.PageFramework_Reference_Style_Properties_Transform",
-      "meta": {
-        "title": "Transform and 3D"
-      }
-    },
-    {
-      "path": "/framework/reference/style/properties/transition-animation",
-      "component": "docs.PageFramework_Reference_Style_Properties_TransitionAnimation",
-      "meta": {
-        "title": "Transitions and animation"
-      }
-    },
-    {
-      "path": "/framework/reference/style/selectors",
-      "component": "docs.PageFramework_Reference_Style_Selectors",
-      "meta": {
-        "title": "Selectors"
-      }
-    },
-    {
-      "path": "/framework/reference/style/write-this-instead",
-      "component": "docs.PageFramework_Reference_Style_WriteThisInstead",
-      "meta": {
-        "title": "Write this instead"
-      }
-    },
-    {
-      "path": "/framework/skills",
-      "component": "docs.PageFramework_Skills",
-      "meta": {
-        "title": "Despia Skills"
-      }
-    },
-    {
-      "path": "/framework/skills/action-contracts",
-      "component": "docs.PageFramework_Skills_ActionContracts",
-      "meta": {
-        "title": "Action contracts: inputs in, events out"
-      }
-    },
-    {
-      "path": "/framework/skills/android",
-      "component": "docs.PageFramework_Skills_Android",
-      "meta": {
-        "title": "DespiaScript on Android"
-      }
-    },
-    {
-      "path": "/framework/skills/android/api-mapping",
-      "component": "docs.PageFramework_Skills_Android_ApiMapping",
-      "meta": {
-        "title": "API mapping - Swift ↔ Kotlin"
-      }
-    },
-    {
-      "path": "/framework/skills/android/containers",
-      "component": "docs.PageFramework_Skills_Android_Containers",
-      "meta": {
-        "title": "`dsx.container` on Android"
-      }
-    },
-    {
-      "path": "/framework/skills/android/js-core-parity",
-      "component": "docs.PageFramework_Skills_Android_JsCoreParity",
-      "meta": {
-        "title": "JS-core parity contract: iOS ⇄ Android, API by API"
-      }
-    },
-    {
-      "path": "/framework/skills/android/manifest-and-build",
-      "component": "docs.PageFramework_Skills_Android_ManifestAndBuild",
-      "meta": {
-        "title": "dsx.json → Android"
-      }
-    },
-    {
-      "path": "/framework/skills/attribute-classes",
-      "component": "docs.PageFramework_Skills_AttributeClasses",
-      "meta": {
-        "title": "Attribute classes: one classification for every DSX block"
-      }
-    },
-    {
-      "path": "/framework/skills/audio",
-      "component": "docs.PageFramework_Skills_Audio",
-      "meta": {
-        "title": "Audio in a DSX app: players, mixing, recording, editing, speech"
-      }
-    },
-    {
-      "path": "/framework/skills/building",
-      "component": "docs.PageFramework_Skills_Building",
-      "meta": {
-        "title": "Building the monorepo runtime in Xcode directly"
-      }
-    },
-    {
-      "path": "/framework/skills/building-a-despia-platform-surface",
-      "component": "docs.PageFramework_Skills_BuildingADespiaPlatformSurface",
-      "meta": {
-        "title": "Building a platform surface in DSX"
-      }
-    },
-    {
-      "path": "/framework/skills/building-ui-that-does-not-flash",
-      "component": "docs.PageFramework_Skills_BuildingUiThatDoesNotFlash",
-      "meta": {
-        "title": "Building UI that does not flash, jump or draw a blank"
-      }
-    },
-    {
-      "path": "/framework/skills/building-with-agents",
-      "component": "docs.PageFramework_Skills_BuildingWithAgents",
-      "meta": {
-        "title": "Building a DSX app with agents: plan from measurements, check before you land"
-      }
-    },
-    {
-      "path": "/framework/skills/component-props-and-state",
-      "component": "docs.PageFramework_Skills_ComponentPropsAndState",
-      "meta": {
-        "title": "Component props vs state: attributes vs variables"
-      }
-    },
-    {
-      "path": "/framework/skills/components-and-reuse",
-      "component": "docs.PageFramework_Skills_ComponentsAndReuse",
-      "meta": {
-        "title": "Components and reuse: one root, panels, and a library of configurable primitives"
-      }
-    },
-    {
-      "path": "/framework/skills/containers",
-      "component": "docs.PageFramework_Skills_Containers",
-      "meta": {
-        "title": "Containers (the shared App Group)"
-      }
-    },
-    {
-      "path": "/framework/skills/cookies",
-      "component": "docs.PageFramework_Skills_Cookies",
-      "meta": {
-        "title": "Cookies: `dsx.cookie`"
-      }
-    },
-    {
-      "path": "/framework/skills/cross-module-calls",
-      "component": "docs.PageFramework_Skills_CrossModuleCalls",
-      "meta": {
-        "title": "Cross-module calls"
-      }
-    },
-    {
-      "path": "/framework/skills/custom-ux",
-      "component": "docs.PageFramework_Skills_CustomUx",
-      "meta": {
-        "title": "Custom UX: the escape hatches"
-      }
-    },
-    {
-      "path": "/framework/skills/deleting-safely",
-      "component": "docs.PageFramework_Skills_DeletingSafely",
-      "meta": {
-        "title": "Deleting safely: ask the framework, then delete"
-      }
-    },
-    {
-      "path": "/framework/skills/deploying",
-      "component": "docs.PageFramework_Skills_Deploying",
-      "meta": {
-        "title": "Deploying from Xcode: archive, sign, ship"
-      }
-    },
-    {
-      "path": "/framework/skills/deprecating-package-apis",
-      "component": "docs.PageFramework_Skills_DeprecatingPackageApis",
-      "meta": {
-        "title": "Deprecating a package API: declare, adapt, report, retire"
-      }
-    },
-    {
-      "path": "/framework/skills/designing-an-app",
-      "component": "docs.PageFramework_Skills_DesigningAnApp",
-      "meta": {
-        "title": "Designing an app that does not look generated"
-      }
-    },
-    {
-      "path": "/framework/skills/designing-great-apps",
-      "component": "docs.PageFramework_Skills_DesigningGreatApps",
-      "meta": {
-        "title": "Designing great apps by construction"
-      }
-    },
-    {
-      "path": "/framework/skills/despiascript",
-      "component": "docs.PageFramework_Skills_Despiascript",
-      "meta": {
-        "title": "DespiaScript"
-      }
-    },
-    {
-      "path": "/framework/skills/documenting-a-module",
-      "component": "docs.PageFramework_Skills_DocumentingAModule",
-      "meta": {
-        "title": "Documenting a module"
-      }
-    },
-    {
-      "path": "/framework/skills/dsx-best-practices",
-      "component": "docs.PageFramework_Skills_DsxBestPractices",
-      "meta": {
-        "title": "DSX best practices"
-      }
-    },
-    {
-      "path": "/framework/skills/dsx-runtime-traps",
-      "component": "docs.PageFramework_Skills_DsxRuntimeTraps",
-      "meta": {
-        "title": "DSX runtime traps: the ones that fail silently"
-      }
-    },
-    {
-      "path": "/framework/skills/dynamic-modules",
-      "component": "docs.PageFramework_Skills_DynamicModules",
-      "meta": {
-        "title": "Building dynamic, powerful modules"
-      }
-    },
-    {
-      "path": "/framework/skills/editor-catalog",
-      "component": "docs.PageFramework_Skills_EditorCatalog",
-      "meta": {
-        "title": "Editor catalog: the web-canvas element schema"
-      }
-    },
-    {
-      "path": "/framework/skills/examples",
-      "component": "docs.PageFramework_Skills_Examples",
-      "meta": {
-        "title": "Trails: the worked example app"
-      }
-    },
-    {
-      "path": "/framework/skills/extracting-a-module",
-      "component": "docs.PageFramework_Skills_ExtractingAModule",
-      "meta": {
-        "title": "Extracting a host feature into a module"
-      }
-    },
-    {
-      "path": "/framework/skills/global-state",
-      "component": "docs.PageFramework_Skills_GlobalState",
-      "meta": {
-        "title": "Global app state: `global.*`"
-      }
-    },
-    {
-      "path": "/framework/skills/integrating-a-native-sdk",
-      "component": "docs.PageFramework_Skills_IntegratingANativeSdk",
-      "meta": {
-        "title": "Integrating a vendor's native SDK the DSX way"
-      }
-    },
-    {
-      "path": "/framework/skills/js-core",
-      "component": "docs.PageFramework_Skills_JsCore",
-      "meta": {
-        "title": "The JS core globals in JSE: app logic, 1:1, no browser"
-      }
-    },
-    {
-      "path": "/framework/skills/lifecycle",
-      "component": "docs.PageFramework_Skills_Lifecycle",
-      "meta": {
-        "title": "Lifecycle guarantees: every resource × every transition"
-      }
-    },
-    {
-      "path": "/framework/skills/live-activities-and-widgets",
-      "component": "docs.PageFramework_Skills_LiveActivitiesAndWidgets",
-      "meta": {
-        "title": "Live Activities & widgets: authoring the OS surfaces"
-      }
-    },
-    {
-      "path": "/framework/skills/localization",
-      "component": "docs.PageFramework_Skills_Localization",
-      "meta": {
-        "title": "Localization"
-      }
-    },
-    {
-      "path": "/framework/skills/manifest-dsl",
-      "component": "docs.PageFramework_Skills_ManifestDsl",
-      "meta": {
-        "title": "dsx.json - the property DSL"
-      }
-    },
-    {
-      "path": "/framework/skills/mcp-agent-transport",
-      "component": "docs.PageFramework_Skills_McpAgentTransport",
-      "meta": {
-        "title": "The agent transport: reaching this toolchain over MCP"
-      }
-    },
-    {
-      "path": "/framework/skills/module-content",
-      "component": "docs.PageFramework_Skills_ModuleContent",
-      "meta": {
-        "title": "`content`: bundled content folders (dsx.json) and the `dsx.content` primitive"
-      }
-    },
-    {
-      "path": "/framework/skills/module-frameworks",
-      "component": "docs.PageFramework_Skills_ModuleFrameworks",
-      "meta": {
-        "title": "Module build artifacts: binary dependencies without committing binaries"
-      }
-    },
-    {
-      "path": "/framework/skills/module-permissions",
-      "component": "docs.PageFramework_Skills_ModulePermissions",
-      "meta": {
-        "title": "Permissions: `Config/permissions.json`"
-      }
-    },
-    {
-      "path": "/framework/skills/module-secrets",
-      "component": "docs.PageFramework_Skills_ModuleSecrets",
-      "meta": {
-        "title": "Module secrets: build-time SDK credentials, dynamic across every app"
-      }
-    },
-    {
-      "path": "/framework/skills/module-state",
-      "component": "docs.PageFramework_Skills_ModuleState",
-      "meta": {
-        "title": "Module context: `dsx.module.<scheme>.context.*`"
-      }
-    },
-    {
-      "path": "/framework/skills/module-system",
-      "component": "docs.PageFramework_Skills_ModuleSystem",
-      "meta": {
-        "title": "Module system architecture"
-      }
-    },
-    {
-      "path": "/framework/skills/module-weights",
-      "component": "docs.PageFramework_Skills_ModuleWeights",
-      "meta": {
-        "title": "Module weights: bundling large ML blobs without committing them"
-      }
-    },
-    {
-      "path": "/framework/skills/mounting-components",
-      "component": "docs.PageFramework_Skills_MountingComponents",
-      "meta": {
-        "title": "Mounting components: `dsx.component.mount`"
-      }
-    },
-    {
-      "path": "/framework/skills/native-components",
-      "component": "docs.PageFramework_Skills_NativeComponents",
-      "meta": {
-        "title": "Native components: the custom-coded component primitive"
-      }
-    },
-    {
-      "path": "/framework/skills/native-languages",
-      "component": "docs.PageFramework_Skills_NativeLanguages",
-      "meta": {
-        "title": "Native languages: the polyglot-module primitive (`languages`)"
-      }
-    },
-    {
-      "path": "/framework/skills/offline-best-practices",
-      "component": "docs.PageFramework_Skills_OfflineBestPractices",
-      "meta": {
-        "title": "Offline, caching & UI state: best practices per surface"
-      }
-    },
-    {
-      "path": "/framework/skills/package-as-sdk",
-      "component": "docs.PageFramework_Skills_PackageAsSdk",
-      "meta": {
-        "title": "Authoring a package as an SDK: DSX best practices"
-      }
-    },
-    {
-      "path": "/framework/skills/package-check-coaching",
-      "component": "docs.PageFramework_Skills_PackageCheckCoaching",
-      "meta": {
-        "title": "What `despia package check` refuses, and the conforming shape"
-      }
-    },
-    {
-      "path": "/framework/skills/porting-a-react-native-library",
-      "component": "docs.PageFramework_Skills_PortingAReactNativeLibrary",
-      "meta": {
-        "title": "Porting a React Native library into DSX"
-      }
-    },
-    {
-      "path": "/framework/skills/realtime-and-static-data",
-      "component": "docs.PageFramework_Skills_RealtimeAndStaticData",
-      "meta": {
-        "title": "Realtime and static data: live streams, sockets, and data baked at build"
-      }
-    },
-    {
-      "path": "/framework/skills/review-your-app",
-      "component": "docs.PageFramework_Skills_ReviewYourApp",
-      "meta": {
-        "title": "Review your app: the loop before and after every change"
-      }
-    },
-    {
-      "path": "/framework/skills/runtime-api",
-      "component": "docs.PageFramework_Skills_RuntimeApi",
-      "meta": {
-        "title": "Runtime API (native) & web contract"
-      }
-    },
-    {
-      "path": "/framework/skills/sample-values",
-      "component": "docs.PageFramework_Skills_SampleValues",
-      "meta": {
-        "title": "Sample values - unit tests as editor fuel"
-      }
-    },
-    {
-      "path": "/framework/skills/security",
-      "component": "docs.PageFramework_Skills_Security",
-      "meta": {
-        "title": "Security model: what JSE/DSX can do, and what holds it"
-      }
-    },
-    {
-      "path": "/framework/skills/storage",
-      "component": "docs.PageFramework_Skills_Storage",
-      "meta": {
-        "title": "Storage (Core/Files)"
-      }
-    },
-    {
-      "path": "/framework/skills/structuring-an-app",
-      "component": "docs.PageFramework_Skills_StructuringAnApp",
-      "meta": {
-        "title": "Structuring an app: three layers, and when to split a document"
-      }
-    },
-    {
-      "path": "/framework/skills/style-catalog",
-      "component": "docs.PageFramework_Skills_StyleCatalog",
-      "meta": {
-        "title": "Style catalog: the style panel's schema, generated from the CSS vocabulary"
-      }
-    },
-    {
-      "path": "/framework/skills/surface-bridges",
-      "component": "docs.PageFramework_Skills_SurfaceBridges",
-      "meta": {
-        "title": "Surface bridges: mounting a RENDER SURFACE on the bus (`dsx.messenger`)"
-      }
-    },
-    {
-      "path": "/framework/skills/thinking-in-dsx",
-      "component": "docs.PageFramework_Skills_ThinkingInDsx",
-      "meta": {
-        "title": "Thinking in DSX when you were trained on React"
-      }
-    },
-    {
-      "path": "/framework/skills/typing-declarations",
-      "component": "docs.PageFramework_Skills_TypingDeclarations",
-      "meta": {
-        "title": "Typing declarations: say what shape a name holds, and turn a set of flags into one mode"
-      }
-    },
-    {
-      "path": "/framework/skills/using-the-cli",
-      "component": "docs.PageFramework_Skills_UsingTheCli",
-      "meta": {
-        "title": "Using the despia CLI"
-      }
-    },
-    {
-      "path": "/framework/skills/web-crypto",
-      "component": "docs.PageFramework_Skills_WebCrypto",
-      "meta": {
-        "title": "Web Crypto in JSE: the standard API, 1:1, no JS engine"
-      }
-    },
-    {
-      "path": "/framework/skills/white-label",
-      "component": "docs.PageFramework_Skills_WhiteLabel",
-      "meta": {
-        "title": "White-labeling: `dsx.global.strings` + `dsx.global.theme` (the platform convention)"
-      }
-    },
-    {
-      "path": "/framework/skills/writing-a-backend",
-      "component": "docs.PageFramework_Skills_WritingABackend",
-      "meta": {
-        "title": "Writing a backend in DSX"
-      }
-    },
-    {
-      "path": "/framework/skills/writing-a-film",
-      "component": "docs.PageFramework_Skills_WritingAFilm",
-      "meta": {
-        "title": "Writing a film in DSX"
-      }
-    },
-    {
-      "path": "/framework/skills/writing-a-module",
-      "component": "docs.PageFramework_Skills_WritingAModule",
-      "meta": {
-        "title": "Writing a module - DespiaScript"
-      }
-    },
-    {
-      "path": "/framework/skills/writing-a-module-internal",
-      "component": "docs.PageFramework_Skills_WritingAModuleInternal",
-      "meta": {
-        "title": "Writing a module"
-      }
-    },
-    {
-      "path": "/framework/skills/writing-a-studio-app",
-      "component": "docs.PageFramework_Skills_WritingAStudioApp",
-      "meta": {
-        "title": "Writing a Despia app: a package that contributes tools"
-      }
-    },
-    {
-      "path": "/framework/skills/writing-an-app",
-      "component": "docs.PageFramework_Skills_WritingAnApp",
-      "meta": {
-        "title": "Writing an app in DSX"
-      }
-    },
-    {
-      "path": "/framework/skills/writing-unit-tests",
-      "component": "docs.PageFramework_Skills_WritingUnitTests",
-      "meta": {
-        "title": "Writing unit tests: self-contained actions in `dsx.json`"
-      }
-    },
-    {
       "path": "/legacy/introduction",
       "component": "docs.PageLegacy_Introduction",
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Despia lets your web app call native device features and ship to iOS and Android - no Swift, no Java, no terminal."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/mcp-server",
@@ -3925,7 +1992,8 @@
       "meta": {
         "title": "MCP Server (Despia V3)",
         "description": "Ship true native features for your web-native apps faster and with more precision using the Despia MCP."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/changelog",
@@ -3933,7 +2001,8 @@
       "meta": {
         "title": "Changelog (Despia V3)",
         "description": "New features, improvements, and fixes across the Despia platform."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/deployment/apple-ios/automatic",
@@ -3941,7 +2010,8 @@
       "meta": {
         "title": "Automatic (Despia V3)",
         "description": "Complete guide for building and publishing iOS applications using Despia"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/deployment/apple-ios/manual",
@@ -3949,7 +2019,8 @@
       "meta": {
         "title": "Manual (Despia V3)",
         "description": "Complete guide for exporting and working with your Despia application as native Swift code."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/deployment/google-android/automatic",
@@ -3957,7 +2028,8 @@
       "meta": {
         "title": "Automatic (Despia V3)",
         "description": "Complete guide for building and publishing Android applications using Despia."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/deployment/google-android/manual",
@@ -3965,7 +2037,8 @@
       "meta": {
         "title": "Manual (Despia V3)",
         "description": "Complete guide for exporting and working with your Despia application as native Android code."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/frontend/structure",
@@ -3973,7 +2046,8 @@
       "meta": {
         "title": "Structure (Despia V3)",
         "description": "Essential patterns for building production-ready mobile applications with Despia. Learn how to structure root frames, handle device boundaries, implement scroll containers, and optimize touch interactions for native performance."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/frontend/performance",
@@ -3981,7 +2055,8 @@
       "meta": {
         "title": "Performance (Despia V3)",
         "description": "Build applications optimized for 60fps performance that degrade gracefully under system constraints. This guide covers proven techniques for JavaScript execution, rendering optimization, memory management, and asset delivery."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/frontend/animations",
@@ -3989,7 +2064,8 @@
       "meta": {
         "title": "Animations (Despia V3)",
         "description": "CSS animation first. Scroll-driven CSS for drawers, sheets, parallax, and page transitions. JS fallback only where CSS is not supported."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/backend/user-session",
@@ -3997,7 +2073,8 @@
       "meta": {
         "title": "User Session (Despia V3)",
         "description": "This guide covers the general user identity management pattern for Despia apps. This system is the foundation that all SDK integrations (RevenueCat, OneSignal, Stripe, etc.) build upon."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/backend/revenuecat/user-session",
@@ -4005,7 +2082,8 @@
       "meta": {
         "title": "User Session (Despia V3)",
         "description": "This guide covers user identity management for in-app purchases and subscriptions using RevenueCat in Despia apps."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/backend/revenuecat/webhooks",
@@ -4013,7 +2091,8 @@
       "meta": {
         "title": "Webhooks (Despia V3)",
         "description": "Complete implementation guide for processing RevenueCat webhooks with authorization validation, event type handling, and entitlement management."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/backend/revenuecat/cron-jobs",
@@ -4021,7 +2100,8 @@
       "meta": {
         "title": "Cron Jobs (Despia V3)",
         "description": "Implement a self-healing subscription sync system using scheduled cron jobs as a backup to webhooks. This ensures your database stays synchronized with RevenueCat even when webhooks fail or are delayed."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/backend/one-signal/user-session",
@@ -4029,7 +2109,8 @@
       "meta": {
         "title": "User Session (Despia V3)",
         "description": "This guide covers user identity management for push notifications using OneSignal in Despia apps."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/updates/overview",
@@ -4037,7 +2118,8 @@
       "meta": {
         "title": "Overview (Despia V3)",
         "description": "Getting OTA updates right means your app stays fast, your users stay unblocked, and you never give a reviewer a reason to push back."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/updates/interface",
@@ -4045,7 +2127,8 @@
       "meta": {
         "title": "Interface (Despia V3)",
         "description": "UI changes are the safest and most common use of OTA. They ship instantly, require no binary, and reach every user on the next app open."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/updates/logic",
@@ -4053,7 +2136,8 @@
       "meta": {
         "title": "Logic (Despia V3)",
         "description": "Business rules, data handling, API integrations, state management, routing - all web layer. They ship via OTA, silently, with no review and no rebuild."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/best-practices/updates/editor",
@@ -4061,7 +2145,8 @@
       "meta": {
         "title": "Editor (Despia V3)",
         "description": "Changes made in the Despia editor affect the native binary. They require a rebuild and a new submission to the App Store and Google Play."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/local-server/introduction",
@@ -4069,7 +2154,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Ship native iOS and Android apps that boot instantly and work completely offline by serving your web build from an on-device HTTP server."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/local-server/reference",
@@ -4077,7 +2163,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Plugin installation, framework configuration, manifest schema, and troubleshooting for the Despia local server."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/local-intelligence/Introduction",
@@ -4085,7 +2172,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Run language models on-device in hybrid apps with one function call. Private by default, offline after first download, zero per-token cost."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/local-intelligence/reference",
@@ -4093,7 +2181,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Complete API reference for despia-intelligence: run, models, runtime, events, and error codes."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/local-database/introduction",
@@ -4101,7 +2190,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Native local SQLite database with optional real-time backend sync for Despia apps."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/local-database/reference",
@@ -4109,7 +2199,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Complete reference for @despia/powersync, init, query, write, watch, migrate, search, and sync."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/local-cdn/introduction",
@@ -4117,7 +2208,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Cache gigabytes of media on-device with O(1) memory usage and background downloads that continue after the app is closed."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/local-cdn/reference",
@@ -4125,7 +2217,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Complete API reference for localcdn:// commands, the contentServerChange callback, and the HTTP upload API."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/authentication/clerk/introduction",
@@ -4133,7 +2226,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Drop-in authentication for your Despia app with email, OAuth, passkeys, and MFA handled by Clerk's native iOS SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/authentication/clerk/reference",
@@ -4141,7 +2235,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Payload envelope, event names, status values, error codes, quirks, and platform support."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/authentication/clerk/auth-methods",
@@ -4149,7 +2244,8 @@
       "meta": {
         "title": "Auth Methods (Despia V3)",
         "description": "Auth Sheet, email/username/phone password, OAuth, Apple, email and phone OTP, passkeys, MFA, Enterprise SSO, password reset, and magic-link tickets."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/authentication/clerk/sessions",
@@ -4157,7 +2253,8 @@
       "meta": {
         "title": "Session (Despia V3)",
         "description": "Check who's signed in, read the auto-refreshed JWT, and authenticate API calls."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/authentication/clerk/backend",
@@ -4165,7 +2262,8 @@
       "meta": {
         "title": "Backend (Despia V3)",
         "description": "Zero-config server-side authentication for Next.js, TanStack, and any framework via cookies and an optional header."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/authentication/clerk/account",
@@ -4173,7 +2271,8 @@
       "meta": {
         "title": "Account (Despia V3)",
         "description": "User Profile sheet, sign-out, attribution sync, and multi-tenant switching."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/payments/introduction",
@@ -4181,7 +2280,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "App Store and Google Play billing via RevenueCat, plus Stripe for physical goods and real-world services."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/payments/revenuecat/introduction",
@@ -4189,7 +2289,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Native App Store and Google Play billing in your web app via the Despia SDK and RevenueCat."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/payments/revenuecat/reference",
@@ -4197,7 +2298,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Complete reference for all Despia in-app purchase schemes, parameters, callbacks, entitlement checks, and webhook handling."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/payments/stripe/introduction",
@@ -4205,7 +2307,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Native Stripe PaymentSheet and CustomerSheet in your web app via the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/payments/stripe/payment",
@@ -4213,7 +2316,8 @@
       "meta": {
         "title": "Payment (Despia V3)",
         "description": "Show the native Stripe Payment Sheet from your web app and receive the result through a single global callback."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/custom-code/extensions",
@@ -4221,7 +2325,8 @@
       "meta": {
         "title": "Extensions (Despia V3)",
         "description": "Reference for building native iOS and Android plugins for Despia."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/introduction",
@@ -4229,7 +2334,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Native AppsFlyer attribution, deep linking, events, identity, consent, and ad revenue, fully managed by Despia and controlled from your web layer."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/testing",
@@ -4237,7 +2343,8 @@
       "meta": {
         "title": "Testing (Despia V3)",
         "description": "Confirm your AppsFlyer setup is working before you launch. No coding tools required."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/identity",
@@ -4245,7 +2352,8 @@
       "meta": {
         "title": "Identity (Despia V3)",
         "description": "Tie attribution and events to your own user IDs, pass hashed email and phone for audience matching, and read the AppsFlyer device ID."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/attribution",
@@ -4253,7 +2361,8 @@
       "meta": {
         "title": "Attribution (Despia V3)",
         "description": "Read where every user came from across TikTok, Meta, Google, affiliate, or organic using data injected by Despia on every page load."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/deeplinking",
@@ -4261,7 +2370,8 @@
       "meta": {
         "title": "Deep Linking (Despia V3)",
         "description": "Carry campaign, affiliate, invite, and content metadata from a link into the app on first launch, even when the user installs from the store first."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/campaigns",
@@ -4269,7 +2379,8 @@
       "meta": {
         "title": "Campaigns (Despia V3)",
         "description": "Connect TikTok and Meta as integrated partners, create custom attribution links, and measure which campaigns drive the most valuable users."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/events",
@@ -4277,7 +2388,8 @@
       "meta": {
         "title": "Events (Despia V3)",
         "description": "Log standard and custom in-app events from your web layer. Standard af_ events map automatically to Meta and TikTok conversion events."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/ad-revenue",
@@ -4285,7 +2397,8 @@
       "meta": {
         "title": "Ad Revenue (Despia V3)",
         "description": "Report impression-level ad revenue per network to AppsFlyer for LTV and ROAS reporting per acquisition channel."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/appsflyer/consent",
@@ -4293,7 +2406,8 @@
       "meta": {
         "title": "Consent (Despia V3)",
         "description": "Forward GDPR and DMA consent choices from your cookie banner to the native AppsFlyer SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/posthog/introduction",
@@ -4301,7 +2415,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "GDPR-compliant product analytics, feature flags, and user identification bridged to your web layer via the Despia PostHog integration."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/analytics/posthog/reference",
@@ -4309,7 +2424,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Complete reference for Despia PostHog analytics, schemes, parameters, injected globals, and feature flags."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/connectivity/websockets",
@@ -4317,7 +2433,8 @@
       "meta": {
         "title": "WebSockets (Despia V3)",
         "description": "WebSocket connection owned by the native runtime, with durable message delivery across WebView reloads, suspension, and relaunch."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/connectivity/nfc",
@@ -4325,7 +2442,8 @@
       "meta": {
         "title": "NFC (Despia V3)",
         "description": "Read from and write to NFC tags directly from your web app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/introduction-1",
@@ -4333,7 +2451,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Read Apple Health and OAuth wearable data natively and deliver it to your backend or your web app on demand, using the native Terra SDK bundled at runtime."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/reference",
@@ -4341,7 +2460,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Full API reference for Terra health data in Despia: client-side schemes, injected globals, event payloads, and backend responsibilities."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/machine-learning/vision/ocr",
@@ -4349,7 +2469,8 @@
       "meta": {
         "title": "OCR (Despia V3)",
         "description": "Run native optical character recognition on any image on iOS and Android, with no server round-trips and no third-party API keys."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/machine-learning/voice/speech-recognition",
@@ -4357,7 +2478,8 @@
       "meta": {
         "title": "Speech Recognition (Despia V3)",
         "description": "Convert spoken audio into text on-device using the native iOS speech recognition engine."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/wallet/pkpass",
@@ -4365,7 +2487,8 @@
       "meta": {
         "title": "PK Pass (Despia V3)",
         "description": "Add passes to a user's device wallet directly from your web app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/user-agent",
@@ -4373,7 +2496,8 @@
       "meta": {
         "title": "User Agent (Despia V3)",
         "description": "Detect whether your app is running in the Despia native runtime and identify the platform to conditionally render features like in-app purchases or native modules."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/onesignal/introduction",
@@ -4381,7 +2505,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Send targeted push notifications to specific users even when your app is closed, using the native OneSignal SDK bundled at runtime."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/onesignal/reference",
@@ -4389,7 +2514,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Full API reference for OneSignal push notifications in Despia: client-side schemes, backend payload options, deep linking fields, segmentation, and critical alerts."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/deeplinking",
@@ -4397,7 +2523,8 @@
       "meta": {
         "title": "Deeplinking (Despia V3)",
         "description": "Configure universal links on iOS and app links on Android so URLs from your domain open directly inside your Despia app instead of the mobile browser."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/revenuecat/introduction",
@@ -4405,7 +2532,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Native App Store and Google Play billing in your web app via the Despia SDK and RevenueCat."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/revenuecat/reference",
@@ -4413,7 +2541,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Complete reference for all Despia in-app purchase schemes, parameters, callbacks, entitlement checks, and webhook handling."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/oauth/easy-login-flow",
@@ -4421,7 +2550,8 @@
       "meta": {
         "title": "Easy OAuth (Despia V3)",
         "description": "Finish social sign-in on your own domain, with the provider's redirect landing directly in your app and no callback page to build."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/oauth/introduction",
@@ -4429,7 +2559,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "How OAuth authentication works in Despia apps. Provider-agnostic, the same flow works for Google, Apple, TikTok, GitHub, or any OAuth 2.0 provider."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/oauth/apple",
@@ -4437,7 +2568,8 @@
       "meta": {
         "title": "Apple Auth (Despia V3)",
         "description": "Sign In with Apple, platform-aware. Native Face ID on iOS, Chrome Custom Tabs on Android, popup on web."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/oauth/google",
@@ -4445,7 +2577,8 @@
       "meta": {
         "title": "Google Auth (Despia V3)",
         "description": "Sign In with Google using the Despia OAuth bridge. Opens ASWebAuthenticationSession on iOS and Chrome Custom Tabs on Android, with a standard popup on web."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/oauth/tiktok",
@@ -4453,7 +2586,8 @@
       "meta": {
         "title": "TikTok Auth (Despia V3)",
         "description": "Sign In with TikTok using the Despia OAuth bridge. Opens ASWebAuthenticationSession on iOS and Chrome Custom Tabs on Android, with a standard redirect on web."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/purchases",
@@ -4461,7 +2595,8 @@
       "meta": {
         "title": "Purchases (Despia V3)",
         "description": "Purchase a specific product directly using RevenueCat through Apple App Store and Google Play billing."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/paywalls",
@@ -4469,7 +2604,8 @@
       "meta": {
         "title": "Paywalls (Despia V3)",
         "description": "Monetize your app with seamless payment processing through Apple and Google's native billing systems using RevenueCat Paywalls."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/restore-purchase",
@@ -4477,7 +2613,8 @@
       "meta": {
         "title": "Restore Purchase (Despia V3)",
         "description": "Restore and retrieve a user's complete purchase history from Apple App Store and Google Play Store using the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/storage-vault",
@@ -4485,7 +2622,8 @@
       "meta": {
         "title": "Storage Vault (Despia V3)",
         "description": "Encrypted persistent storage backed by iCloud Key Value Store on iOS and Android Key/Value Backup on Android. Survives uninstall and reinstall."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/service-workers",
@@ -4493,7 +2631,8 @@
       "meta": {
         "title": "Service Workers (Despia V3)",
         "description": "Run your web app's service worker inside the native app so cached pages and assets keep serving when the device has no connection."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/url-scheme",
@@ -4501,7 +2640,8 @@
       "meta": {
         "title": "URL Scheme (Despia V3)",
         "description": "Set the custom protocol your app registers with iOS and Android so native authentication sessions can hand tokens back to your app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/file-picker",
@@ -4509,7 +2649,8 @@
       "meta": {
         "title": "File Picker (Despia V3)",
         "description": "Route every file upload to the correct native picker based on the file types your input accepts."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/gps-location",
@@ -4517,7 +2658,8 @@
       "meta": {
         "title": "GPS Location (Despia V3)",
         "description": "Track a user's real-time location with configurable time intervals, distance thresholds, live frontend callbacks, single reads, optional server delivery, and a long-range mode that keeps recording after the app is force-killed."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/gyroscope",
@@ -4525,7 +2667,8 @@
       "meta": {
         "title": "Gyroscope (Despia V3)",
         "description": "Read live angular velocity from the device's gyroscope plus magnetic heading from the compass on a single channel, with a magnitude threshold for filtering low-motion noise."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/light-and-dark-mode",
@@ -4533,7 +2676,8 @@
       "meta": {
         "title": "Light & Dark Mode (Despia V3)",
         "description": "Implement automatic light and dark mode using CSS prefers-color-scheme and Despia's injected safe area variables, with no JavaScript or SDK calls required."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/admob/Iinterstitial",
@@ -4541,7 +2685,8 @@
       "meta": {
         "title": "Interstitial Ads (Despia V3)",
         "description": "Display a full-screen native AdMob interstitial ad at a natural transition point using a single fire-and-forget SDK call."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/admob/inline-ads",
@@ -4549,7 +2694,8 @@
       "meta": {
         "title": "Inline Ads (Despia V3)",
         "description": "Render AdMob ads as real DOM elements inside your web UI by bridging the Google Mobile Ads SDK to the Despia WebView. No native overlays, no z-index fights, just AdSense, GPT, or IMA tags loading in place."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/admob/rewarded-ads",
@@ -4557,7 +2703,8 @@
       "meta": {
         "title": "Rewarded Ads (Despia V3)",
         "description": "Display a native AdMob rewarded video ad through Despia and grant in-app rewards only when the user completes the view."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/external-links",
@@ -4565,7 +2712,8 @@
       "meta": {
         "title": "External Links (Despia V3)",
         "description": "Control how your app routes external URLs, opening payment and OAuth flows in Safari for store compliance and everything else inside the in-app browser."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/device-indexing",
@@ -4573,7 +2721,8 @@
       "meta": {
         "title": "Device Indexing (Despia V3)",
         "description": "Read the device's unique identifier through despia.uuid to track installs, link sessions, and prevent account sharing across your mobile app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/haptic-feedback",
@@ -4581,7 +2730,8 @@
       "meta": {
         "title": "Haptic Feedback (Despia V3)",
         "description": "Trigger native tactile feedback through Despia using five preset haptic patterns mapped to standard interaction types."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/prevent-autoscroll",
@@ -4589,7 +2739,8 @@
       "meta": {
         "title": "Prevent Autoscroll (Despia V3)",
         "description": "Stop the native WebView from repositioning when the keyboard appears so your JavaScript keyboard handling stays in full control."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/contact-access",
@@ -4597,7 +2748,8 @@
       "meta": {
         "title": "Contact Access (Despia V3)",
         "description": "Read the user's device contacts through Despia after requesting native permission, returned as a JSON object keyed by contact name."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/healthkit",
@@ -4605,7 +2757,8 @@
       "meta": {
         "title": "HealthKit (Legacy) (Despia V3)",
         "description": "Read and write Apple HealthKit data including steps, heart rate, sleep, workouts, and more within your Despia app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/health-data/apple-health",
@@ -4613,7 +2766,8 @@
       "meta": {
         "title": "Apple Health (Despia V3)",
         "description": "Read and write Apple HealthKit data including steps, heart rate, sleep, workouts, and more within your Despia app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/health-data/google-health",
@@ -4621,7 +2775,8 @@
       "meta": {
         "title": "Google Health (Despia V3)",
         "description": "Google Health Connect integration for Android is coming soon to Despia."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/siri-shortcuts",
@@ -4629,7 +2784,8 @@
       "meta": {
         "title": "Siri Shortcuts (Despia V3)",
         "description": "Register a natural language phrase as a Siri shortcut that calls a globally-defined JavaScript function in your app when spoken."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/biometrics",
@@ -4637,7 +2793,8 @@
       "meta": {
         "title": "Biometrics (Despia V3)",
         "description": "Trigger Face ID, Touch ID, or device passcode authentication through Despia and respond via three global callback functions."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/speech-recognition",
@@ -4645,7 +2802,8 @@
       "meta": {
         "title": "Speech Recognition (Despia V3)",
         "description": "Convert spoken audio into text on-device using the native iOS speech recognition engine."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/app-privacy",
@@ -4653,7 +2811,8 @@
       "meta": {
         "title": "App Privacy (Despia V3)",
         "description": "Read the user's tracking consent status synchronously through despia.trackingDisabled to gate analytics and ad-tracking behavior."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/safe-areas",
@@ -4661,7 +2820,8 @@
       "meta": {
         "title": "Safe Areas (Despia V3)",
         "description": "Handle notches, status bars, home indicators, and gesture bars using CSS variables injected by the Despia runtime, paired with a defensive env() fallback."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/screen-radius",
@@ -4669,7 +2829,8 @@
       "meta": {
         "title": "Screen Radius (Despia V3)",
         "description": "Read the device's physical screen corner radius and use it to build inner UI elements with perfectly concentric rounded corners."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/in-app-rating",
@@ -4677,7 +2838,8 @@
       "meta": {
         "title": "In-App Rating (Despia V3)",
         "description": "Show the operating system's native star rating prompt inside your app, or send users straight to the store review composer."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/action-sheet",
@@ -4685,7 +2847,8 @@
       "meta": {
         "title": "Action Sheet (Despia V3)",
         "description": "Trigger a native iOS or Android action sheet from your web app and react to the user's selection."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/camera-roll",
@@ -4693,7 +2856,8 @@
       "meta": {
         "title": "Camera Roll (Despia V3)",
         "description": "Save remote-hosted images to the device photo gallery through Despia using a single fire-and-forget SDK call with a CDN-hosted URL."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/offline-push",
@@ -4701,7 +2865,8 @@
       "meta": {
         "title": "Offline Push (Despia V3)",
         "description": "Schedule a local notification on the device with a title, body, deep link, and delay in seconds, fully offline and triggered without a server round-trip."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/app-settings",
@@ -4709,7 +2874,8 @@
       "meta": {
         "title": "App Settings (Despia V3)",
         "description": "Open your app's native settings page directly so users can re-grant push notification, location, or camera permissions they previously denied."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/file-viewer",
@@ -4717,7 +2883,8 @@
       "meta": {
         "title": "File Viewer (Despia V3)",
         "description": "Open a remote file in a native previewer with consistent render fidelity across iOS and Android."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/home-widgets",
@@ -4725,7 +2892,8 @@
       "meta": {
         "title": "Home Widgets (Despia V3)",
         "description": "Render dynamic SVG content from your backend into iOS home screen widgets, refreshed in the background at the interval you specify."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/file-sharing",
@@ -4733,7 +2901,8 @@
       "meta": {
         "title": "File Sharing (Despia V3)",
         "description": "Open the device's native share sheet with a file from a CDN URL, letting users send it to any installed app, contact, or cloud service."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/focus-events",
@@ -4741,7 +2910,8 @@
       "meta": {
         "title": "Focus Events (Despia V3)",
         "description": "Detect when your app enters the foreground or background using global window callbacks."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/screen-brightness",
@@ -4749,7 +2919,8 @@
       "meta": {
         "title": "Screen Brightness (Despia V3)",
         "description": "Set screen brightness behavior for scanning workflows, with three modes for automatic, always-bright, and standard rendering."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/share-dialog",
@@ -4757,7 +2928,8 @@
       "meta": {
         "title": "Share Dialog (Despia V3)",
         "description": "Open the native share sheet pre-populated with a text message and URL, letting users send the combination to any app, contact, or service installed on their device."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/clipboard",
@@ -4765,7 +2937,8 @@
       "meta": {
         "title": "Clipboard (Despia V3)",
         "description": "Read the device clipboard contents through Despia and use them inside your app, useful for paste-style flows like coupon codes, share links, and attribution tokens."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/store-location",
@@ -4773,7 +2946,8 @@
       "meta": {
         "title": "Store Location (Despia V3)",
         "description": "Read the user's App Store or Play Store country code through despia.storeLocation to gate regional features and route payments correctly."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/share-extension",
@@ -4781,7 +2955,8 @@
       "meta": {
         "title": "Share Extension (Despia V3)",
         "description": "Receive content shared into your app from other apps via the system share sheet, delivered through a single global callback that fires when your app launches with a shared payload."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/quick-actions",
@@ -4789,7 +2964,8 @@
       "meta": {
         "title": "Quick Actions (Despia V3)",
         "description": "Add native long-press shortcuts to your app icon that invoke a global JavaScript function when tapped, letting users jump straight into a specific workflow."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/simple-storage",
@@ -4797,7 +2973,8 @@
       "meta": {
         "title": "Simple Storage (Despia V3)",
         "description": "Single-slot key-value storage on the device through the Despia SDK. Legacy feature, kept for apps already shipping with it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/print-documents",
@@ -4805,7 +2982,8 @@
       "meta": {
         "title": "Print Documents (Despia V3)",
         "description": "Open the native print dialog with a PDF or image from a CDN URL, letting users send the document to any connected printer through the system print interface."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/screenshot",
@@ -4813,14 +2991,16 @@
       "meta": {
         "title": "Screenshot (Despia V3)",
         "description": "Capture the visible page and save it directly to the device photo gallery through a single fire-and-forget Despia SDK call."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/notification-sounds",
       "component": "docs.PageLegacy_NativeFeatures_NotificationSounds",
       "meta": {
         "title": "Notification Sounds (Despia V3)"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/audio-player",
@@ -4828,14 +3008,16 @@
       "meta": {
         "title": "Audio (Despia V3)",
         "description": "Stream audio with a real native player, lock-screen controls, and live config updates."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/bluetooth",
       "component": "docs.PageLegacy_NativeFeatures_Bluetooth",
       "meta": {
         "title": "Bluetooth (Despia V3)"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/age-assurance",
@@ -4843,7 +3025,8 @@
       "meta": {
         "title": "Age Assurance (Despia V3)",
         "description": "Read the age range the operating system already holds for your user, with a three-state age gate that works the same on iOS and Android."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/native-features/sandbox",
@@ -4851,7 +3034,8 @@
       "meta": {
         "title": "Sandbox (Despia V3)",
         "description": "Repoint a compiled app at a test environment at runtime without rebuilding, then restore production when testing is done."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/editor/versioning",
@@ -4859,7 +3043,8 @@
       "meta": {
         "title": "Versioning (Despia V3)",
         "description": "Set your app's public version number and raise it in fixed increments before every store submission."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/editor/publishing-an-update",
@@ -4867,7 +3052,8 @@
       "meta": {
         "title": "Publishing an Update (Despia V3)",
         "description": "Ship a new binary after your first submission, and know which changes need one at all."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/deployment/apple-ios/health-kit",
@@ -4875,7 +3061,8 @@
       "meta": {
         "title": "HealthKit (Despia V3)",
         "description": "Your build failed after enabling HealthKit in the Despia editor. Here's why and how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/deployment/apple-ios/att-and-tracking",
@@ -4883,14 +3070,16 @@
       "meta": {
         "title": "ATT & Tracking (Despia V3)",
         "description": "Your Despia build is blocked at submission over NSUserTrackingUsageDescription. Here is what the key means and how to clear it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/deployment/update-bundle-id",
       "component": "docs.PageLegacy_Roadblocks_Deployment_UpdateBundleId",
       "meta": {
         "title": "Update Bundle IDs (Despia V3)"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/revenue-cat/missing-item",
@@ -4898,7 +3087,8 @@
       "meta": {
         "title": "Missing Item (Despia V3)",
         "description": "Your paywall is empty or checkout isn't working. Products aren't loading. Here's how to debug it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/runtime/no-ota-updates",
@@ -4906,7 +3096,8 @@
       "meta": {
         "title": "No OTA Updates (Despia V3)",
         "description": "Your users aren't receiving OTA updates. Changes deployed to production don't appear in the app. Here's how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/runtime/lost-auth-tokens",
@@ -4914,7 +3105,8 @@
       "meta": {
         "title": "Lost Auth Tokens (Despia V3)",
         "description": "Your users close the app and when they reopen it, they're logged out. Here's how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/runtime/o-auth-failures",
@@ -4922,7 +3114,8 @@
       "meta": {
         "title": "OAuth Failures (Despia V3)",
         "description": "OAuth not working in your Despia native app? This guide focuses on the key difference between web OAuth and Despia native OAuth."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/runtime/slow-apps",
@@ -4930,7 +3123,8 @@
       "meta": {
         "title": "Slow Apps (Despia V3)",
         "description": "Your Despia app feels sluggish. Here's how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/runtime/empty-pages",
@@ -4938,7 +3132,8 @@
       "meta": {
         "title": "Empty Pages (Despia V3)",
         "description": "Your app loads but shows a blank white screen. Here's how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/runtime/wrong-framework",
@@ -4946,7 +3141,8 @@
       "meta": {
         "title": "Wrong Framework (Despia V3)",
         "description": "Why Despia is its own native runtime, and how to configure AI tools to work with it correctly."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/runtime/watermark-bug",
@@ -4954,7 +3150,8 @@
       "meta": {
         "title": "Watermark Bug (Despia V3)",
         "description": "You upgraded to a commercial license but the Despia watermark is still visible in your app. Here is why and how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/roadblocks/runtime/legacy-setups",
@@ -4962,7 +3159,8 @@
       "meta": {
         "title": "Legacy Setups (Despia V3)",
         "description": "AI coding tools often generate outdated Despia setups. This guide covers the two most common mistakes: legacy environment detection and targeting the internal window.despia object."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/introduction",
@@ -4970,7 +3168,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "Your app got rejected. Take a breath. This is normal, fixable, and part of shipping apps."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/minimum-functionality",
@@ -4978,7 +3177,8 @@
       "meta": {
         "title": "Minimum Functionality (Despia V3)",
         "description": "Your app was rejected for not meeting minimum functionality requirements. Here's what that means and how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/non-mobile-design",
@@ -4986,7 +3186,8 @@
       "meta": {
         "title": "Non-Mobile Design (Despia V3)",
         "description": "Your app was rejected because it looks like a website instead of a native mobile app. Here's how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/in-app-purchases",
@@ -4994,7 +3195,8 @@
       "meta": {
         "title": "In-App Purchases (Despia V3)",
         "description": "Your app was rejected for issues with in-app purchases. Here's what went wrong and how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/deceptive-paywalls",
@@ -5002,7 +3204,8 @@
       "meta": {
         "title": "Deceptive Paywalls (Despia V3)",
         "description": "Your app was rejected because the paywall is misleading or uses dark patterns. Here's what reviewers flagged and how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/privacy-policy",
@@ -5010,7 +3213,8 @@
       "meta": {
         "title": "Privacy Policy (Despia V3)",
         "description": "Your app was rejected because of a missing or inadequate privacy policy. Here's what's required and how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/tracking-transparency",
@@ -5018,7 +3222,8 @@
       "meta": {
         "title": "Tracking Transparency (Despia V3)",
         "description": "Your app was rejected for issues with Apple's App Tracking Transparency (ATT). Here's what went wrong and how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/ai-processing",
@@ -5026,7 +3231,8 @@
       "meta": {
         "title": "AI Processing (Despia V3)",
         "description": "Your app was rejected because it processes user data with AI without proper consent. Here's how to implement Apple's required AI consent flow."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/spam-and-copies",
@@ -5034,7 +3240,8 @@
       "meta": {
         "title": "Spam and Copies (Despia V3)",
         "description": "Your app was rejected because it's too similar to existing apps. Here's how to differentiate and get approved."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/social-login-options",
@@ -5042,7 +3249,8 @@
       "meta": {
         "title": "Social Login Options (Despia V3)",
         "description": "Your app was rejected because it offers social login without including the platform's native option. Here's how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/user-specific-data",
@@ -5050,7 +3258,8 @@
       "meta": {
         "title": "User-Specific Data (Despia V3)",
         "description": "Your app was rejected because it collects personal data that isn't necessary for its functionality. Here's how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/store-rejections/common-rejection/blank-screen-redirects",
@@ -5058,7 +3267,8 @@
       "meta": {
         "title": "Blank Screen Redirects (Despia V3)",
         "description": "Your app was rejected because it shows a blank or white screen during authentication. Here's how to fix it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/platform-support/lovable",
@@ -5066,7 +3276,8 @@
       "meta": {
         "title": "Despia for Lovable (Despia V3)",
         "description": "Ship your Lovable app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/platform-support/base44",
@@ -5074,7 +3285,8 @@
       "meta": {
         "title": "Despia for Base44 (Despia V3)",
         "description": "Ship your Base44 app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/platform-support/replit",
@@ -5082,7 +3294,8 @@
       "meta": {
         "title": "Despia for Replit (Despia V3)",
         "description": "Ship your Replit web app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/platform-support/claude-code",
@@ -5090,7 +3303,8 @@
       "meta": {
         "title": "Despia for Claude Code (Despia V3)",
         "description": "Ship your Claude Code web app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/platform-support/cursor",
@@ -5098,7 +3312,8 @@
       "meta": {
         "title": "Despia for Cursor (Despia V3)",
         "description": "Ship your Cursor-built web app to the App Store and Google Play with native billing, push notifications, attribution, and offline support built in."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/how-it-works",
@@ -5106,7 +3321,8 @@
       "meta": {
         "title": "How it Works (Despia V3)",
         "description": "Add real native device features to your Lovable-generated app and deploy to App Stores - no native code required."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/user-agent",
@@ -5114,7 +3330,8 @@
       "meta": {
         "title": "User Agent (Despia V3)",
         "description": "Detect whether your app is running in the Despia native runtime and identify the platform (iOS or Android) by checking the user agent string."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/onesignal",
@@ -5122,7 +3339,8 @@
       "meta": {
         "title": "OneSignal (Despia V3)",
         "description": "Send targeted remote push notifications via OneSignal to users even when your app is closed."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/deeplinking",
@@ -5130,14 +3348,16 @@
       "meta": {
         "title": "Deeplinking (Despia V3)",
         "description": "Configure universal links (iOS) and app links (Android) to enable direct app opening from web URLs in your Lovable mobile app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/o-auth-2-0/apple-auth",
       "component": "docs.PageLegacy_Lovable_NativeFeatures_OAuth20_AppleAuth",
       "meta": {
         "title": "Apple Auth (Despia V3)"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/oauth/google",
@@ -5145,7 +3365,8 @@
       "meta": {
         "title": "Google Auth (Despia V3)",
         "description": "Access the real native Google OAuth 2.0 using the ASWebAuthSession and Chrome Custom Tabs via a simple to use SDK"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/oauth/tiktok",
@@ -5153,7 +3374,8 @@
       "meta": {
         "title": "TikTok Auth (Despia V3)",
         "description": "Access the real native TikTok OAuth 2.0 using the ASWebAuthSession and Chrome Custom Tabs via a simple to use SDK"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/paywalls",
@@ -5161,7 +3383,8 @@
       "meta": {
         "title": "Paywalls (Despia V3)",
         "description": "Monetize your Lovable mobile app with seamless payment processing through Apple and Google's native billing systems using RevenueCat Paywalls."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/restore-purchase",
@@ -5169,7 +3392,8 @@
       "meta": {
         "title": "Restore Purchase (Despia V3)",
         "description": "Restore and retrieve a user's complete purchase history from Apple App Store and Google Play Store using the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/storage-vault",
@@ -5177,7 +3401,8 @@
       "meta": {
         "title": "Storage Vault (Despia V3)",
         "description": "Store and retrieve user identity data that persists across app sessions through your Lovable mobile app using the Despia SDK. Perfect for identifying users, preventing trial abuse, and managing login sessions."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/gps-location-1",
@@ -5185,7 +3410,8 @@
       "meta": {
         "title": "GPS Location (Despia V3)",
         "description": "Track and retrieve a user's real-time location data with configurable intervals using the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/rewarded-ads",
@@ -5193,7 +3419,8 @@
       "meta": {
         "title": "Rewarded Ads (Despia V3)",
         "description": "Monetize your Lovable mobile app with native rewarded video advertisements that grant users in-app rewards."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/external-links",
@@ -5201,7 +3428,8 @@
       "meta": {
         "title": "External Links (Despia V3)",
         "description": "Control how your app handles external links with custom routing for payments, OAuth, and deep linking"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/device-indexing",
@@ -5209,7 +3437,8 @@
       "meta": {
         "title": "Device Indexing (Despia V3)",
         "description": "Access the unique device identifier of native mobile devices in your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/haptic-feedback",
@@ -5217,7 +3446,8 @@
       "meta": {
         "title": "Haptic Feedback (Despia V3)",
         "description": "Add native tactile feedback to enhance user interactions in your Lovable mobile app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/contact-access",
@@ -5225,7 +3455,8 @@
       "meta": {
         "title": "Contact Access (Despia V3)",
         "description": "Retrieve and display contact information from users' devices within your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/health-kit",
@@ -5233,7 +3464,8 @@
       "meta": {
         "title": "HealthKit (Despia V3)",
         "description": "Retrieve and display health and fitness data from users' Apple HealthKit within your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/siri-shortcuts",
@@ -5241,7 +3473,8 @@
       "meta": {
         "title": "Siri Shortcuts (Despia V3)",
         "description": "Enable Siri voice shortcuts with custom natural language commands that trigger JavaScript functions in your Lovable mobile app using the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/biometrics",
@@ -5249,7 +3482,8 @@
       "meta": {
         "title": "Biometrics (Despia V3)",
         "description": "Add Face ID, Touch ID, and device passcode authentication to secure sensitive features in your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/app-privacy",
@@ -5257,7 +3491,8 @@
       "meta": {
         "title": "App Privacy (Despia V3)",
         "description": "Check user privacy consent status for Apple's App Tracking Transparency (ATT), GDPR compliance, and privacy regulations in your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/safe-areas",
@@ -5265,7 +3500,8 @@
       "meta": {
         "title": "Safe Areas (Despia V3)",
         "description": "Handle device safe areas (notches, status bars, home indicators) using custom CSS variables for responsive mobile layouts in your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/camera-roll",
@@ -5273,7 +3509,8 @@
       "meta": {
         "title": "Camera Roll (Despia V3)",
         "description": "Save images directly to the device's photo gallery from your Lovable mobile app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/offline-push",
@@ -5281,7 +3518,8 @@
       "meta": {
         "title": "Offline Push (Despia V3)",
         "description": "Send instant local notifications to users with customizable messages, titles, and timing through your Lovable mobile app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/app-settings",
@@ -5289,7 +3527,8 @@
       "meta": {
         "title": "App Settings (Despia V3)",
         "description": "Open your app's native settings page directly from within your Lovable mobile app to guide users to permission controls."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/home-widgets",
@@ -5297,7 +3536,8 @@
       "meta": {
         "title": "Home Widgets (Despia V3)",
         "description": "Display dynamic SVG content in iOS home screen widgets with real-time data updates and user personalization through your Lovable mobile app."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/file-sharing",
@@ -5305,7 +3545,8 @@
       "meta": {
         "title": "File Sharing (Despia V3)",
         "description": "Enable native file sharing capabilities in your Lovable mobile app, allowing users to share files of any type through their device's built-in sharing system."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/screen-brightness",
@@ -5313,7 +3554,8 @@
       "meta": {
         "title": "Screen Brightness (Despia V3)",
         "description": "Control device scanning behavior with configurable modes (auto, on, off) and automatic screen brightness adjustment through your Lovable mobile app using the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/share-dialog",
@@ -5321,7 +3563,8 @@
       "meta": {
         "title": "Share Dialog (Despia V3)",
         "description": "Enable native social sharing capabilities with customizable message and URL parameters through your Lovable mobile app using the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/clipboard",
@@ -5329,7 +3572,8 @@
       "meta": {
         "title": "Clipboard (Despia V3)",
         "description": "Retrieve clipboard content from users' devices within your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/store-location",
@@ -5337,7 +3581,8 @@
       "meta": {
         "title": "Store Location (Despia V3)",
         "description": "Access the user's current store location for location-based services, regional content, and localized experiences in your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/share-extension",
@@ -5345,7 +3590,8 @@
       "meta": {
         "title": "Share Extension (Despia V3)",
         "description": "Access shared content (images and text) from other apps when your Lovable application is opened via share functionality."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/quick-actions",
@@ -5353,7 +3599,8 @@
       "meta": {
         "title": "Quick Actions (Despia V3)",
         "description": "Create native mobile application shortcuts that allow users to access specific workflows in your Lovable app without even opening it."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/simple-storage",
@@ -5361,7 +3608,8 @@
       "meta": {
         "title": "Simple Storage (Despia V3)",
         "description": "Persist data directly on the user's device using simple read/write commands with the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/print-documents",
@@ -5369,7 +3617,8 @@
       "meta": {
         "title": "Print Documents (Despia V3)",
         "description": "Enable native printing capabilities in your Lovable mobile app, allowing users to print images and PDFs directly from their device using the device's built-in print system."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/screenshot",
@@ -5377,7 +3626,8 @@
       "meta": {
         "title": "Screenshot (Despia V3)",
         "description": "Capture full page screenshots and save them directly to the device's photo gallery through your Lovable mobile app using the Despia SDK."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/legacy-features/one-signal-v1",
@@ -5385,7 +3635,8 @@
       "meta": {
         "title": "OneSignal V1 (Despia V3)",
         "description": "Send targeted remote push notifications via OneSignal to users even when your app is closed"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/lovable/native-features/gps-location",
@@ -5393,14 +3644,16 @@
       "meta": {
         "title": "GPS Location (Despia V3)",
         "description": "Retrieve and monitor real-time location data from users' devices in the background within your Lovable application."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/authentication/payments/test",
       "component": "docs.PageLegacy_Authentication_Payments_Test",
       "meta": {
         "title": "Test (Despia V3)"
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/extensions/introduction",
@@ -5408,7 +3661,8 @@
       "meta": {
         "title": "Introduction (Despia V3)",
         "description": "A native extension system for advanced developers solving problems Despia cannot anticipate. Wrap any iOS and Android SDK into a plugin, declarative, open source, callable from your web layer."
-      }
+      },
+      "tabRoot": true
     },
     {
       "path": "/legacy/refernce",
@@ -5416,7 +3670,8 @@
       "meta": {
         "title": "Reference (Despia V3)",
         "description": "Cache remote files locally for offline access with background downloads"
-      }
+      },
+      "tabRoot": true
     }
   ],
   "siteUrl": "https://docs.despia.com",
@@ -5434,6 +3689,7 @@
     "workspace": "despia"
   },
   "modules": [
-    "clipboard"
+    "clipboard",
+    "appearance"
   ]
 }

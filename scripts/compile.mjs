@@ -24,7 +24,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { SHOW_UNSHIPPED, comingSoonMarkdown, expandPackagePage, generatedPackageSource, loadPackages, packageFor, shipState } from "./packages-lib.mjs";
+import { GROUP_ORDER, SHOW_UNSHIPPED, comingSoonMarkdown, expandPackagePage, generatedPackageSource, groupOf, loadPackages, packageFor, shipState } from "./packages-lib.mjs";
 
 // The component reference pages are NOT generated here. They are written into content/
 // components/ by the framework's own generator (ClosedSource/scripts/generate_component_docs.rb
@@ -600,17 +600,15 @@ function cardGrid(node, indent) {
  *  site, drawn by the same runtime the reader is using, above the same source as a code block). */
 /** The Coming soon block: the greyed planned chips and the notify form's place. The form itself is plain HTML that
  *  scripts/assemble.mjs writes into the .doc-notify stack (it posts with no JavaScript; docs.js enhances it). */
+// the waitlist endpoint the notify form posts to (default in NotifyForm.dsx: https://api.despia.com/v1/waitlist)
+const WAITLIST_URL = process.env.DOCS_WAITLIST_URL ?? "";
 function comingSoonBlock(node, indent) {
   const topic = attrValue(node.attrs, "topic") ?? "";
   const chips = (attrValue(node.attrs, "chips") ?? "").split(",").filter(Boolean);
-  const slug = topic.toLowerCase().replace(/\//g, "--").replace(/[^a-z0-9-]/g, "-");
-  return `${indent}<vstack class="doc-soon" style="align-items: stretch">
-${indent}  <hstack class="doc-soon-chips" role="group" a11yLabel="Planned for">
-${indent}    <chip label="Coming soon" class="doc-soon-badge"/>
-${chips.map((c) => `${indent}    <chip label="${escapeForDsxAttr(c)}" class="doc-soon-chip"/>`).join("\n")}
-${indent}  </hstack>
-${indent}  <stack class="doc-notify doc-notify-topic-${slug}"/>
-${indent}</vstack>`;
+  return `${indent}<hstack role="group" a11yLabel="Planned for">
+${chips.map((c) => `${indent}  <chip label="${escapeForDsxAttr(c)}"/>`).join("\n")}
+${indent}</hstack>
+${indent}<NotifyForm topic="${escapeForDsxAttr(topic)}"${WAITLIST_URL ? ` endpoint="${escapeForDsxAttr(WAITLIST_URL)}"` : ""}/>`;
 }
 
 function compileBody(page, lines, startLine, indent) {
@@ -673,7 +671,8 @@ const site = (process.env.DOCS_SITE_URL ?? "https://docs.despia.com").replace(/\
 // Versioned docs: this build is the docs of DOCS_VERSION (default: the framework release the
 // content documents). public/versions.json lists every published docs version; old versions are
 // separate builds served under /v/<version>/ (the version selector reads the list).
-const DOCS_VERSION = process.env.DOCS_VERSION ?? "0.1.0";
+const RELEASE = JSON.parse(readFileSync(join(root, "data", "release.json"), "utf8"));
+const DOCS_VERSION = process.env.DOCS_VERSION ?? RELEASE.version;
 // The Improvements ledger (despia.com/improvements.json, PLAN-J): an entry whose links name a docs
 // page puts an "Improved in vX" marker on that page. Read from DOCS_IMPROVEMENTS (a local copy of
 // the feed) or data/improvements.json; absent = no markers, never invented ones.
@@ -795,7 +794,7 @@ pages.sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
 /** Hand-authored pages: real DSX documents at the Components root (never generated —
  *  this compiler owns and wipes only Components/pages). Each entry joins the route
  *  table, the nav model and the search index exactly like a compiled page. */
-const handAuthored = [
+const handAuthored = [].concat([]).filter(() => false).concat([
   {
     route: "/system",
     component: "System",
@@ -807,11 +806,22 @@ const handAuthored = [
     description: "The design system as a living page: every element in its states.",
     search: "design system gallery elements states buttons fields selection toggle segmented picker slider stepper list rows cards surfaces tabs sheet typography color tokens spacing radius",
   },
-];
+]).filter(() => false);
 
 // The Troubleshooting index is generated (filters + cards over the articles' front matter).
 const tsArticles = pages.filter((p) => p.space === "troubleshooting");
 const generatedPages = [
+  {
+    route: "/packages",
+    component: "PagePackages",
+    title: "Packages",
+    label: "All packages",
+    space: "modern",
+    section: "packages",
+    order: 1,
+    description: "Every native feature you can add to a Despia app, from the package catalog. Shipped packages work today; the rest are coming soon.",
+    search: "packages catalog native features " + loadPackages().packages.filter((x) => x.listed).map((x) => `${x.title} ${x.summary ?? ""}`).join(" "),
+  },
   {
     route: "/troubleshooting",
     component: "PageTroubleshooting",
@@ -934,23 +944,28 @@ const navItem = (p, icon, sectionName) => ({ route: p.route, title: p.title, lab
 const byRoute = new Map(entries.map((p) => [p.route, p]));
 const navBySpace = {};
 {
+  // THE IA (data/nav.json, owner 2026-10-10): named sections in reading order; `packages: "shipped"` adds one collapsible
+  // section per group of shipped catalog packages, every row of a group wearing the group's symbol.
+  const IA = JSON.parse(readFileSync(join(root, "data", "nav.json"), "utf8"));
   const sections = [];
-  for (const page of entries.filter((p) => p.space === "modern")) {
-    const alpha = isAlpha(page);
-    const name = alpha ? STABILITY.section : page.section === "" ? "Start" : page.section.replace(/(^|-)([a-z])/g, (_, __, c) => " " + c.toUpperCase()).trim();
-    let section = sections.find((s) => s.name === name);
-    if (section === undefined) { section = { name, rank: alpha ? 8 : SECTION_RANK[page.section] ?? 9, items: [], ...(alpha ? { icon: STABILITY.icon } : {}) }; sections.push(section); }
-    // front matter `group:` nests a page under a collapsible group inside its section (the package catalogue's categories)
-    const groupName = alpha ? undefined : page.meta?.group;
-    if (groupName !== undefined && groupName !== "") {
-      let group = section.items.find((i) => i.group === groupName);
-      if (group === undefined) { group = { group: groupName, icon: ICONS.groups?.[groupName] ?? SECTION_ICONS[name] ?? ICONS.fallback, defaultOpen: false, items: [] }; section.items.push(group); }
-      group.items.push(navItem(page, undefined, name));
-      continue;
+  const missing = [];
+  for (const sec of IA.sections) {
+    const items = [];
+    for (const r of sec.routes) {
+      const page = byRoute.get(r);
+      if (page === undefined) { missing.push(r); continue; }
+      items.push(navItem(page, undefined, sec.name));
     }
-    section.items.push(navItem(page, undefined, name));
+    if (items.length > 0) sections.push({ name: sec.name, items });
+    if (sec.packages === "shipped") {
+      const shipped = entries.filter((pg) => pg.space === "modern" && pg.meta?.package && !pg.soon);
+      for (const g of GROUP_ORDER) {
+        const rows = shipped.filter((pg) => groupOf(packageFor(pg.meta.package)) === g).sort((x, y) => (pageLabel(x) < pageLabel(y) ? -1 : 1));
+        if (rows.length > 0) sections.push({ name: g, collapsible: true, items: rows.map((pg) => ({ ...navItem(pg, undefined, g), icon: ICONS.groups?.[g] ?? "shippingbox" })) });
+      }
+    }
   }
-  sections.sort((a, b) => a.rank - b.rank);
+  if (missing.length > 0) console.warn(`[docs.compile] data/nav.json names route(s) with no page yet: ${missing.join(" ")}`);
   navBySpace.modern = sections;
 }
 {
@@ -1007,6 +1022,7 @@ function shellAttrs(page, toc) {
   return [
     shellAttr(page, "title", page.route.startsWith("/components/") ? componentLabel(page.route, page.title) : page.title),
     shellAttr(page, "label", pageLabel(page)),
+    ...(page.description ? [shellAttr(page, "description", page.description)] : []),
     ...(isAlpha(page) ? [`stability="alpha"`] : []),
     `route="${page.route}"`,
     `space="${page.space}"`,
@@ -1028,15 +1044,13 @@ const varLines = (page) => [
   ...page.mdVars.map((text, i) => `    <variable as="md${i}">return ${jseStringLiteral(text)}</variable>`),
   ...page.attrVars.map((text, i) => `    <variable as="a${i}">return ${jseStringLiteral(text)}</variable>`),
 ];
-const pageFrame = (page, extraHead, body) => `<vstack theme="{{ dsx.global.docs &amp;&amp; dsx.global.docs.theme ? dsx.global.docs.theme : '' }}" style="align-items: stretch">
+const pageFrame = (page, extraHead, body) => `<DocShell ${page.shell}>
   <head>
     <!-- GENERATED by scripts/compile.mjs${page.file ? ` from ${relative(root, page.file).split(sep).join("/")}` : ""} - edit the source, not this file. -->
 ${[...varLines(page), ...extraHead].join("\n")}
   </head>
-  <DocShell ${page.shell}>
 ${body}
-  </DocShell>
-</vstack>
+</DocShell>
 `;
 
 const writeMd = (route, text) => {
@@ -1115,6 +1129,56 @@ for (const page of pages) {
   page.shell = shellAttrs(page, toc);
   writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, [], blocks));
   writeMd(page.route, page.mdSource ?? defang(readFileSync(page.file, "utf8")));
+}
+
+// ── the generated package catalog (/packages): data/packages.json, never hand listed ─────────────────────────────
+{
+  const page = generatedPages.find((p) => p.route === "/packages");
+  const listed = loadPackages().packages.filter((x) => x.listed);
+  const rows = listed.map((x) => {
+    const pageOf = entries.find((e) => e.route === x.url);
+    return {
+      slug: x.slug, url: x.url, title: x.title, summary: x.summary ?? "", group: groupOf(x),
+      soon: pageOf?.soon === true, badge: pageOf?.soon === true ? "Soon" : x.maturity === "alpha" ? "Alpha" : "",
+      brand: x.icon.brand ?? "", symbol: x.icon.symbol ?? "", tint: x.icon.tint ?? "",
+    };
+  }).sort((a, b) => (a.soon === b.soon ? (a.title < b.title ? -1 : 1) : a.soon ? 1 : -1));
+  const groups = GROUP_ORDER.filter((g) => rows.some((r) => r.group === g));
+  page.body = [`# Packages`, "", page.description, "",
+    ...groups.flatMap((g) => [`## ${g}`, "", ...rows.filter((r) => r.group === g).map((r) => `- [${r.title}](${site}${r.url}.md)${r.soon ? " (coming soon)" : ""}: ${r.summary}`), ""])].join("\n");
+  page.mdVars = [];
+  page.shell = shellAttrs(page, []);
+  const rowsVar = page.attrVars.push(JSON.stringify(rows)) - 1;
+  const head = [
+    `    <variable as="q">return ''</variable>`,
+    `    <variable as="group">return dsx.query.group ? String(dsx.query.group) : 'All'</variable>`,
+    `    <variable as="shipped">return 'All'</variable>`,
+    `    <formula as="rows" input:raw="dsx.variable.a${rowsVar}">return JSON.parse(raw)</formula>`,
+    `    <formula as="sections" input:rows="dsx.formula.rows" input:q="dsx.variable.q" input:group="dsx.variable.group" input:shipped="dsx.variable.shipped">`,
+    `      const needle = String(q || '').toLowerCase()`,
+    `      const hit = rows.filter((r) => (group === 'All' || r.group === group) &amp;&amp; (shipped === 'All' || (shipped === 'Available' ? !r.soon : r.soon)) &amp;&amp; (needle === '' || r.title.toLowerCase().includes(needle) || r.summary.toLowerCase().includes(needle)))`,
+    `      const names = ${JSON.stringify(groups)}`,
+    `      return names.map((name) => ({ id: name, title: name, rows: hit.filter((r) => r.group === name) })).filter((s) => s.rows.length &gt; 0)`,
+    `    </formula>`,
+  ];
+  const body = [
+    `  <searchbar bind="dsx.variable.q" placeholder="Search packages"/>`,
+    `  <ListGroup>`,
+    `    <SettingsRow icon="line.3.horizontal.decrease.circle" title="Category"><picker bind="dsx.variable.group" options="All,${groups.join(",")}" label="Category"/></SettingsRow>`,
+    `    <SettingsRow icon="checkmark.circle" title="Status"><segmented bind="dsx.variable.shipped" options="All,Available,Coming soon" label="Status"/></SettingsRow>`,
+    `  </ListGroup>`,
+    `  <ListGroup repeat="dsx.formula.sections" key="id" header="{{ dsx.this.title }}">`,
+    `    <SettingsRow repeat="dsx.this.rows" key="slug" title="{{ dsx.this.title }}" subtitle="{{ dsx.this.summary }}" lines="2" badge="{{ dsx.this.badge }}"`,
+    `                 chevron="true" tappable="true" on:tap="dsx.module.route.select({ path: dsx.this.url })">`,
+    `      <IconTile slot="leading" brand="{{ dsx.this.brand }}" icon="{{ dsx.this.symbol }}" tint="{{ dsx.this.tint }}" name="{{ dsx.this.title }}"/>`,
+    `    </SettingsRow>`,
+    `  </ListGroup>`,
+    `  <ListGroup visible-if="dsx.formula.sections.length === 0">`,
+    `    <SettingsRow icon="magnifyingglass" title="No package matches" subtitle="Try another word or category."/>`,
+    `  </ListGroup>`,
+  ].join("\n");
+  writeFileSync(join(generatedDir, `${page.component}.dsx`), pageFrame(page, head, body));
+  writeMd(page.route, page.body);
 }
 
 // ── the generated Troubleshooting index ───────────────────────────────────────────────────
@@ -1447,54 +1511,47 @@ ${pad}</row>`);
   flush();
   return out.join("\n");
 }
+// Each space's sidebar, the console's: stock SidebarSections of SidebarItems inside DocShell's SidebarList (selection is
+// the page's route). A nested group (Legacy's docs.json groups) is its own collapsible section, open when it holds the
+// page on screen. Rows are data: one variable per section, one repeated SidebarItem.
+function navSections(sections) {
+  const out = [];
+  for (const section of sections) {
+    const loose = section.items.filter((i) => i.group === undefined);
+    if (loose.length > 0) out.push({ name: section.name, collapsible: section.collapsible === true, rows: loose });
+    for (const g of section.items.filter((i) => i.group !== undefined)) out.push({ name: g.group, collapsible: true, rows: flatItems(g.items), icon: g.icon });
+  }
+  return out;
+}
 for (const s of SPACES) {
   const vars = [];
-  // a section header that only restates the space ("Troubleshooting" in Troubleshooting) or opens
-  // the list ("Start") says nothing the reader does not know; it is left out
-  const quiet = (name, i) => name === s.label || (i === 0 && (name === "Start" || name === "Get started"));
-  // Every named section is a stock Accordion (SwiftUI DisclosureGroup): the section holding the page on
-  // screen opens, the others start folded (docs.js restores the reader's own choice per section). The
-  // quiet first section (Start) stays a plain run of rows. One variable per section lists its routes.
-  const body = (navBySpace[s.id] ?? []).map((section, i) => {
-    if (quiet(section.name, i)) return navMarkup(section.items, section.icon ?? SECTION_ICONS[section.name], 0, vars);
-    const rows = navMarkup(section.items, section.icon ?? SECTION_ICONS[section.name], 1, vars);
-    const n = vars.push(`    <variable as="sec${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(flatItems(section.items).map((x) => x.route)))})</variable>`) - 1;
-    const sectionIcon = section.icon ?? SECTION_ICONS[section.name] ?? ICONS.fallback;
-    return `    <row class="doc-nav-section">
-      <Accordion title="${escapeForDsxAttr(section.name)}" open="{{ dsx.variable.sec${n}.includes(dsx.attribute.route) }}">
-        <hstack slot="header" class="doc-nav-section-label">
-          <image icon="${sectionIcon}" style="font-size: 15px" a11yHidden="true"/>
-          <text value="${escapeForDsxAttr(section.name)}"/>
-        </hstack>
-        <list style="appearance: none" selection="dsx.variable.current" scroll="false">
-${rows}
-        </list>
-      </Accordion>
-    </row>`;
+  const body = navSections(navBySpace[s.id] ?? []).map((sec) => {
+    const rows = sec.rows.map((i) => ({ route: i.route, label: i.label, icon: i.icon ?? sec.icon ?? "doc.text", ...(i.soon ? { badge: "Soon" } : {}) }));
+    const n = vars.push(`    <variable as="r${vars.length}">return JSON.parse(${jseStringLiteral(JSON.stringify(rows))})</variable>`) - 1;
+    const routes = JSON.stringify(rows.map((r) => r.route)).replace(/"/g, "'");
+    const fold = sec.collapsible ? ` collapsible="true" expanded="{{ ${routes}.includes(dsx.attribute.route) }}"` : "";
+    return `  <SidebarSection title="${escapeForDsxAttr(sec.name)}"${fold}>
+    <SidebarItem repeat="dsx.variable.r${n}" key="route" value="{{ dsx.this.route }}" icon="{{ dsx.this.icon }}" title="{{ dsx.this.label }}" badge="{{ dsx.this.badge || '' }}"/>
+  </SidebarSection>`;
   }).join("\n");
-  writeFileSync(join(generatedDir, `${navComponentOf(s.id)}.dsx`), `<vstack class="doc-nav doc-nav-${s.id}" role="navigation" a11yLabel="${escapeForDsxAttr(s.label)} documentation">
+  writeFileSync(join(generatedDir, `${navComponentOf(s.id)}.dsx`), `<stack class="doc-nav doc-nav-${s.id}">
   <head>
-    <!-- GENERATED by scripts/compile.mjs (the ${s.label} nav model) - edit the content tree, not this file.
-         The stock sidebar list: section headers, icon rows, collapsible groups, the page on screen
-         selected through selection= (keyed by route). -->
+    <!-- GENERATED by scripts/compile.mjs (the ${s.label} nav model, data/nav.json) - edit the IA, not this file. -->
     <attribute as="route" default="''"/>
-    <variable as="current">return dsx.attribute.route</variable>
 ${vars.join("\n")}
   </head>
-  <list style="appearance: none" selection="dsx.variable.current" scroll="false">
 ${body}
-  </list>
-</vstack>
+</stack>
 `);
 }
-writeFileSync(join(generatedDir, "DocNav.dsx"), `<vstack class="doc-nav-host" style="flex: 1; min-height: 0; align-items: stretch">
+writeFileSync(join(generatedDir, "DocNav.dsx"), `<stack class="doc-nav-host">
   <head>
     <!-- GENERATED by scripts/compile.mjs: the sidebar of the page's space. -->
     <attribute as="route" default="''"/>
     <attribute as="space" default="'modern'"/>
   </head>
 ${SPACES.map((s) => `  <${navComponentOf(s.id)} visible-if="dsx.attribute.space === '${s.id}'" route="{{ dsx.attribute.route }}"/>`).join("\n")}
-</vstack>
+</stack>
 `);
 
 // ── the generated /system card wall (SystemCards) ─────────────────────────────────────────
@@ -1521,13 +1578,16 @@ config.siteUrl = site;
 // build accepts its despia.com origin; a customer project naming despia.com is still refused.
 config.owner = { workspace: "despia" };
 // the platform packages the docs' own components reach: the example box's copy (CopyButton -> dsx.module.clipboard)
-config.modules = [...new Set([...(config.modules ?? []), "clipboard"])];
+config.modules = [...new Set([...(config.modules ?? []), "clipboard", "appearance"])];
 const head = (config.web?.head ?? []).filter((row) => row.meta?.name !== "despia-support-origin");
 config.web = { ...(config.web ?? {}), head: [...head, { meta: { name: "despia-support-origin", content: supportOrigin } }] };
 config.routes = entries.map((p) => ({
   path: p.route,
   component: `docs.${p.component}`,
   meta: { title: p.space === "legacy" ? `${p.title} (Despia V3)` : p.title, ...(p.description !== "" ? { description: p.description } : {}) },
+  // a docs page reached from the sidebar is a root of its own (the console's sidebar pages are tab roots): the NavBar
+  // draws its large title, not a trail through the home page. Only a package page sits under the catalog.
+  ...(p.route.startsWith("/packages/") ? {} : { tabRoot: true }),
 }));
 writeFileSync(join(root, "dsx.config.json"), JSON.stringify(config, null, 2) + "\n");
 

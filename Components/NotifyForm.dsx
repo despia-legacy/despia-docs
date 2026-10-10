@@ -1,0 +1,38 @@
+<!-- NotifyForm: "Get notified" on a Coming soon page, from the console's own parts (a ListGroup of SettingsRows with a
+     stock text field). It posts ONE JSON body to the waitlist API (claude-waitlist lane contract, owner 2026-10-10):
+       POST https://api.despia.com/v1/waitlist  { email, topic, source: "docs", consent: true }  -> 200 { ok, subscribed }
+     `topic` is the page's slug (^[a-z0-9]([a-z0-9._-]{0,62}[a-z0-9])?$). The email is checked here before sending; the
+     answer shows in the group itself. No tracking of any kind. <NotifyForm topic="appleauth"/> -->
+<vstack>
+  <head>
+    <attribute as="topic" default="''"/>
+    <attribute as="endpoint" default="'https://api.despia.com/v1/waitlist'"/>
+    <variable as="email">return ''</variable>
+    <!-- '' · ok · invalid · error (the wait itself is dsx.action.send.pending) -->
+    <variable as="state">return ''</variable>
+    <variable as="message" computed="true">
+      const s = dsx.variable.state
+      return s === 'ok' ? "Thanks. We'll email you when it's ready." : s === 'invalid' ? 'Enter a valid email address.'
+        : s === 'error' ? 'That did not go through. Try again in a moment.' : ''
+    </variable>
+    <action as="send">
+      const email = String(dsx.variable.email || '').trim()
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) || email.length &gt; 254) { dsx.variable.state = 'invalid'; return }
+      const r = await fetch(dsx.attribute.endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({ email: email, topic: dsx.attribute.topic, source: 'docs', consent: true })
+      })
+      dsx.variable.state = r.ok ? 'ok' : 'error'
+      if (r.ok) { dsx.variable.email = '' }
+    </action>
+  </head>
+  <ListGroup header="Get notified" footer="We'll email you when it's ready. Unsubscribe anytime.">
+    <SettingsRow icon="envelope" title="Email">
+      <textfield bind="dsx.variable.email" keyboard="email" autocapitalize="none" placeholder="you@example.com" label="Email" on:submit="dsx.action.send()"/>
+    </SettingsRow>
+    <SettingsRow icon="bell" title="Notify me" tone="accent" tappable="true" disabled="{{ dsx.action.send.pending }}" on:tap="dsx.action.send()"/>
+    <SettingsRow status="{{ dsx.variable.state === 'ok' ? 'done' : 'failed' }}" title="{{ dsx.variable.message }}"
+                 visible-if="dsx.variable.state === 'ok' || dsx.variable.state === 'invalid' || dsx.variable.state === 'error'"/>
+  </ListGroup>
+</vstack>

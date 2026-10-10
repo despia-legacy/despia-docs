@@ -114,6 +114,16 @@ for (const p of legacyPaths) {
   rootTable[p] = `/legacy${p}`;
   rootTable[`${p}.md`] = `/legacy${p}.md`;
 }
+// Mintlify-era Modern API paths and the catalog aliases (redirects/modern-aliases.json): one 301 to the page that took
+// each over. A target must be a page of this build; a source must not be one.
+const aliases = JSON.parse(readFileSync(join(out, "modern-aliases.json"), "utf8")).aliases;
+for (const [from, to] of Object.entries(aliases)) {
+  const page = to.split("#")[0];
+  if (modernRoutes.has(from)) { console.error(`[docs.redirects] alias ${from} shadows a page`); process.exit(1); }
+  if (!modernRoutes.has(page) && !page.startsWith("/legacy/")) console.warn(`[docs.redirects] alias ${from} -> ${to}: no such page in this build`);
+  rootTable[from] = to;
+  if (!to.includes("#")) rootTable[`${from}.md`] = `${to}.md`;
+}
 writeFileSync(join(out, "docs-root.json"), JSON.stringify(rootTable, null, 1) + "\n");
 
 console.log(`[docs.redirects] setup.despia.com: ${rows.length} exact row(s) (Worker adds the catch-all; ${inventory.length}/${inventory.length} live pages covered) -> redirects/setup.despia.com.csv, redirects/setup-worker/; docs root: ${Object.keys(rootTable).length / 2} v3 path(s) -> /legacy (${shadowed} owned by a modern page)`);

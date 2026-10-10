@@ -1,0 +1,5 @@
+{
+  "_note": "The release these docs describe. The owner's release label (2026-10-10): Despia V4 pre-release 0.0.2. The framework has no machine-readable release version yet (ClosedSource/release/published.json is a single published flag), so this is the one place the label lives; compile.mjs reads it for the version shown in the sidebar, versions.json and llms.txt.",
+  "version": "0.0.2",
+  "label": "Despia V4 0.0.2"
+}

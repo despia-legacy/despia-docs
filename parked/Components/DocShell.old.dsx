@@ -1,0 +1,340 @@
+<vstack class="doc-shell" on:appear="dsx.module.route.chrome({ show: 'false' })">
+  <head>
+    <!--
+      The one layout every documentation page mounts, built from STOCK components only (rule 10):
+      the docs header (brand, search, Ask AI; on a phone a second row with the menu button and the
+      breadcrumbs), then the navigation (DocSidebar: a column on a wide window, a sheet on a phone),
+      the page (title block with the page actions, chips, callouts, the content as stock markdown,
+      previous and next) and the "On this page" rail; Ask AI (DocAsk) is a side panel on a wide
+      window and a full-height sheet on a phone. The page draws its own top bar, so it releases the
+      system route bar (no Back button on a documentation page, owner 2026-10-09).
+    -->
+    <attribute as="title" default="'Despia docs'"/>
+    <attribute as="label" default="''"/>
+    <!-- 'alpha' on a native UI page (data/stability.json): the early-alpha note sits above the content -->
+    <attribute as="stability" default="'stable'"/>
+    <attribute as="route" default="'/'"/>
+    <attribute as="space" default="'modern'"/>
+    <!-- The spaces (id, label, home) as JSON: scripts/compile.mjs SPACES is the one declaration. -->
+    <attribute as="spaces" default="'[]'"/>
+    <!-- md = the raw-markdown sibling (route + .md). -->
+    <attribute as="md" default="''"/>
+    <attribute as="section" default="''"/>
+    <attribute as="toc" default="'[]'"/>
+    <attribute as="prev" default="''"/>
+    <attribute as="prevLabel" default="''"/>
+    <attribute as="next" default="''"/>
+    <attribute as="nextLabel" default="''"/>
+    <!-- Legacy pages: the modern equivalent's route when the migration map knows one. -->
+    <attribute as="modern" default="''"/>
+    <!-- Versioned docs: the version this build documents, and the page's own lifecycle. -->
+    <attribute as="version" default="'0.1.0'"/>
+    <attribute as="since" default="''"/>
+    <attribute as="changed" default="''"/>
+    <attribute as="removed" default="''"/>
+    <!-- "Improved in vX" markers from the Improvements ledger (JSON list, compile-time). -->
+    <attribute as="improved" default="'[]'"/>
+    <!-- The Support knowledge API (vector search). Empty = keyword search only. -->
+    <attribute as="supportOrigin" default="'https://support.despia.com'"/>
+    <variable as="query">return ''</variable>
+    <variable as="scope">return 'This space'</variable>
+    <variable as="vector">return []</variable>
+    <variable as="moreOpen">return false</variable>
+    <variable as="navOpen">return false</variable>
+    <variable as="askOpen">return false</variable>
+    <variable as="askQ">return ''</variable>
+    <variable as="newsClosed">return ''</variable>
+    <variable as="spacePick">
+      const list = dsx.attribute.spaces ? JSON.parse(dsx.attribute.spaces) : []
+      const hit = list.find((s) => s.id === dsx.attribute.space)
+      return hit ? hit.label : (list.length > 0 ? list[0].label : '')
+    </variable>
+    <api as="searchIndex" url="/search-index.json"/>
+    <!-- The version menu's list (public/versions.json: latest at /, each older version under /v/<v>/). -->
+    <api as="versions" url="/versions.json"/>
+    <!-- The Help hub's docs announcements (scripts/sync-hub.mjs writes public/announcements.json): the newest one sits
+         above the page until the reader closes it. Same origin and served with the page, so it never arrives late. -->
+    <api as="announcements" url="/announcements.json"/>
+    <variable as="news" computed="true">
+      const d = dsx.api.announcements.data
+      const items = d &amp;&amp; Array.isArray(d.items) ? d.items : []
+      const top = items.length &gt; 0 ? items[0] : null
+      return top == null || top.id === dsx.variable.newsClosed ? null : top
+    </variable>
+    <formula as="spaceList" input:raw="dsx.attribute.spaces">
+      return raw ? JSON.parse(raw) : []
+    </formula>
+    <formula as="spaceLabel" input:space="dsx.attribute.space" input:list="dsx.formula.spaceList">
+      const hit = list.find((s) => s.id === space)
+      return hit ? hit.label : ''
+    </formula>
+    <formula as="spaceHome" input:space="dsx.attribute.space" input:list="dsx.formula.spaceList">
+      const hit = list.find((s) => s.id === space)
+      return hit ? hit.home : '/'
+    </formula>
+    <formula as="hitGroups" input:q="dsx.variable.query" input:scope="dsx.variable.scope" input:space="dsx.attribute.space" input:vector="dsx.variable.vector" input:list="dsx.formula.spaceList">
+      if (!q || q.length < 2) { return [] }
+      const index = dsx.api.searchIndex.data
+      if (!index || !index.pages) { return [] }
+      const all = scope === 'All spaces'
+      const labels = Object.fromEntries(list.map((s) => [s.id, s.label]).concat([['blog', 'Blog']]))
+      const needle = q.toLowerCase()
+      const pool = all ? index.pages : index.pages.filter((page) => page.space === space)
+      const inTitle = pool.filter((page) => page.title.toLowerCase().includes(needle))
+      const inText = pool.filter((page) => !page.title.toLowerCase().includes(needle) && page.text.toLowerCase().includes(needle))
+      const ranked = inTitle.concat(inText).slice(0, 8)
+      const seen = ranked.map((page) => page.route)
+      const site = 'https://docs.despia.com'
+      const related = (vector || []).map((hit) => {
+        const url = String(hit.url || '')
+        const path = url.startsWith(site) ? (url.slice(site.length) || '/') : url
+        return { route: path, title: String(hit.title || path), label: '', space: String(hit.space || ''), section: 'Related', related: true }
+      }).filter((hit) => hit.route !== '' && !seen.includes(hit.route)).slice(0, 5)
+      const groupName = (page) => {
+        if (page.related) { return 'Related' }
+        const sec = page.section === '' ? 'Start' : page.section.charAt(0).toUpperCase() + page.section.slice(1)
+        return all ? (labels[page.space] || page.space) + ' · ' + sec : sec
+      }
+      const bySection = ranked.concat(related).groupBy(groupName)
+      return Object.entries(bySection).map((pair) => ({
+        name: pair[0],
+        rows: pair[1].map((page) => ({ id: page.route, title: (page.label ? page.label : page.title) + (page.alpha ? ' · Alpha' : ''), route: page.route })),
+      }))
+    </formula>
+    <formula as="tocRows" input:raw="dsx.attribute.toc">
+      if (!raw || raw === '') { return [] }
+      return JSON.parse(raw)
+    </formula>
+    <formula as="versionMenu" input:current="dsx.attribute.version">
+      const list = dsx.api.versions.data && dsx.api.versions.data.versions ? dsx.api.versions.data.versions : []
+      const rows = list.length > 0 ? list : [{ version: current, label: current + ' (latest)', path: '/' }]
+      return [{ header: true, title: 'Docs version' }].concat(rows.map((v) => ({
+        title: v.label,
+        icon: v.version === current ? 'checkmark' : '',
+        action: v.version === current ? '' : 'route.reset',
+        args: { path: v.path },
+      })))
+    </formula>
+    <formula as="improvedRows" input:raw="dsx.attribute.improved">
+      if (!raw || raw === '' || raw === '[]') { return [] }
+      return JSON.parse(raw)
+    </formula>
+    <formula as="themeState" input:docs="dsx.global.docs">
+      return docs && docs.theme ? docs.theme : ''
+    </formula>
+    <formula as="askPrompt" input:md="dsx.attribute.md">
+      return encodeURIComponent('Read https://docs.despia.com' + md + ' so I can ask questions about it.')
+    </formula>
+    <!-- the search results as rows of one grouped list (the group is the section label) -->
+    <formula as="hitRows" input:groups="dsx.formula.hitGroups">
+      let rows = []
+      for (const g of groups) { for (const r of g.rows) { rows.push({ id: r.id, title: r.title, route: r.route, group: g.name }) } }
+      return rows
+    </formula>
+    <!-- the trail below the space (the picker already says which space): the section when it is
+         not just the space's own name, then the page -->
+    <formula as="crumbs" input:section="dsx.attribute.section" input:label="dsx.attribute.label" input:title="dsx.attribute.title" input:route="dsx.attribute.route" input:home="dsx.formula.spaceHome" input:spaceName="dsx.formula.spaceLabel">
+      const rows = []
+      if (section !== '' && section !== spaceName) { rows.push({ title: section, href: home }) }
+      rows.push({ title: label !== '' ? label : title, current: true })
+      return JSON.stringify(rows)
+    </formula>
+    <formula as="spaceNames" input:list="dsx.formula.spaceList">return list.map((s) => s.label).join(',')</formula>
+    <!-- The help menu: rows with an href are links; the hook rows are the actions docs.js performs
+         (copy, and the Support widget intents). A stock <menu> row cannot carry an href (gap 9). -->
+    <!-- The agents (the website's marks, copied to public/marks): the page goes as context. A colour
+         mark is an image; a one-colour mark is the stock svg in currentColor, so it reads in both themes. -->
+    <formula as="agentRows" input:prompt="dsx.formula.askPrompt">
+      return [
+        { id: 'claude', title: 'Claude', mark: '/marks/claude-color.svg', d: '', href: 'https://claude.ai/new?q=' + prompt },
+        { id: 'chatgpt', title: 'ChatGPT', mark: '', d: 'M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z', href: 'https://chatgpt.com/?hints=search&q=' + prompt },
+        { id: 'cursor', title: 'Cursor', mark: '', d: 'M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23', href: '/agents' },
+      ]
+    </formula>
+    <formula as="helpRows" input:md="dsx.attribute.md" input:prompt="dsx.formula.askPrompt">
+      return [
+        { id: 'human', title: 'Ask a human', href: '', hook: 'doc-ask-human' },
+        { id: 'md', title: 'View as Markdown', href: md, hook: '' },
+        { id: 'edit', title: 'Propose an edit', href: '', hook: 'doc-propose-edit' },
+        { id: 'feature', title: 'Request a feature', href: '', hook: 'doc-request-feature' },
+        { id: 'github', title: 'Despia on GitHub', href: 'https://github.com/despia-native/despia', hook: '' },
+      ]
+    </formula>
+    <!-- the one page menu: agents, then Ask AI and a human, then this page's links -->
+    <formula as="pageRows" input:agents="dsx.formula.agentRows" input:help="dsx.formula.helpRows">
+      const open = agents.map((a) => ({ id: a.id, title: a.id === 'cursor' ? 'Use the docs in Cursor' : 'Open in ' + a.title, href: a.href, hook: '', mark: a.mark, d: a.d, icon: '', group: 'Open in an AI agent' }))
+      const ask = [{ id: 'ask', title: 'Ask AI', href: '', hook: 'doc-ask-btn-inline', mark: '', d: '', icon: 'sparkles', group: 'Ask' }]
+      const rest = help.map((h) => ({ id: h.id, title: h.title, href: h.href, hook: h.hook, mark: '', d: '', icon: '', group: h.id === 'human' ? 'Ask' : 'This page' }))
+      return open.concat(ask, rest)
+    </formula>
+    <formula as="themeLabel" input:state="dsx.formula.themeState">
+      return state === 'dark' ? 'Dark' : state === 'light' ? 'Light' : 'System'
+    </formula>
+    <!-- Ask AI: the pages that match the question, ranked by how many of its words a title and a page hold -->
+    <formula as="askRows" input:q="dsx.variable.askQ" input:space="dsx.attribute.space">
+      if (!q) { return [] }
+      const index = dsx.api.searchIndex.data
+      if (!index || !index.pages) { return [] }
+      const words = q.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2 &amp;&amp; !['how','the','and','for','can','what','does','with','from','into','your','this','that'].includes(w))
+      if (words.length === 0) { return [] }
+      const scored = index.pages.map((page) => {
+        const title = page.title.toLowerCase()
+        const text = page.text.toLowerCase()
+        let score = 0
+        for (const w of words) { if (title.includes(w)) { score = score + 3 } if (text.includes(w)) { score = score + 1 } }
+        return { page: page, score: score + (page.space === space ? 0.5 : 0) }
+      }).filter((x) => x.score >= 2)
+      scored.sort((a, b) => b.score - a.score)
+      return scored.slice(0, 6).map((x) => ({ id: x.page.route, route: x.page.route, title: x.page.label ? x.page.label : x.page.title, line: String(x.page.description || '').slice(0, 160) }))
+    </formula>
+    <formula as="askHref" input:q="dsx.variable.askQ" input:md="dsx.attribute.md">
+      const ask = encodeURIComponent(q + ' (answer from the Despia documentation: https://docs.despia.com' + md + ' and https://docs.despia.com/llms.txt)')
+      return { claude: 'https://claude.ai/new?q=' + ask, chatgpt: 'https://chatgpt.com/?hints=search&amp;q=' + ask }
+    </formula>
+    <action as="cycleTheme">
+      const current = dsx.global.docs && dsx.global.docs.theme ? dsx.global.docs.theme : ''
+      dsx.global.docs = { theme: current === '' ? 'dark' : current === 'dark' ? 'light' : '' }
+    </action>
+    <action as="queueVector">
+      dsx.variable.vector = []
+      const q = dsx.variable.query
+      if (!q || q.length < 3 || dsx.attribute.supportOrigin === '') { return }
+      setTimeout(() => { dsx.action.fetchVector() }, 300, 'docs-vector')
+    </action>
+    <action as="fetchVector">
+      const q = dsx.variable.query
+      if (!q || q.length < 3) { return }
+      const space = dsx.variable.scope === 'All spaces' ? 'all' : dsx.attribute.space
+      const r = await fetch(dsx.attribute.supportOrigin + '/v1/search?q=' + encodeURIComponent(q) + '&space=' + space + '&limit=6')
+      if (r.ok && r.data && r.data.hits && dsx.variable.query === q) { dsx.variable.vector = r.data.hits }
+    </action>
+    <action as="goSpace">
+      const hit = dsx.formula.spaceList.find((s) => s.label === dsx.variable.spacePick)
+      const path = hit ? hit.home : ''
+      if (path && dsx.variable.spacePick !== dsx.formula.spaceLabel) { dsx.module.route.reset({ path: path }) }
+    </action>
+    <watch value="dsx.variable.query" on:change="dsx.action.queueVector()"/>
+    <watch value="dsx.variable.scope" on:change="dsx.action.queueVector()"/>
+  </head>
+
+  <!-- THE HEADER (owner 2026-10-09, the structure of the best docs sites): the brand, then search and Ask AI on the
+       right; on a phone a second slim row holds the menu button and where this page sits. The navigation is the one
+       DocSidebar: a column on a wide window, a sheet behind the menu button on a phone. -->
+  <vstack class="doc-header" role="banner">
+    <hstack class="doc-header-row">
+      <pressable href="/" a11yLabel="Despia documentation home" class="doc-brand">
+        <svg d="M79.16,0A79.16,79.16,0,0,0,0,79.16,79.16,79.16,0,0,0,79.16,0 M0,79.16H0a79.16,79.16,0,0,0,79.16,79.16A79.16,79.16,0,0,0,0,79.16 M79.16,158.32a79.16,79.16,0,0,0,79.16-79.16h0a79.16,79.16,0,0,0-79.16,79.16 M125.77,63.75A29.83,29.83,0,1,0,95.94,33.92a29.84,29.84,0,0,0,29.83,29.83 M199.7,23.18h37.11q23.34,0,39.08,15.15t15.74,38.21q0,23.07-15.74,38.22t-39.08,15.15H199.7Zm70.87,53.36a35,35,0,0,0-9.9-25,31.68,31.68,0,0,0-23.86-10.46H219.92V112h16.89a31.75,31.75,0,0,0,23.86-10.39,35,35,0,0,0,9.9-25 M391.92,88.63a41.86,41.86,0,0,1-1.11,9h-66.5a22,22,0,0,0,8.2,12.16,23.43,23.43,0,0,0,14.87,5.07,21.58,21.58,0,0,0,10.95-2.78,21.88,21.88,0,0,0,7.54-6.88h21.95a38.71,38.71,0,0,1-15.49,19.77,44.05,44.05,0,0,1-24.95,7.4q-18.61,0-31.65-12.61t-13-31.1q0-18.48,13.09-31t31.86-12.54A43.13,43.13,0,0,1,379,57.75a41.57,41.57,0,0,1,13,30.88m-67.33-8h45.72a23.23,23.23,0,0,0-7.64-13.16,21.88,21.88,0,0,0-15-5.32,23.18,23.18,0,0,0-23.07,18.48 M471.19,73H451.6a10.23,10.23,0,0,0-4-8.61q-4-3.06-10.67-3.06-6.39,0-9.58,2.5a7.82,7.82,0,0,0-3.2,6.46,7,7,0,0,0,3.68,6.32,21.88,21.88,0,0,0,9.24,2.78,112.3,112.3,0,0,1,12,1.91,94.57,94.57,0,0,1,12,3.34,18.46,18.46,0,0,1,9.24,7.54q3.67,5.56,3.68,14.24,0,12.93-10.32,19.42t-26.65,6.5q-16.05,0-25.81-7.61t-9.76-20.32h19.8a9.86,9.86,0,0,0,4.41,8.34q4.41,3.19,11.36,3.19,7.23,0,11.57-2.47a7.72,7.72,0,0,0,4.35-7,7.38,7.38,0,0,0-3.69-6.67A20.61,20.61,0,0,0,440,97a119.87,119.87,0,0,1-11.88-1.7,82.88,82.88,0,0,1-11.88-3.13,18.06,18.06,0,0,1-9.17-7.46q-3.69-5.57-3.69-14.39,0-12.23,9-18.72t24.59-6.5q15.92,0,25.09,7.44T471.19,73 M509.3,47.5V60.77h.28a35,35,0,0,1,10.94-11.11A29.38,29.38,0,0,1,537,45.07a42.5,42.5,0,0,1,31,12.54q12.75,12.54,12.75,31.16T568,119.8a42.5,42.5,0,0,1-31,12.54q-16.81,0-27.45-14.38h-.28v36.26H489.08V47.5Zm0,41.27a24.65,24.65,0,0,0,7.33,17.89,25,25,0,0,0,35.65,0,25.45,25.45,0,0,0,0-35.88,25.11,25.11,0,0,0-35.68,0,24.75,24.75,0,0,0-7.3,18 M595.59,37.84a11.84,11.84,0,0,1,0-16.81,11.51,11.51,0,0,1,8.48-3.54A11.37,11.37,0,0,1,612.51,21a11.89,11.89,0,0,1,0,16.81,11.35,11.35,0,0,1-8.44,3.55,11.48,11.48,0,0,1-8.48-3.55M594,47.5h20.22v82.41H594Z M699.78,129.91V116.7h-.28a34.73,34.73,0,0,1-10.94,11.09,29.59,29.59,0,0,1-16.5,4.55,42.51,42.51,0,0,1-31-12.54q-12.75-12.54-12.75-31.17,0-18.48,12.75-31a42.51,42.51,0,0,1,31-12.54q16.82,0,27.44,14.38h.28v-12H720v82.41Zm0-41.28a24.5,24.5,0,0,0-7.33-17.85,25,25,0,0,0-35.64,0,25.41,25.41,0,0,0,0,35.85,25,25,0,0,0,35.68,0,24.84,24.84,0,0,0,7.29-18" viewBox="0 0 720 158.32" fill="currentColor" style="width: 110px; height: 24px" a11yHidden="true"/>
+      </pressable>
+      <spacer/>
+      <button icon="magnifyingglass" a11yLabel="Search the docs" variant="plain" class="doc-header-search" on:tap="dsx.variable.navOpen = true"/>
+      <button icon="sparkles" label="Ask AI" variant="bordered" class="doc-header-ask" on:tap="dsx.variable.askOpen = !dsx.variable.askOpen"/>
+    </hstack>
+    <hstack class="doc-subbar">
+      <button icon="line.3.horizontal" a11yLabel="Open the navigation" variant="plain" class="doc-menu-button" on:tap="dsx.variable.navOpen = true"/>
+      <Breadcrumbs items="{{ dsx.formula.crumbs }}"/>
+    </hstack>
+  </vstack>
+
+  <hstack class="doc-body">
+    <vstack class="doc-sidebar" role="navigation" a11yLabel="Documentation">
+      <DocSidebar route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}" spaceNames="{{ dsx.formula.spaceNames }}"
+                  spacePick="{{ dsx.variable.spacePick }}" version="{{ dsx.attribute.version }}" versionMenu="{{ dsx.formula.versionMenu }}"
+                  query="{{ dsx.variable.query }}" scope="{{ dsx.variable.scope }}" hits="{{ dsx.formula.hitRows }}" themeLabel="{{ dsx.formula.themeLabel }}"
+                  on:search="dsx.variable.query = dsx.this.value" on:scope="dsx.variable.scope = dsx.this.value"
+                  on:space="dsx.variable.spacePick = dsx.this.value" on:theme="dsx.action.cycleTheme()"/>
+    </vstack>
+
+    <scroll class="doc-detail">
+      <hstack class="doc-detail-row">
+        <vstack class="doc-page">
+          <!-- the title block: where the page sits, its title, and the page actions beside it (Copy page + one menu) -->
+          <hstack class="doc-title-row">
+            <vstack class="doc-title-text">
+              <text class="doc-eyebrow" value="{{ dsx.attribute.section }}" visible-if="dsx.attribute.section !== ''"/>
+              <text class="doc-title" type="title1" value="{{ dsx.attribute.title }}" a11yTrait="header"/>
+            </vstack>
+            <hstack class="doc-help" visible-if="dsx.attribute.md !== ''" role="toolbar" a11yLabel="Page actions">
+              <button label="Copy page" icon="doc.on.doc" variant="bordered" class="doc-actions-copy" a11yLabel="Copy page as Markdown"/>
+              <popover present="dsx.variable.moreOpen" on:dismiss="dsx.variable.moreOpen = false" arrow="top">
+                <button icon="chevron.down" variant="bordered" a11yLabel="More ways to use this page" on:tap="dsx.variable.moreOpen = !dsx.variable.moreOpen"/>
+                <scroll slot="content">
+                  <list bind="dsx.formula.pageRows" key="id" group_by="group" scroll="false" style="appearance: none">
+                    <row href="{{ dsx.this.href }}" on:tap="dsx.variable.moreOpen = false">
+                      <hstack class="doc-agent-row">
+                        <image src="{{ dsx.this.mark }}" visible-if="dsx.this.mark !== ''" a11yHidden="true" style="width: 20px; height: 20px"/>
+                        <svg d="{{ dsx.this.d }}" visible-if="dsx.this.d !== ''" viewBox="0 0 24 24" fill="currentColor" a11yHidden="true" style="width: 20px; height: 20px"/>
+                        <image icon="{{ dsx.this.icon }}" visible-if="dsx.this.icon !== ''" a11yHidden="true"/>
+                        <text value="{{ dsx.this.title }}" class="{{ dsx.this.hook }}"/>
+                        <image icon="arrow.up.right" visible-if="dsx.this.href !== ''" a11yHidden="true"/>
+                      </hstack>
+                    </row>
+                  </list>
+                </scroll>
+              </popover>
+            </hstack>
+          </hstack>
+
+          <hstack class="doc-chips" visible-if="dsx.attribute.since !== '' || dsx.attribute.changed !== '' || dsx.attribute.removed !== '' || dsx.formula.improvedRows.length > 0">
+            <chip label="{{ 'Added in ' + dsx.attribute.since }}" visible-if="dsx.attribute.since !== ''"/>
+            <chip label="{{ 'Changed in ' + dsx.attribute.changed }}" visible-if="dsx.attribute.changed !== ''"/>
+            <chip label="{{ 'Removed in ' + dsx.attribute.removed }}" role="danger" visible-if="dsx.attribute.removed !== ''"/>
+            <button repeat="dsx.formula.improvedRows" key="id" label="{{ 'Improved in ' + dsx.this.version + ': ' + dsx.this.title }}" variant="plain" href="{{ dsx.this.url }}"/>
+          </hstack>
+
+          <vstack class="doc-news" visible-if="dsx.variable.news != null">
+            <Callout tone="info" title="{{ dsx.variable.news == null ? '' : dsx.variable.news.title }}" message="{{ dsx.variable.news == null ? '' : dsx.variable.news.body }}"
+                     dismissible="true" on:dismiss="dsx.variable.newsClosed = dsx.variable.news.id"/>
+            <button label="Learn more" icon="arrow.right" variant="plain" href="{{ dsx.variable.news == null || dsx.variable.news.link == null ? '' : dsx.variable.news.link }}"
+                    visible-if="dsx.variable.news != null &amp;&amp; dsx.variable.news.link != null"/>
+          </vstack>
+
+          <AlphaNote visible-if="dsx.attribute.stability === 'alpha'"/>
+
+          <vstack class="doc-legacy" visible-if="dsx.attribute.space === 'legacy'">
+            <Banner type="info" title="Legacy (V3)" message="This page documents Despia V3 and the despia-native package."/>
+            <button label="{{ dsx.attribute.modern !== '' ? 'Despia V4 equivalent' : 'Migration map' }}" icon="arrow.right" variant="plain"
+                    href="{{ dsx.attribute.modern !== '' ? dsx.attribute.modern : '/migrate/map' }}"/>
+          </vstack>
+
+          <slot/>
+
+          <hstack class="doc-pager" visible-if="dsx.attribute.prev !== '' || dsx.attribute.next !== ''">
+            <LinkCard title="{{ dsx.attribute.prevLabel }}" description="Previous" href="{{ dsx.attribute.prev }}" visible-if="dsx.attribute.prev !== ''"/>
+            <LinkCard title="{{ dsx.attribute.nextLabel }}" description="Next" href="{{ dsx.attribute.next }}" visible-if="dsx.attribute.next !== ''"/>
+          </hstack>
+        </vstack>
+
+        <vstack class="doc-rail" visible-if="dsx.formula.tocRows.length >= 2">
+          <text value="On this page" class="doc-rail-title"/>
+          <list bind="dsx.formula.tocRows" key="id" scroll="false" class="doc-outline" style="appearance: none" a11yLabel="On this page">
+            <row href="{{ '#' + dsx.this.id }}" class="{{ dsx.this.level > 2 ? 'doc-outline-sub' : '' }}">
+              <text value="{{ dsx.this.title }}" lineLimit="2"/>
+            </row>
+          </list>
+        </vstack>
+      </hstack>
+    </scroll>
+
+    <vstack class="doc-ask-panel" visible-if="dsx.variable.askOpen &amp;&amp; dsx.screen.width &gt;= 1024" role="complementary" a11yLabel="Ask AI">
+      <hstack class="doc-ask-panel-head">
+        <text value="Ask AI" class="doc-ask-panel-title"/>
+        <spacer/>
+        <button icon="xmark" a11yLabel="Close Ask AI" variant="plain" on:tap="dsx.variable.askOpen = false"/>
+      </hstack>
+      <DocAsk asked="{{ dsx.variable.askQ }}" sources="{{ dsx.formula.askRows }}" claudeHref="{{ dsx.formula.askHref.claude }}"
+              chatgptHref="{{ dsx.formula.askHref.chatgpt }}" on:ask="dsx.variable.askQ = dsx.this.value"/>
+    </vstack>
+  </hstack>
+
+  <sheet present="dsx.variable.navOpen" detents="full" title="Documentation" close="trailing" on:dismiss="dsx.variable.navOpen = false">
+    <DocSidebar route="{{ dsx.attribute.route }}" space="{{ dsx.attribute.space }}" spaceNames="{{ dsx.formula.spaceNames }}"
+                spacePick="{{ dsx.variable.spacePick }}" version="{{ dsx.attribute.version }}" versionMenu="{{ dsx.formula.versionMenu }}"
+                query="{{ dsx.variable.query }}" scope="{{ dsx.variable.scope }}" hits="{{ dsx.formula.hitRows }}" themeLabel="{{ dsx.formula.themeLabel }}"
+                on:search="dsx.variable.query = dsx.this.value" on:scope="dsx.variable.scope = dsx.this.value"
+                on:space="dsx.variable.spacePick = dsx.this.value" on:theme="dsx.action.cycleTheme()"/>
+  </sheet>
+  <sheet present="dsx.variable.askOpen &amp;&amp; dsx.screen.width &lt; 1024" detents="full" title="Ask AI" close="trailing" on:dismiss="dsx.variable.askOpen = false">
+    <DocAsk asked="{{ dsx.variable.askQ }}" sources="{{ dsx.formula.askRows }}" claudeHref="{{ dsx.formula.askHref.claude }}"
+            chatgptHref="{{ dsx.formula.askHref.chatgpt }}" on:ask="dsx.variable.askQ = dsx.this.value"/>
+  </sheet>
+</vstack>

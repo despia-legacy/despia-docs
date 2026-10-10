@@ -21,7 +21,7 @@ const pages = walk(contentDir).filter((f) => !relative(contentDir, f).startsWith
     const src = readFileSync(file, "utf8");
     const fm = /^---\n([\s\S]*?)\n---/.exec(src)?.[1] ?? "";
     const meta = Object.fromEntries(fm.split("\n").map((l) => [l.slice(0, l.indexOf(":")).trim(), l.slice(l.indexOf(":") + 1).trim()]));
-    return { file, src, meta, route: meta.route ?? "/" + relative(contentDir, file).split(sep).join("/").replace(/\.md$/, "").replace(/\/index$/, "") };
+    return { file, src, meta, route: meta.route ?? (meta.package && packageFor(meta.package) ? packageFor(meta.package).url : null) ?? "/" + relative(contentDir, file).split(sep).join("/").replace(/\.md$/, "").replace(/\/index$/, "") };
   });
 const packagePages = pages.filter((p) => p.meta.package);
 

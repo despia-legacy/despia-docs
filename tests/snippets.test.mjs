@@ -85,7 +85,8 @@ const FRAGMENT_CODES = new Set([2304, 2552, 18004, 1375, 1378]);
 const samples = files.flatMap((file) => fences(bodyOf(file)).map((f) => ({ ...f, file: rel(file), script: scriptOf(f) })));
 const { packages } = loadPackages();
 const byCommand = new Map();
-for (const p of packages) if (!byCommand.has(p.command)) byCommand.set(p.command, p);
+// a command named by more than one manifest: the published one answers (the one an app can add)
+for (const p of [...packages].sort((a, b) => Number(b.published) - Number(a.published))) if (!byCommand.has(p.command)) byCommand.set(p.command, p);
 
 test("samples exist (the test reads the pages it guards)", () => {
   assert.ok(samples.filter((s) => /dsx\.module\./.test(s.script)).length >= 10, "expected the package and web-app pages to carry dsx samples");

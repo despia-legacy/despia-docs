@@ -148,7 +148,7 @@ export function surfaceDts() {
   const { packages } = loadPackages();
   const seen = new Set();
   const mods = [];
-  for (const p of packages) {
+  for (const p of [...packages].sort((a, b) => Number(b.published) - Number(a.published))) {
     if (seen.has(p.command) || !/^[a-z][a-z0-9]*$/.test(p.command)) continue;
     seen.add(p.command);
     // dotted action names (`auth.signInWithIdToken`) are groups: dsx.module.supabase.auth.signInWithIdToken(...)
@@ -225,7 +225,7 @@ export function comingSoonMarkdown(title, state) {
 
 **Coming soon.** ${state.summary}
 
-This page fills in when it ships. Leave your email above and we'll tell you when it's ready.
+Leave your email and we'll tell you when it's ready.
 `;
 }
 

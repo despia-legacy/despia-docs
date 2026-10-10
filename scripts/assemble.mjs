@@ -50,6 +50,8 @@ const canonical = existsSync(canonicalFile) ? JSON.parse(readFileSync(canonicalF
 // widget origin only; no plugins, no base or form hijack. frame-src admits the v3 pages' YouTube
 // embeds. frame-ancestors cannot live in a meta tag: worker/index.ts sends it as a header.
 const supportOrigin = (process.env.DOCS_SUPPORT_ORIGIN ?? "https://support.despia.com").replace(/\/+$/, "");
+// the Coming soon form posts to the waitlist API (Components/NotifyForm.dsx)
+const waitlistOrigin = new URL(process.env.DOCS_WAITLIST_URL ?? "https://api.despia.com/v1/waitlist").origin;
 function cspFor(html) {
   const hashes = new Set();
   for (const m of html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)) {
@@ -62,38 +64,13 @@ function cspFor(html) {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https:",
-    `connect-src 'self' ${supportOrigin}`,
+    `connect-src 'self' ${supportOrigin} ${waitlistOrigin}`,
     "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
   ].join("; ");
 }
-// Coming soon pages (scripts/packages-lib.mjs shipState): the compiler leaves an empty `.doc-notify` stack whose class
-// names the topic; here it becomes a plain HTML form that posts with no JavaScript (worker/notify.ts answers a 303 back
-// and writes the state in), which docs.js upgrades to an inline fetch. Same origin only: the page CSP's form-action and
-// connect-src are 'self'. DOCS_NOTIFY_ACTION points a build at another handler.
-const notifyAction = process.env.DOCS_NOTIFY_ACTION ?? "/notify";
-const escapeHtml = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const NOTIFY_STYLE = `<style id="doc-notify-style">
-.doc-notify-form{display:flex;flex-direction:column;gap:.5rem;max-width:30rem;padding:1rem;border:1px solid var(--dsx-separator,rgba(127,127,127,.3));border-radius:12px}
-.doc-notify-form label{font-weight:600}
-.doc-notify-row{display:flex;gap:.5rem;flex-wrap:wrap}
-.doc-notify-row input{flex:1 1 14rem;min-width:0;font:inherit;padding:.55rem .75rem;border-radius:8px;border:1px solid var(--dsx-separator,rgba(127,127,127,.4));background:var(--dsx-background,transparent);color:inherit}
-.doc-notify-row button{font:inherit;font-weight:600;padding:.55rem 1rem;border-radius:8px;border:0;background:var(--dsx-accent,#0a84ff);color:#fff;cursor:pointer}
-.doc-notify-row button[disabled]{opacity:.6;cursor:default}
-.doc-notify-consent{margin:0;font-size:.8125rem;opacity:.7}
-.doc-notify-status{margin:0;font-size:.875rem;min-height:1.25em}
-.doc-notify-status[data-state=ok]{color:var(--dsx-green,#30a14e)}
-.doc-notify-status[data-state=error]{color:var(--dsx-red,#d73a49)}
-</style>`;
-const notifyForm = (topic, back) => `<form class="doc-notify-form" id="notify" method="post" action="${escapeHtml(notifyAction)}">` +
-  `<input type="hidden" name="topic" value="${escapeHtml(topic)}"><input type="hidden" name="back" value="${escapeHtml(back)}">` +
-  `<label for="notify-email">Get notified when it's ready</label>` +
-  `<div class="doc-notify-row"><input id="notify-email" type="email" name="email" required maxlength="254" autocomplete="email" placeholder="you@example.com"><button type="submit">Notify me</button></div>` +
-  `<p class="doc-notify-consent">We'll email you when it's ready. Unsubscribe anytime.</p>` +
-  `<p class="doc-notify-status" role="status" aria-live="polite"></p></form>`;
-let notifyForms = 0;
 let enhanced = 0;
 let stamped = 0;
 let secured = 0;
@@ -110,11 +87,6 @@ const injectDocsScript = (dir) => {
       html = html.replace("</head>", `<link rel="canonical" href="${canonical[key]}">\n<link rel="alternate" type="text/markdown" href="${md}">\n</head>`);
       stamped += 1;
     }
-    html = html.replace(/(<div class="[^"]*\bdoc-notify doc-notify-topic-([a-z0-9-]+)\b[^"]*"[^>]*>)(<\/div>)/g, (_, open, slug, close) => {
-      notifyForms += 1;
-      return `${open}${notifyForm(slug.replace(/--/g, "/"), key)}${close}`;
-    });
-    if (html.includes("doc-notify-form") && !html.includes("doc-notify-style")) html = html.replace("</head>", `${NOTIFY_STYLE}\n</head>`);
     if (!html.includes("/docs.js") && html.includes("</body>")) {
       html = html.replace("</body>", `<script defer src="/docs.js"></script>\n</body>`);
       enhanced += 1;
@@ -127,6 +99,5 @@ const injectDocsScript = (dir) => {
   }
 };
 injectDocsScript(dist);
-console.log(`[docs.assemble] ${notifyForms} Coming soon notify form(s) written`);
 console.log(`[docs.assemble] public/ artifacts folded into dist/ — one servable tree (${enhanced} page(s) carry docs.js, ${stamped} canonical + markdown alternate, ${secured} strict CSP)`);
 

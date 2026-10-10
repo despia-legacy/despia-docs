@@ -9,7 +9,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
-import { SHOW_UNSHIPPED, shipState } from "../scripts/packages-lib.mjs";
+import { SHOW_UNSHIPPED, packageFor, shipState } from "../scripts/packages-lib.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const contentDir = join(root, "content");
@@ -21,7 +21,7 @@ const pages = walk(contentDir)
     const fm = /^---\n([\s\S]*?)\n---/.exec(src)?.[1] ?? "";
     const meta = {};
     for (const l of fm.split("\n")) { const i = l.indexOf(":"); if (i > 0) meta[l.slice(0, i).trim()] = l.slice(i + 1).trim(); }
-    const route = meta.route ?? "/" + relative(contentDir, file).split(sep).join("/").replace(/\.md$/, "").replace(/\/index$/, "");
+    const route = meta.route ?? (meta.package && packageFor(meta.package) ? packageFor(meta.package).url : null) ?? "/" + relative(contentDir, file).split(sep).join("/").replace(/\.md$/, "").replace(/\/index$/, "");
     return { file, meta, route };
   });
 

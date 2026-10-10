@@ -1,5 +1,6 @@
 ---
 title: Use these docs with your agent
+label: Use with your AI agent
 description: Give Claude Code, Cursor, Codex or any MCP client the Despia documentation: an MCP server, llms.txt and a markdown twin of every page.
 order: 2
 section:

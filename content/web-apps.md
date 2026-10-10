@@ -1,7 +1,7 @@
 ---
 title: Using Despia from your web app
 description: How dsx.module calls work in React, Next.js, Vue and plain JavaScript inside a Despia app, and every difference from a DSX page, in one place.
-label: Using Despia from your web app
+label: Web apps
 section:
 icon: globe
 order: 3

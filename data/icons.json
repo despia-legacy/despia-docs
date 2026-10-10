@@ -17,17 +17,20 @@
     "App Review": "checkmark.seal"
   },
   "groups": {
-    "Purchases and payments": "creditcard",
-    "Sign-in and identity": "key",
+    "Sign-in": "key",
+    "Payments & subscriptions": "creditcard",
     "Notifications": "bell",
-    "Analytics and attribution": "sparkles",
-    "Device and system": "iphone",
-    "Media, files and sharing": "camera",
-    "Health": "faceid",
-    "Connectivity": "network",
-    "Speech": "mic",
-    "Data and contacts": "externaldrive",
-    "Compliance": "checkmark.seal"
+    "Device & sensors": "iphone",
+    "Media": "camera",
+    "Analytics & ads": "chart.bar",
+    "Storage": "externaldrive",
+    "Privacy": "lock.shield",
+    "Communication": "bubble.left.and.bubble.right",
+    "Interface": "square.grid.2x2",
+    "Health": "heart",
+    "Intelligence": "sparkles",
+    "Legacy": "clock.arrow.circlepath",
+    "More": "shippingbox"
   },
   "routes": {
     "/web-apps": "globe",
