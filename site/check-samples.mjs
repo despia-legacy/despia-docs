@@ -30,7 +30,7 @@ const commandOf = (call) => pkgs.find((p) => (p.actions ?? []).some((a) => a.cal
 const samples = []; // { where, lang, text, fragment }
 function scanMarkdown(where, md) {
   const re = /^```(\w+)([^\n]*)\n([\s\S]*?)^```/gm;
-  for (const m of md.matchAll(re)) samples.push({ where, lang: m[1], text: m[3], fragment: /\bfragment\b/.test(m[2]) });
+  for (const m of md.matchAll(re)) samples.push({ where, lang: m[1], text: m[3], fragment: /\bfragment\b/.test(m[2]), file: /title="Components\/([A-Z]\w*)\.dsx"/.exec(m[2])?.[1] });
 }
 const walk = (d) => readdirSync(d).flatMap((f) => { const p = join(d, f); return f.startsWith("._") ? [] : statSync(p).isDirectory() ? walk(p) : p.endsWith(".md") ? [p] : []; });
 for (const f of walk(join(repo, "content-v2"))) scanMarkdown(relative(repo, f), readFileSync(f, "utf8"));
@@ -54,7 +54,8 @@ const whole = samples.filter((s) => s.lang === "dsx" && !s.fragment);
 //    framework reference publishes must be in that table or universal; every dsx.action/variable/formula/attribute a
 //    sample reads must be declared in that sample. data/dsx-facts.json comes from site/sync-dsx-facts.mjs.
 const FACTS = JSON.parse(readFileSync(join(repo, "data", "dsx-facts.json"), "utf8"));
-const UNIVERSAL = new Set([...FACTS.universal, "class", "style", "slot", "pane", "key", "as"]);
+// tabTitle / tabIcon: set on a <tabs> child (StackReference, `tabs`); pane: a <scaffold> child (StackReference, `scaffold`)
+const UNIVERSAL = new Set([...FACTS.universal, "class", "style", "slot", "pane", "key", "as", "tabTitle", "tabIcon"]);
 const CODE_TAGS = new Set(["script", "functions", "action", "formula", "variable", "var", "let", "style"]);
 const HEAD_ATTRS = { variable: ["as", "computed", "type", "sample", "comment", "persist"], attribute: ["as", "default", "type", "comment"], ...FACTS.headLanguageAttrs };
 function scanTags(src) {
@@ -105,13 +106,16 @@ if (cli) {
   const dir = join(repo, "dist-v2", ".samples");
   rmSync(dir, { recursive: true, force: true });
   mkdirSync(join(dir, "Components"), { recursive: true });
-  const names = whole.map((s, i) => { const n = `Sample${String(i + 1).padStart(3, "0")}`; writeFileSync(join(dir, "Components", `${n}.dsx`), s.text.replace(/\n?$/, "\n")); return n; });
+  // a sample titled Components/Name.dsx compiles as Name.dsx (the first one with that name), so a page that uses
+  // <Name/> defined in another sample on the same page resolves it, exactly as it would in a real project
+  const taken = new Set();
+  const names = whole.map((s, i) => { const n = s.file && !taken.has(s.file) ? (taken.add(s.file), s.file) : `Sample${String(i + 1).padStart(3, "0")}`; writeFileSync(join(dir, "Components", `${n}.dsx`), s.text.replace(/\n?$/, "\n")); return n; });
   writeFileSync(join(dir, "dsx.json"), JSON.stringify({ name: "docs-samples", command: "docssamples", scheme: "docssamples", version: "0.1.0" }) + "\n");
   writeFileSync(join(dir, "dsx.config.json"), JSON.stringify({ entry: names[0] ?? "Sample001", modules: [...used].filter(Boolean).sort() }, null, 2) + "\n");
   const r = spawnSync(process.execPath, [cli, "lint"], { cwd: dir, encoding: "utf8", timeout: 300000 });
   const outText = `${r.stdout}\n${r.stderr}`;
   for (const line of outText.split("\n")) {
-    const m = /Components\/(Sample\d+)\.dsx:(\d+):\s*(error|warning):\s*(.*)$/.exec(line);
+    const m = /Components\/(\w+)\.dsx:(\d+):\s*(error|warning):\s*(.*)$/.exec(line);
     if (!m) continue;
     const s = whole[names.indexOf(m[1])];
     if (m[3] === "error") problems.push(`${s.where}: line ${m[2]} of the sample: ${m[4]}`);

@@ -62,4 +62,4 @@ The attribute says the item is overdue. The sheet says what overdue looks like.
 
 ## What lint enforces
 
-`despia lint` refuses the retired styling attributes (`padding`, `spacing`, `radius`, `background`, `fontSize`, `fontWeight` and the rest) with an error that names the CSS to write at that exact value. A style attribute fails the build, so it never reaches a user.
+`despia lint` refuses the old styling attributes (`padding`, `spacing`, `radius`, `background`, `fontSize`, `fontWeight` and the rest) with an error that names the CSS to write at that exact value. A style attribute fails the build, so it never reaches a user.
