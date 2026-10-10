@@ -9,31 +9,25 @@ order: 3
 
 # Using Despia from your web app
 
-Inside a Despia app, your web app calls native features exactly the way a DSX page does:
+Inside a Despia app, your web app calls native features with one line:
 
 ```js
 await dsx.module.haptic.success()
 ```
 
-That line works in React, Next.js, Vue, Svelte and plain JavaScript. Despia defines `dsx` on the page before any of your
-scripts run, so there is nothing to install or import. Every package page in these docs shows this one form, and it is
-the code you ship.
-
-The rest of this page is every place where a web app differs, written once: server rendering, TypeScript, sites that
-also run outside Despia, events, and which pages get `dsx` at all.
+It works in React, Next.js, Vue, Svelte and plain JavaScript. Despia defines `dsx` before your scripts run, so there is
+nothing to install or import.
 
 ## The short version
 
-- Write `dsx.module.<package>.<action>(...)`. Calls return a promise; `await` it.
-- **Next.js and other server-rendered frameworks:** `dsx` exists only in the browser, inside the app. Call it from event
-  handlers or `useEffect` in a `"use client"` component, never while the server renders.
-- **TypeScript:** add one line, `declare const dsx: any`, or the typed declaration below.
-- **Your site also runs in a normal browser** (your public website, `next dev` in Chrome): write
-  `window.dsx?.module...` instead, so the code does nothing where Despia is absent.
-- **A package exists on some builds only** (Sign in with Apple is iOS only): ask `dsx.has("<package>")` and route to
-  your fallback. Never check the operating system.
-- **Only your app's own pages can call it.** On another domain, calls fail with `origin_not_allowed`; inside an iframe
-  there is no `dsx`. See [Which pages get dsx](#which-pages-get-dsx).
+| Topic | What to know |
+| :-- | :-- |
+| Calls | `dsx.module.<package>.<action>(...)` returns a promise. `await` it. |
+| Next.js, Nuxt, SvelteKit | Call `dsx` in event handlers or effects only, never during the server render. |
+| TypeScript | Add `declare const dsx: any` to a `.d.ts` file, or the typed version below. |
+| Site also runs outside Despia | Write `window.dsx?.module...` so the call is skipped in a normal browser. |
+| Package missing on some builds | Check `dsx.has("appleauth")` first. Never check the operating system. |
+| Other domains and iframes | Calls from another domain fail with `origin_not_allowed`. Iframes get no `dsx`. |
 
 ## React
 
