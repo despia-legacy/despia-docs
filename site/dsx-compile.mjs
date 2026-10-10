@@ -175,7 +175,6 @@ function shell() {
       const rows = JSON.parse(String(dsx.attribute.toc || '[]'))
       return rows.map(r => ({ id: r.id, title: r.title, href: '#' + r.id }))
     </variable>
-    <variable as="wide" computed="true">return dsx.screen.width &gt;= 1200</variable>
     <variable as="groups" computed="true">return dsx.variable.nav.groups.filter(g => g.section == dsx.attribute.area)</variable>
     <variable as="appearanceMenu" computed="true">
       return [
@@ -215,9 +214,13 @@ function shell() {
   </scroll>
 
   <!-- On this page: the scaffold's own inspector column on a wide window, a ListGroup of the page's sections -->
-  <scroll pane="inspector" visible-if="dsx.variable.wide &amp;&amp; dsx.variable.tocRows.length &gt;= 2">
-    <ListGroup header="On this page">
+  <scroll pane="inspector">
+    <ListGroup header="On this page" visible-if="dsx.variable.tocRows.length &gt;= 2">
       <SettingsRow repeat="dsx.variable.tocRows" key="id" title="{{ dsx.this.title }}" href="{{ dsx.this.href }}" lines="2"/>
+    </ListGroup>
+    <ListGroup header="This page" visible-if="dsx.attribute.md != ''">
+      <SettingsRow icon="doc.plaintext" title="View as Markdown" href="{{ dsx.attribute.md }}" chevron="true"/>
+      <SettingsRow icon="sparkles" title="Use with your agent" href="/dsx/agents" chevron="true"/>
     </ListGroup>
   </scroll>
 
@@ -404,7 +407,8 @@ for (const p of pkgs) {
     { id: "group", icon: GROUP_ICON(groupOf(p)), title: "Category", value: groupOf(p) },
   ];
   const md = packageMarkdownFor(p);
-  const head = mdVar("md0", toDsxMarkdown(p.description && md.startsWith(p.description) ? md.slice(p.description.length).trimStart() : md)) + `    <variable as="glance">return ${jsLiteral(glance)}</variable>\n`;
+  const sec = sectioned(toDsxMarkdown(p.description && md.startsWith(p.description) ? md.slice(p.description.length).trimStart() : md));
+  const head = sec.head + `    <variable as="glance">return ${jsLiteral(glance)}</variable>\n`;
   const body = `  <ProductHeader title="${attr(titleOf(p))}" subtitle="${attr(p.summary)}" brand="${attr(p.icon?.brand ?? "")}" icon="${attr(p.icon?.symbol ?? GROUP_ICON(groupOf(p)))}"/>
   <grid columns="adaptive" minimum="420" scroll="false">
     <ListGroup header="About">
@@ -414,8 +418,8 @@ for (const p of pkgs) {
       <SettingsRow repeat="dsx.variable.glance" key="id" icon="{{ dsx.this.icon }}" title="{{ dsx.this.title }}" value="{{ dsx.this.value }}"/>
     </ListGroup>
   </grid>
-${article("md0")}`;
-  emit(p.url, page({ route: p.url, area: "packages", title: titleOf(p), description: p.summary, md: `${p.url}.md`, head, body, large: false,
+${sec.body}`;
+  emit(p.url, page({ route: p.url, area: "packages", title: titleOf(p), description: p.summary, md: `${p.url}.md`, head, body, large: false, toc: sec.toc,
     noticeFor: p.published ? null : [p.slug, "Coming soon", "This package is not available yet. Leave your email and we will tell you when it is.", "Get notified"] }), { title: titleOf(p), description: p.summary });
 }
 
