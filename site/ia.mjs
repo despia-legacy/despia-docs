@@ -40,11 +40,6 @@ export const SECTIONS = [
         ["/convert", "Convert overview", "Bring your existing web app into a native iOS and Android app, today."],
         ["/convert/quickstart", "Quickstart", "From your web app's URL to a build on your phone."],
       ] },
-      { title: "Your web app", pages: [
-        ["/convert/native-features", "Native features from JavaScript", "Call dsx.module from your web app's own code."],
-        ["/convert/react", "React and Next.js", "Calling native features from components, hooks and server-rendered pages."],
-        ["/convert/detect", "Running inside Despia", "Detect the app, and keep the same site working in a browser."],
-      ] },
       { title: "Moving over", pages: [
         ["/convert/from-v3", "Moving from Despia V3", "Your V3 calls keep working. Move each one when you are ready."],
       ] },

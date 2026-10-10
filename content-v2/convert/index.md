@@ -41,7 +41,7 @@ In the [console](https://console.despia.com), choose **New app** and enter your 
 
 ### Add native features
 
-Add packages to the app, then call them from your code. See [Native features from JavaScript](/convert/native-features), and [React and Next.js](/convert/react) for frameworks that render on the server.
+Add packages to the app, then call them from your code. See [Native features from JavaScript](/web-apps/native-features), and [React and Next.js](/web-apps/frameworks) for frameworks that render on the server.
 
 ### Build and ship
 
@@ -51,7 +51,7 @@ Connect your App Store Connect key and Google Play service account once, build, 
 
 ::: cards
 - [Quickstart](/convert/quickstart) {bolt} From your web app's address to a build on your phone.
-- [Native features from JavaScript](/convert/native-features) {shippingbox} Calls, results, errors and events.
-- [Running inside Despia](/convert/detect) {globe} Keep one site working in the app and in a browser.
+- [Native features from JavaScript](/web-apps/native-features) {shippingbox} Calls, results, errors and events.
+- [Running inside Despia](/web-apps/outside-despia) {globe} Keep one site working in the app and in a browser.
 - [Moving from Despia V3](/convert/from-v3) {book} Bring a V3 app over.
 :::

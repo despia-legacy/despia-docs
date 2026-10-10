@@ -128,8 +128,8 @@ const PAGE_ICON = {
   "/dsx": "sparkles", "/dsx/quickstart": "bolt", "/dsx/project": "folder", "/dsx/documents": "doc.text", "/dsx/data": "curlybraces",
   "/dsx/styling": "paintbrush", "/dsx/attributes": "tag", "/dsx/native-ui": "square.grid.2x2", "/dsx/navigation": "arrow.triangle.turn.up.right.diamond",
   "/dsx/packages": "shippingbox", "/dsx/platforms": "iphone", "/dsx/cli": "terminal", "/dsx/console": "macwindow", "/dsx/agents": "sparkles",
-  "/dsx/agents/skills": "book", "/convert": "globe", "/convert/quickstart": "bolt", "/convert/native-features": "curlybraces",
-  "/convert/react": "chevron.left.forwardslash.chevron.right", "/convert/detect": "safari", "/convert/from-v3": "arrow.up.circle",
+  "/dsx/agents/skills": "book", "/convert": "globe", "/convert/quickstart": "bolt", "/web-apps/native-features": "curlybraces",
+  "/web-apps/frameworks": "chevron.left.forwardslash.chevron.right", "/web-apps/outside-despia": "safari", "/convert/from-v3": "arrow.up.circle",
   "/ship": "paperplane", "/ship/app-store-connect": "key", "/ship/google-play": "key", "/ship/builds": "hammer", "/ship/releases": "square.stack",
   "/app-review": "checkmark.shield",
 };

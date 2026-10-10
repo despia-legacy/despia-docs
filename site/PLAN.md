@@ -51,12 +51,10 @@ Convert  /convert
   Get started
     Convert overview            /convert
     Quickstart                  /convert/quickstart
-  Your web app
-    Native features from JavaScript  /convert/native-features   (old /web-apps content, condensed)
-    React and Next.js           /convert/react
-    Running inside Despia       /convert/detect
   Moving over
     Moving from Despia V3       /convert/from-v3
+Web apps  /web-apps                      (lane webapp-howto: quickstart, native-features, frameworks, typescript,
+                                          hosted-and-bundled, preview, outside-despia (the ONLY window.dsx?. page), packages)
 Packages  /packages                       (written, Phase A) catalog: search, status segmented control, category chips, dense grid
   <one page per package>        /packages/<slug>  (generated: DSX sample + Convert JS sample, when to use, actions, params, results)
 Build and ship  /ship

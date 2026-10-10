@@ -49,7 +49,7 @@ Install the build on your phone from the link it gives you, tap your button, and
 ## Next
 
 ::: cards
-- [Native features from JavaScript](/convert/native-features) {shippingbox} Results, errors, events and which pages can call.
-- [React and Next.js](/convert/react) {curlybraces} Where calls may run in frameworks that render on the server.
-- [Running inside Despia](/convert/detect) {globe} One site in the app and in a normal browser.
+- [Native features from JavaScript](/web-apps/native-features) {shippingbox} Results, errors, events and which pages can call.
+- [React and Next.js](/web-apps/frameworks) {curlybraces} Where calls may run in frameworks that render on the server.
+- [Running inside Despia](/web-apps/outside-despia) {globe} One site in the app and in a normal browser.
 :::

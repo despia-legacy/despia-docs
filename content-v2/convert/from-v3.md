@@ -47,6 +47,6 @@ The [migration map](/migrate/map) lists every V3 feature and the Despia V4 packa
 ## Next
 
 ::: cards
-- [Native features from JavaScript](/convert/native-features) {shippingbox} The full calling model.
+- [Native features from JavaScript](/web-apps/native-features) {shippingbox} The full calling model.
 - [Packages](/packages) {book} Every package and its actions.
 :::
