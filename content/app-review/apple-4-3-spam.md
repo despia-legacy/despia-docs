@@ -25,9 +25,9 @@ Generic to-do, notes, calculator or AI-chat wrappers without a distinct audience
 
 ## How to fix it
 
-**v4 (DSX).** The fix is in the app's content and store listing, not in an API.
+**Despia V4 (DSX).** The fix is in the app's content and store listing, not in an API.
 
-**v3 (legacy).** The full walkthrough, with code: [Spam and copies in the legacy docs](/legacy/store-rejections/common-rejection/spam-and-copies).
+**Despia V3 (legacy).** The full walkthrough, with code: [Spam and copies in the legacy docs](/legacy/store-rejections/common-rejection/spam-and-copies).
 
 ## Reply to the reviewer
 

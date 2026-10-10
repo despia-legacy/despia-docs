@@ -20,6 +20,6 @@ fails silently, so the result is a white screen rather than an error.
 with a transparent background, upload it again and rebuild. If the splash shows but the app is
 still white, check the app URL is `https://` with a valid certificate.
 
-<Card title="The full v3 write-up: Empty Pages" href="/legacy/roadblocks/runtime/empty-pages">
+<Card title="The full Despia V3 write-up: Empty Pages" href="/legacy/roadblocks/runtime/empty-pages">
 The GIF requirements table, URL and certificate checks, and the local server manifest checks.
 </Card>

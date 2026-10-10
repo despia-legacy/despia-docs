@@ -25,9 +25,9 @@ Apps add Google login first (it is what the web app had) and ship to iOS without
 
 ## How to fix it
 
-**v4 (DSX).** Add Sign in with Apple beside the other providers: `dsx.module.appleauth.signIn()`, and the `Core/Auth/OAuth` package for web-based providers.
+**Despia V4 (DSX).** Add Sign in with Apple beside the other providers: `await dsx.module.appleauth.signIn()` from the [Sign in with Apple package](/packages/appleauth), and the [OAuth package](/packages/oauth) for web-based providers.
 
-**v3 (legacy).** The full walkthrough, with code: [Login services in the legacy docs](/legacy/store-rejections/common-rejection/social-login-options).
+**Despia V3 (legacy).** The full walkthrough, with code: [Login services in the legacy docs](/legacy/store-rejections/common-rejection/social-login-options).
 
 ## Reply to the reviewer
 

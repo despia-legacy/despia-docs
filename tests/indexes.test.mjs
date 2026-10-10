@@ -7,7 +7,7 @@ test("Troubleshooting lists every article unfiltered and filters by platform", a
   const page = await mount("PageTroubleshooting");
   assert.equal(page.formula("items").length, 3);
   assert.equal(page.formula("shown").length, 3);
-  page.set("platformFilter", "v4");
+  page.set("platformFilter", "V4");
   assert.equal(page.formula("shown").length, 0);
 });
 

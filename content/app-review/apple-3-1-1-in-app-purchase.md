@@ -25,9 +25,9 @@ Web apps often already sell through Stripe or a web checkout, link out to it, or
 
 ## How to fix it
 
-**v4 (DSX).** Use the `Core/RevenueCat` package: `dsx.module.revenuecat.paywall()`, `purchase()`, `customer()`; configure the products in App Store Connect and Google Play Console first.
+**Despia V4 (DSX).** Use the [RevenueCat package](/packages/revenuecat): `await dsx.module.revenuecat.paywall()`, `purchase()` and `customer()`; configure the products in App Store Connect and Google Play Console first.
 
-**v3 (legacy).** The full walkthrough, with code: [In-app purchase in the legacy docs](/legacy/store-rejections/common-rejection/in-app-purchases).
+**Despia V3 (legacy).** The full walkthrough, with code: [In-app purchase in the legacy docs](/legacy/store-rejections/common-rejection/in-app-purchases).
 
 ## Reply to the reviewer
 

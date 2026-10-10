@@ -20,6 +20,6 @@ answers every request from that cache, so the native container never fetches the
 **Fix.** Remove the PWA plugin and unregister the service worker (or configure it to never cache
 the app shell), then rebuild and reinstall the app once.
 
-<Card title="The full v3 write-up: No OTA Updates" href="/legacy/roadblocks/runtime/no-ota-updates">
+<Card title="The full Despia V3 write-up: No OTA Updates" href="/legacy/roadblocks/runtime/no-ota-updates">
 Every framework's removal steps, the unregister snippet and how to verify the fix.
 </Card>

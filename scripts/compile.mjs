@@ -656,7 +656,7 @@ function compileBody(page, lines, startLine, indent) {
 const SPACES = [
   { id: "modern", label: "Despia V4", prefix: "", home: "/", blurb: "Despia V4 and DSX" },
   { id: "legacy", label: "Legacy (V3)", prefix: "/legacy", home: "/legacy/introduction", blurb: "despia-native and the V3 runtime" },
-  { id: "migrate", label: "Migration", prefix: "/migrate", home: "/migrate", blurb: "Move a v3 app to v4" },
+  { id: "migrate", label: "Migration", prefix: "/migrate", home: "/migrate", blurb: "Move a V3 app to Despia V4" },
   { id: "troubleshooting", label: "Troubleshooting", prefix: "/troubleshooting", home: "/troubleshooting", blurb: "Symptom, cause, fix" },
   { id: "releases", label: "Releases", prefix: "/releases", home: "/releases", blurb: "Release notes per DSX release and per package version" },
   { id: "app-review", label: "App Review", prefix: "/app-review", home: "/app-review", blurb: "Apple and Google review guidelines, and how Despia apps pass them" },
@@ -839,7 +839,7 @@ const pages = sources.map(({ file, source, generated }) => {
 // (its modern path /framework/guides/from-v3 is unchanged).
 const fromV3 = pages.find((p) => p.route === "/framework/guides/from-v3");
 if (fromV3 !== undefined) {
-  pages.push({ ...fromV3, route: "/migrate/guide", space: "migrate", section: "Move to v4", order: 2,
+  pages.push({ ...fromV3, route: "/migrate/guide", space: "migrate", section: "Move to Despia V4", order: 2,
     label: "Step-by-step guide", component: componentNameFor("/migrate/guide"), meta: { ...fromV3.meta, canonicalOf: fromV3.route } });
 }
 pages.sort((a, b) => a.order - b.order || (a.route < b.route ? -1 : 1));
@@ -894,7 +894,7 @@ const generatedPages = [
     space: "troubleshooting",
     section: "",
     order: 1,
-    description: "Symptom, cause and fix for the problems Despia developers actually hit, on v4 and on the v3 runtime.",
+    description: "Symptom, cause and fix for the problems Despia developers actually hit, on Despia V4 and on the V3 runtime.",
     search: "troubleshooting symptom cause fix " + tsArticles.map((p) => `${p.title} ${p.meta.symptom ?? ""}`).join(" "),
   },
 ];
@@ -909,7 +909,7 @@ generatedPages.push({
   space: "app-review",
   section: "",
   order: 1,
-  description: "Apple App Review guidelines and Google Play policies that Despia apps run into: what each means, why apps hit it, how to fix it on v4 and v3, and a reply for the reviewer.",
+  description: "Apple App Review guidelines and Google Play policies that Despia apps run into: what each means, why apps hit it, how to fix it on Despia V4 and V3, and a reply for the reviewer.",
   search: "app review store rejection guideline apple google play " + arEntries.map((p) => `${p.meta.guideline ?? ""} ${p.title} ${p.meta.category ?? ""}`).join(" "),
 });
 
@@ -1288,7 +1288,7 @@ for (const page of pages) {
     const packages = String(p.meta.packages ?? "").split(",").map((s) => s.trim()).filter(Boolean);
     // CMS schema v1 (collections/troubleshooting.json): platform v4 | legacy | both; reportedAt,
     // workaroundAt, resolvedAt (+ resolvedIn, releaseNote). fixedAt / releasedAt are read as aliases.
-    const platform = p.meta.platform === "legacy" ? "Legacy" : p.meta.platform === "both" ? "v4 · Legacy" : "v4";
+    const platform = p.meta.platform === "legacy" ? "Legacy" : p.meta.platform === "both" ? "V4 · Legacy" : "V4";
     const reported = p.meta.reportedAt ?? "";
     const released = p.meta.resolvedAt ?? p.meta.releasedAt ?? p.meta.fixedAt ?? "";
     return {
@@ -1325,7 +1325,7 @@ for (const page of pages) {
   const body = [
     `    <markdown bind="dsx.variable.md${intro}"/>`,
     `    <hstack class="doc-ts-filters" role="group" a11yLabel="Filter articles">`,
-    `      <segmented bind="dsx.variable.platformFilter" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
+    `      <segmented bind="dsx.variable.platformFilter" options="All,V4,Legacy" label="Platform" class="doc-ts-platform"/>`,
     `      <picker bind="dsx.variable.pkg" options="${escapeForDsxAttr(packageOptions.join(","))}" label="Package" class="doc-ts-package"/>`,
     `    </hstack>`,
     `    <stack class="doc-ts-fixed" visible-if="dsx.formula.fixed.length > 0">`,
@@ -1357,7 +1357,7 @@ for (const page of pages) {
   const items = arEntries.map((p) => ({
     id: p.route, route: p.route, title: p.title, summary: p.description,
     guideline: p.meta.guideline ?? "", stores: list(p.meta.store), storesLabel: list(p.meta.store).join(" · "),
-    category: p.meta.category ?? "", platforms: list(p.meta.platform).map((x) => (x === "legacy" ? "Legacy" : x)),
+    category: p.meta.category ?? "", platforms: list(p.meta.platform).map((x) => (x === "legacy" ? "Legacy" : x === "v4" ? "V4" : x)),
     cases: Number(p.meta.cases ?? 0),
     haystack: `${p.meta.guideline ?? ""} ${p.title} ${p.meta.category ?? ""} ${p.meta.store ?? ""} ${p.description}`.toLowerCase(),
   })).sort((a, b) => a.guideline.localeCompare(b.guideline, "en", { numeric: true }) || (a.title < b.title ? -1 : 1));
@@ -1402,7 +1402,7 @@ for (const page of pages) {
     `    </stack>`,
     `    <hstack class="doc-ts-filters" role="group" a11yLabel="Filter guidelines">`,
     `      <segmented bind="dsx.variable.store" options="All,Apple,Google" label="Store" class="doc-ts-platform"/>`,
-    `      <segmented bind="dsx.variable.platformFilter" options="All,v4,Legacy" label="Platform" class="doc-ts-platform"/>`,
+    `      <segmented bind="dsx.variable.platformFilter" options="All,V4,Legacy" label="Platform" class="doc-ts-platform"/>`,
     `      <picker bind="dsx.variable.category" options="${escapeForDsxAttr(categories.join(","))}" label="Category" class="doc-ts-package"/>`,
     `    </hstack>`,
     `    <text value="{{ dsx.formula.shown.length + (dsx.formula.shown.length === 1 ? ' guideline' : ' guidelines') }}" type="headline"/>`,

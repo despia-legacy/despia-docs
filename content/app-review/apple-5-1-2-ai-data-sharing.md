@@ -25,9 +25,9 @@ Chat and AI features post user content to model APIs with the disclosure only in
 
 ## How to fix it
 
-**v4 (DSX).** Ask with a native confirm before the first AI call, say which service receives the data, and store the answer (for example with `dsx.module.identityvault.write()`, package `Core/IdentityVault`).
+**Despia V4 (DSX).** Ask with a native confirm before the first AI call, say which service receives the data, and store the answer (for example with `await dsx.module.identityvault.write(...)`, from the [Identity Vault package](/packages/identityvault)).
 
-**v3 (legacy).** The full walkthrough, with code: [Sharing personal data with AI services in the legacy docs](/legacy/store-rejections/common-rejection/ai-processing).
+**Despia V3 (legacy).** The full walkthrough, with code: [Sharing personal data with AI services in the legacy docs](/legacy/store-rejections/common-rejection/ai-processing).
 
 ## Reply to the reviewer
 

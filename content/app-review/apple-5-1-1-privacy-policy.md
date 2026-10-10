@@ -25,9 +25,9 @@ Analytics, crash reporting, push and payment SDKs all collect data; policies are
 
 ## How to fix it
 
-**v4 (DSX).** List every package the app adds (analytics, push, payments) in the policy; link it from the app's settings screen and from App Store Connect.
+**Despia V4 (DSX).** List every package the app adds (analytics, push, payments) in the policy; link it from the app's settings screen and from App Store Connect.
 
-**v3 (legacy).** The full walkthrough, with code: [Privacy policy in the legacy docs](/legacy/store-rejections/common-rejection/privacy-policy).
+**Despia V3 (legacy).** The full walkthrough, with code: [Privacy policy in the legacy docs](/legacy/store-rejections/common-rejection/privacy-policy).
 
 ## Reply to the reviewer
 

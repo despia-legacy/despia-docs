@@ -25,9 +25,9 @@ Conversion-optimised web paywalls carry dark patterns: tiny prices, the most exp
 
 ## How to fix it
 
-**v4 (DSX).** Present store products with `dsx.module.revenuecat.paywall()` (the store's own terms and prices), keep a visible close control, and show price, period and trial end next to the purchase button.
+**Despia V4 (DSX).** Present store products with `await dsx.module.revenuecat.paywall()` (the store's own terms and prices), keep a visible close control, and show price, period and trial end next to the purchase button.
 
-**v3 (legacy).** The full walkthrough, with code: [Subscriptions and paywalls in the legacy docs](/legacy/store-rejections/common-rejection/deceptive-paywalls).
+**Despia V3 (legacy).** The full walkthrough, with code: [Subscriptions and paywalls in the legacy docs](/legacy/store-rejections/common-rejection/deceptive-paywalls).
 
 ## Reply to the reviewer
 

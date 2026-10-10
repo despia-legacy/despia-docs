@@ -25,9 +25,9 @@ Redirect-based OAuth leaves the app's web view on an empty page while the provid
 
 ## How to fix it
 
-**v4 (DSX).** Run sign-in in the system browser session with `dsx.module.oauth.start({ url, callback: "https" })` (`Core/Auth/OAuth`; see the HTTPS callback guide) so the app never shows the redirect pages.
+**Despia V4 (DSX).** Run sign-in in the system browser session with `await dsx.module.oauth.start({ url, callback: "https" })` (the [OAuth package](/packages/oauth)) so the app never shows the redirect pages.
 
-**v3 (legacy).** The full walkthrough, with code: [Blank screens during login in the legacy docs](/legacy/store-rejections/common-rejection/blank-screen-redirects).
+**Despia V3 (legacy).** The full walkthrough, with code: [Blank screens during login in the legacy docs](/legacy/store-rejections/common-rejection/blank-screen-redirects).
 
 ## Reply to the reviewer
 

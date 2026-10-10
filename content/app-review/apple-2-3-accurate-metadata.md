@@ -24,9 +24,9 @@ Store screenshots made from the website or a design file instead of the shipped 
 
 ## How to fix it
 
-**v4 (DSX).** The fix is in the app's content and store listing, not in an API.
+**Despia V4 (DSX).** The fix is in the app's content and store listing, not in an API.
 
-**v3 (legacy).** The same fix applies; see [Store rejections](/legacy/store-rejections/introduction) for how to resubmit.
+**Despia V3 (legacy).** The same fix applies; see [Store rejections](/legacy/store-rejections/introduction) for how to resubmit.
 
 ## Reply to the reviewer
 

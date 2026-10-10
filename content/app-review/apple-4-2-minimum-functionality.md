@@ -25,9 +25,9 @@ Shipping from web code is fast, so landing pages, single-screen apps and website
 
 ## How to fix it
 
-**v4 (DSX).** Build screens with DSX's native defaults (tab bar, navigation stack, native controls) rather than a web layout, and use native capabilities where they serve the app (push, haptics, offline).
+**Despia V4 (DSX).** Build screens with DSX's native defaults (tab bar, navigation stack, native controls) rather than a web layout, and use native capabilities where they serve the app (push, haptics, offline).
 
-**v3 (legacy).** The full walkthrough, with code: [Minimum functionality in the legacy docs](/legacy/store-rejections/common-rejection/minimum-functionality).
+**Despia V3 (legacy).** The full walkthrough, with code: [Minimum functionality in the legacy docs](/legacy/store-rejections/common-rejection/minimum-functionality).
 
 ## Reply to the reviewer
 

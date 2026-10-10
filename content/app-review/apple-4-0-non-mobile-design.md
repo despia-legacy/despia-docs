@@ -25,9 +25,9 @@ Responsive web layouts carry desktop patterns into the app: drawer menus, top ba
 
 ## How to fix it
 
-**v4 (DSX).** DSX renders native chrome by default (system tab bar, navigation bar, sheets), so a v4 screen starts from the platform's own layout instead of a web one.
+**Despia V4 (DSX).** DSX renders native chrome by default (system tab bar, navigation bar, sheets), so a Despia V4 screen starts from the platform's own layout instead of a web one.
 
-**v3 (legacy).** The full walkthrough, with code: [Website-style design in the legacy docs](/legacy/store-rejections/common-rejection/non-mobile-design).
+**Despia V3 (legacy).** The full walkthrough, with code: [Website-style design in the legacy docs](/legacy/store-rejections/common-rejection/non-mobile-design).
 
 ## Reply to the reviewer
 

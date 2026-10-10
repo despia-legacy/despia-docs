@@ -25,9 +25,9 @@ Ad and attribution SDKs, or web tracking added later through an over-the-air upd
 
 ## How to fix it
 
-**v4 (DSX).** Request permission with `dsx.module.apptracking.permission.request()` (package `Core/WebPlatform/AppTracking`) before any tracking SDK starts, and keep the privacy labels in step with every package that tracks.
+**Despia V4 (DSX).** Request permission with `await dsx.module.apptracking.permission.request()` from the [App Tracking package](/packages/apptracking) before any tracking SDK starts, and keep the privacy labels in step with every package that tracks.
 
-**v3 (legacy).** The full walkthrough, with code: [App Tracking Transparency in the legacy docs](/legacy/store-rejections/common-rejection/tracking-transparency).
+**Despia V3 (legacy).** The full walkthrough, with code: [App Tracking Transparency in the legacy docs](/legacy/store-rejections/common-rejection/tracking-transparency).
 
 ## Reply to the reviewer
 

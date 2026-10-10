@@ -20,6 +20,6 @@ page that never checks for an existing session and redirects.
 app; store the token where the native app keeps it across launches, and validate it before
 treating the user as signed out.
 
-<Card title="The full v3 write-up: Lost Auth Tokens" href="/legacy/roadblocks/runtime/lost-auth-tokens">
+<Card title="The full Despia V3 write-up: Lost Auth Tokens" href="/legacy/roadblocks/runtime/lost-auth-tokens">
 Diagnosis on device, the redirect pattern for React, and storage options that survive a restart.
 </Card>

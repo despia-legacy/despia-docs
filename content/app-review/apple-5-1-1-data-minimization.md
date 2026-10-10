@@ -25,9 +25,9 @@ Sign-up forms copied from the web ask for gender, birthday or phone number that 
 
 ## How to fix it
 
-**v4 (DSX).** Remove fields no feature reads; mark the rest optional with the reason next to the field.
+**Despia V4 (DSX).** Remove fields no feature reads; mark the rest optional with the reason next to the field.
 
-**v3 (legacy).** The full walkthrough, with code: [Collecting data the app does not need in the legacy docs](/legacy/store-rejections/common-rejection/user-specific-data).
+**Despia V3 (legacy).** The full walkthrough, with code: [Collecting data the app does not need in the legacy docs](/legacy/store-rejections/common-rejection/user-specific-data).
 
 ## Reply to the reviewer
 
