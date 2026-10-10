@@ -2,7 +2,7 @@
 //  ia.mjs - THE information architecture of the Despia V4 docs, declared once (PLAN.md shows the same tree).
 //  Top tabs = the sections. Each section's sidebar = its groups, in reading order. A page that is in the tree but has no
 //  content file yet builds as a short "being written" page so no link in the chrome is ever a 404.
-//  section ids are also the export's `section` field (dist/docs-index.json): dsx | convert | packages | ship | home.
+//  section ids are also the export's `section` field (dist/docs-index.json): dsx | convert | web-apps | packages | ship | home.
 //
 export const SECTIONS = [
   {
@@ -42,6 +42,29 @@ export const SECTIONS = [
       ] },
       { title: "Moving over", pages: [
         ["/convert/from-v3", "Moving from Despia V3", "Your V3 calls keep working. Move each one when you are ready."],
+      ] },
+    ],
+  },
+  {
+    // the web-app how-to (owner 2026-10-11: despia.com/docs/web-apps, one site with the docs): running an existing web app
+    // inside a Despia app, from the developer's side. window.dsx?. appears only on /web-apps/outside-despia.
+    id: "web-apps", label: "Web apps", href: "/web-apps",
+    groups: [
+      { title: "Get started", pages: [
+        ["/web-apps", "Quickstart", "Your web app in a Despia app, then the first native call."],
+      ] },
+      { title: "Your code", pages: [
+        ["/web-apps/native-features", "Calling native features", "The one form, results, errors, dsx.has and events."],
+        ["/web-apps/frameworks", "Frameworks", "React, Next.js, Vue, Svelte and plain JavaScript."],
+        ["/web-apps/typescript", "TypeScript", "Declare the dsx global once."],
+        ["/web-apps/outside-despia", "Outside Despia", "When the same site also runs in normal browsers."],
+      ] },
+      { title: "Run and test", pages: [
+        ["/web-apps/hosted-and-bundled", "Hosted or bundled", "Load your address, or ship your build inside the app."],
+        ["/web-apps/preview", "Preview and test", "despia dev in a browser, then a simulator or your phone."],
+      ] },
+      { title: "Reference", pages: [
+        ["/web-apps/packages", "Package index", "Every package a web app can call, with its call."],
       ] },
     ],
   },
