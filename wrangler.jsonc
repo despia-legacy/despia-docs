@@ -1,6 +1,6 @@
 // The docs site's deploy manifest: `npm run build` first (compile → dsx build → assemble),
 // then `npx wrangler deploy`. `--dry-run` validates without an account — the CI gate.
-// The worker runs first (run_worker_first): it owns /mcp and SSR for dynamic routes, and
+// The worker runs first (run_worker_first): it owns the redirects (/mcp 301s to mcp.despia.com) and SSR for dynamic routes, and
 // reaches the static tree through the ASSETS binding — the same chain the framework's own
 // site face implements.
 {

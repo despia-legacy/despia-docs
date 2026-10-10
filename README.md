@@ -19,8 +19,8 @@ stack it documents.
 - **Search**: client-side over the build-time index. No server dependency for the basic
   path.
 - **Agents are first-class**: every page serves its raw markdown under `/md/…`, the site
-  summarizes itself at `/llms.txt`, and the site runs its own MCP server at `/mcp` with
-  `search`, `fetch-page` and `list-sections` tools over streamable HTTP.
+  summarizes itself at `/llms.txt`, and the build exports `docs-index.json` for the general Despia MCP
+  (https://mcp.despia.com/mcp). This site runs no MCP server; `/mcp` 301s there.
 
 ```sh
 npm install

@@ -3,14 +3,13 @@
 //  documents (v0-live-plan W7 runs on W1+W2+W3 by construction). Three faces, one worker:
 //    · the SITE — Workers Static Assets serve the built tree; dynamic routes fall through
 //      to the platform-free page handler (SSR); createWorkersHandler chains them,
-//    · the MCP face at /mcp — free tools over streamable HTTP: docs_search, docs_fetch,
-//      resolutions_search, troubleshooting_search, app_review_search, integrations_list,
-//      integration_get, improvements_list, improvements_get (and the original search,
-//      fetch-page, list-sections). The retrieval core is worker/search.ts (hybrid, cached,
-//      lexical fast path); this file wires the platform: assets, edge cache, rate limit,
-//    · the API host underneath, empty today and ready for the vector-search route.
-//  One site, five spaces (modern, legacy, migrate, troubleshooting, app-review): every MCP tool takes a
-//  `space` argument, and the old docs root keeps its v3 links: a v3 path asked of this host
+//    · the docs handlers (search, page fetch, sections) the site's own pages and the console's docs
+//      panel call; the retrieval core is worker/search.ts (hybrid, cached, lexical fast path).
+//      There is NO MCP server here (owner 2026-10-10): agents use the general Despia MCP at
+//      https://mcp.despia.com/mcp, whose docs tools read this build's docs-index.json export;
+//      /mcp on this host 301s there (redirects/v2-moves.json).
+//  One site, five spaces (modern, legacy, migrate, troubleshooting, app-review), and the old docs
+//  root keeps its v3 links: a v3 path asked of this host
 //  (it used to bounce to setup.despia.com) 301s once to /legacy/... (redirects/docs-root.json,
 //  generated; a path a modern page owns is never in it).
 //
@@ -32,7 +31,6 @@ import integrations from "../public/integrations.json";
 import versions from "../public/versions.json";
 import rootRedirects from "../redirects/docs-root.json";
 import { createTools, SPACES, type Cache, type IndexPage, type VectorHit } from "./search.ts";
-import { DOCS_TOOLS } from "./tools.ts";
 
 interface AssetsBinding { fetch(request: Request): Promise<Response> }
 
@@ -137,25 +135,8 @@ const handler = createWorkersHandler(
   undefined,
   {
     siteRegistry: registry as never,
-    mcpTools: DOCS_TOOLS.map((t) => ({ name: t.name, chain: "docs", action: t.action, description: t.description, inputs: Object.keys(t.inputs) })),
   },
 );
-
-//  Per-IP rate limit for /mcp, per isolate (a token bucket: 60 calls a minute, bursts of 20).
-//  It keeps one noisy client from spending the vector budget; a zone-wide limit is the
-//  Cloudflare rate limiting rule the owner attaches at deploy (STATUS, owner-gated).
-const buckets = new Map<string, { tokens: number; at: number }>();
-function allow(ip: string): boolean {
-  const now = Date.now();
-  const b = buckets.get(ip) ?? { tokens: 20, at: now };
-  b.tokens = Math.min(20, b.tokens + ((now - b.at) / 60_000) * 60);
-  b.at = now;
-  if (buckets.size > 10_000) buckets.clear();
-  if (b.tokens < 1) { buckets.set(ip, b); return false; }
-  b.tokens -= 1;
-  buckets.set(ip, b);
-  return true;
-}
 
 //  The headers a meta tag cannot carry (the per-page CSP itself is stamped into each page by
 //  scripts/assemble.mjs, with the sha256 of every inline script).
@@ -176,7 +157,7 @@ function secure(res: Response, noindex: boolean): Response {
 
 //  Declare once, render everywhere: the console's docs panel (and any other Despia surface) reads
 //  the same nav model and markdown siblings this site renders. They are public, credential-free
-//  documents, so they answer any origin; pages and /mcp keep their own rules.
+//  documents, so they answer any origin; pages keep their own rules.
 function readable(path: string, res: Response): Response {
   if (!(path === "/nav.json" || path.endsWith(".md"))) return res;
   const out = new Response(res.body, res);
@@ -195,10 +176,10 @@ export default {
       return Promise.resolve(new Response("User-agent: *\nDisallow: /\n", { headers: { "content-type": "text/plain; charset=utf-8", "X-Robots-Tag": "noindex, nofollow" } }));
     }
     const moved = (rootRedirects as Record<string, string>)[url.pathname.length > 1 ? url.pathname.replace(/\/+$/, "") : url.pathname];
-    if (moved !== undefined) return Promise.resolve(Response.redirect(`${url.origin}${moved}${url.search}`, 301));
-    if (url.pathname === "/mcp" && request.method === "POST" && !allow(request.headers.get("cf-connecting-ip") ?? "local")) {
-      return Promise.resolve(new Response(JSON.stringify({ jsonrpc: "2.0", id: null, error: { code: -32029, message: "rate limited: 60 calls a minute per client" } }),
-        { status: 429, headers: { "content-type": "application/json", "retry-after": "10" } }));
+    // an absolute target leaves the site (/mcp -> the general Despia MCP); 308 for a POST so an MCP client follows with its body
+    if (moved !== undefined) {
+      const target = /^https?:\/\//.test(moved) ? moved : `${url.origin}${moved}${url.search}`;
+      return Promise.resolve(Response.redirect(target, request.method === "GET" || request.method === "HEAD" ? 301 : 308));
     }
     if (typeof env["SUPPORT_ORIGIN"] === "string" && env["SUPPORT_ORIGIN"] !== "") supportOrigin = String(env["SUPPORT_ORIGIN"]).replace(/\/+$/, "");
     if (typeof env["SITE_ORIGIN"] === "string" && env["SITE_ORIGIN"] !== "") siteOrigin = String(env["SITE_ORIGIN"]).replace(/\/+$/, "");
