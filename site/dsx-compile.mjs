@@ -183,7 +183,7 @@ function shell() {
     </variable>
     <variable as="tocRows" computed="true">
       const rows = JSON.parse(String(dsx.attribute.toc || '[]'))
-      return rows.map(r => ({ id: r.id, title: r.title, href: '#' + r.id }))
+      return rows.map(r => ({ id: r.id, title: r.title, href: dsx.attribute.route + '#' + r.id }))
     </variable>
     <variable as="groups" computed="true">return dsx.variable.nav.groups.filter(g => g.section == dsx.attribute.area)</variable>
     <variable as="areaPath" computed="true">
@@ -230,11 +230,10 @@ function shell() {
   <!-- On this page: the scaffold's own inspector column on a wide window, a ListGroup of the page's sections -->
   <scroll pane="inspector">
     <ListGroup header="On this page" visible-if="dsx.variable.tocRows.length &gt;= 2">
-      <SettingsRow repeat="dsx.variable.tocRows" key="id" title="{{ dsx.this.title }}" href="{{ dsx.this.href }}" lines="2"/>
+      <SettingsRow repeat="dsx.variable.tocRows" key="id" title="{{ dsx.this.title }}" lines="2" tappable="true" on:tap="dsx.module.route.push({ path: dsx.this.href })"/>
     </ListGroup>
     <ListGroup header="This page" visible-if="dsx.attribute.md != ''">
-      <SettingsRow icon="doc.plaintext" title="View as Markdown" href="{{ dsx.attribute.md }}" chevron="true"/>
-      <SettingsRow icon="sparkles" title="Use with your agent" href="/dsx/agents" chevron="true"/>
+      <SettingsRow icon="sparkles" title="Use with your agent" chevron="true" tappable="true" on:tap="dsx.module.route.push({ path: '/dsx/agents' })"/>
     </ListGroup>
   </scroll>
 
@@ -405,7 +404,7 @@ if (want("/packages")) {
     </grid>
   </stack>
   <ListGroup repeat="dsx.variable.sections" key="id" header="{{ dsx.this.title }}" visible-if="dsx.variable.compact">
-    <SettingsRow repeat="dsx.this.rows" key="id" title="{{ dsx.this.title }}" subtitle="{{ dsx.this.summary }}" lines="2" chevron="true" href="{{ dsx.this.path }}">
+    <SettingsRow repeat="dsx.this.rows" key="id" title="{{ dsx.this.title }}" subtitle="{{ dsx.this.summary }}" lines="2" chevron="true" tappable="true" on:tap="dsx.module.route.select({ path: dsx.this.path })">
       <IconTile slot="leading" brand="{{ dsx.this.brand }}" icon="{{ dsx.this.symbol }}" name="{{ dsx.this.title }}"/>
     </SettingsRow>
   </ListGroup>`;

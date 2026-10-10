@@ -13,7 +13,7 @@ description: Every native feature your web app can call today, with its lead cal
 
 ## Payments & subscriptions
 
-- [In-app purchases and paywalls](/packages/store#use-it) (Alpha): `await dsx.module.store.billingMessages()`. Sell subscriptions and purchases with a native paywall and one simple way to check what a user owns.
+- [In-app purchases and paywalls](/packages/store#use-it) (Alpha): `await dsx.module.store.paywall(…)`. Sell subscriptions and purchases with a native paywall and one simple way to check what a user owns.
 - [Payments](/packages/payments#use-it) (Alpha): `await dsx.module.payments.payment(…)`. Take payments in your app with one set of calls, whichever payment provider you use.
 - [RevenueCat](/packages/revenuecat#use-it): `await dsx.module.revenuecat.login(…)`. Sell subscriptions and in-app purchases with RevenueCat.
 - [RevenueCat (Store)](/packages/store-modules-revenuecat#use-it): `await dsx.module.revenuecat.login(…)`. Sell subscriptions and in-app purchases with RevenueCat.

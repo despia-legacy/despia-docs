@@ -81,7 +81,7 @@ const escapeAttr = (s) => s.replace(/"/g, "'");
 const labelFor = (p, a) => `${a.name.charAt(0).toUpperCase()}${a.name.slice(1).replace(/([A-Z])/g, " $1").toLowerCase()}`;
 
 // the lead action: the one call a package page (and the Web apps index) shows first
-const PREFER = ["success", "show", "signIn", "login", "purchase", "payment", "request", "start", "open", "connect", "link", "get", "play",
+const PREFER = ["success", "show", "signIn", "login", "purchase", "paywall", "checkout", "payment", "request", "start", "open", "connect", "link", "get", "play",
   "pick", "share", "scan", "read", "send", "track", "trackEvent", "logEvent", "capture", "schedule", "index", "set", "authenticate", "verify", "check", "status"];
 export function leadActionOf(p) {
   const actions = (p.actions ?? []).filter((a) => a.reach === null || (Array.isArray(a.reach) && a.reach.length));
