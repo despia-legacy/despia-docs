@@ -45,6 +45,57 @@ for (const s of samples) {
 }
 
 const whole = samples.filter((s) => s.lang === "dsx" && !s.fragment);
+
+// ── the vocabulary check (what `despia lint` lets through): every attribute on an element whose attribute table the
+//    framework reference publishes must be in that table or universal; every dsx.action/variable/formula/attribute a
+//    sample reads must be declared in that sample. data/dsx-facts.json comes from site/sync-dsx-facts.mjs.
+const FACTS = JSON.parse(readFileSync(join(repo, "data", "dsx-facts.json"), "utf8"));
+const UNIVERSAL = new Set([...FACTS.universal, "class", "style", "slot", "pane", "key", "as"]);
+const CODE_TAGS = new Set(["script", "functions", "action", "formula", "variable", "var", "let", "style"]);
+const HEAD_ATTRS = { variable: ["as", "computed", "type", "sample", "comment", "persist"], attribute: ["as", "default", "type", "comment"], ...FACTS.headLanguageAttrs };
+function scanTags(src) {
+  const out = [];
+  let i = 0;
+  while ((i = src.indexOf("<", i)) >= 0) {
+    if (src.startsWith("<!--", i)) { i = src.indexOf("-->", i) + 3; if (i < 3) break; continue; }
+    const m = /^<([A-Za-z][\w.-]*)/.exec(src.slice(i, i + 80));
+    if (!m) { i++; continue; }
+    const tag = m[1];
+    let j = i + m[0].length;
+    const attrs = [];
+    while (j < src.length && src[j] !== ">" && !(src[j] === "/" && src[j + 1] === ">")) {
+      const a = /^\s+([^\s=/>]+)(?:="([^"]*)")?/.exec(src.slice(j));
+      if (!a) { j++; continue; }
+      attrs.push({ name: a[1], value: a[2] ?? "" });
+      j += a[0].length;
+    }
+    const selfClosing = src[j] === "/";
+    out.push({ tag, attrs });
+    i = j + 1;
+    if (CODE_TAGS.has(tag) && !selfClosing) { const end = src.indexOf(`</${tag}>`, i); if (end > 0) { out[out.length - 1].body = src.slice(i, end); i = end; } }
+  }
+  return out;
+}
+for (const s of whole) {
+  const tags = scanTags(s.text);
+  const declared = { action: new Set(), variable: new Set(), formula: new Set(), attribute: new Set(), api: new Set(), context: new Set() };
+  for (const t of tags) {
+    const as = t.attrs.find((a) => a.name === "as")?.value;
+    if (as && declared[t.tag]) declared[t.tag].add(as);
+    if (as && (t.tag === "var" || t.tag === "let")) declared.variable.add(as);
+  }
+  for (const t of tags) {
+    const known = HEAD_ATTRS[t.tag] ?? FACTS.elements[t.tag];
+    if (!known || !known.length) continue;
+    for (const { name } of t.attrs) {
+      if (UNIVERSAL.has(name) || known.includes(name) || /^(aria-|data-|class:|input:|on:appear|on:disappear)/.test(name) || /:(ios|android|web|macos|phone|tablet|desktop)$/.test(name)) continue;
+      problems.push(`${s.where}: <${t.tag} ${name}=…> is not an attribute of <${t.tag}> in the framework reference`);
+    }
+  }
+  for (const m of s.text.matchAll(/\bdsx\.(action|variable|formula|attribute|api|context)\.([A-Za-z_$][\w$]*)/g)) {
+    if (!declared[m[1]].has(m[2])) problems.push(`${s.where}: dsx.${m[1]}.${m[2]} is used but this sample declares no <${m[1]} as="${m[2]}">`);
+  }
+}
 let linted = 0;
 if (cli) {
   const dir = join(repo, "dist-v2", ".samples");
@@ -60,6 +111,7 @@ if (cli) {
     if (!m) continue;
     const s = whole[names.indexOf(m[1])];
     if (m[3] === "error") problems.push(`${s.where}: line ${m[2]} of the sample: ${m[4]}`);
+    else if (/unknown element tag/.test(m[4])) problems.push(`${s.where}: line ${m[2]} of the sample: ${m[4]}`);
     else console.warn(`warning: ${s.where}: line ${m[2]}: ${m[4]}`);
   }
   const summary = /despia lint: .*/.exec(outText)?.[0];
