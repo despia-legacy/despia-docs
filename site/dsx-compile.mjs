@@ -162,21 +162,27 @@ function shell() {
     <attribute as="md" default="''"/>
     <attribute as="toc" default="'[]'"/>
 
-    <variable as="nav" computed="true">return docsNav()</variable>
-    <variable as="areaTitle" computed="true">
+    <!-- FIXED PER PAGE, so plain variables (evaluated once): a computed variable is re-evaluated on every read, and a
+         repeat reads it once per row (the build profile: 74% of a docs build was re-evaluated computed bodies) -->
+    <variable as="nav">return docsNav()</variable>
+    <variable as="areaTitle">
       const hit = dsx.variable.nav.areas.find(a => a.id == dsx.attribute.area)
       return hit ? hit.title : 'Home'
     </variable>
-    <variable as="areaMenu" computed="true">
+    <variable as="areaMenu">
       return [{ header: true, title: 'Despia V4 ${attr(RELEASE.version ?? "")}' }].concat(dsx.variable.nav.areas.map(a => ({
         title: a.title, icon: a.id == dsx.attribute.area ? 'checkmark' : a.icon, action: 'route.reset', args: { path: a.path } })))
     </variable>
-    <variable as="tocRows" computed="true">
+    <variable as="tocRows">
       const rows = JSON.parse(String(dsx.attribute.toc || '[]'))
       return rows.map(r => ({ id: r.id, title: r.title, href: '#' + r.id }))
     </variable>
-    <variable as="groups" computed="true">return dsx.variable.nav.groups.filter(g => g.section == dsx.attribute.area)</variable>
-    <variable as="appearanceMenu" computed="true">
+    <variable as="groups">return dsx.variable.nav.groups.filter(g => g.section == dsx.attribute.area)</variable>
+    <variable as="areaPath">
+      const hit = dsx.variable.nav.areas.find(a => a.id == dsx.attribute.area)
+      return hit ? hit.path : '/'
+    </variable>
+    <variable as="appearanceMenu">
       return [
         { header: true, title: 'Appearance' },
         { title: 'System', icon: 'circle.lefthalf.filled', action: 'appearance.set', args: { mode: 'system' } },
@@ -200,7 +206,7 @@ function shell() {
     <SidebarSection title="Docs" tab="items">
       <SidebarItem repeat="dsx.variable.nav.areas" key="id" value="{{ dsx.this.path }}" icon="{{ dsx.this.icon }}" title="{{ dsx.this.title }}"/>
     </SidebarSection>
-    <SidebarSection repeat="dsx.variable.groups" key="id" title="{{ dsx.this.title }}" root="{{ dsx.variable.nav.areas.find(a => a.id == dsx.attribute.area).path }}">
+    <SidebarSection repeat="dsx.variable.groups" key="id" title="{{ dsx.this.title }}" root="{{ dsx.variable.areaPath }}">
       <SidebarItem repeat="dsx.this.rows" key="id" value="{{ dsx.this.path }}" icon="{{ dsx.this.icon }}" title="{{ dsx.this.title }}"/>
     </SidebarSection>
 
